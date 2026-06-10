@@ -1,4 +1,5 @@
-import { constants } from "./constants";
+import { constants } from "./constants.js";
+import { entityKeys } from "./enums.js";
 
 export function generateEntitiesForMode(
     mode,
@@ -8,12 +9,10 @@ export function generateEntitiesForMode(
     let newPlayer = {
         ...createBaseEntity(),
         controller: playerController,
-        key: "_player",
     };
     let newEnemy = {
         ...createBaseEntity(),
         controller: enemyController,
-        key: "_enemy",
     };
 
     switch (mode) {
@@ -33,8 +32,8 @@ export function generateEntitiesForMode(
     }
 
     return {
-        player: newPlayer,
-        enemy: newEnemy,
+        [entityKeys.PLAYER_ONE]: newPlayer,
+        [entityKeys.PLAYER_TWO]: newEnemy,
     };
 }
 

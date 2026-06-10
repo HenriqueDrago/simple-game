@@ -1,14 +1,14 @@
 import "./ControlPanel.css";
 
-import { constants } from "../utils/constants";
+import { constants, presetAi } from "../utils/constants";
+
+import { turnStatus, entityKeys } from "../utils/enums";
 
 function ControlPanel({
-    handleStart,
-    handleReset,
     battleState,
     game,
     setGame,
-    handleDistributionModeChange
+    handleDistributionModeChange,
 }) {
     const handleAiChange = (e, entityKey) => {
         setGame((prev) => ({
@@ -25,17 +25,18 @@ function ControlPanel({
 
     return (
         <div className="control-panel-container">
-            {battleState === "setup" && (
-                <button onClick={handleStart}>Start</button>
-            )}
-            <button onClick={handleReset}>Reset</button>
-            {battleState === "setup" && (
+            
+            {battleState === turnStatus.SETUP && (
                 <div className="ai-selector">
-                    <label htmlFor="distribution-mode">Stat Distribution:</label>
+                    <label htmlFor="distribution-mode">
+                        Stat Distribution:
+                    </label>
                     <select
                         id="distribution-mode"
                         value={game.statDistributionMode}
-                        onChange={(e) => handleDistributionModeChange(e.target.value)}
+                        onChange={(e) =>
+                            handleDistributionModeChange(e.target.value)
+                        }
                     >
                         {constants.DISTRIBUTION_MODES.map((dType) => (
                             <option key={dType} value={dType}>
@@ -45,35 +46,37 @@ function ControlPanel({
                     </select>
                 </div>
             )}
-            {battleState === "setup" && (
+            {battleState === turnStatus.SETUP && (
                 <div className="ai-selector">
                     <label htmlFor="player-ai">Player AI:</label>
                     <select
                         id="player-ai"
-                        value={game.entities.player.controller}
-                        onChange={(e) => handleAiChange(e, "player")}
+                        value={game.entities[entityKeys.PLAYER_ONE].controller}
+                        onChange={(e) =>
+                            handleAiChange(e, entityKeys.PLAYER_ONE)
+                        }
                     >
-                        {constants.PRESET_AI.map((aiType) => (
-                            <option key={aiType} value={aiType}>
-                                {aiType.charAt(0).toUpperCase() +
-                                    aiType.slice(1)}
+                        {Object.entries(presetAi).map(([aiKey, aiData]) => (
+                            <option key={aiKey} value={aiKey}>
+                                {aiData.name}
                             </option>
                         ))}
                     </select>
                 </div>
             )}
-            {battleState === "setup" && (
+            {battleState === turnStatus.SETUP && (
                 <div className="ai-selector">
                     <label htmlFor="enemy-ai">Enemy AI:</label>
                     <select
                         id="enemy-ai"
-                        value={game.entities.enemy.controller}
-                        onChange={(e) => handleAiChange(e, "enemy")}
+                        value={game.entities[entityKeys.PLAYER_TWO].controller}
+                        onChange={(e) =>
+                            handleAiChange(e, entityKeys.PLAYER_TWO)
+                        }
                     >
-                        {constants.PRESET_AI.map((aiType) => (
-                            <option key={aiType} value={aiType}>
-                                {aiType.charAt(0).toUpperCase() +
-                                    aiType.slice(1)}
+                        {Object.entries(presetAi).map(([aiKey, aiData]) => (
+                            <option key={aiKey} value={aiKey}>
+                                {aiData.name}
                             </option>
                         ))}
                     </select>

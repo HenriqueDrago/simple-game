@@ -7,6 +7,28 @@
     gap: 10px;
     padding: 20px;
     margin: 0px;
+}
+
+.header-announcement-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    gap: 10px;
+    padding: 20px;
+    margin: 0px;
 
     border: 2px solid white;
+}
+
+.header-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+
+    gap: 10px;
+    padding: 20px;
+    margin: 0px;
 }

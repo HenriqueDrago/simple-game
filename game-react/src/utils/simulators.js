@@ -1,5 +1,5 @@
-import { constants } from "./constants";
-import { consumeResources } from "./entity";
+import { constants } from "./constants.js";
+import { consumeResources } from "./entities.js";
 
 export const simulators = {
     simulateAegis,
@@ -16,195 +16,167 @@ export const simulators = {
     simulateShadowMantle,
     simulateShadowPact,
     simulateSpecialAttack,
-}
+};
 
-function simulateGuard(target, targetKey, nonTarget, nonTargetKey) {
+function simulateGuard({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newMana = Math.min(
-        target.maxMana,
-        Math.floor(
-            target.currMana + target.maxMana * constants.GUARD_MANA_REGEN,
-        ),
+        agent.maxMana,
+        Math.floor(agent.currMana + agent.maxMana * constants.GUARD_MANA_REGEN),
     );
 
     const newOverheat = Math.max(
         0,
-        target.overheat - constants.OVERHEAT_ACTION_COOLING,
+        agent.overheat - constants.OVERHEAT_ACTION_COOLING,
     );
 
-    const draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
-            currMana: newMana,
-            overheat: newOverheat,
-        },
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: { ...agent, currMana: newMana, overheat: newOverheat },
     };
-
-    return draftEntities;
 }
 
-function simulateAegis(target, targetKey, nonTarget, nonTargetKey) {
+function simulateAegis({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newRadiance =
-        target.radiance + Math.ceil(target.attributes.def.value / 2);
+        agent.radiance + Math.ceil(agent.attributes.def.value / 2);
 
-    const draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
-            radiance: newRadiance,
-        },
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: { ...agent, radiance: newRadiance },
     };
-
-    return draftEntities;
 }
 
-function simulateSacrifice(target, targetKey, nonTarget, nonTargetKey) {
-    const oldHp = target.currHp;
+function simulateSacrifice({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const oldHp = agent.currHp;
     const dmgTaken = Math.ceil(oldHp / 2);
 
-    const radianceConsumed = Math.min(dmgTaken, target.radiance);
-    const newRadiance = target.radiance - radianceConsumed;
+    const radianceConsumed = Math.min(dmgTaken, agent.radiance);
+    const newRadiance = agent.radiance - radianceConsumed;
 
     const newHp = oldHp - dmgTaken + radianceConsumed;
     const newBloodSacrifice = Math.max(
-        target.bloodSacrifice,
-        oldHp - newHp + target.bloodSacrifice,
+        agent.bloodSacrifice,
+        oldHp - newHp + agent.bloodSacrifice,
     );
 
-    const newMaxMana = target.maxMana + Math.max(0, oldHp - newHp);
+    const newMaxMana = agent.maxMana + Math.max(0, oldHp - newHp);
 
-    const draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: {
+            ...agent,
             maxMana: newMaxMana,
             currHp: newHp,
             bloodSacrifice: newBloodSacrifice,
             radiance: newRadiance,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateAttack(
-    attacker,
-    attackerKey,
-    defender,
-    defenderKey,
-    arrayActive,
-) {
+function simulateAttack({
+    agent,
+    agentKey,
+    nonAgent,
+    nonAgentKey,
+    isArrayActive,
+}) {
     const base_damage =
-        attacker.attributes.str.value +
-        attacker.bloodSacrifice * constants.BLOOD_SACRIFICE_MULT;
+        agent.attributes.str.value +
+        agent.bloodSacrifice * constants.BLOOD_SACRIFICE_MULT;
     const dmgAfterDef =
         Math.max(
             0,
             base_damage -
-                Math.floor(defender.attributes.def.value * defender.defEffect),
-        ) + attacker.radiance;
+                Math.floor(nonAgent.attributes.def.value * nonAgent.defEffect),
+        ) + agent.radiance;
     const final_damage = Math.max(
         1,
-        Math.ceil(dmgAfterDef * (1 - defender.dmgReduction)),
+        Math.ceil(dmgAfterDef * (1 - nonAgent.dmgReduction)),
     );
 
-    const radianceConsumed = Math.min(final_damage, defender.radiance);
+    const radianceConsumed = Math.min(final_damage, nonAgent.radiance);
     const emberConsumed = Math.min(
         final_damage - radianceConsumed,
-        defender.lingeringEmber,
+        nonAgent.lingeringEmber,
     );
     const newHp = Math.max(
         0,
-        defender.currHp - (final_damage - radianceConsumed - emberConsumed),
+        nonAgent.currHp - (final_damage - radianceConsumed - emberConsumed),
     );
 
-    const newRadiance = defender.radiance - radianceConsumed;
-    const newEmber = defender.lingeringEmber - emberConsumed;
+    const newRadiance = nonAgent.radiance - radianceConsumed;
+    const newEmber = nonAgent.lingeringEmber - emberConsumed;
 
-    const thornsDmg = arrayActive ? attacker.attributes.str.value : 0;
-    const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
+    const thornsDmg = isArrayActive ? agent.attributes.str.value : 0;
+    const attackerNewHP = Math.max(0, agent.currHp - thornsDmg);
 
-    const draftEntities = {
-        [attackerKey]: {
-            ...attacker,
-            currHp: attackerNewHP,
-            radiance: 0,
-        },
-        [defenderKey]: {
-            ...defender,
+    return {
+        [agentKey]: { ...agent, currHp: attackerNewHP, radiance: 0 },
+        [nonAgentKey]: {
+            ...nonAgent,
             currHp: newHp,
             radiance: newRadiance,
             lingeringEmber: newEmber,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateSpecialAttack(attacker, attackerKey, defender, defenderKey) {
-    const base_damage = attacker.attributes.str.value + attacker.radiance;
-    const manaDiff = Math.max(0, attacker.currMana - defender.currMana);
+function simulateSpecialAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const base_damage = agent.attributes.str.value + agent.radiance;
+    const manaDiff = Math.max(0, agent.currMana - nonAgent.currMana);
 
     const canUseSpAtk =
-        attacker.currMana + attacker.manaOverflow >= constants.SP_ATTACK_COST;
+        agent.currMana + agent.manaOverflow >= constants.SP_ATTACK_COST;
 
     const final_damage = canUseSpAtk
         ? 1 +
           Math.floor(
-              Math.max(0, base_damage + manaDiff) * (1 - defender.dmgReduction), // Ignores def
+              Math.max(0, base_damage + manaDiff) * (1 - nonAgent.dmgReduction),
           )
         : 0;
 
-    const radianceConsumed = Math.min(final_damage, defender.radiance);
+    const radianceConsumed = Math.min(final_damage, nonAgent.radiance);
     const emberConsumed = Math.min(
         final_damage - radianceConsumed,
-        defender.lingeringEmber,
+        nonAgent.lingeringEmber,
     );
     const newHp = Math.max(
         0,
-        defender.currHp - (final_damage - radianceConsumed - emberConsumed),
+        nonAgent.currHp - (final_damage - radianceConsumed - emberConsumed),
     );
 
-    const newRadiance = defender.radiance - radianceConsumed;
-    const newEmber = defender.lingeringEmber - emberConsumed;
+    const newRadiance = nonAgent.radiance - radianceConsumed;
+    const newEmber = nonAgent.lingeringEmber - emberConsumed;
 
     const defenderNewMana = Math.min(
-        defender.maxMana,
-        defender.currMana + manaDiff,
+        nonAgent.maxMana,
+        nonAgent.currMana + manaDiff,
     );
     const defenderNewManaOverflow =
-        defender.manaOverflow +
-        Math.max(0, defender.currMana + manaDiff - defender.maxMana);
+        nonAgent.manaOverflow +
+        Math.max(0, nonAgent.currMana + manaDiff - nonAgent.maxMana);
 
     const overflowConsumed = Math.min(
         constants.SP_ATTACK_COST,
-        attacker.manaOverflow,
+        agent.manaOverflow,
     );
     const manaConsumed = constants.SP_ATTACK_COST - overflowConsumed;
 
     const attackerNewManaOverflow = canUseSpAtk
-        ? attacker.manaOverflow - overflowConsumed
-        : attacker.manaOverflow;
-
+        ? agent.manaOverflow - overflowConsumed
+        : agent.manaOverflow;
     const attackerNewMana = canUseSpAtk
-        ? attacker.currMana - manaConsumed
-        : attacker.currMana;
+        ? agent.currMana - manaConsumed
+        : agent.currMana;
 
-    const draftEntities = {
-        [attackerKey]: {
-            ...attacker,
+    return {
+        [agentKey]: {
+            ...agent,
             currMana: attackerNewMana,
             manaOverflow: attackerNewManaOverflow,
             radiance: 0,
         },
-        [defenderKey]: {
-            ...defender,
+        [nonAgentKey]: {
+            ...nonAgent,
             currHp: newHp,
             currMana: defenderNewMana,
             manaOverflow: defenderNewManaOverflow,
@@ -212,155 +184,107 @@ function simulateSpecialAttack(attacker, attackerKey, defender, defenderKey) {
             lingeringEmber: newEmber,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateHeal(target, targetKey, nonTarget, nonTargetKey) {
+function simulateHeal({ agent, agentKey, nonAgent, nonAgentKey }) {
     const base_heal = Math.min(
-        target.maxHp - target.currHp,
-        target.currMana + target.manaOverflow,
+        agent.maxHp - agent.currHp,
+        agent.currMana + agent.manaOverflow,
     );
+    const newHp = Math.min(agent.currHp + base_heal, agent.maxHp);
 
-    const newHp = Math.min(target.currHp + base_heal, target.maxHp);
-
-    const overflowConsumed = Math.min(base_heal, target.manaOverflow);
+    const overflowConsumed = Math.min(base_heal, agent.manaOverflow);
     const manaConsumed = base_heal - overflowConsumed;
 
-    const newManaOverflow = target.manaOverflow - overflowConsumed;
-    const newMana = target.currMana - manaConsumed;
+    const newManaOverflow = agent.manaOverflow - overflowConsumed;
+    const newMana = agent.currMana - manaConsumed;
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: {
+            ...agent,
             currHp: newHp,
             currMana: newMana,
             manaOverflow: newManaOverflow,
             poison: 0,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateCurse(target, targetKey, nonTarget, nonTargetKey) {
-    const targetNewPoison = target.shackledMana + target.poison;
-    const nonTargetNewPoison = nonTarget.shackledMana + nonTarget.poison;
+function simulateCurse({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const agentNewPoison = agent.shackledMana + agent.poison;
+    const nonAgentNewPoison = nonAgent.shackledMana + nonAgent.poison;
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-            poison: nonTargetNewPoison,
+    return {
+        [nonAgentKey]: {
+            ...nonAgent,
+            poison: nonAgentNewPoison,
             shackledMana: 0,
         },
-        [targetKey]: {
-            ...target,
-            poison: targetNewPoison,
-            shackledMana: 0,
-        },
+        [agentKey]: { ...agent, poison: agentNewPoison, shackledMana: 0 },
     };
-
-    return draftEntities;
 }
 
-function simulateArray(target, targetKey, nonTarget, nonTargetKey) {
-    const targetShackledMana =
-        target.shackledMana + target.currMana + target.manaOverflow;
-    const nonTargetShackledMana =
-        nonTarget.shackledMana + nonTarget.currMana + nonTarget.manaOverflow;
+function simulateArray({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const agentShackledMana =
+        agent.shackledMana + agent.currMana + agent.manaOverflow;
+    const nonAgentShackledMana =
+        nonAgent.shackledMana + nonAgent.currMana + nonAgent.manaOverflow;
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
+    return {
+        [nonAgentKey]: {
+            ...nonAgent,
             currMana: 0,
             manaOverflow: 0,
-            shackledMana: nonTargetShackledMana,
+            shackledMana: nonAgentShackledMana,
         },
-        [targetKey]: {
-            ...target,
+        [agentKey]: {
+            ...agent,
             currMana: 0,
             manaOverflow: 0,
-            shackledMana: targetShackledMana,
+            shackledMana: agentShackledMana,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateShadowPact(target, targetKey, nonTarget, nonTargetKey) {
-    let draftTarget = {
-        ...target,
+function simulateShadowPact({ agent, agentKey, nonAgent, nonAgentKey }) {
+    let draftAgent = { ...agent };
+    draftAgent = consumeResources(draftAgent, 5, "shadowPact");
+
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: { ...draftAgent, umbralCore: true },
     };
-
-    draftTarget = consumeResources(draftTarget, 5, "shadowPact");
-
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...draftTarget,
-            umbralCore: true,
-        },
-    };
-
-    return draftEntities;
 }
 
-function simulateShadowMantle(target, targetKey, nonTarget, nonTargetKey) {
-    const unrelentingShadows = target.shadowflame;
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
+function simulateShadowMantle({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const unrelentingShadows = agent.shadowflame;
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: {
+            ...agent,
             darkEmbrace: true,
             unrelentingShadows: unrelentingShadows,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateRitualOfAsh(target, targetKey, nonTarget, nonTargetKey) {
-    const newLE = target.shadowflame + target.lingeringEmber;
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...nonTarget,
-        },
-        [targetKey]: {
-            ...target,
-            shadowflame: 0,
-            lingeringEmber: newLE,
-        },
+function simulateRitualOfAsh({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const newLE = agent.shadowflame + agent.lingeringEmber;
+    return {
+        [nonAgentKey]: { ...nonAgent },
+        [agentKey]: { ...agent, shadowflame: 0, lingeringEmber: newLE },
     };
-
-    return draftEntities;
 }
 
-function simulateDarkPromise(target, targetKey, nonTarget, nonTargetKey) {
-    let draftTarget = {
-        ...target,
-    };
-
-    let draftNonTarget = {
-        ...nonTarget,
-    };
-
+function simulateDarkPromise({ agent, agentKey, nonAgent, nonAgentKey }) {
     const toBeRestored =
-        target.shadowflame + Math.floor(target.lingeringEmber / 2);
+        agent.shadowflame + Math.floor(agent.lingeringEmber / 2);
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...draftNonTarget,
-            unrelentingShadows: toBeRestored,
-        },
-        [targetKey]: {
-            ...draftTarget,
+    return {
+        [nonAgentKey]: { ...nonAgent, unrelentingShadows: toBeRestored },
+        [agentKey]: {
+            ...agent,
             umbralCore: false,
             dimmingDarkness: true,
             shadowflame: 0,
@@ -369,87 +293,54 @@ function simulateDarkPromise(target, targetKey, nonTarget, nonTargetKey) {
             unrelentingShadows: toBeRestored,
         },
     };
-
-    return draftEntities;
 }
 
-function simulateBlackMayhem(target, targetKey, nonTarget, nonTargetKey) {
-    let draftTarget = {
-        ...target,
-    };
-
-    let draftNonTarget = {
-        ...nonTarget,
-    };
-
-    const cindersPreBurn = draftNonTarget.cinders;
+function simulateBlackMayhem({ agent, agentKey, nonAgent, nonAgentKey }) {
+    let draftNonAgent = { ...nonAgent };
+    const cindersPreBurn = draftNonAgent.cinders;
 
     const result = consumeResources(
-        draftNonTarget,
-        target.shadowflame,
+        draftNonAgent,
+        agent.shadowflame,
         "blackMayhem",
     );
+    draftNonAgent = result.draftEntity;
 
-    draftNonTarget = result.draftEntity;
     const burntResources = result.consumed;
-
-    const burntCinders = cindersPreBurn - draftNonTarget.cinders;
+    const burntCinders = cindersPreBurn - draftNonAgent.cinders;
     const burntNonCinders = burntResources - burntCinders;
 
-    const newNonTargetCinders = draftNonTarget.cinders + burntNonCinders;
-    const newTargetLE = draftTarget.lingeringEmber + burntCinders;
+    const newNonTargetCinders = draftNonAgent.cinders + burntNonCinders;
+    const newTargetLE = agent.lingeringEmber + burntCinders;
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...draftNonTarget,
-            cinders: newNonTargetCinders,
-        },
-        [targetKey]: {
-            ...draftTarget,
-            lingeringEmber: newTargetLE,
-        },
+    return {
+        [nonAgentKey]: { ...draftNonAgent, cinders: newNonTargetCinders },
+        [agentKey]: { ...agent, lingeringEmber: newTargetLE },
     };
-
-    return draftEntities;
 }
 
-function simulateLaser(target, targetKey, nonTarget, nonTargetKey) {
-    let draftTarget = {
-        ...target,
-    };
-
-    let draftNonTarget = {
-        ...nonTarget,
-    };
-
-    const hasEnoughMana = draftTarget.currMana > 0;
-
+function simulateLaser({ agent, agentKey, nonAgent, nonAgentKey }) {
+    const hasEnoughMana = agent.currMana > 0;
     const dmg = hasEnoughMana ? 1 : 0;
-    const newOverheat = hasEnoughMana
-        ? draftTarget.overheat + dmg
-        : draftTarget.overheat;
 
+    const newOverheat = hasEnoughMana ? agent.overheat + dmg : agent.overheat;
     const opponentHp = hasEnoughMana
-        ? Math.max(0, draftNonTarget.currHp - dmg)
-        : draftNonTarget.currHp;
-    const newMana =
-        hasEnoughMana && target.manaOverflow <= 0
-            ? draftTarget.currMana - 1
-            : draftTarget.currMana;
-    const newManaOverflow = Math.max(0, target.manaOverflow - 1);
+        ? Math.max(0, nonAgent.currHp - dmg)
+        : nonAgent.currHp;
 
-    let draftEntities = {
-        [nonTargetKey]: {
-            ...draftNonTarget,
-            currHp: opponentHp,
-        },
-        [targetKey]: {
-            ...draftTarget,
+    const newMana =
+        hasEnoughMana && agent.manaOverflow <= 0
+            ? agent.currMana - 1
+            : agent.currMana;
+    const newManaOverflow = Math.max(0, agent.manaOverflow - 1);
+
+    return {
+        [nonAgentKey]: { ...nonAgent, currHp: opponentHp },
+        [agentKey]: {
+            ...agent,
             overheat: newOverheat,
             currMana: newMana,
             manaOverflow: newManaOverflow,
         },
     };
-
-    return draftEntities;
 }

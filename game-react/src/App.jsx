@@ -1,466 +1,69 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable react-hooks/purity */
 import { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
 import ControlPanel from "./components/ControlPanel.jsx";
-import GamePanel from "./components/GamePanel.jsx";
+import StatsPanel from "./components/StatsPanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
-import {
-    simpleAI,
-    bloodknightAI,
-    paladinAI,
-    hexerAI,
-    warlockAI,
-    adaptativeAI,
-    shadowSorcererAI,
-} from "./utils/aiControllers.js";
-import { constants } from "./utils/constants.js";
+import { simpleAI } from "./utils/aiControllers.js";
+import { constants, presetAi } from "./utils/constants.js";
 import { processUpkeep, commitTurn } from "./utils/turnManagement.js";
 import {
     applyStats,
     distribute_points,
     createBaseEntity,
     generateEntitiesForMode,
-} from "./utils/entity.js";
+} from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
+import { entityKeys, turnStatus, aiKeys } from "./utils/enums.js";
 
 import "./App.css";
-
-/*
-Notes for self:
-Effect activation order on turn start:
-    1. Shackled Mana Distribution (if Array unactive)
-    2. Shackled Mana Passive Increase (if Array active)
-    2. Unrelenting Shadows resource restoration
-    2. Shadowflame Resource Burn (if not in Dark Embrace and not in Dimming Darkness)
-    3. Lingering Ember Passive Conversion
-    2. Poison Damage (if not in Dimming Darkness)
-    3. Mana Bleed (if not in Dimming Darkness)
-Effect activation order on turn end:
-    1. Shackle Mana conversion
-    2. Mana Overflow Damage (if not in Dimming Darkness)
-*/
 
 function App() {
     // Declare states
     const [game, setGame] = useState({
-        status: "setup",
+        status: turnStatus.SETUP,
         nextStatus: null,
         shacklingCurse: 0,
         statDistributionMode: "Random",
         entities: {
-            player: {
+            [entityKeys.PLAYER_ONE]: {
                 ...distribute_points(createBaseEntity()),
-                controller: "human",
-                key: "_player",
+                controller: aiKeys.HUMAN,
             },
-            enemy: {
+            [entityKeys.PLAYER_TWO]: {
                 ...distribute_points(createBaseEntity()),
-                controller: "simple",
-                key: "_enemy",
+                controller: aiKeys.SIMPLE,
             },
         },
     });
 
-    const actionHandles = {
-        handleAttack,
-        handleHeal,
-        handleGuard,
-        handleSpecialAttack,
-        handleSacrifice,
-        handleCurse,
-        handleAegis,
-        handleArray,
-        handleShadowPact,
-        handleShadowMantle,
-        handleRitualOfAsh,
-        handleDarkPromise,
-        handleBlackMayhem,
-        handleLaser,
-    };
-
     // Handles
-    function handleAttack(attackerKey, defenderKey) {
-        console.log("Used: Atk");
+    function handleAction(action, agentKey, nonAgentKey) {
+        console.log(`Used: ${action}`);
         setGame((prev) => {
-            const arrayActive = prev.remainingArray > 0;
+            const agent = game.entities[agentKey];
+            const nonAgent = game.entities[nonAgentKey];
 
-            const attacker = prev.entities[attackerKey];
-            const defender = prev.entities[defenderKey];
+            const isArrayActive = game.remainingArray > 0;
 
-            const draftEntities = simulators.simulateAttack(
-                attacker,
-                attackerKey,
-                defender,
-                defenderKey,
-                arrayActive,
-            );
+            const context = {
+                agent,
+                agentKey,
+                nonAgent,
+                nonAgentKey,
+                isArrayActive,
+            };
 
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
+            const sim = simulators[`simulate${action}`];
+
+            const draftEntities = sim(context);
+
             return commitTurn(
                 prev,
                 draftEntities,
-                nextActorKey,
-                currActorKey,
+                nonAgentKey,
+                agentKey,
                 "atk",
-            );
-        });
-    }
-
-    function handleSpecialAttack(attackerKey, defenderKey) {
-        console.log("Used: SpAtk");
-        setGame((prev) => {
-            const attacker = prev.entities[attackerKey];
-            const defender = prev.entities[defenderKey];
-
-            const draftEntities = simulators.simulateSpecialAttack(
-                attacker,
-                attackerKey,
-                defender,
-                defenderKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "spAtk",
-            );
-        });
-    }
-
-    function handleHeal(targetKey, nonTargetKey) {
-        console.log("Used: Heal");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            const draftEntities = simulators.simulateHeal(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "heal",
-            );
-        });
-    }
-
-    function handleGuard(targetKey, nonTargetKey) {
-        console.log("Used: Guard");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            const draftEntities = simulators.simulateGuard(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "guard",
-            );
-        });
-    }
-
-    function handleSacrifice(targetKey, nonTargetKey) {
-        console.log("Used: Sacrifice");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            const draftEntities = simulators.simulateSacrifice(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "sacrifice",
-            );
-        });
-    }
-
-    function handleCurse(targetKey, nonTargetKey) {
-        console.log("Used: Curse");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateCurse(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "curse",
-            );
-        });
-    }
-
-    function handleAegis(targetKey, nonTargetKey) {
-        console.log("Used: Aegis");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            const draftEntities = simulators.simulateAegis(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "aegis",
-            );
-        });
-    }
-
-    function handleArray(targetKey, nonTargetKey) {
-        console.log("Used: Array");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateArray(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "array",
-            );
-        });
-    }
-
-    function handleShadowPact(targetKey, nonTargetKey) {
-        console.log("Used: Shadow Pact");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            console.log(target);
-
-            let draftEntities = simulators.simulateShadowPact(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            console.log(draftEntities);
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "shadowPact",
-            );
-        });
-    }
-
-    function handleShadowMantle(targetKey, nonTargetKey) {
-        console.log("Used: Shadow Mantle");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateShadowMantle(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "shadowMantle",
-            );
-        });
-    }
-
-    function handleRitualOfAsh(targetKey, nonTargetKey) {
-        console.log("Used: Ritual of Ash");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateRitualOfAsh(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "ritualOfAsh",
-            );
-        });
-    }
-
-    function handleBlackMayhem(targetKey, nonTargetKey) {
-        console.log("Used: Black Mayhem");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateBlackMayhem(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "blackMayhem",
-            );
-        });
-    }
-
-    function handleDarkPromise(targetKey, nonTargetKey) {
-        console.log("Used: Dark Promise");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateDarkPromise(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "darkPromise",
-            );
-        });
-    }
-
-    function handleLaser(targetKey, nonTargetKey) {
-        console.log("Used: Laser");
-        setGame((prev) => {
-            const target = prev.entities[targetKey];
-            const nonTarget = prev.entities[nonTargetKey];
-
-            let draftEntities = simulators.simulateLaser(
-                target,
-                targetKey,
-                nonTarget,
-                nonTargetKey,
-            );
-
-            const nextActorKey =
-                prev.status === "playerturn" ? "enemy" : "player";
-            const currActorKey =
-                prev.status === "playerturn" ? "player" : "enemy";
-            return commitTurn(
-                prev,
-                draftEntities,
-                nextActorKey,
-                currActorKey,
-                "laser",
             );
         });
     }
@@ -471,8 +74,8 @@ function App() {
             statDistributionMode: newMode,
             entities: generateEntitiesForMode(
                 newMode,
-                prev.entities.player.controller,
-                prev.entities.enemy.controller,
+                prev.entities[entityKeys.PLAYER_ONE].controller,
+                prev.entities[entityKeys.PLAYER_TWO].controller,
             ),
         }));
     }
@@ -480,81 +83,43 @@ function App() {
     function handleReset() {
         setGame((prev) => ({
             ...prev,
-            status: "setup",
+            status: turnStatus.SETUP,
             remainingArray: 0,
             nextStatus: null,
             entities: generateEntitiesForMode(
                 prev.statDistributionMode,
-                prev.entities.player.controller,
-                prev.entities.enemy.controller,
+                prev.entities[entityKeys.PLAYER_ONE].controller,
+                prev.entities[entityKeys.PLAYER_TWO].controller,
             ),
         }));
     }
 
     function handleStart() {
-        const playerStats = applyStats(game.entities.player.attributes);
-        const enemyStats = applyStats(game.entities.enemy.attributes);
-
-        const firstTurn = "playerturn";
+        const playerStats = applyStats(
+            game.entities[entityKeys.PLAYER_ONE].attributes,
+        );
+        const enemyStats = applyStats(
+            game.entities[entityKeys.PLAYER_TWO].attributes,
+        );
 
         setGame((prev) => ({
             ...prev,
-            status: firstTurn,
+            status: turnStatus.PLAYER_ONE_TURN,
             remainingArray: 0,
             entities: {
-                player: {
-                    ...prev.entities.player,
+                [entityKeys.PLAYER_ONE]: {
+                    ...prev.entities[entityKeys.PLAYER_ONE],
                     attributes: playerStats,
                 },
-                enemy: {
-                    ...prev.entities.enemy,
+                [entityKeys.PLAYER_TWO]: {
+                    ...prev.entities[entityKeys.PLAYER_TWO],
                     attributes: enemyStats,
                 },
             },
         }));
     }
 
-    function handleAutoTurn(targetKey, nonTargetKey, personality) {
-        console.log(personality);
-        const target = game.entities[targetKey];
-        const nonTarget = game.entities[nonTargetKey];
-        const arrayActive = game.remainingArray > 0;
-        const totalMana = target.currMana + target.manaOverflow;
-        const hasManaForSpecial = totalMana >= constants.SP_ATTACK_COST;
-
-        // Pack everything the AIs might need into a single object
-        const context = {
-            target,
-            nonTarget,
-            targetKey,
-            nonTargetKey,
-            arrayActive,
-            totalMana,
-            hasManaForSpecial,
-            actions: actionHandles,
-        };
-
-        // Dispatcher
-        const aiMap = {
-            simple: simpleAI,
-            bloodknight: bloodknightAI,
-            paladin: paladinAI,
-            hexer: hexerAI,
-            warlock: warlockAI,
-            adaptative: adaptativeAI,
-            shadowSorcerer: shadowSorcererAI,
-        };
-
-        // Execute the matching AI, or default to simple if not found
-        const executeAI = aiMap[personality] || simpleAI;
-        console.log(executeAI);
-        executeAI(context);
-    }
-
-    // Simulations
-
-    // Other Auxiliary Functions
-
+    // Auxiliary Functions
     function updateStatsPoints(targetKey, StatusKey, value) {
         setGame((prev) => {
             const currSpent = prev.entities[targetKey].unspentPoints;
@@ -597,32 +162,52 @@ function App() {
     // Efeitos
     useEffect(() => {
         const activeKey =
-            game.status === "playerturn"
-                ? "player"
-                : game.status === "enemyturn"
-                  ? "enemy"
+            game.status === turnStatus.PLAYER_ONE_TURN
+                ? entityKeys.PLAYER_ONE
+                : game.status === turnStatus.PLAYER_TWO_TURN
+                  ? entityKeys.PLAYER_TWO
                   : null;
 
-        if (activeKey) {
-            const activeEntity = game.entities[activeKey];
-            const targetKey = activeKey === "player" ? "enemy" : "player";
+        if (!activeKey) return;
 
-            if (activeEntity.controller !== "human") {
-                const timer = setTimeout(() => {
-                    handleAutoTurn(
-                        activeKey,
-                        targetKey,
-                        activeEntity.controller,
-                    );
-                }, 1000);
+        const agentKey = activeKey;
+        const nonAgentKey =
+            activeKey === entityKeys.PLAYER_ONE
+                ? entityKeys.PLAYER_TWO
+                : entityKeys.PLAYER_ONE;
+        const agent = game.entities[agentKey];
 
-                return () => clearTimeout(timer);
-            }
+        if (agent.controller !== aiKeys.HUMAN) {
+            const triggerAI = () => {
+                const nonAgent = game.entities[nonAgentKey];
+                const isArrayActive = game.remainingArray > 0;
+
+                const totalMana = agent.currMana + agent.manaOverflow;
+                const hasManaForSpecial = totalMana >= constants.SP_ATTACK_COST;
+
+                const context = {
+                    agent,
+                    agentKey,
+                    nonAgent,
+                    nonAgentKey,
+                    isArrayActive,
+                    totalMana,
+                    hasManaForSpecial,
+                    handleAction,
+                };
+
+                const executeAI = presetAi[agent.controller].caller || simpleAI;
+                executeAI(context);
+            };
+
+            const timer = setTimeout(triggerAI, 1000);
+
+            return () => clearTimeout(timer);
         }
-    }, [game.status, game.entities]);
+    }, [game.status, game.entities, game.remainingArray]);
 
     useEffect(() => {
-        if (game.status === "transition") {
+        if (game.status === turnStatus.TRANSITION) {
             const timer = setTimeout(() => {
                 setGame((prev) => ({ ...prev, status: prev.nextStatus }));
             }, 800);
@@ -633,40 +218,34 @@ function App() {
 
     // Turn Start effects
     useEffect(() => {
-        if (game.status === "upkeep_player" || game.status === "upkeep_enemy") {
+        if (
+            game.status === turnStatus.UPKEEP_PLAYER_ONE ||
+            game.status === turnStatus.UPKEEP_PLAYER_TWO
+        ) {
             setGame(processUpkeep);
         }
     }, [game.status]);
 
     return (
         <div className="app-container">
-            <Header battleState={game.status} />
-            <ControlPanel
+            <Header
+                battleState={game.status}
                 handleStart={handleStart}
                 handleReset={handleReset}
-                battleState={game.status}
+            />
+            <GamePanel
+                updateStatsPoints={updateStatsPoints}
                 game={game}
-                setGame={setGame}
                 handleDistributionModeChange={handleDistributionModeChange}
             />
-            <GamePanel updateStatsPoints={updateStatsPoints} game={game} />
             <ActionPanel
-                handleAttack={handleAttack}
-                handleHeal={handleHeal}
-                handleGuard={handleGuard}
-                handleSpecialAttack={handleSpecialAttack}
-                handleSacrifice={handleSacrifice}
-                handleCurse={handleCurse}
-                handleAegis={handleAegis}
-                handleArray={handleArray}
-                handleShadowPact={handleShadowPact}
-                handleShadowMantle={handleShadowMantle}
-                handleRitualOfAsh={handleRitualOfAsh}
-                handleDarkPromise={handleDarkPromise}
-                handleBlackMayhem={handleBlackMayhem}
-                handleLaser={handleLaser}
-                playerController={game.entities.player.controller}
-                enemyController={game.entities.enemy.controller}
+                handleAction={handleAction}
+                playerController={
+                    game.entities[entityKeys.PLAYER_ONE].controller
+                }
+                enemyController={
+                    game.entities[entityKeys.PLAYER_TWO].controller
+                }
                 game={game}
             />
         </div>

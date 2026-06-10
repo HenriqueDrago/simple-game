@@ -1,9 +1,31 @@
-import { constants } from "./constants";
-import { consumeResources, restoreResources } from "./entity";
+import { constants } from "./constants.js";
+import { consumeResources, restoreResources } from "./entities.js";
+import { turnStatus, entityKeys } from "./enums.js";
+
+/*
+Notes for self:
+Effect activation order on turn start:
+    1. Shackled Mana Distribution (if Array unactive)
+    2. Shackled Mana Passive Increase (if Array active)
+    2. Unrelenting Shadows resource restoration
+    2. Shadowflame Resource Burn (if not in Dark Embrace and not in Dimming Darkness)
+    3. Lingering Ember Passive Conversion
+    2. Poison Damage (if not in Dimming Darkness)
+    3. Mana Bleed (if not in Dimming Darkness)
+Effect activation order on turn end:
+    1. Shackle Mana conversion
+    2. Mana Overflow Damage (if not in Dimming Darkness)
+*/
 
 export function processUpkeep(prev) {
-    const targetKey = prev.status === "upkeep_player" ? "player" : "enemy";
-    const nonTargetKey = prev.status === "upkeep_player" ? "enemy" : "player";
+    const targetKey =
+        prev.status === turnStatus.UPKEEP_PLAYER_ONE
+            ? entityKeys.PLAYER_ONE
+            : entityKeys.PLAYER_TWO;
+    const nonTargetKey =
+        prev.status === turnStatus.UPKEEP_PLAYER_ONE
+            ? entityKeys.PLAYER_TWO
+            : entityKeys.PLAYER_ONE;
 
     const isArrayActive = prev.remainingArray > 0;
 
@@ -141,22 +163,23 @@ export function processUpkeep(prev) {
 
     // Calcula o próximo turno e verifica as mortes
     const enemyDead =
-        prev.entities.enemy.currHp <= 0 ||
-        (draftTarget.currHp <= 0 && draftTarget.key === "_enemy");
+        prev.entities[entityKeys.PLAYER_TWO].currHp <= 0 ||
+        (draftTarget.currHp <= 0 && targetKey === entityKeys.PLAYER_TWO);
     const playerDead =
-        prev.entities.player.currHp <= 0 ||
-        (draftTarget.currHp <= 0 && draftTarget.key === "_player");
+        prev.entities[entityKeys.PLAYER_ONE].currHp <= 0 ||
+        (draftTarget.currHp <= 0 && targetKey === entityKeys.PLAYER_ONE);
 
-    let nextStatus = targetKey === "player" ? "playerturn" : "enemyturn";
+    let nextStatus =
+        targetKey === entityKeys.PLAYER_ONE ? turnStatus.PLAYER_ONE_TURN : turnStatus.PLAYER_TWO_TURN;
 
     if (playerDead) {
         if (enemyDead) {
-            nextStatus = "draw";
+            nextStatus = turnStatus.DRAW;
         } else {
-            nextStatus = "defeat";
+            nextStatus = turnStatus.DEFEAT;
         }
     } else if (enemyDead) {
-        nextStatus = "victory";
+        nextStatus = turnStatus.VICTORY;
     }
 
     return {
@@ -190,54 +213,16 @@ export function commitTurn(
     const currActor = draftEntities[currActorKey];
     // const nextActor = draftEntities[nextActorKey];
 
-    const overheated = currActor.overheat >= constants.MAX_OVERHEAT;
-
-    if (!overheated && action === "laser") {
-        const enemyDead =
-            draftEntities.enemy.currHp <= 0 ||
-            (currActor.currHp === 0 && currActor.key === "_enemy");
-        const playerDead =
-            draftEntities.player.currHp <= 0 ||
-            (currActor.currHp === 0 && currActor.key === "_player");
-
-        let nextStatus = currActorKey === "player" ? "playerturn" : "enemyturn";
-
-        if (playerDead) {
-            if (enemyDead) {
-                nextStatus = "draw";
-            } else {
-                nextStatus = "defeat";
-            }
-        } else if (enemyDead) {
-            nextStatus = "victory";
-        }
-
-        return {
-            ...prev,
-            status: "transition",
-            nextStatus: nextStatus,
-            entities: {
-                ...draftEntities,
-                [currActorKey]: {
-                    ...draftEntities[currActorKey],
-                },
-                [nextActorKey]: {
-                    ...draftEntities[nextActorKey],
-                },
-            },
-        };
-    }
-
     // DR
     const dmgReduction =
-        action === "sacrifice" ||
-        action === "guard" ||
-        action === "shadowMantle"
+        action === "Sacrifice" ||
+        action === "Guard" ||
+        action === "ShadowMantle"
             ? constants.ALTERNATE_DR
             : 0;
     // DEF effect
     const defEffect =
-        action == "guard" || action == "aegis"
+        action == "Guard" || action == "Aegis"
             ? constants.ALTERNATE_DEF_EFFECTIVENESS
             : 1.0;
     // Mana Shackle
@@ -258,36 +243,38 @@ export function commitTurn(
 
     // Array
     const currArray =
-        action === "array"
+        action === "Array"
             ? constants.ARRAY_DURATION - 1
-            : action === "curse"
+            : action === "Curse"
               ? 0
               : Math.max(0, prev.remainingArray - 1);
 
     // Check for deaths after end of turn effects have been applied
     const enemyDead =
-        draftEntities.enemy.currHp <= 0 ||
-        (newHp === 0 && currActor.key === "_enemy");
+        draftEntities[entityKeys.PLAYER_TWO].currHp <= 0 ||
+        (newHp === 0 && currActorKey === entityKeys.PLAYER_TWO);
     const playerDead =
-        draftEntities.player.currHp <= 0 ||
-        (newHp === 0 && currActor.key === "_player");
+        draftEntities[entityKeys.PLAYER_ONE].currHp <= 0 ||
+        (newHp === 0 && currActorKey === entityKeys.PLAYER_ONE);
 
     let nextStatus =
-        nextActorKey === "player" ? "upkeep_player" : "upkeep_enemy";
+        nextActorKey === entityKeys.PLAYER_ONE
+            ? turnStatus.UPKEEP_PLAYER_ONE
+            : turnStatus.UPKEEP_PLAYER_TWO;
 
     if (playerDead) {
         if (enemyDead) {
-            nextStatus = "draw";
+            nextStatus = turnStatus.DRAW;
         } else {
-            nextStatus = "defeat";
+            nextStatus = turnStatus.DEFEAT;
         }
     } else if (enemyDead) {
-        nextStatus = "victory";
+        nextStatus = turnStatus.VICTORY;
     }
 
     return {
         ...prev,
-        status: "transition",
+        status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
         remainingArray: currArray,
         entities: {
@@ -307,4 +294,3 @@ export function commitTurn(
         },
     };
 }
-
