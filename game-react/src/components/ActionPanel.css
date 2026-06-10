@@ -1,0 +1,101 @@
+.action-panel-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Changed from row to column so the description drops below */
+    width: 100%;
+    margin-top: 10px;
+    gap: 15px; /* Ensures space between the button grid and the description box */
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 3 equal-width columns */
+    gap: 15px; /* Spacing between buttons */
+    max-width: 600px; /* Prevents the buttons from getting too wide on large screens */
+    width: 100%;
+}
+
+.button-grid button {
+    width: 100%;
+    height: 100%; /* Ensures all buttons stretch to match the tallest button in the row */
+    padding: 12px 10px;
+    box-sizing: border-box;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.enemy-wait {
+    font-size: 1.2rem;
+    color: #aaaaaa;
+    padding: 8px 16px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #aaaaaa;
+}
+
+.action-description-box {
+    width: 100%;
+    max-width: 600px;
+    min-height: 48px; /* Prevents the UI from jumping when text wraps */
+    padding: 10px 15px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    justify-content: flex-start;
+    text-align: left;
+    line-height: 1.4;
+
+    border: 1px solid white;
+}
+
+.description-item {
+    width: 100%;
+}
+
+.description-item hr {
+    width: 100%;
+    margin: 8px 0;
+    border: 0;
+    border-top: 1px solid #555;
+}
+
+/* Mirror the standard grid layout */
+.shadow-button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 600px;
+    width: 100%;
+}
+
+/* Base styling for the shadow buttons */
+.shadow-button-grid button {
+    width: 100%;
+    height: 100%;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    /* Shadow Flavour */
+    background-color: #1a1a24; 
+    color: #d1d1e0;
+    border: 1px solid #4a2b66; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(74, 43, 102, 0.4);
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+/* Hover effects to make them glow */
+.shadow-button-grid button:hover {
+    background-color: #261c36;
+    color: #ffffff;
+    border-color: #8c52ff;
+    box-shadow: 0 6px 12px rgba(140, 82, 255, 0.3), inset 0 0 12px rgba(140, 82, 255, 0.5);
+    transform: translateY(-2px);
+}

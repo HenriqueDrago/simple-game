@@ -1,0 +1,22 @@
+.game-panel-container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-direction: row;
+
+    gap: 30px;
+    padding: 30px;
+    border: 2px solid white;
+}
+
+.entity-panel {
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-direction: column;
+
+    min-width: 250px;
+    gap: 15px;
+    padding: 20px;
+    border: 2px solid white;
+}

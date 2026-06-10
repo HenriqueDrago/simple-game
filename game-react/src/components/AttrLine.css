@@ -1,0 +1,31 @@
+.status-line-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    min-height: 28px;
+}
+
+.point-assign-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    min-width: 80px; 
+}
+
+.point-assign-container > button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+.non-changeable-status {
+    width: 100%;
+    text-align: center;
+}

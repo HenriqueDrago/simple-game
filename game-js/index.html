@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Simple Game</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="container" id="main-container">
+            <div class="header" id="header-container">
+                <h1> Simple Game </h1>
+                <h2 id="win-text"></h2>
+                <div id="control-buttons-container">
+                    <button id="start-button">Start</button>
+                    <button id="reset-button">Restart</button>
+                </div>
+            </div>
+            <div class="players-container">
+                <div class="player-container" id="player1">
+                    <div class="hp-bar-container">
+                        <p id="player1-hp"></p>
+                    </div>
+                    <div class="status-container" id="player1-str-container">
+                        <p>Pontos STR: </p>
+                        <button id="player1-increase-str">+</button>
+                        <p id="player1-str-value"></p>
+                        <button disabled id="player1-decrease-str">-</button>
+                    </div>
+                    <div class="status-container" id="player1-spd-container">
+                        <p>Pontos SPD: </p>
+                        <button id="player1-increase-spd">+</button>
+                        <p id="player1-spd-value"></p>
+                        <button disabled id="player1-decrease-spd">-</button>
+                    </div>
+                    <div class="status-container" id="player1-def-container">
+                        <p>Pontos DEF: </p>
+                        <button id="player1-increase-def">+</button>
+                        <p id="player1-def-value"></p>
+                        <button disabled id="player1-decrease-def">-</button>
+                    </div>
+                    <div class="status-container" id="player1-hp-container">
+                        <p>Pontos HP: </p>
+                        <button id="player1-increase-hp">+</button>
+                        <p id="player1-hp-value"></p>
+                        <button disabled id="player1-decrease-hp">-</button>
+                    </div>
+                </div>
+
+                <div class="player-container" id="player2">
+                    <div class="hp-bar-container">
+                        <p id="player2-hp"></p>
+                    </div>
+                    <div class="status-container" id="player2-str-container">
+                        <p>Pontos STR: </p>
+                        <p id="player2-str-value"></p>
+                    </div>
+                    <div class="status-container" id="player2-spd-container">
+                        <p>Pontos SPD: </p>
+                        <p id="player2-spd-value"></p>
+                    </div>
+                    <div class="status-container" id="player2-def-container">
+                        <p>Pontos DEF: </p>
+                        <p id="player2-def-value"></p>
+                    </div>
+                    <div class="status-container" id="player2-hp-container">
+                        <p>Pontos HP: </p>
+                        <p id="player2-hp-value"></p>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="hidden" id="actions-container">
+                <button id="attack-button">Attack</button>
+                <button id="enemy-turn-button">Enemy Turn</button>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+</html>
