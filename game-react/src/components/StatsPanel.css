@@ -1,15 +1,4 @@
-.game-panel-container {
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    flex-direction: row;
-
-    gap: 30px;
-    padding: 30px;
-    border: 2px solid white;
-}
-
-.entity-panel {
+.stats-panel-container {
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
@@ -19,4 +8,36 @@
     gap: 15px;
     padding: 20px;
     border: 2px solid white;
+
+    transition: all 0.2s ease;
+}
+
+.stats-panel-container.state-guarding {
+    box-shadow: 0 0 12px 4px gray;
+    border-color: gray;
+}
+
+.stats-panel-container.state-sacrificial {
+    box-shadow: 0 0 12px 4px red;
+    border-color: red;
+}
+
+.stats-panel-container.state-radiant {
+    box-shadow: 0 0 12px 4px yellow;
+    border-color: yellow;
+}
+
+.stats-panel-container.state-umbral {
+    box-shadow: 0 0 12px 4px purple;
+    border-color: purple;
+}
+
+.stats-panel-container.state-dark-embrace {
+    box-shadow: 0 0 12px 4px rgb(30, 30, 30);
+    border-color: rgb(40, 40, 40);
+}
+
+.stats-panel-container.state-dimming {
+    box-shadow: 0 0 12px 4px rgb(40, 0, 40);
+    border-color: rgb(50, 10, 50);
 }

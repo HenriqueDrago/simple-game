@@ -17,7 +17,7 @@ export const ACTION_DESCRIPTIONS = {
     guard: (
         <div>
             <strong>GUARD:</strong> Restores MANA equal to a percentage of MAX
-            MANA and enters GUARDING STATE until the next turn.
+            MANA and enters GUARDING until the next turn.
         </div>
     ),
 
@@ -34,7 +34,7 @@ export const ACTION_DESCRIPTIONS = {
         <div>
             <strong>SELF-SACRIFICE:</strong> Consumes a percentage of current
             HP. Gains BLOOD SACRIFICE and MAX MANA equal to the HP lost, then
-            enters SACRIFICIAL STATE until the next turn. While BLOOD SACRIFICE
+            enters SACRIFICIAL state until the next turn. While BLOOD SACRIFICE
             is present, suffers from MANA BLEED.
         </div>
     ),
@@ -60,7 +60,7 @@ export const ACTION_DESCRIPTIONS = {
     aegis: (
         <div>
             <strong>AEGIS:</strong> Gains RADIANCE based on the caster's DEF.
-            Gains HOLY PROTECTION until the next turn.
+            Enters RADIANT state until the next turn.
         </div>
     ),
 
@@ -109,8 +109,8 @@ export const ACTION_DESCRIPTIONS = {
 export const MECHANIC_DESCRIPTIONS = {
     guardingState: (
         <div>
-            <strong>[GUARDING STATE]:</strong> Raises DEF EFFECTIVENESS and
-            grants additional DR.
+            <strong>[GUARDING]:</strong> Raises DEF EFFECTIVENESS and grants
+            additional DR.
         </div>
     ),
 
@@ -132,8 +132,8 @@ export const MECHANIC_DESCRIPTIONS = {
 
     sacrificialState: (
         <div>
-            <strong>[SACRIFICIAL STATE]:</strong> Increases DR against all
-            damage sources.
+            <strong>[SACRIFICIAL]:</strong> Increases DR against all damage
+            sources.
         </div>
     ),
 
@@ -206,7 +206,7 @@ export const MECHANIC_DESCRIPTIONS = {
     darkEmbrace: (
         <div>
             <strong>[DARK EMBRACE]:</strong> Takes 50% less damage from all
-            sources. SHADOWFLAME does not burn RESOURCES while active.
+            sources. While active, SHADOWFLAME on self does not burn RESOURCES.
         </div>
     ),
 
@@ -221,8 +221,8 @@ export const MECHANIC_DESCRIPTIONS = {
 
     dimmingDarkness: (
         <div>
-            <strong>[DIMMING DARKNESS]:</strong> Disables POISON, SHADOWFLAME,
-            MANA OVERFLOW, and MANA BLEED effects on self.
+            <strong>[DIMMING DARKNESS]:</strong> Does not activate POISON and
+            MANA OVERFLOW effects on self.
         </div>
     ),
 
@@ -232,9 +232,9 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    holyProtection: (
+    radiant: (
         <div>
-            <strong>[HOLY PROTECTION]:</strong> Raises DEF EFFECTIVENESS.
+            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS.
         </div>
     ),
 

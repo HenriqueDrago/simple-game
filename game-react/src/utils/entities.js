@@ -1,41 +1,5 @@
 import { constants } from "./constants.js";
-import { entityKeys } from "./enums.js";
-
-export function generateEntitiesForMode(
-    mode,
-    playerController,
-    enemyController,
-) {
-    let newPlayer = {
-        ...createBaseEntity(),
-        controller: playerController,
-    };
-    let newEnemy = {
-        ...createBaseEntity(),
-        controller: enemyController,
-    };
-
-    switch (mode) {
-        case "Random":
-            newEnemy = distribute_points(newEnemy);
-            newPlayer = distribute_points(newPlayer);
-            break;
-        case "Randomize Enemy":
-            newEnemy = distribute_points(newEnemy);
-            break;
-        case "Randomize Player":
-            newPlayer = distribute_points(newPlayer);
-            break;
-        case "Custom":
-        default:
-            break;
-    }
-
-    return {
-        [entityKeys.PLAYER_ONE]: newPlayer,
-        [entityKeys.PLAYER_TWO]: newEnemy,
-    };
-}
+import { sdmKeys } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
     let draftEntity = {
@@ -115,52 +79,74 @@ export function restoreResources(entity, amount) {
     return entity;
 }
 
-export function applyStats(attributes) {
-    let newAtt = {
-        ...attributes,
-    };
-
-    for (let att of constants.ATTRIBUTE_NAMES) {
-        newAtt[att] = {
-            ...newAtt[att],
-            value:
-                constants.BASE_STATS[att] +
-                newAtt[att].points * constants.STAT_MULTIPLIERS[att],
-        };
-    }
-
-    return newAtt;
-}
-
-export function distribute_points(entity) {
-    let clonedAttributes = {};
-
-    for (let att of constants.ATTRIBUTE_NAMES) {
-        clonedAttributes[att] = { ...entity.attributes[att] };
-    }
-
+export function distributePoints(entity, mode, bestStats = null) {
     let newEntity = {
         ...entity,
-        attributes: clonedAttributes,
+        attributes: {},
     };
 
-    for (let i = 0; i < constants.INITIAL_POINTS_AVAILABLE; i++) {
-        let random_stat =
-            constants.ATTRIBUTE_NAMES[
-                Math.floor(Math.random() * constants.ATTRIBUTE_NAMES.length)
-            ];
-        newEntity.attributes[random_stat].points += 1;
-        newEntity.unspentPoints -= 1;
+    for (let attr of constants.ATTRIBUTE_NAMES) {
+        newEntity.attributes[attr] = { ...entity.attributes[attr] };
     }
 
-    for (let attr of constants.ATTRIBUTE_NAMES) {
-        newEntity.attributes[attr] = {
-            ...newEntity.attributes[attr],
-            valuePreview:
-                constants.BASE_STATS[attr] +
-                newEntity.attributes[attr].points *
-                    constants.STAT_MULTIPLIERS[attr],
-        };
+    switch (mode) {
+        case sdmKeys.CUSTOM:
+            // Do nothing
+            break;
+
+        case sdmKeys.RANDOM:
+            // Reset points before rolling
+            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr].points = 0;
+            }
+
+            // Roll random stats
+            for (let i = 0; i < constants.INITIAL_POINTS_AVAILABLE; i++) {
+                let random_stat =
+                    constants.ATTRIBUTE_NAMES[
+                        Math.floor(
+                            Math.random() * constants.ATTRIBUTE_NAMES.length,
+                        )
+                    ];
+                newEntity.attributes[random_stat].points += 1;
+                newEntity.unspentPoints -= 1;
+            }
+
+            // Apply values
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr].value =
+                    constants.BASE_STATS[attr] +
+                    newEntity.attributes[attr].points *
+                        constants.STAT_MULTIPLIERS[attr];
+            }
+            break;
+
+        case sdmKeys.BEST:
+            // Verify if a "Best" distribution has been passed
+            if (!bestStats) {
+                break;
+            }
+
+            // Reset points
+            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+
+            // Distribute points
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr] = {
+                    ...newEntity.attributes[attr],
+                    points: bestStats[attr],
+                    value:
+                        constants.BASE_STATS[attr] +
+                        bestStats[attr] * constants.STAT_MULTIPLIERS[attr],
+                };
+
+                newEntity.unspentPoints -= bestStats[attr];
+            }
+            break;
+
+        default:
+            break;
     }
 
     return newEntity;
@@ -172,7 +158,6 @@ export function createBaseEntity() {
     for (let attr of constants.ATTRIBUTE_NAMES) {
         baseAttributes[attr] = {
             value: constants.BASE_STATS[attr],
-            valuePreview: constants.BASE_STATS[attr],
             points: 0,
         };
     }
@@ -183,8 +168,6 @@ export function createBaseEntity() {
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
         manaOverflow: 0,
-        dmgReduction: 0,
-        defEffect: 1.0,
         bloodSacrifice: 0,
         radiance: 0,
         shackledMana: 0,
@@ -194,10 +177,44 @@ export function createBaseEntity() {
         lingeringEmber: 0,
         unrelentingShadows: 0,
         overheat: 0,
-        darkEmbrace: false,
-        dimmingDarkness: false,
-        umbralCore: false,
+        states: {
+            guarding: false,
+            sacrificial: false,
+            radiant: false,
+            thornedShackles: false,
+            darkEmbrace: false,
+            dimmingDarkness: false,
+            umbralCore: false,
+        },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
     };
+}
+
+export function processEntityDR(entity) {
+    let drMult = 1.0;
+    console.log(entity);
+    if (entity.states.guarding) {
+        drMult *= constants.ALTERNATE_DR;
+    }
+    if (entity.states.sacrificial) {
+        drMult *= constants.ALTERNATE_DR;
+    }
+    if (entity.states.darkEmbrace) {
+        drMult *= constants.ALTERNATE_DR;
+    }
+
+    return drMult;
+}
+
+export function processEntityDefEffect(entity) {
+    let defEffect = 1.0;
+    if (entity.states.guarding) {
+        defEffect *= constants.ALTERNATE_DEF_EFFECTIVENESS;
+    }
+    if (entity.states.radiant) {
+        defEffect *= 0;
+    }
+
+    return defEffect;
 }

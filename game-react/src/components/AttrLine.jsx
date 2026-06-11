@@ -1,5 +1,7 @@
 import "./AttrLine.css";
 
+import { turnStatus } from "../utils/enums";
+
 function AttrLine({
     battleState,
     handleStatusChange,
@@ -8,7 +10,7 @@ function AttrLine({
     entity,
     entityKey,
 }) {
-    const showControls = modifiable && battleState === "setup";
+    const showControls = modifiable && battleState === turnStatus.SETUP;
 
     return (
         <div className="status-line-container">
@@ -16,13 +18,10 @@ function AttrLine({
                 <p className="changeable-status">
                     {attr.toUpperCase() +
                         ": " +
-                        entity.attributes[attr].value +
-                        " --> (" +
-                        entity.attributes[attr].valuePreview +
-                        ")"}
+                        entity.attributes[attr].value}
                 </p>
             ) : (
-                <p className="non-changeable-status">{attr.toUpperCase() + ": " + entity.attributes[attr].valuePreview}</p>
+                <p className="non-changeable-status">{attr.toUpperCase() + ": " + entity.attributes[attr].value}</p>
             )}
 
             {showControls && (

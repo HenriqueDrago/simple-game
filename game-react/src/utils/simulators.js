@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { consumeResources } from "./entities.js";
+import { consumeResources, processEntityDR, processEntityDefEffect } from "./entities.js";
 
 export const simulators = {
     simulateAegis,
@@ -24,24 +24,33 @@ function simulateGuard({ agent, agentKey, nonAgent, nonAgentKey }) {
         Math.floor(agent.currMana + agent.maxMana * constants.GUARD_MANA_REGEN),
     );
 
-    const newOverheat = Math.max(
-        0,
-        agent.overheat - constants.OVERHEAT_ACTION_COOLING,
-    );
-
     return {
         [nonAgentKey]: { ...nonAgent },
-        [agentKey]: { ...agent, currMana: newMana, overheat: newOverheat },
+        [agentKey]: {
+            ...agent,
+            currMana: newMana,
+            states: {
+                ...agent.states,
+                guarding: true,
+            },
+        },
     };
 }
 
 function simulateAegis({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newRadiance =
-        agent.radiance + Math.ceil(agent.attributes.def.value / 2);
+        agent.radiance + Math.ceil(agent.attributes.def.value * constants.RADIANCE_GEN_MULT);
 
     return {
         [nonAgentKey]: { ...nonAgent },
-        [agentKey]: { ...agent, radiance: newRadiance },
+        [agentKey]: {
+            ...agent,
+            radiance: newRadiance,
+            states: {
+                ...agent.states,
+                radiant: true,
+            },
+        },
     };
 }
 
@@ -68,6 +77,10 @@ function simulateSacrifice({ agent, agentKey, nonAgent, nonAgentKey }) {
             currHp: newHp,
             bloodSacrifice: newBloodSacrifice,
             radiance: newRadiance,
+            states: {
+                ...agent.states,
+                sacrificial: true,
+            },
         },
     };
 }
@@ -76,21 +89,22 @@ function simulateAttack({
     agent,
     agentKey,
     nonAgent,
-    nonAgentKey,
-    isArrayActive,
+    nonAgentKey
 }) {
+    console.log("Attack entities")
+    console.log(agent)
+    console.log(nonAgent)
+
     const base_damage =
         agent.attributes.str.value +
         agent.bloodSacrifice * constants.BLOOD_SACRIFICE_MULT;
-    const dmgAfterDef =
-        Math.max(
-            0,
-            base_damage -
-                Math.floor(nonAgent.attributes.def.value * nonAgent.defEffect),
-        ) + agent.radiance;
+    
+    const effectiveDef = Math.floor(nonAgent.attributes.def.value * processEntityDefEffect(nonAgent));
+    const drMult = processEntityDR(nonAgent);
+
     const final_damage = Math.max(
         1,
-        Math.ceil(dmgAfterDef * (1 - nonAgent.dmgReduction)),
+        Math.ceil((base_damage - effectiveDef) * drMult)
     );
 
     const radianceConsumed = Math.min(final_damage, nonAgent.radiance);
@@ -103,10 +117,12 @@ function simulateAttack({
         nonAgent.currHp - (final_damage - radianceConsumed - emberConsumed),
     );
 
+    console.log(`effdef: ${effectiveDef}, drMult: ${drMult}, base_damage: ${base_damage}, final_damage: ${final_damage}`)
+
     const newRadiance = nonAgent.radiance - radianceConsumed;
     const newEmber = nonAgent.lingeringEmber - emberConsumed;
 
-    const thornsDmg = isArrayActive ? agent.attributes.str.value : 0;
+    const thornsDmg = nonAgent.states.thornedShackles ? agent.attributes.str.value : 0;
     const attackerNewHP = Math.max(0, agent.currHp - thornsDmg);
 
     return {
@@ -124,14 +140,13 @@ function simulateSpecialAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
     const base_damage = agent.attributes.str.value + agent.radiance;
     const manaDiff = Math.max(0, agent.currMana - nonAgent.currMana);
 
+    const drMult = processEntityDR(nonAgent);
+
     const canUseSpAtk =
         agent.currMana + agent.manaOverflow >= constants.SP_ATTACK_COST;
 
     const final_damage = canUseSpAtk
-        ? 1 +
-          Math.floor(
-              Math.max(0, base_damage + manaDiff) * (1 - nonAgent.dmgReduction),
-          )
+        ? Math.max(1, Math.floor(base_damage + manaDiff) * drMult)
         : 0;
 
     const radianceConsumed = Math.min(final_damage, nonAgent.radiance);
@@ -220,8 +235,20 @@ function simulateCurse({ agent, agentKey, nonAgent, nonAgentKey }) {
             ...nonAgent,
             poison: nonAgentNewPoison,
             shackledMana: 0,
+            states: {
+                ...nonAgent.states,
+                thornedShackles: false,
+            },
         },
-        [agentKey]: { ...agent, poison: agentNewPoison, shackledMana: 0 },
+        [agentKey]: {
+            ...agent,
+            poison: agentNewPoison,
+            shackledMana: 0,
+            states: {
+                ...agent.states,
+                thornedShackles: false,
+            },
+        },
     };
 }
 
@@ -237,12 +264,20 @@ function simulateArray({ agent, agentKey, nonAgent, nonAgentKey }) {
             currMana: 0,
             manaOverflow: 0,
             shackledMana: nonAgentShackledMana,
+            states: {
+                ...nonAgent.states,
+                thornedShackles: true,
+            },
         },
         [agentKey]: {
             ...agent,
             currMana: 0,
             manaOverflow: 0,
             shackledMana: agentShackledMana,
+            states: {
+                ...agent.states,
+                thornedShackles: true,
+            },
         },
     };
 }
@@ -253,7 +288,13 @@ function simulateShadowPact({ agent, agentKey, nonAgent, nonAgentKey }) {
 
     return {
         [nonAgentKey]: { ...nonAgent },
-        [agentKey]: { ...draftAgent, umbralCore: true },
+        [agentKey]: {
+            ...draftAgent,
+            states: {
+                ...agent.states,
+                umbralCore: true,
+            },
+        },
     };
 }
 
@@ -263,8 +304,11 @@ function simulateShadowMantle({ agent, agentKey, nonAgent, nonAgentKey }) {
         [nonAgentKey]: { ...nonAgent },
         [agentKey]: {
             ...agent,
-            darkEmbrace: true,
             unrelentingShadows: unrelentingShadows,
+            states: {
+                ...agent.states,
+                darkEmbrace: true,
+            },
         },
     };
 }
@@ -285,12 +329,15 @@ function simulateDarkPromise({ agent, agentKey, nonAgent, nonAgentKey }) {
         [nonAgentKey]: { ...nonAgent, unrelentingShadows: toBeRestored },
         [agentKey]: {
             ...agent,
-            umbralCore: false,
-            dimmingDarkness: true,
             shadowflame: 0,
             lingeringEmber: 0,
             cinders: 0,
             unrelentingShadows: toBeRestored,
+            states: {
+                ...agent.states,
+                umbralCore: false,
+                dimmingDarkness: true,
+            },
         },
     };
 }

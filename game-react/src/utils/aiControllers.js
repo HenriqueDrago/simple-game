@@ -186,10 +186,10 @@ export function hexerAI(context) {
             return;
         }
 
-        if (agent.overheat < constants.MAX_OVERHEAT - 1 && agent.currMana > 0) {
-            handleAction("Laser", agentKey, nonAgentKey);
-            return;
-        }
+        // if (agent.overheat < constants.MAX_OVERHEAT - 1 && agent.currMana > 0) {
+        //     handleAction("Laser", agentKey, nonAgentKey);
+        //     return;
+        // }
 
         // Exception 3: Opponent has considerably less mana, nuke them to force mana onto their sheet
         const manaDiff = agent.currMana - nonAgent.currMana;

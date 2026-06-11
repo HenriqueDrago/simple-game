@@ -112,10 +112,10 @@ function ActionPanel({
     const showUmbralButtons =
         (playerController === aiKeys.HUMAN &&
             battleState === turnStatus.PLAYER_ONE_TURN &&
-            game.entities[entityKeys.PLAYER_ONE].umbralCore) ||
+            game.entities[entityKeys.PLAYER_ONE].states.umbralCore) ||
         (enemyController === aiKeys.HUMAN &&
             battleState === turnStatus.PLAYER_TWO_TURN &&
-            game.entities[entityKeys.PLAYER_TWO].umbralCore);
+            game.entities[entityKeys.PLAYER_TWO].states.umbralCore);
 
     const showEnemyWait =
         battleState === turnStatus.PLAYER_TWO_TURN &&

@@ -16,12 +16,18 @@ export const entityKeys = Object.freeze({
 })
 
 export const aiKeys = Object.freeze({
-    HUMAN: 0,
-    SIMPLE: 1,
-    BLOODKNIGHT: 2,
-    WARLOCK: 3,
-    PALADIN: 4,
-    HEXER: 5,
-    SHADOW_SORCERER: 6,
-    ADAPTATIVE: 7
+    HUMAN: "human",
+    SIMPLE: "simple",
+    BLOODKNIGHT: "bloodknight",
+    WARLOCK: "warlock",
+    PALADIN: "paladin",
+    HEXER: "hexer",
+    SHADOW_SORCERER: "shadowSorcerer",
+    ADAPTATIVE: "adaptative"
+})
+
+export const sdmKeys = Object.freeze({
+    RANDOM: "random",
+    CUSTOM: "custom",
+    BEST: "best"
 })

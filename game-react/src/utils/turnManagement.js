@@ -105,11 +105,7 @@ export function processUpkeep(prev) {
     }
 
     // Shadowflame
-    if (
-        draftTarget.shadowflame > 0 &&
-        !draftTarget.darkEmbrace &&
-        !draftTarget.dimmingDarkness
-    ) {
+    if (draftTarget.shadowflame > 0 && !draftTarget.states.darkEmbrace) {
         draftTarget = consumeResources(
             draftTarget,
             draftTarget.shadowflame,
@@ -134,7 +130,7 @@ export function processUpkeep(prev) {
     }
 
     // Poison
-    if (draftTarget.poison > 0 && !draftTarget.dimmingDarkness) {
+    if (draftTarget.poison > 0 && !draftTarget.states.dimmingDarkness) {
         const newHp = Math.max(0, draftTarget.currHp - draftTarget.poison);
         draftTarget = {
             ...draftTarget,
@@ -143,7 +139,7 @@ export function processUpkeep(prev) {
     }
 
     // Blood Sacrifice
-    if (draftTarget.bloodSacrifice > 0 && !draftTarget.dimmingDarkness) {
+    if (draftTarget.bloodSacrifice > 0) {
         const manaBleed = Math.min(
             draftTarget.currMana,
             Math.ceil(draftTarget.bloodSacrifice * constants.MANA_BLEED_MULT),
@@ -170,7 +166,9 @@ export function processUpkeep(prev) {
         (draftTarget.currHp <= 0 && targetKey === entityKeys.PLAYER_ONE);
 
     let nextStatus =
-        targetKey === entityKeys.PLAYER_ONE ? turnStatus.PLAYER_ONE_TURN : turnStatus.PLAYER_TWO_TURN;
+        targetKey === entityKeys.PLAYER_ONE
+            ? turnStatus.PLAYER_ONE_TURN
+            : turnStatus.PLAYER_TWO_TURN;
 
     if (playerDead) {
         if (enemyDead) {
@@ -182,6 +180,15 @@ export function processUpkeep(prev) {
         nextStatus = turnStatus.VICTORY;
     }
 
+    const draftTargetStates = {
+        ...draftTarget.states,
+        guarding: false,
+        sacrificial: false,
+        radiant: false,
+        darkEmbrace: false,
+        dimmingDarkness: false,
+    };
+
     return {
         ...prev,
         status: nextStatus,
@@ -189,11 +196,8 @@ export function processUpkeep(prev) {
             ...prev.entities,
             [targetKey]: {
                 ...draftTarget,
-                dmgReduction: 0,
-                defEffect: 1.0,
                 unrelentingShadows: 0,
-                dimmingDarkness: false,
-                darkEmbrace: false,
+                states: draftTargetStates,
             },
             [nonTargetKey]: {
                 ...draftNonTarget,
@@ -209,34 +213,23 @@ export function commitTurn(
     currActorKey,
     action,
 ) {
+    console.log(draftEntities)
     // End of turn math
     const currActor = draftEntities[currActorKey];
     // const nextActor = draftEntities[nextActorKey];
 
-    // DR
-    const dmgReduction =
-        action === "Sacrifice" ||
-        action === "Guard" ||
-        action === "ShadowMantle"
-            ? constants.ALTERNATE_DR
-            : 0;
-    // DEF effect
-    const defEffect =
-        action == "Guard" || action == "Aegis"
-            ? constants.ALTERNATE_DEF_EFFECTIVENESS
-            : 1.0;
     // Mana Shackle
-    const hasShackledMana = currActor.shackledMana > 0;
-
-    const shackledMana = hasShackledMana
+    const shackledMana = currActor.states.thornedShackles
         ? currActor.shackledMana + currActor.currMana + currActor.manaOverflow
         : 0;
 
-    const currMana = hasShackledMana ? 0 : currActor.currMana;
-    let currManaOverflow = hasShackledMana ? 0 : currActor.manaOverflow;
+    const currMana = currActor.states.thornedShackles ? 0 : currActor.currMana;
+    let currManaOverflow = currActor.states.thornedShackles
+        ? 0
+        : currActor.manaOverflow;
 
     // Mana Overflow
-    const newHp = currActor.dimmingDarkness
+    const newHp = currActor.states.dimmingDarkness
         ? currActor.currHp
         : Math.max(0, currActor.currHp - currManaOverflow);
     currManaOverflow = currActor.dimmingDarkness ? currActor.manaOverflow : 0;
@@ -248,6 +241,9 @@ export function commitTurn(
             : action === "Curse"
               ? 0
               : Math.max(0, prev.remainingArray - 1);
+
+    // Thorned Shackles
+    const thornedShackles = currArray > 0;
 
     // Check for deaths after end of turn effects have been applied
     const enemyDead =
@@ -282,14 +278,20 @@ export function commitTurn(
             [currActorKey]: {
                 ...draftEntities[currActorKey],
                 currHp: newHp,
-                dmgReduction: dmgReduction,
-                defEffect: defEffect,
                 shackledMana: shackledMana,
                 currMana: currMana,
                 manaOverflow: currManaOverflow,
+                states: {
+                    ...draftEntities[currActorKey].states,
+                    thornedShackles: thornedShackles,
+                },
             },
             [nextActorKey]: {
                 ...draftEntities[nextActorKey],
+                states: {
+                    ...draftEntities[nextActorKey].states,
+                    thornedShackles: thornedShackles,
+                },
             },
         },
     };

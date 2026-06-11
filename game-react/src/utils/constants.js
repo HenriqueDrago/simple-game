@@ -39,6 +39,8 @@ const MANA_SHACKLE_TURN_GAIN = 3;
 const MAX_OVERHEAT = 5;
 const OVERHEAT_ACTION_COOLING = 3;
 
+const RADIANCE_GEN_MULT = 1.0;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -77,16 +79,17 @@ export const constants = {
     ALTERNATE_DEF_EFFECTIVENESS,
     GUARD_MANA_REGEN,
     resources,
+    RADIANCE_GEN_MULT,
 };
 
 export const presetAi = {
     [aiKeys.HUMAN]: {
-        name: "Human",
+        name: "Human (No AI)",
         best: {
             str: 5,
             def: 5,
         },
-        caller: simpleAI, 
+        caller: simpleAI,
     },
     [aiKeys.SIMPLE]: {
         name: "Simple",

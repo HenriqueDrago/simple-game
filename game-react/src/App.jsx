@@ -1,20 +1,14 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
-import ControlPanel from "./components/ControlPanel.jsx";
-import StatsPanel from "./components/StatsPanel.jsx";
+import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
 import { simpleAI } from "./utils/aiControllers.js";
 import { constants, presetAi } from "./utils/constants.js";
 import { processUpkeep, commitTurn } from "./utils/turnManagement.js";
-import {
-    applyStats,
-    distribute_points,
-    createBaseEntity,
-    generateEntitiesForMode,
-} from "./utils/entities.js";
+import { distributePoints, createBaseEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
-import { entityKeys, turnStatus, aiKeys } from "./utils/enums.js";
+import { entityKeys, turnStatus, aiKeys, sdmKeys } from "./utils/enums.js";
 
 import "./App.css";
 
@@ -24,15 +18,16 @@ function App() {
         status: turnStatus.SETUP,
         nextStatus: null,
         shacklingCurse: 0,
-        statDistributionMode: "Random",
         entities: {
             [entityKeys.PLAYER_ONE]: {
-                ...distribute_points(createBaseEntity()),
+                ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
                 controller: aiKeys.HUMAN,
+                statDistributionMode: sdmKeys.RANDOM,
             },
             [entityKeys.PLAYER_TWO]: {
-                ...distribute_points(createBaseEntity()),
+                ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
                 controller: aiKeys.SIMPLE,
+                statDistributionMode: sdmKeys.RANDOM,
             },
         },
     });
@@ -44,14 +39,11 @@ function App() {
             const agent = game.entities[agentKey];
             const nonAgent = game.entities[nonAgentKey];
 
-            const isArrayActive = game.remainingArray > 0;
-
             const context = {
                 agent,
                 agentKey,
                 nonAgent,
                 nonAgentKey,
-                isArrayActive,
             };
 
             const sim = simulators[`simulate${action}`];
@@ -63,22 +55,58 @@ function App() {
                 draftEntities,
                 nonAgentKey,
                 agentKey,
-                "atk",
+                action,
             );
         });
     }
 
-    function handleDistributionModeChange(newMode) {
+    function handleDistributionModeChange(newMode, entityKey) {
         setGame((prev) => ({
             ...prev,
-            statDistributionMode: newMode,
-            entities: generateEntitiesForMode(
-                newMode,
-                prev.entities[entityKeys.PLAYER_ONE].controller,
-                prev.entities[entityKeys.PLAYER_TWO].controller,
-            ),
+            entities: {
+                ...prev.entities,
+                [entityKey]: {
+                    ...distributePoints(
+                        { ...prev.entities[entityKey] },
+                        newMode,
+                        presetAi[prev.entities[entityKey].controller].best,
+                    ),
+                    controller: prev.entities[entityKey].controller,
+                    statDistributionMode: newMode,
+                },
+            },
         }));
     }
+
+    const handleAiChange = (controllerKey, entityKey) => {
+        setGame((prev) => {
+            const currentMode = prev.entities[entityKey].statDistributionMode;
+
+            let updatedEntity = {
+                ...prev.entities[entityKey],
+                controller: controllerKey,
+            };
+
+            if (currentMode === sdmKeys.BEST) {
+                updatedEntity = {
+                    ...updatedEntity,
+                    ...distributePoints(
+                        updatedEntity,
+                        currentMode,
+                        presetAi[controllerKey].best,
+                    ),
+                };
+            }
+
+            return {
+                ...prev,
+                entities: {
+                    ...prev.entities,
+                    [entityKey]: updatedEntity,
+                },
+            };
+        });
+    };
 
     function handleReset() {
         setGame((prev) => ({
@@ -86,52 +114,60 @@ function App() {
             status: turnStatus.SETUP,
             remainingArray: 0,
             nextStatus: null,
-            entities: generateEntitiesForMode(
-                prev.statDistributionMode,
-                prev.entities[entityKeys.PLAYER_ONE].controller,
-                prev.entities[entityKeys.PLAYER_TWO].controller,
-            ),
-        }));
-    }
-
-    function handleStart() {
-        const playerStats = applyStats(
-            game.entities[entityKeys.PLAYER_ONE].attributes,
-        );
-        const enemyStats = applyStats(
-            game.entities[entityKeys.PLAYER_TWO].attributes,
-        );
-
-        setGame((prev) => ({
-            ...prev,
-            status: turnStatus.PLAYER_ONE_TURN,
-            remainingArray: 0,
             entities: {
                 [entityKeys.PLAYER_ONE]: {
-                    ...prev.entities[entityKeys.PLAYER_ONE],
-                    attributes: playerStats,
+                    ...distributePoints(
+                        createBaseEntity(),
+                        prev.entities[entityKeys.PLAYER_ONE]
+                            .statDistributionMode,
+                        presetAi[
+                            prev.entities[entityKeys.PLAYER_ONE].controller
+                        ].best,
+                    ),
+                    controller: prev.entities[entityKeys.PLAYER_ONE].controller,
+                    statDistributionMode:
+                        prev.entities[entityKeys.PLAYER_ONE]
+                            .statDistributionMode,
                 },
                 [entityKeys.PLAYER_TWO]: {
-                    ...prev.entities[entityKeys.PLAYER_TWO],
-                    attributes: enemyStats,
+                    ...distributePoints(
+                        createBaseEntity(),
+                        prev.entities[entityKeys.PLAYER_TWO]
+                            .statDistributionMode,
+                        presetAi[
+                            prev.entities[entityKeys.PLAYER_TWO].controller
+                        ].best,
+                    ),
+                    controller: prev.entities[entityKeys.PLAYER_TWO].controller,
+                    statDistributionMode:
+                        prev.entities[entityKeys.PLAYER_TWO]
+                            .statDistributionMode,
                 },
             },
         }));
     }
 
-    // Auxiliary Functions
-    function updateStatsPoints(targetKey, StatusKey, value) {
-        setGame((prev) => {
-            const currSpent = prev.entities[targetKey].unspentPoints;
-            const currAttPoints =
-                prev.entities[targetKey].attributes[StatusKey].points;
+    function handleStart() {
+        setGame((prev) => ({
+            ...prev,
+            status: turnStatus.PLAYER_ONE_TURN,
+            remainingArray: 0,
+        }));
+    }
 
-            const trueSpentPoints = Math.min(
-                currSpent,
+    // Auxiliary Functions
+    function updateStatsPoints(targetKey, statusKey, value) {
+        setGame((prev) => {
+            const currUnspent = prev.entities[targetKey].unspentPoints;
+            const currAttPoints =
+                prev.entities[targetKey].attributes[statusKey].points;
+
+            const spentPoints = Math.min(
+                currUnspent,
                 Math.max(-currAttPoints, value),
             );
-            const newPoints = currSpent - trueSpentPoints;
-            const newAttributePoints = currAttPoints + trueSpentPoints;
+            const newPoints = currUnspent - spentPoints;
+            const newAttributePoints = currAttPoints + spentPoints;
 
             return {
                 ...prev,
@@ -142,14 +178,14 @@ function App() {
                         unspentPoints: newPoints,
                         attributes: {
                             ...prev.entities[targetKey].attributes,
-                            [StatusKey]: {
+                            [statusKey]: {
                                 ...prev.entities[targetKey].attributes[
-                                    StatusKey
+                                    statusKey
                                 ],
-                                valuePreview:
-                                    constants.BASE_STATS[StatusKey] +
+                                value:
+                                    constants.BASE_STATS[statusKey] +
                                     newAttributePoints *
-                                        constants.STAT_MULTIPLIERS[StatusKey],
+                                        constants.STAT_MULTIPLIERS[statusKey],
                                 points: newAttributePoints,
                             },
                         },
@@ -234,9 +270,10 @@ function App() {
                 handleReset={handleReset}
             />
             <GamePanel
-                updateStatsPoints={updateStatsPoints}
                 game={game}
+                updateStatsPoints={updateStatsPoints}
                 handleDistributionModeChange={handleDistributionModeChange}
+                handleAiChange={handleAiChange}
             />
             <ActionPanel
                 handleAction={handleAction}

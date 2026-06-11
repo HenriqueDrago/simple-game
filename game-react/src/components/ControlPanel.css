@@ -2,7 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: row;
+    flex-direction: column;
     gap: 15px;
     width: 100%;
 }
@@ -10,21 +10,32 @@
 .ai-selector {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    gap: 15px;
     font-family: inherit;
 }
 
+.ai-selector label {
+    font-weight: bold;
+    text-align: left;
+    flex-shrink: 0; /* Prevents the text from squishing */
+}
+
 .ai-selector select {
-    padding: 6px 10px;
-    border: 1px solid white;
-    cursor: pointer;
+    flex-grow: 1; /* Makes the dropdowns stretch to match each other */
+    padding: 8px 10px;
+    border: 2px solid #ccc;
     background-color: white;
     color: black;
     font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
+    transition: border-color 0.2s ease;
 }
 
-.ai-selector label {
-    font-weight: bold;
+.ai-selector select:focus {
+    outline: none;
+    border-color: #666; 
 }

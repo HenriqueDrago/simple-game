@@ -4,7 +4,7 @@ import AttrLine from "./AttrLine.jsx";
 import StackCounter from "./StackCounter.jsx";
 
 import { constants } from "../utils/constants.js";
-import { entityKeys } from "../utils/enums.js";
+import { sdmKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 
@@ -30,86 +30,50 @@ const stackCounters = [
     ["Overheat", "overheat", "#ff8c00", "rgba(255, 140, 0, 0.15)"],
 ];
 
-function StatsPanel({ game, updateStatsPoints }) {
+function StatsPanel({ game, updateStatsPoints, entityKey }) {
     const battleState = game.status;
-    const distributionMode = game.statDistributionMode;
+    const distributionMode = game.entities[entityKey].statDistributionMode;
+
+    const states = game.entities[entityKey].states;
+
+    const activeStates = [];
+    if (states.guarding) activeStates.push("state-guarding");
+    if (states.sacrificial) activeStates.push("state-sacrificial");
+    if (states.thornedShackles) activeStates.push("state-thorned");
+    if (states.darkEmbrace) activeStates.push("state-dark-embrace");
+    if (states.radiant) activeStates.push("state-radiant");
+    if (states.dimmingDarkness) activeStates.push("state-dimming");
+    if (states.umbralCore) activeStates.push("state-umbral");
+
+    const statesClass = activeStates.join(" ");
 
     return (
-        <div className="game-panel-container">
-            <div className="entity-panel">
-                <HpBar
-                    entity={game.entities[entityKeys.PLAYER_ONE]}
-                    label="Player One"
-                />
-                <ManaBar
-                    entity={game.entities[entityKeys.PLAYER_ONE]}
-                    label="Player One"
-                />
+        <div className={`stats-panel-container ${statesClass}`}>
+            <HpBar entity={game.entities[entityKey]} label="Player One" />
+            <ManaBar entity={game.entities[entityKey]} label="Player One" />
 
-                {stackCounters.map(([label, field, color, backgroundColor]) => (
-                    <StackCounter
-                        key={field}
-                        label={label}
-                        value={game.entities[entityKeys.PLAYER_ONE][field]}
-                        color={color}
-                        backgroundColor={backgroundColor}
+            {stackCounters.map(([label, field, color, backgroundColor]) => (
+                <StackCounter
+                    key={field}
+                    label={label}
+                    value={game.entities[entityKey][field]}
+                    color={color}
+                    backgroundColor={backgroundColor}
+                />
+            ))}
+
+            <div className="attributes-wrapper">
+                {constants.ATTRIBUTE_NAMES.map((attr) => (
+                    <AttrLine
+                        key={attr}
+                        battleState={battleState}
+                        handleStatusChange={updateStatsPoints}
+                        entity={game.entities[entityKey]}
+                        entityKey={entityKey}
+                        attr={attr}
+                        modifiable={distributionMode === sdmKeys.CUSTOM}
                     />
                 ))}
-
-                <div className="attributes-wrapper">
-                    {constants.ATTRIBUTE_NAMES.map((attr) => (
-                        <AttrLine
-                            key={attr}
-                            battleState={battleState}
-                            handleStatusChange={updateStatsPoints}
-                            entity={game.entities[entityKeys.PLAYER_ONE]}
-                            entityKey={entityKeys.PLAYER_ONE}
-                            attr={attr}
-                            modifiable={
-                                distributionMode === "Custom" ||
-                                distributionMode === "Randomize Enemy"
-                            }
-                        />
-                    ))}
-                </div>
-            </div>
-
-            <div className="entity-panel">
-                <HpBar
-                    entity={game.entities[entityKeys.PLAYER_TWO]}
-                    label="Player Two"
-                />
-                <ManaBar
-                    entity={game.entities[entityKeys.PLAYER_TWO]}
-                    label="Player Two"
-                />
-
-                {stackCounters.map(([label, field, color, backgroundColor]) => (
-                    <StackCounter
-                        key={field}
-                        label={label}
-                        value={game.entities[entityKeys.PLAYER_TWO][field]}
-                        color={color}
-                        backgroundColor={backgroundColor}
-                    />
-                ))}
-
-                <div className="attributes-wrapper">
-                    {constants.ATTRIBUTE_NAMES.map((attr) => (
-                        <AttrLine
-                            key={attr}
-                            battleState={battleState}
-                            handleStatusChange={updateStatsPoints}
-                            entity={game.entities[entityKeys.PLAYER_TWO]}
-                            entityKey={entityKeys.PLAYER_TWO}
-                            attr={attr}
-                            modifiable={
-                                distributionMode === "Custom" ||
-                                distributionMode === "Randomize Player"
-                            }
-                        />
-                    ))}
-                </div>
             </div>
         </div>
     );
