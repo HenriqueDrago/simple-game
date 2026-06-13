@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { sdmKeys } from "./enums.js";
+import { sdmKeys, actionKeys, effectKeys } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
     let draftEntity = {
@@ -18,12 +18,12 @@ export function consumeResources(entity, amount, cause) {
         // Avoid shadowflame (and related actions) burning unintended resources
         if (
             !(
-                (cause === "shadowflame" ||
-                    cause === "shadowPact" ||
-                    cause === "blackMayhem") &&
-                (currResourceKey === "shadowflame" ||
-                    currResourceKey === "lingeringEmber" ||
-                    currResourceKey === "unrelentingShadows")
+                (cause === effectKeys.SHADOWFLAME ||
+                    cause === actionKeys.SHADOW_PACT ||
+                    cause === actionKeys.BLACK_MAYHEM) &&
+                (currResourceKey === effectKeys.SHADOWFLAME ||
+                    currResourceKey === effectKeys.LINGERING_EMBER ||
+                    currResourceKey === effectKeys.UNRELENTING_SHADOWS)
             )
         ) {
             const currentAmount = draftEntity.resources[currResourceKey];
@@ -200,6 +200,8 @@ export function createBaseEntity() {
         currHp: constants.BASE_STATS.hp,
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
+        maxOverheat: constants.MAX_OVERHEAT,
+        currOverheat: 0,
         resources: {
             manaOverflow: 0,
             bloodSacrifice: 0,
@@ -214,6 +216,8 @@ export function createBaseEntity() {
             permafrost: 0,
             overgrowth: 0,
             scoria: 0,
+            harmony: 0,
+            dissonance: 0,
         },
         states: {
             guarding: false,
@@ -223,6 +227,11 @@ export function createBaseEntity() {
             darkEmbrace: false,
             dimmingDarkness: false,
             umbralCore: false,
+            harmonious: false,
+            dissonant: false,
+            deployment: false,
+            weaponsDeployed: false,
+            thermalOverload: false,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,

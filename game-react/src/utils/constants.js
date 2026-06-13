@@ -8,7 +8,7 @@ import {
     shadowSorcererAI,
 } from "./aiControllers.js";
 
-import { aiKeys } from "./enums.js";
+import { aiKeys, actionKeys } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
 
@@ -36,8 +36,7 @@ const BLOOD_SACRIFICE_MULT = 1.0;
 const ARRAY_DURATION = 3;
 const MANA_SHACKLE_TURN_GAIN = 3;
 
-const MAX_OVERHEAT = 5;
-const OVERHEAT_ACTION_COOLING = 3;
+const MAX_OVERHEAT = 10;
 
 const RADIANCE_GEN_MULT = 1.0;
 
@@ -52,6 +51,10 @@ const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
 
 const NATURE_MANA_REGEN = 3;
 const NATURE_HP_REGEN = 2;
+
+const STARTING_SONORORITY = 0;
+const SONORITY_LOWER_LIMIT = -5;
+const SONORITY_HIGHER_LIMIT = 5;
 
 const DISTRIBUTION_MODES = [
     "Random",
@@ -73,7 +76,7 @@ const freeResources = [
     "radiance",
 ];
 
-const limitedResources = ["currMana", "currHp"];
+const limitedResources = ["currMana", "currHp", "currOverheat"];
 
 export const constants = {
     INITIAL_POINTS_AVAILABLE,
@@ -86,7 +89,6 @@ export const constants = {
     ARRAY_DURATION,
     MANA_SHACKLE_TURN_GAIN,
     MAX_OVERHEAT,
-    OVERHEAT_ACTION_COOLING,
     DISTRIBUTION_MODES,
     STANDARD_DR_INCREASE,
     STANDARD_DEF_EFFECT_INCREASE,
@@ -101,6 +103,9 @@ export const constants = {
     RADIANT_DEF_EFFECT_MULTIPLIER,
     NATURE_HP_REGEN,
     NATURE_MANA_REGEN,
+    STARTING_SONORORITY,
+    SONORITY_LOWER_LIMIT,
+    SONORITY_HIGHER_LIMIT
 };
 
 export const presetAi = {
@@ -168,4 +173,39 @@ export const presetAi = {
         },
         caller: adaptativeAI,
     },
+};
+
+const offensiveActions = [
+    actionKeys.ATTACK,
+    actionKeys.SPECIAL_ATTACK,
+    actionKeys.BLACK_MAYHEM,
+    actionKeys.LASER,
+    actionKeys.MELTDOWN,
+    actionKeys.SACRIFICE,
+];
+
+const defensiveActions = [
+    actionKeys.HEAL,
+    actionKeys.GUARD,
+    actionKeys.AEGIS,
+    actionKeys.SHADOW_MANTLE,
+];
+
+const transformativeActions = [
+    actionKeys.ARRAY,
+    actionKeys.SHADOW_PACT,
+    actionKeys.DARK_PROMISE,
+    actionKeys.WHEEL,
+    actionKeys.ATTUNE,
+    actionKeys.DA_CAPO,
+    actionKeys.DEPLOY,
+    actionKeys.CURSE,
+    actionKeys.RITUAL_OF_ASH,
+    actionKeys.SOUND_OF_SILENCE,
+];
+
+export const actionsClass = {
+    offensiveActions,
+    defensiveActions,
+    transformativeActions,
 };

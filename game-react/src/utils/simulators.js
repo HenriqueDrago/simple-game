@@ -4,66 +4,77 @@ import {
     processEntityDR,
     processEntityDefEffect,
 } from "./entities.js";
-import { elementalKeys } from "./enums.js";
+import { elementalKeys, actionKeys } from "./enums.js";
 
 export const simulators = {
-    simulateAegis,
-    simulateArray,
-    simulateAttack,
-    simulateBlackMayhem,
-    simulateCurse,
-    simulateDarkPromise,
-    simulateGuard,
-    simulateHeal,
-    simulateRitualOfAsh,
-    simulateSacrifice,
-    simulateShadowMantle,
-    simulateShadowPact,
-    simulateSpecialAttack,
-    simulateWheel,
+    [actionKeys.AEGIS]: simulateAegis,
+    [actionKeys.ARRAY]: simulateArray,
+    [actionKeys.ATTACK]: simulateAttack,
+    [actionKeys.BLACK_MAYHEM]: simulateBlackMayhem,
+    [actionKeys.CURSE]: simulateCurse,
+    [actionKeys.DARK_PROMISE]: simulateDarkPromise,
+    [actionKeys.GUARD]: simulateGuard,
+    [actionKeys.HEAL]: simulateHeal,
+    [actionKeys.RITUAL_OF_ASH]: simulateRitualOfAsh,
+    [actionKeys.SACRIFICE]: simulateSacrifice,
+    [actionKeys.SHADOW_MANTLE]: simulateShadowMantle,
+    [actionKeys.SHADOW_PACT]: simulateShadowPact,
+    [actionKeys.SPECIAL_ATTACK]: simulateSpecialAttack,
+    [actionKeys.WHEEL]: simulateWheel,
+    [actionKeys.ATTUNE]: simulateAttune,
+    [actionKeys.DA_CAPO]: simulateDaCapo,
+    [actionKeys.SOUND_OF_SILENCE]: simulateSoundOfSilence,
 };
 
-function simulateGuard({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newMana = Math.min(
         agent.maxMana,
         Math.floor(agent.currMana + agent.maxMana * constants.GUARD_MANA_REGEN),
     );
 
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            currMana: newMana,
-            states: {
-                ...agent.states,
-                guarding: true,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                currMana: newMana,
+                states: {
+                    ...agent.states,
+                    guarding: true,
+                },
             },
         },
     };
 }
 
-function simulateAegis({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newRadiance =
         agent.resources.radiance +
         Math.ceil(agent.attributes.def.value * constants.RADIANCE_GEN_MULT);
 
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                radiance: newRadiance,
-            },
-            states: {
-                ...agent.states,
-                radiant: true,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    radiance: newRadiance,
+                },
+                states: {
+                    ...agent.states,
+                    radiant: true,
+                },
             },
         },
     };
 }
 
-function simulateSacrifice({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateSacrifice({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const oldHp = agent.currHp;
     const dmgTaken = Math.ceil(oldHp * constants.SAC_HP_CONSUMPTION);
 
@@ -82,31 +93,46 @@ function simulateSacrifice({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newMaxMana = agent.maxMana + Math.max(0, oldHp - newHp);
 
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            maxMana: newMaxMana,
-            currHp: newHp,
-            resources: {
-                ...agent.resources,
-                bloodSacrifice: newBloodSacrifice,
-                radiance: newRadiance,
-                fadingLight: newFadingLight,
-            },
-            states: {
-                ...agent.states,
-                sacrificial: true,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                maxMana: newMaxMana,
+                currHp: newHp,
+                resources: {
+                    ...agent.resources,
+                    bloodSacrifice: newBloodSacrifice,
+                    radiance: newRadiance,
+                    fadingLight: newFadingLight,
+                },
+                states: {
+                    ...agent.states,
+                    sacrificial: true,
+                },
             },
         },
     };
 }
 
-function simulateAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const sonority = prev.sonority;
+    const sonorityModifier = agent.states.harmonious
+        ? sonority
+        : agent.states.dissonant
+          ? -sonority
+          : 0;
+
+    console.log(sonority);
+    console.log(sonorityModifier)
+
     const base_damage =
         agent.attributes.str.value +
         agent.resources.bloodSacrifice * constants.BLOOD_SACRIFICE_MULT +
         agent.resources.scoria +
-        agent.resources.radiance;
+        agent.resources.radiance +
+        sonorityModifier;
 
     const effectiveDef = Math.floor(
         nonAgent.attributes.def.value * processEntityDefEffect(nonAgent),
@@ -119,37 +145,45 @@ function simulateAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
             nonAgent.resources.permafrost,
     );
 
-    const radianceConsumed = Math.min(
-        final_damage,
-        nonAgent.resources.radiance,
-    );
+    /* Consumption order:
+        - Embers
+        - Fading Light
+        - Radiance
+    */
+
     const emberConsumed = Math.min(
-        final_damage - radianceConsumed,
+        final_damage,
         nonAgent.resources.lingeringEmber,
     );
+    const radianceConsumed = Math.min(
+        final_damage - emberConsumed,
+        nonAgent.resources.radiance,
+    );
+    const fadingLightConsumed = Math.min(
+        final_damage - emberConsumed - radianceConsumed,
+        nonAgent.resources.fadingLight,
+    );
+
+    const damagePostMitigation =
+        final_damage - emberConsumed - radianceConsumed - fadingLightConsumed;
 
     const newMana = nonAgent.states.radiant
-        ? Math.max(
-              0,
-              nonAgent.currMana -
-                  (final_damage - radianceConsumed - emberConsumed),
-          )
+        ? Math.max(0, nonAgent.currMana - damagePostMitigation)
         : nonAgent.currMana;
 
     const newHp = Math.max(
         0,
         nonAgent.currHp -
-            (final_damage -
-                radianceConsumed -
-                emberConsumed -
-                (nonAgent.currMana - newMana)),
+            (damagePostMitigation - (nonAgent.currMana - newMana)),
     );
 
     const newRadiance = nonAgent.resources.radiance - radianceConsumed;
     const newEmber = nonAgent.resources.lingeringEmber - emberConsumed;
-    const newFadingLight = nonAgent.states.radiant
-        ? nonAgent.resources.fadingLight + radianceConsumed
-        : nonAgent.resources.fadingLight;
+    const newNonAgentFadingLight = nonAgent.resources.fadingLight - fadingLightConsumed;
+
+    const newAgentFadingLight = nonAgent.states.radiant
+        ? agent.resources.fadingLight + radianceConsumed
+        : agent.resources.fadingLight;
 
     const thornsDmg = nonAgent.states.thornedShackles
         ? agent.attributes.str.value
@@ -157,48 +191,60 @@ function simulateAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
     const attackerNewHP = Math.max(0, agent.currHp - thornsDmg);
 
     return {
-        [agentKey]: {
-            ...agent,
-            currHp: attackerNewHP,
-            resources: {
-                ...agent.resources,
-                radiance: 0,
-                fadingLight: newFadingLight,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                currHp: attackerNewHP,
+                resources: {
+                    ...agent.resources,
+                    radiance: 0,
+                    fadingLight: newAgentFadingLight,
+                },
             },
-        },
-        [nonAgentKey]: {
-            ...nonAgent,
-            currHp: newHp,
-            currMana: newMana,
-            resources: {
-                ...nonAgent.resources,
-                radiance: newRadiance,
-                fadingLight: newFadingLight,
-                lingeringEmber: newEmber,
+            [nonAgentKey]: {
+                ...nonAgent,
+                currHp: newHp,
+                currMana: newMana,
+                resources: {
+                    ...nonAgent.resources,
+                    radiance: newRadiance,
+                    fadingLight: newNonAgentFadingLight,
+                    lingeringEmber: newEmber,
+                },
             },
         },
     };
 }
 
-function simulateSpecialAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateSpecialAttack({
+    prev,
+    agent,
+    agentKey,
+    nonAgent,
+    nonAgentKey,
+}) {
     if (
         agent.currMana + agent.resources.manaOverflow <
         constants.SP_ATTACK_COST
     ) {
-        return {
-            [agentKey]: {
-                ...agent,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-            },
-        };
+        return prev;
     }
+
+    const sonority = prev.sonority;
+
+    const sonorityModifier = agent.states.harmonious
+        ? sonority
+        : agent.states.dissonant
+          ? -sonority
+          : 0;
 
     const base_damage =
         agent.attributes.str.value +
         agent.resources.radiance +
-        agent.resources.scoria;
+        agent.resources.scoria +
+        sonorityModifier;
     const manaDiff = Math.max(0, agent.currMana - nonAgent.currMana);
 
     const drMult = processEntityDR(nonAgent);
@@ -209,45 +255,43 @@ function simulateSpecialAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
             nonAgent.resources.permafrost,
     );
 
-    const radianceConsumed = Math.min(
-        final_damage,
-        nonAgent.resources.radiance,
-    );
     const emberConsumed = Math.min(
-        final_damage - radianceConsumed,
+        final_damage,
         nonAgent.resources.lingeringEmber,
     );
+    const radianceConsumed = Math.min(
+        final_damage - emberConsumed,
+        nonAgent.resources.radiance,
+    );
+    const fadingLightConsumed = Math.min(
+        final_damage - emberConsumed - radianceConsumed,
+        nonAgent.resources.fadingLight,
+    );
 
-    let defenderNewMana = nonAgent.states.radiant
-        ? Math.max(
-              0,
-              nonAgent.currMana -
-                  (final_damage - radianceConsumed - emberConsumed),
-          )
-        : nonAgent.currMana;
+    const damagePostMitigation =
+        final_damage - emberConsumed - radianceConsumed - fadingLightConsumed;
+
+    let defenderManaConsumed = nonAgent.states.radiant
+        ? Math.min(nonAgent.currMana, damagePostMitigation)
+        : 0;
 
     const newHp = Math.max(
         0,
         nonAgent.currHp -
-            (final_damage -
-                radianceConsumed -
-                emberConsumed -
-                (nonAgent.currMana - defenderNewMana)),
+            (damagePostMitigation - defenderManaConsumed),
     );
 
     const newRadiance = nonAgent.resources.radiance - radianceConsumed;
     const newEmber = nonAgent.resources.lingeringEmber - emberConsumed;
+    const newNonAgentFadingLight = nonAgent.resources.fadingLight - fadingLightConsumed;
+
     const newAgentFadingLight = nonAgent.states.radiant
         ? agent.resources.fadingLight + radianceConsumed
         : agent.resources.fadingLight;
-    const newNonAgentFadingLight = nonAgent.states.radiant
-        ? nonAgent.resources.fadingLight + radianceConsumed
-        : nonAgent.resources.fadingLight;
 
-    defenderNewMana = Math.min(nonAgent.maxMana, defenderNewMana + manaDiff);
-    const defenderNewManaOverflow =
-        nonAgent.resources.manaOverflow +
-        Math.max(0, nonAgent.currMana + manaDiff - nonAgent.maxMana);
+    const defenderNewTotalMana = nonAgent.currMana + manaDiff - defenderManaConsumed;
+    const defenderNewManaOverflow = nonAgent.resources.manaOverflow + Math.max(0, defenderNewTotalMana - nonAgent.maxMana);
+    const defenderNewMana = Math.min(nonAgent.maxMana, defenderNewTotalMana);
 
     const overflowConsumed = Math.min(
         constants.SP_ATTACK_COST,
@@ -261,32 +305,36 @@ function simulateSpecialAttack({ agent, agentKey, nonAgent, nonAgentKey }) {
     const attackerNewMana = agent.currMana - manaConsumed;
 
     return {
-        [agentKey]: {
-            ...agent,
-            currMana: attackerNewMana,
-            resources: {
-                ...agent.resources,
-                manaOverflow: attackerNewManaOverflow,
-                radiance: 0,
-                fadingLight: newAgentFadingLight,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                currMana: attackerNewMana,
+                resources: {
+                    ...agent.resources,
+                    manaOverflow: attackerNewManaOverflow,
+                    radiance: 0,
+                    fadingLight: newAgentFadingLight,
+                },
             },
-        },
-        [nonAgentKey]: {
-            ...nonAgent,
-            currHp: newHp,
-            currMana: defenderNewMana,
-            resources: {
-                ...nonAgent.resources,
-                manaOverflow: defenderNewManaOverflow,
-                fadingLight: newNonAgentFadingLight,
-                radiance: newRadiance,
-                lingeringEmber: newEmber,
+            [nonAgentKey]: {
+                ...nonAgent,
+                currHp: newHp,
+                currMana: defenderNewMana,
+                resources: {
+                    ...nonAgent.resources,
+                    manaOverflow: defenderNewManaOverflow,
+                    fadingLight: newNonAgentFadingLight,
+                    radiance: newRadiance,
+                    lingeringEmber: newEmber,
+                },
             },
         },
     };
 }
 
-function simulateHeal({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateHeal({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const base_heal = Math.min(
         agent.maxHp - agent.currHp,
         agent.currMana + agent.resources.manaOverflow,
@@ -300,55 +348,63 @@ function simulateHeal({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newMana = agent.currMana - manaConsumed;
 
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            currHp: newHp,
-            currMana: newMana,
-            resources: {
-                ...agent.resources,
-                manaOverflow: newManaOverflow,
-                poison: 0,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                currHp: newHp,
+                currMana: newMana,
+                resources: {
+                    ...agent.resources,
+                    manaOverflow: newManaOverflow,
+                    poison: 0,
+                },
             },
         },
     };
 }
 
-function simulateCurse({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const agentNewPoison =
         agent.resources.shackledMana + agent.resources.poison;
     const nonAgentNewPoison =
         nonAgent.resources.shackledMana + nonAgent.resources.poison;
 
     return {
-        [nonAgentKey]: {
-            ...nonAgent,
-            resources: {
-                ...nonAgent.resources,
-                poison: nonAgentNewPoison,
-                shackledMana: 0,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    poison: nonAgentNewPoison,
+                    shackledMana: 0,
+                },
+                states: {
+                    ...nonAgent.states,
+                    thornedShackles: false,
+                },
             },
-            states: {
-                ...nonAgent.states,
-                thornedShackles: false,
-            },
-        },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                poison: agentNewPoison,
-                shackledMana: 0,
-            },
-            states: {
-                ...agent.states,
-                thornedShackles: false,
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    poison: agentNewPoison,
+                    shackledMana: 0,
+                },
+                states: {
+                    ...agent.states,
+                    thornedShackles: false,
+                },
             },
         },
     };
 }
 
-function simulateArray({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const agentShackledMana =
         agent.resources.shackledMana +
         agent.currMana +
@@ -359,139 +415,167 @@ function simulateArray({ agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent.resources.manaOverflow;
 
     return {
-        [nonAgentKey]: {
-            ...nonAgent,
-            currMana: 0,
-            resources: {
-                ...nonAgent.resources,
-                manaOverflow: 0,
-                shackledMana: nonAgentShackledMana,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: {
+                ...nonAgent,
+                currMana: 0,
+                resources: {
+                    ...nonAgent.resources,
+                    manaOverflow: 0,
+                    shackledMana: nonAgentShackledMana,
+                },
+                states: {
+                    ...nonAgent.states,
+                    thornedShackles: true,
+                },
             },
-            states: {
-                ...nonAgent.states,
-                thornedShackles: true,
-            },
-        },
-        [agentKey]: {
-            ...agent,
-            currMana: 0,
-            resources: {
-                ...agent.resources,
-                manaOverflow: 0,
-                shackledMana: agentShackledMana,
-            },
-            states: {
-                ...agent.states,
-                thornedShackles: true,
+            [agentKey]: {
+                ...agent,
+                currMana: 0,
+                resources: {
+                    ...agent.resources,
+                    manaOverflow: 0,
+                    shackledMana: agentShackledMana,
+                },
+                states: {
+                    ...agent.states,
+                    thornedShackles: true,
+                },
             },
         },
     };
 }
 
-function simulateShadowPact({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { draftEntity, resourcesConsumed } = consumeResources(
         { ...agent },
         constants.SHADOW_PACT_BURN,
-        "shadowPact",
+        actionKeys.SHADOW_PACT,
     );
 
     const draftAgent = {
         ...draftEntity,
-    }
+    };
 
     const newUnrelShadows =
-        draftAgent.resources.unrelentingShadows + (resourcesConsumed.radiance || 0);
+        draftAgent.resources.unrelentingShadows +
+        (resourcesConsumed.radiance || 0);
 
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...draftAgent,
-            states: {
-                ...draftAgent.states,
-                umbralCore: true,
-            },
-            resources: {
-                ...draftAgent.resources,
-                unrelentingShadows: newUnrelShadows,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...draftAgent,
+                states: {
+                    ...draftAgent.states,
+                    umbralCore: true,
+                },
+                resources: {
+                    ...draftAgent.resources,
+                    unrelentingShadows: newUnrelShadows,
+                    shadowflame: resourcesConsumed.totalConsumption,
+                },
             },
         },
     };
 }
 
-function simulateShadowMantle({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateShadowMantle({
+    prev,
+    agent,
+    agentKey,
+    nonAgent,
+    nonAgentKey,
+}) {
     const unrelentingShadows = agent.resources.shadowflame;
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                unrelentingShadows: unrelentingShadows,
-            },
-            states: {
-                ...agent.states,
-                darkEmbrace: true,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    unrelentingShadows: unrelentingShadows,
+                },
+                states: {
+                    ...agent.states,
+                    darkEmbrace: true,
+                },
             },
         },
     };
 }
 
-function simulateRitualOfAsh({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newLE = agent.resources.shadowflame + agent.resources.lingeringEmber;
     return {
-        [nonAgentKey]: { ...nonAgent },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                shadowflame: 0,
-                lingeringEmber: newLE,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: { ...nonAgent },
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    shadowflame: 0,
+                    lingeringEmber: newLE,
+                },
             },
         },
     };
 }
 
-function simulateDarkPromise({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const toBeRestored =
         agent.resources.shadowflame +
         Math.floor(agent.resources.lingeringEmber / 2);
 
     return {
-        [nonAgentKey]: {
-            ...nonAgent,
-            resources: {
-                ...nonAgent.resources,
-                unrelentingShadows: toBeRestored,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    unrelentingShadows: toBeRestored,
+                },
             },
-        },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                shadowflame: 0,
-                lingeringEmber: 0,
-                cinders: 0,
-                unrelentingShadows: toBeRestored,
-            },
-            states: {
-                ...agent.states,
-                umbralCore: false,
-                dimmingDarkness: true,
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    shadowflame: 0,
+                    lingeringEmber: 0,
+                    cinders: 0,
+                    unrelentingShadows: toBeRestored,
+                },
+                states: {
+                    ...agent.states,
+                    umbralCore: false,
+                    dimmingDarkness: true,
+                },
             },
         },
     };
 }
 
-function simulateBlackMayhem({ agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { draftEntity, resourcesConsumed } = consumeResources(
         { ...nonAgent },
         agent.resources.shadowflame,
-        "blackMayhem",
+        actionKeys.BLACK_MAYHEM,
     );
 
     const draftNonAgent = {
         ...draftEntity,
-    }
+    };
 
     const burntNonCindersNonRad =
         resourcesConsumed.totalConsumption -
@@ -501,37 +585,35 @@ function simulateBlackMayhem({ agent, agentKey, nonAgent, nonAgentKey }) {
     const newUnrelShadows =
         agent.resources.unrelentingShadows + (resourcesConsumed.radiance || 0);
 
-
     const newNonAgentCinders =
         draftNonAgent.resources.cinders + burntNonCindersNonRad;
-    const newAgentLE = agent.resources.lingeringEmber + (resourcesConsumed.cinders || 0);
+    const newAgentLE =
+        agent.resources.lingeringEmber + (resourcesConsumed.cinders || 0);
 
     return {
-        [nonAgentKey]: {
-            ...draftNonAgent,
-            resources: {
-                ...draftNonAgent.resources,
-                cinders: newNonAgentCinders,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [nonAgentKey]: {
+                ...draftNonAgent,
+                resources: {
+                    ...draftNonAgent.resources,
+                    cinders: newNonAgentCinders,
+                },
             },
-        },
-        [agentKey]: {
-            ...agent,
-            resources: {
-                ...agent.resources,
-                lingeringEmber: newAgentLE,
-                unrelentingShadows: newUnrelShadows,
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    lingeringEmber: newAgentLE,
+                    unrelentingShadows: newUnrelShadows,
+                },
             },
         },
     };
 }
 
-function simulateWheel({
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-    currElement,
-}) {
+function simulateWheel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     let newElement;
 
     let newPermafrost = agent.resources.permafrost;
@@ -540,6 +622,7 @@ function simulateWheel({
 
     let newHp = agent.currHp;
     let newMaxHp = agent.maxHp;
+    const currElement = prev.elementalWheel;
 
     switch (currElement) {
         case elementalKeys.NATURE:
@@ -563,7 +646,10 @@ function simulateWheel({
     }
 
     return {
-        draftEntities: {
+        ...prev,
+        elementalWheel: newElement,
+        entities: {
+            ...prev.entities,
             [agentKey]: {
                 ...agent,
                 currHp: newHp,
@@ -579,6 +665,107 @@ function simulateWheel({
                 ...nonAgent,
             },
         },
-        newElement: newElement,
+    };
+}
+
+function simulateAttune({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    return {
+        ...prev,
+        sonority: constants.STARTING_SONORORITY,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                states: {
+                    ...agent.states,
+                    harmonious: true,
+                },
+            },
+            [nonAgentKey]: {
+                ...nonAgent,
+                states: {
+                    ...nonAgent.states,
+                    dissonant: true,
+                },
+            },
+        },
+    };
+}
+
+function simulateDaCapo({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const newDissonance = -Math.min(0, prev.sonority);
+
+    return {
+        ...prev,
+        sonority: null,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    dissonance: newDissonance,
+                },
+                states: {
+                    ...agent.states,
+                    harmonious: false,
+                    dissonant: false,
+                },
+            },
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    dissonance: newDissonance,
+                },
+                states: {
+                    ...nonAgent.states,
+                    dissonant: false,
+                    harmonious: false,
+                },
+            },
+        },
+    };
+}
+
+function simulateSoundOfSilence({
+    prev,
+    agent,
+    agentKey,
+    nonAgent,
+    nonAgentKey,
+}) {
+    const newHarmony = Math.max(0, prev.sonority);
+
+    return {
+        ...prev,
+        sonority: null,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                resources: {
+                    ...agent.resources,
+                    harmony: newHarmony,
+                },
+                states: {
+                    ...agent.states,
+                    harmonious: false,
+                    dissonant: false,
+                },
+            },
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    harmony: newHarmony,
+                },
+                states: {
+                    ...nonAgent.states,
+                    dissonant: false,
+                    harmonious: false,
+                },
+            },
+        },
     };
 }

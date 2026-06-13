@@ -5,30 +5,32 @@ import StackCounter from "./StackCounter.jsx";
 import ElementalCounter from "./ElementalCounter.jsx";
 
 import { constants } from "../utils/constants.js";
-import { sdmKeys, elementalKeys } from "../utils/enums.js";
+import { sdmKeys, elementalKeys, effectKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 
 const stackCounters = [
-    ["Blood Sacrifice", "bloodSacrifice", "#ff4d4d", "rgba(255, 77, 77, 0.1)"],
-    ["Radiance", "radiance", "#ffc107", "rgba(255, 193, 7, 0.15)"],
-    ["Poison", "poison", "#32cd32", "rgba(50, 205, 50, 0.1)"],
-    ["Shackled Mana", "shackledMana", "#3f51b5", "rgba(63, 81, 181, 0.15)"],
-    ["Shadowflame", "shadowflame", "#ff1493", "rgba(255, 20, 147, 0.15)"],
+    ["Blood Sacrifice", effectKeys.BLOOD_SACRIFICE, "#ff4d4d", "rgba(255, 77, 77, 0.1)"],
+    ["Radiance", effectKeys.RADIANCE, "#ffc107", "rgba(255, 193, 7, 0.15)"],
+    ["Poison", effectKeys.POISON, "#32cd32", "rgba(50, 205, 50, 0.1)"],
+    ["Shackled Mana", effectKeys.SHACKLED_MANA, "#3f51b5", "rgba(63, 81, 181, 0.15)"],
+    ["Shadowflame", effectKeys.SHADOWFLAME, "#ff1493", "rgba(255, 20, 147, 0.15)"],
     [
         "Lingering Ember",
-        "lingeringEmber",
+        effectKeys.LINGERING_EMBER,
         "#e998fd",
         "rgba(245, 208, 254, 0.12)",
     ],
-    ["Cinders", "cinders", "#a9a9a9", "rgba(169, 169, 169, 0.15)"],
+    ["Cinders", effectKeys.CINDERS, "#a9a9a9", "rgba(169, 169, 169, 0.15)"],
     [
         "Unrelenting Shadows",
-        "unrelentingShadows",
+        effectKeys.UNRELENTING_SHADOWS,
         "#9370db",
         "rgba(147, 112, 219, 0.1)",
     ],
-    ["Fading Light", "fadingLight", "#ffe8a1", "rgba(245, 170, 0, 0.15)"],
+    ["Fading Light", effectKeys.FADING_LIGHT, "#ffe8a1", "rgba(245, 170, 0, 0.15)"],
+    ["Harmony", effectKeys.HARMONY, "#00bfff", "rgba(0, 191, 255, 0.15)"],
+    ["Dissonance", effectKeys.DISSONANCE, "#ff4500", "rgba(255, 69, 0, 0.15)"],
 ];
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
@@ -46,6 +48,8 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
     if (states.radiant) activeStates.push("state-radiant");
     if (states.dimmingDarkness) activeStates.push("state-dimming");
     if (states.umbralCore) activeStates.push("state-umbral");
+    if (states.harmonious) activeStates.push("state-harmonious");
+    if (states.dissonant) activeStates.push("state-dissonant");
 
     const statesClass = activeStates.join(" ");
 
@@ -78,7 +82,9 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 ))}
             </div>
 
-            {game.elementalWheel !== elementalKeys.INACTIVE && <ElementalCounter entity={game.entities[entityKey]}></ElementalCounter>}
+            {game.elementalWheel !== elementalKeys.INACTIVE && (
+                <ElementalCounter entity={game.entities[entityKey]}></ElementalCounter>
+            )}
         </div>
     );
 }

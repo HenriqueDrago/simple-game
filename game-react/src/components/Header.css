@@ -32,3 +32,36 @@
     padding: 20px;
     margin: 0px;
 }
+
+.who-starts-select-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    gap: 15px;
+    font-family: inherit;
+}
+
+.who-starts-select-container label {
+    font-weight: bold;
+    text-align: left;
+    flex-shrink: 0; /* Prevents the text from squishing */
+}
+
+.who-starts-select-container select {
+    flex-grow: 1; /* Makes the dropdowns stretch to match each other */
+    padding: 8px 10px;
+    border: 2px solid #ccc;
+    background-color: white;
+    color: black;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: border-color 0.2s ease;
+}
+
+.who-starts-select-container select:focus {
+    outline: none;
+    border-color: #666; 
+}

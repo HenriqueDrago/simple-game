@@ -1,15 +1,12 @@
 import { useState } from "react";
 import "./ActionPanel.css";
 
-import {
-    ACTION_DESCRIPTIONS,
-    MECHANIC_DESCRIPTIONS,
-} from "../utils/descriptors";
-import { entityKeys, turnStatus, aiKeys } from "../utils/enums";
+import { ACTION_DESCRIPTIONS, EFFECT_DESCRIPTIONS } from "../utils/descriptors";
+import { entityKeys, turnStatus, aiKeys, actionKeys } from "../utils/enums";
 
 const UMBRAL_ACTIONS = [
     {
-        name: "BlackMayhem",
+        key: actionKeys.BLACK_MAYHEM,
         label: "Black Mayhem",
         hoverKeys: [
             "blackMayhem",
@@ -20,17 +17,17 @@ const UMBRAL_ACTIONS = [
         ],
     },
     {
-        name: "ShadowMantle",
+        key: actionKeys.SHADOW_MANTLE,
         label: "Shadow Mantle",
         hoverKeys: ["shadowMantle", "darkEmbrace", "shadowflame", "resources"],
     },
     {
-        name: "RitualOfAsh",
+        key: actionKeys.RITUAL_OF_ASH,
         label: "Ritual Of Ash",
         hoverKeys: ["ritualOfAsh", "shadowflame", "lingeringEmber", "cinders"],
     },
     {
-        name: "DarkPromise",
+        key: actionKeys.DARK_PROMISE,
         label: "Dark Promise",
         hoverKeys: [
             "darkPromise",
@@ -44,23 +41,27 @@ const UMBRAL_ACTIONS = [
     },
 ];
 
-const getNormalActions = (arrayActive) => [
-    { name: "Attack", label: "Attack", hoverKeys: ["attack"] },
-    { name: "Guard", label: "Guard", hoverKeys: ["guard", "guardingState"] },
-    { name: "Heal", label: "Heal", hoverKeys: ["heal", "poison"] },
+const getNormalActions = (arrayActive, currEntity) => [
+    { key: actionKeys.ATTACK, label: "Attack", hoverKeys: ["attack"] },
     {
-        name: "SpecialAttack",
+        key: actionKeys.GUARD,
+        label: "Guard",
+        hoverKeys: ["guard", "guardingState"],
+    },
+    { key: actionKeys.HEAL, label: "Heal", hoverKeys: ["heal", "poison"] },
+    {
+        key: actionKeys.SPECIAL_ATTACK,
         label: "Special Attack",
         hoverKeys: ["spAtk", "manaImbalance", "manaOverflow"],
     },
     arrayActive
         ? {
-              name: "Curse",
+              key: actionKeys.CURSE,
               label: "Curse",
               hoverKeys: ["curse", "shackledMana", "poison"],
           }
         : {
-              name: "Array",
+              key: actionKeys.ARRAY,
               label: "Array",
               hoverKeys: [
                   "array",
@@ -70,7 +71,7 @@ const getNormalActions = (arrayActive) => [
               ],
           },
     {
-        name: "Sacrifice",
+        key: actionKeys.SACRIFICE,
         label: "Self Sacrifice",
         hoverKeys: [
             "sacrifice",
@@ -80,20 +81,37 @@ const getNormalActions = (arrayActive) => [
         ],
     },
     {
-        name: "Aegis",
+        key: actionKeys.AEGIS,
         label: "Aegis",
         hoverKeys: ["aegis", "radiance", "holyProtection"],
     },
     {
-        name: "ShadowPact",
+        key: actionKeys.SHADOW_PACT,
         label: "Shadow Pact",
         hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
     },
     {
-        name: "Wheel",
+        key: actionKeys.WHEEL,
         label: "Wheel",
         hoverKeys: [],
     },
+    currEntity.states.harmonious
+        ? {
+              key: actionKeys.DA_CAPO,
+              label: "Da Capo",
+              hoverKeys: [],
+          }
+        : currEntity.states.dissonant
+          ? {
+                key: actionKeys.SOUND_OF_SILENCE,
+                label: "The Sound of Silence",
+                hoverKeys: [],
+            }
+          : {
+                key: actionKeys.ATTUNE,
+                label: "Attune",
+                hoverKeys: [],
+            },
 ];
 
 function ActionPanel({
@@ -104,7 +122,11 @@ function ActionPanel({
 }) {
     const battleState = game.status;
     const arrayActive = game.remainingArray > 0;
-    const descriptions = { ...ACTION_DESCRIPTIONS, ...MECHANIC_DESCRIPTIONS };
+    const currEntity =
+        battleState === turnStatus.PLAYER_ONE_TURN
+            ? game.entities[entityKeys.PLAYER_ONE]
+            : game.entities[entityKeys.PLAYER_TWO];
+    const descriptions = { ...ACTION_DESCRIPTIONS, ...EFFECT_DESCRIPTIONS };
 
     const [hoveredAction, setHoveredAction] = useState(null);
 
@@ -130,12 +152,12 @@ function ActionPanel({
         playerController !== aiKeys.HUMAN;
 
     // Centralized action handler
-    const handleActionButton = (actionName) => {
+    const handleActionButton = (actionKey) => {
         setHoveredAction(null);
         const isPlayerOne = battleState === turnStatus.PLAYER_ONE_TURN;
 
         handleAction(
-            actionName,
+            actionKey,
             isPlayerOne ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO,
             isPlayerOne ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE,
         );
@@ -143,7 +165,7 @@ function ActionPanel({
 
     const currentActions = showUmbralButtons
         ? UMBRAL_ACTIONS
-        : getNormalActions(arrayActive);
+        : getNormalActions(arrayActive, currEntity);
 
     return (
         <div className="action-panel-container">
@@ -155,11 +177,11 @@ function ActionPanel({
                 >
                     {currentActions.map((action) => (
                         <button
-                            key={action.name}
+                            key={action.key}
                             onMouseEnter={() =>
                                 setHoveredAction(action.hoverKeys)
                             }
-                            onClick={() => handleActionButton(action.name)}
+                            onClick={() => handleActionButton(action.key)}
                         >
                             {action.label}
                         </button>

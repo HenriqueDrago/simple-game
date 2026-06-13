@@ -43,7 +43,7 @@ function GamePanel({
                         entityKey={entityKeys.PLAYER_TWO}
                     ></StatsPanel>
                 </div>
-                <SonorityCounter></SonorityCounter>
+                <SonorityCounter sonority={game.sonority}></SonorityCounter>
             </div>
             {game.status === turnStatus.SETUP && (
                 <ControlPanel

@@ -1,6 +1,12 @@
-import { constants } from "./constants.js";
+import { constants, actionsClass } from "./constants.js";
 import { consumeResources, restoreResources } from "./entities.js";
-import { turnStatus, entityKeys, elementalKeys } from "./enums.js";
+import {
+    turnStatus,
+    entityKeys,
+    elementalKeys,
+    actionKeys,
+    effectKeys,
+} from "./enums.js";
 
 /*
 Notes for self:
@@ -40,11 +46,7 @@ export function processUpkeep(prev) {
         ...prev.entities[nonTargetKey],
     };
 
-    const hasShackledMana =
-        draftTarget.resources.shackledMana > 0 ||
-        draftNonTarget.resources.shackledMana > 0;
-
-    if (hasShackledMana) {
+    if (draftTarget.states.thornedShackles || draftNonTarget.states.thornedShackles) {
         if (isArrayActive) {
             const newTargetShackledMana =
                 draftTarget.resources.shackledMana +
@@ -112,6 +114,39 @@ export function processUpkeep(prev) {
         }
     }
 
+    // Shadowflame
+    if (
+        draftTarget.resources.shadowflame > 0 &&
+        !draftTarget.states.darkEmbrace
+    ) {
+        console.log(draftTarget.resources.shadowflame)
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            draftTarget.resources.shadowflame,
+            effectKeys.SHADOWFLAME,
+        );
+
+        draftTarget = {
+            ...draftEntity,
+        };
+
+        const newUnrelShadows =
+            (resourcesConsumed.radiance || 0) +
+            draftTarget.resources.unrelentingShadows;
+
+        const newShadowflame =
+            draftTarget.resources.shadowflame + resourcesConsumed.totalConsumption;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                unrelentingShadows: newUnrelShadows,
+                shadowflame: newShadowflame,
+            },
+        };
+    }
+
     // Unrelenting Shadows
     if (draftTarget.resources.unrelentingShadows > 0) {
         draftTarget = restoreResources(
@@ -124,34 +159,6 @@ export function processUpkeep(prev) {
             resources: {
                 ...draftTarget.resources,
                 unrelentingShadows: 0,
-            }
-        }
-    }
-
-    // Shadowflame
-    if (
-        draftTarget.resources.shadowflame > 0 &&
-        !draftTarget.states.darkEmbrace
-    ) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            draftTarget.resources.shadowflame,
-            "shadowflame",
-        );
-
-        draftTarget = {
-            ...draftEntity,
-        };
-
-        const newUnrelShadows =
-            (resourcesConsumed.radiance || 0) +
-            draftTarget.resources.unrelentingShadows;
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                unrelentingShadows: newUnrelShadows,
             },
         };
     }
@@ -191,6 +198,24 @@ export function processUpkeep(prev) {
         };
     }
 
+    // Dissonance
+    if (
+        draftTarget.resources.dissonance > 0
+    ) {
+        const newHp = Math.max(
+            0,
+            draftTarget.currHp - draftTarget.resources.dissonance,
+        );
+        draftTarget = {
+            ...draftTarget,
+            currHp: newHp,
+            resources: {
+                ...draftTarget.resources,
+                dissonance: 0,
+            }
+        };
+    }
+
     // Blood Sacrifice
     if (
         draftTarget.resources.bloodSacrifice > 0 &&
@@ -218,16 +243,12 @@ export function processUpkeep(prev) {
 
     // Fading Light
     if (
-        draftTarget.resources.fadingLight > 0 &&
-        currElement !== elementalKeys.FROST
+        draftTarget.resources.fadingLight > 0
+        // currElement !== elementalKeys.FROST
     ) {
-        const newFadingLight = Math.floor(
-            draftTarget.resources.fadingLight / 2,
-        );
         const newHp = Math.min(
             draftTarget.maxHp,
-            draftTarget.currHp +
-                (draftTarget.resources.fadingLight - newFadingLight),
+            draftTarget.currHp + draftTarget.resources.fadingLight,
         );
 
         draftTarget = {
@@ -235,37 +256,17 @@ export function processUpkeep(prev) {
             currHp: newHp,
             resources: {
                 ...draftTarget.resources,
-                fadingLight: newFadingLight,
+                fadingLight: 0,
             },
         };
     }
 
     // Nature
     if (prev.elementalWheel === elementalKeys.NATURE) {
-        const dntHp = Math.min(draftNonTarget.maxHp, draftNonTarget.currHp + constants.NATURE_HP_REGEN);
-        const dntMissingMana = draftNonTarget.maxMana - draftNonTarget.currMana;
-
-        const dntNewMana = Math.min(
-            draftNonTarget.maxMana,
-            draftNonTarget.currMana + constants.NATURE_MANA_REGEN,
+        const dtHp = Math.min(
+            draftTarget.maxHp,
+            draftTarget.currHp + constants.NATURE_HP_REGEN,
         );
-        const dntNewManaOverflow = Math.max(
-            draftNonTarget.resources.manaOverflow,
-            draftNonTarget.resources.manaOverflow +
-                (constants.NATURE_MANA_REGEN - dntMissingMana),
-        );
-
-        draftNonTarget = {
-            ...draftNonTarget,
-            currHp: dntHp,
-            currMana: dntNewMana,
-            resources: {
-                ...draftNonTarget.resources,
-                manaOverflow: dntNewManaOverflow,
-            },
-        };
-
-        const dtHp = Math.min(draftTarget.maxHp, draftTarget.currHp + constants.NATURE_HP_REGEN);
         const dtMissingMana = draftTarget.maxMana - draftTarget.currMana;
 
         const dtNewMana = Math.min(
@@ -340,15 +341,20 @@ export function processUpkeep(prev) {
     };
 }
 
-export function commitTurn(prev, context, nextActorKey, currActorKey, action) {
-    console.log(context);
-
-    const draftEntities = action === "Wheel" ? context.draftEntities : context;
-    const newElement =
-        action === "Wheel" ? context.newElement : prev.elementalWheel;
+export function commitTurn(newGame, currActorKey, nextActorKey, action) {
+    const draftEntities = newGame.entities;
 
     const currActor = draftEntities[currActorKey];
     const nextActor = draftEntities[nextActorKey];
+
+    let newSonority = newGame.sonority;
+    if (newSonority != null) {
+        newSonority = actionsClass.offensiveActions.includes(action)
+            ? Math.max(constants.SONORITY_LOWER_LIMIT, newSonority - 1)
+            : actionsClass.defensiveActions.includes(action)
+              ? Math.min(constants.SONORITY_HIGHER_LIMIT, newSonority + 1)
+              : newSonority;
+    }
 
     // Mana Shackle
     const shackledMana = currActor.states.thornedShackles
@@ -364,46 +370,45 @@ export function commitTurn(prev, context, nextActorKey, currActorKey, action) {
 
     // Mana Overflow
     let newHp =
-        currActor.states.dimmingDarkness || newElement === elementalKeys.FROST
+        currActor.states.dimmingDarkness ||
+        newGame.elementalWheel === elementalKeys.FROST
             ? currActor.currHp
             : Math.max(0, currActor.currHp - currManaOverflow);
 
     currManaOverflow =
-        currActor.states.dimmingDarkness || newElement === elementalKeys.FROST
+        currActor.states.dimmingDarkness ||
+        newGame.elementalWheel === elementalKeys.FROST
             ? currActor.resources.manaOverflow
             : 0;
 
     // Scorch
     newHp =
-        newElement === elementalKeys.SCORCH
+        newGame.elementalWheel === elementalKeys.SCORCH
             ? Math.max(0, newHp - constants.SCORCH_DMG)
             : newHp;
 
-    let nextActorHp =
-        newElement === elementalKeys.SCORCH
-            ? Math.max(0, nextActor.currHp - constants.SCORCH_DMG)
-            : nextActor.currHp;
-
     // Array
     const currArray =
-        action === "Array"
+        action === actionKeys.ARRAY
             ? constants.ARRAY_DURATION - 1
-            : action === "Curse"
+            : action === actionKeys.CURSE
               ? 0
-              : Math.max(0, prev.remainingArray - 1);
+              : Math.max(0, newGame.remainingArray - 1);
 
     // Thorned Shackles
     const thornedShackles = currArray > 0;
 
+    // Harmony
+    newHp = newHp + currActor.resources.harmony
+
     // Check for deaths after end of turn effects have been applied
     const enemyDead =
         draftEntities[entityKeys.PLAYER_TWO].currHp <= 0 ||
-        (newHp <= 0 && currActorKey === entityKeys.PLAYER_TWO) ||
-        (nextActorHp <= 0 && nextActorKey === entityKeys.PLAYER_TWO);
+        (newHp <= 0 && currActorKey === entityKeys.PLAYER_TWO);
+
     const playerDead =
         draftEntities[entityKeys.PLAYER_ONE].currHp <= 0 ||
-        (newHp <= 0 && currActorKey === entityKeys.PLAYER_ONE) ||
-        (nextActorHp <= 0 && nextActorKey === entityKeys.PLAYER_ONE);
+        (newHp <= 0 && currActorKey === entityKeys.PLAYER_ONE);
 
     let nextStatus =
         nextActorKey === entityKeys.PLAYER_ONE
@@ -421,32 +426,32 @@ export function commitTurn(prev, context, nextActorKey, currActorKey, action) {
     }
 
     return {
-        ...prev,
+        ...newGame,
         status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
         remainingArray: currArray,
-        elementalWheel: newElement,
+        sonority: newSonority,
         entities: {
             ...draftEntities,
             [currActorKey]: {
-                ...draftEntities[currActorKey],
+                ...currActor,
                 currHp: newHp,
                 currMana: currMana,
                 resources: {
-                    ...draftEntities[currActorKey].resources,
+                    ...currActor.resources,
                     shackledMana: shackledMana,
                     manaOverflow: currManaOverflow,
+                    harmony: 0,
                 },
                 states: {
-                    ...draftEntities[currActorKey].states,
+                    ...currActor.states,
                     thornedShackles: thornedShackles,
                 },
             },
             [nextActorKey]: {
-                ...draftEntities[nextActorKey],
-                currHp: nextActorHp,
+                ...nextActor,
                 states: {
-                    ...draftEntities[nextActorKey].states,
+                    ...nextActor.states,
                     thornedShackles: thornedShackles,
                 },
             },

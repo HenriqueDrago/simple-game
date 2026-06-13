@@ -15,6 +15,7 @@ import {
     aiKeys,
     sdmKeys,
     elementalKeys,
+    whoStartsKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -26,6 +27,8 @@ function App() {
         nextStatus: null,
         remainingArray: 0,
         elementalWheel: elementalKeys.INACTIVE,
+        sonority: null,
+        whoStarts: whoStartsKeys.PLAYER_ONE,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -60,14 +63,14 @@ function App() {
                 agentKey,
                 nonAgent,
                 nonAgentKey,
-                currElement: prev.elementalWheel,
+                prev,
             };
 
-            const sim = simulators[`simulate${action}`];
+            const sim = simulators[action];
 
-            const result = sim(context);
+            const simulationResult = sim(context);
 
-            return commitTurn(prev, result, nonAgentKey, agentKey, action);
+            return commitTurn(simulationResult, agentKey, nonAgentKey, action);
         });
     }
 
@@ -196,6 +199,7 @@ function App() {
                 status: turnStatus.SETUP,
                 remainingArray: 0,
                 nextStatus: null,
+                sonority: null,
                 elementalWheel: elementalKeys.INACTIVE,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
@@ -206,11 +210,26 @@ function App() {
     }
 
     function handleStart() {
+        setGame((prev) => {
+            const initialStatus =
+                prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
+                (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
+                    ? turnStatus.PLAYER_ONE_TURN
+                    : turnStatus.PLAYER_TWO_TURN;
+
+            return {
+                ...prev,
+                status: initialStatus,
+                remainingArray: 0,
+                elementalWheel: elementalKeys.INACTIVE,
+            };
+        });
+    }
+
+    function handleWhoStartsChange(value) {
         setGame((prev) => ({
             ...prev,
-            status: turnStatus.PLAYER_ONE_TURN,
-            remainingArray: 0,
-            elementalWheel: elementalKeys.INACTIVE,
+            whoStarts: value,
         }));
     }
 
@@ -289,6 +308,7 @@ function App() {
                     totalMana,
                     hasManaForSpecial,
                     handleAction,
+                    prev: game,
                 };
 
                 const executeAI = presetAi[agent.controller].caller || simpleAI;
@@ -324,9 +344,10 @@ function App() {
     return (
         <div className="app-container">
             <Header
-                battleState={game.status}
+                game={game}
                 handleStart={handleStart}
                 handleReset={handleReset}
+                handleWhoStartsChange={handleWhoStartsChange}
             />
             <GamePanel
                 game={game}

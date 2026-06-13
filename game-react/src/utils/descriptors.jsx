@@ -1,12 +1,14 @@
+import { actionKeys, effectKeys } from "./enums";
+
 export const ACTION_DESCRIPTIONS = {
-    attack: (
+    [actionKeys.ATTACK]: (
         <div>
             <strong>ATTACK:</strong> Deals damage equal to the user's STR. Final
             damage is reduced by the target's DEF and DAMAGE REDUCTION.
         </div>
     ),
 
-    heal: (
+    [actionKeys.HEAL]: (
         <div>
             <strong>HEAL:</strong> Converts MANA into HP. Healing cannot exceed
             MAX HP, and MANA cannot drop below 0. Maximum healing is limited by
@@ -14,14 +16,14 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    guard: (
+    [actionKeys.GUARD]: (
         <div>
             <strong>GUARD:</strong> Restores MANA equal to 30% of MAX MANA and
             enters GUARDING state until next turn start.
         </div>
     ),
 
-    spAtk: (
+    [actionKeys.SPECIAL_ATTACK]: (
         <div>
             <strong>SPECIAL ATTACK:</strong> Consumes 6 MANA. Deals damage equal
             to the user's STR + MANA IMBALANCE. This damage ignores DEF. The
@@ -30,16 +32,15 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    sacrifice: (
+    [actionKeys.SACRIFICE]: (
         <div>
-            <strong>SELF-SACRIFICE:</strong> Consumes half of current HP. Gains
-            BLOOD SACRIFICE and MAX MANA equal to the HP lost, then enters
-            SACRIFICIAL state until next turn start. While BLOOD SACRIFICE is
-            present, suffers from MANA BLEED.
+            <strong>SELF-SACRIFICE:</strong> Takes damage equal to half of
+            current HP. Gains BLOOD SACRIFICE and MAX MANA equal to the HP lost
+            this way, then enters SACRIFICIAL state until next turn start.
         </div>
     ),
 
-    array: (
+    [actionKeys.ARRAY]: (
         <div>
             <strong>ARRAY:</strong> Envelops the battlefield in a magical array
             for 3 turns. Consumes all MANA and MANA OVERFLOW from every entity,
@@ -49,7 +50,7 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    curse: (
+    [actionKeys.CURSE]: (
         <div>
             <strong>CURSE:</strong> Consumes all SHACKLED MANA from every
             entity. Each entity gains POISON equal to the amount consumed on
@@ -57,14 +58,14 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    aegis: (
+    [actionKeys.AEGIS]: (
         <div>
             <strong>AEGIS:</strong> Gains RADIANCE equal to the user's DEF.
             Enters RADIANT state until next turn start.
         </div>
     ),
 
-    shadowPact: (
+    [actionKeys.SHADOW_PACT]: (
         <div>
             <strong>SHADOW PACT:</strong> Enters UMBRAL CORE. Burns 5 RESOURCES,
             then gains SHADOWFLAME equal to the amount burned. Cannot burn
@@ -73,7 +74,7 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    blackMayhem: (
+    [actionKeys.BLACK_MAYHEM]: (
         <div>
             <strong>BLACK MAYHEM:</strong> Burns the target's RESOURCES equal to
             the user's SHADOWFLAME. Grants CINDERS to the target equal to the
@@ -84,7 +85,7 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    shadowMantle: (
+    [actionKeys.SHADOW_MANTLE]: (
         <div>
             <strong>SHADOW MANTLE:</strong> Gains UNRELENTING SHADOWS equal to
             SHADOWFLAME on self. Then, enters DARK EMBRACE until next turn
@@ -92,14 +93,14 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    ritualOfAsh: (
+    [actionKeys.RITUAL_OF_ASH]: (
         <div>
             <strong>RITUAL OF ASH:</strong> Extinguishes all SHADOWFLAME, then
             gains LINGERING EMBER equal to the amount lost.
         </div>
     ),
 
-    darkPromise: (
+    [actionKeys.DARK_PROMISE]: (
         <div>
             <strong>DARK PROMISE:</strong> Exits UMBRAL CORE and enters DIMMING
             DARKNESS until next turn start. Loses all SHADOWFLAME, LINGERING
@@ -108,23 +109,46 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    wheel: (
+    [actionKeys.WHEEL]: (
         <div>
             <strong>[WHEEL]:</strong> Activates the ELEMENTAL WHEEL. If already
             active, turns the WHEEL.
         </div>
     ),
+
+    [actionKeys.ATTUNE]: (
+        <div>
+            <strong>ATTUNE:</strong> Enters HARMONIOUS state and forces the
+            target into DISSONANT state. Enables SONORITY on the battlefield.
+        </div>
+    ),
+
+    [actionKeys.DA_CAPO]: (
+        <div>
+            <strong>DA CAPO:</strong> Exits HARMONIOUS state and ejects the
+            target from DISSONANT state. All entities gain DISSONANCE based on
+            negative SONORITY. Disables SONORITY on the battlefield.
+        </div>
+    ),
+
+    [actionKeys.SOUND_OF_SILENCE]: (
+        <div>
+            <strong>THE SOUND OF SILENCE:</strong> Exits DISSONANT state and
+            ejects the target from HARMONIOUS state. All entities gain HARMONY
+            based on positive SONORITY. Disables SONORITY on the battlefield.
+        </div>
+    ),
 };
 
-export const MECHANIC_DESCRIPTIONS = {
-    guardingState: (
+export const EFFECT_DESCRIPTIONS = {
+    [effectKeys.GUARDING_STATE]: (
         <div>
             <strong>[GUARDING]:</strong> Raises DEF EFFECTIVENESS and DAMAGE
             REDUCTION by 50%.
         </div>
     ),
 
-    manaImbalance: (
+    [effectKeys.MANA_IMBALANCE]: (
         <div>
             <strong>[MANA IMBALANCE]:</strong> The difference between the user's
             and target's current MANA. If the target has equal or greater MANA,
@@ -132,7 +156,7 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    manaOverflow: (
+    [effectKeys.MANA_OVERFLOW]: (
         <div>
             <strong>[MANA OVERFLOW]:</strong> Used before MANA by abilities that
             consume MANA. At turn end, all MANA OVERFLOW is lost and self takes
@@ -140,13 +164,13 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    sacrificialState: (
+    [effectKeys.SACRIFICIAL_STATE]: (
         <div>
             <strong>[SACRIFICIAL]:</strong> Raises DAMAGE REDUCTION by 50%.
         </div>
     ),
 
-    manaBleed: (
+    [effectKeys.MANA_BLEED]: (
         <div>
             <strong>[MANA BLEED]:</strong> At turn start, loses MANA equal to
             half of current BLOOD SACRIFICE and restores an equal amount of HP.
@@ -154,7 +178,7 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    thornedShackles: (
+    [effectKeys.THORNED_SHACKLES]: (
         <div>
             <strong>[THORNED SHACKLES]:</strong> At turn end, consumes all MANA
             and MANA OVERFLOW, then grants SHACKLED MANA equal to the amount
@@ -163,7 +187,7 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    shackledMana: (
+    [effectKeys.SHACKLED_MANA]: (
         <div>
             <strong>[SHACKLED MANA]:</strong> At turn start, gains 3 SHACKLED
             MANA while ARRAY is active. When ARRAY ends, all SHACKLED MANA is
@@ -172,23 +196,22 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    poison: (
+    [effectKeys.POISON]: (
         <div>
             <strong>[POISON]:</strong> At turn start, takes damage equal to
             current POISON stacks.
         </div>
     ),
 
-    radiance: (
+    [effectKeys.RADIANCE]: (
         <div>
-            <strong>[RADIANCE]:</strong> Increases damage dealt when using
-            ATTACK or SPECIAL ATTACK and reduces damage received when attacked.
-            RADIANCE consumed by SELF-SACRIFICE does not generate BLOOD
-            SACRIFICE.
+            <strong>[RADIANCE]:</strong> When using ATTACK or SPECIAL ATTACK,
+            consumes RADIANCE to increase damage dealt. When suffering damage
+            from enemy attacks, consumes RADIANCE to reduce damage taken.
         </div>
     ),
 
-    resources: (
+    [effectKeys.RESOURCES]: (
         <div>
             <strong>[RESOURCES]:</strong> Includes SHADOWFLAME, UNRELENTING
             SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED
@@ -199,14 +222,14 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    umbralCore: (
+    [effectKeys.UMBRAL_CORE]: (
         <div>
             <strong>[UMBRAL CORE]:</strong> Replaces all actions with SHADOW
             MANTLE, BLACK MAYHEM, RITUAL OF ASH, and DARK PROMISE.
         </div>
     ),
 
-    shadowflame: (
+    [effectKeys.SHADOWFLAME]: (
         <div>
             <strong>[SHADOWFLAME]:</strong> At turn start, burns RESOURCES equal
             to current SHADOWFLAME, then gains SHADOWFLAME equal to the amount
@@ -216,52 +239,53 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    darkEmbrace: (
+    [effectKeys.DARK_EMBRACE]: (
         <div>
             <strong>[DARK EMBRACE]:</strong> Raises DAMAGE REDUCTION by 50%.
             While active, SHADOWFLAME on self does not burn RESOURCES.
         </div>
     ),
 
-    lingeringEmber: (
+    [effectKeys.LINGERING_EMBER]: (
         <div>
             <strong>[LINGERING EMBER]:</strong> Cannot be consumed by
-            SHADOWFLAME. Damage removes LINGERING EMBER instead of HP. Gains
-            CINDERS equal to the amount lost this way. At turn start, converts
-            half of current LINGERING EMBER into both SHADOWFLAME and CINDERS.
+            SHADOWFLAME. When suffering damage from enemy attacks, consumes
+            LINGERING EMBER to reduce damage taken. Gains CINDERS equal to the
+            amount lost this way. At turn start, converts half of current
+            LINGERING EMBER into both SHADOWFLAME and CINDERS.
         </div>
     ),
 
-    dimmingDarkness: (
+    [effectKeys.DIMMING_DARKNESS]: (
         <div>
             <strong>[DIMMING DARKNESS]:</strong> Does not activate POISON and
             MANA OVERFLOW effects on self.
         </div>
     ),
 
-    cinders: (
+    [effectKeys.CINDERS]: (
         <div>
             <strong>[CINDERS]:</strong> No effect.
         </div>
     ),
 
-    radiant: (
+    [effectKeys.RADIANT]: (
         <div>
-            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS. While this
-            effect is active, all RADIANCE lost by taking damage is converted
-            into FADING LIGHT. Additionally, as long as self has MANA, take
+            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS. When
+            attacked, all RADIANCE lost on self is converted into FADING LIGHT
+            for the attacker. Additionally, as long as self has MANA, take
             damage on MANA instead of HP.
         </div>
     ),
 
-    bloodSacrifice: (
+    [effectKeys.BLOOD_SACRIFICE]: (
         <div>
             <strong>[BLOOD SACRIFICE]:</strong> Increases damage dealt by the
             stack when using ATTACK. Causes MANA BLEED at turn start.
         </div>
     ),
 
-    unrelentingShadows: (
+    [effectKeys.UNRELENTING_SHADOWS]: (
         <div>
             <strong>[UNRELENTING SHADOWS]:</strong> At turn start, loses all
             UNRELENTING SHADOWS. Then, gains RESOURCES based on the UNRELENTING
@@ -269,14 +293,16 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    fadingLight: (
+    [effectKeys.FADING_LIGHT]: (
         <div>
-            <strong>[FADING LIGHT]:</strong> At turn start, loses half stack and
-            restores HP by the amount lost this way.
+            <strong>[FADING LIGHT]:</strong> When suffering damage from enemy
+            attacks, consumes FADING LIGHT to reduce damage taken. At turn
+            start, loses all FADING LIGHT and restores HP by the amount lost
+            this way.
         </div>
     ),
 
-    elementalWheel: (
+    [effectKeys.ELEMENTAL_WHEEL]: (
         <div>
             <strong>[ELEMENTAL WHEEL]:</strong> While active, grants a passive
             effect based on the current element. When activated or turned,
@@ -284,7 +310,7 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    frost: (
+    [effectKeys.FROST]: (
         <div>
             <strong>[FROST]:</strong> Passive: Does not activate POISON, MANA
             OVERFLOW, FADING LIGHT, and MANA BLEED effects on self. Active:
@@ -292,14 +318,15 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    nature: (
+    [effectKeys.NATURE]: (
         <div>
-            <strong>[NATURE]:</strong> Passive: At turn start, restores 2 HP and 3
-            MANA. Excess MANA becomes MANA OVERFLOW. Active: Gains 5 OVERGROWTH.
+            <strong>[NATURE]:</strong> Passive: At turn start, restores 2 HP and
+            3 MANA. Excess MANA becomes MANA OVERFLOW. Active: Gains 5
+            OVERGROWTH.
         </div>
     ),
 
-    scorch: (
+    [effectKeys.SCORCH]: (
         <div>
             <strong>[SCORCH]:</strong> Passive: At turn end, deals 3 damage to
             all entities. This damage ignores DEF and DAMAGE REDUCTION. Active:
@@ -307,24 +334,63 @@ export const MECHANIC_DESCRIPTIONS = {
         </div>
     ),
 
-    permafrost: (
+    [effectKeys.PERMAFROST]: (
         <div>
             <strong>[PERMAFROST]:</strong> Reduces damage taken from ATTACK and
             SPECIAL ATTACK by current PERMAFROST.
         </div>
     ),
 
-    overgrowth: (
+    [effectKeys.OVERGROWTH]: (
         <div>
             <strong>[OVERGROWTH]:</strong> Increases MAX HP. Upon gaining
             OVERGROWTH, restores HP equal to the amount gained.
         </div>
     ),
 
-    scoria: (
+    [effectKeys.SCORIA]: (
         <div>
             <strong>[SCORIA]:</strong> Increases ATTACK and SPECIAL ATTACK
             damage by current SCORIA.
+        </div>
+    ),
+
+    [effectKeys.SONORITY]: (
+        <div>
+            <strong>[SONORITY]:</strong> Starts at 0 and ranges from -5 to 5.
+            Increases when using DEFENSIVE ACTIONS. Decreases when using
+            OFFENSIVE ACTIONS.
+        </div>
+    ),
+
+    [effectKeys.HARMONIOUS]: (
+        <div>
+            <strong>[HARMONIOUS]:</strong> Deals higher or lower damage
+            proportionally to current SONORITY. Replaces ATTUNE with DA CAPO.
+        </div>
+    ),
+
+    [effectKeys.DISSONANT]: (
+        <div>
+            <strong>[DISSONANT]:</strong> Deals higher or lower damage
+            proportionally to inverse SONORITY. Replaces ATTUNE with THE SOUND
+            OF SILENCE.
+        </div>
+    ),
+
+    [effectKeys.HARMONY]: (
+        <div>
+            <strong>[HARMONY]:</strong> Gained based on positive SONORITY. At
+            turn end, consumes all HARMONY and restores HP equal to the amount
+            consumed.
+        </div>
+    ),
+
+    [effectKeys.DISSONANCE]: (
+        <div>
+            <strong>[DISSONANCE]:</strong> Gained based on negative SONORITY. At
+            turn start, consumes all DISSONANCE and takes damage equal to the
+            amount consumed.
         </div>
     ),
 };
