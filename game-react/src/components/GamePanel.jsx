@@ -1,6 +1,8 @@
 import "./GamePanel.css";
 import ControlPanel from "./ControlPanel";
 import StatsPanel from "./StatsPanel";
+import ElementalWheel from "./ElementalWheel";
+import SonorityCounter from "./SonorityCounter";
 
 import { entityKeys, turnStatus } from "../utils/enums";
 
@@ -24,17 +26,24 @@ function GamePanel({
                     controller={game.entities[entityKeys.PLAYER_ONE].controller}
                 ></ControlPanel>
             )}
-            <div className={`stats-panels-container ${game.remainingArray > 0 ? 'array-active' : ''}`}>
-                <StatsPanel
-                    game={game}
-                    updateStatsPoints={updateStatsPoints}
-                    entityKey={entityKeys.PLAYER_ONE}
-                ></StatsPanel>
-                <StatsPanel
-                    game={game}
-                    updateStatsPoints={updateStatsPoints}
-                    entityKey={entityKeys.PLAYER_TWO}
-                ></StatsPanel>
+            <div className="central-game-panel">
+                <ElementalWheel element={game.elementalWheel}></ElementalWheel>
+
+                <div
+                    className={`stats-panels-container ${game.remainingArray > 0 ? "array-active" : ""}`}
+                >
+                    <StatsPanel
+                        game={game}
+                        updateStatsPoints={updateStatsPoints}
+                        entityKey={entityKeys.PLAYER_ONE}
+                    ></StatsPanel>
+                    <StatsPanel
+                        game={game}
+                        updateStatsPoints={updateStatsPoints}
+                        entityKey={entityKeys.PLAYER_TWO}
+                    ></StatsPanel>
+                </div>
+                <SonorityCounter></SonorityCounter>
             </div>
             {game.status === turnStatus.SETUP && (
                 <ControlPanel

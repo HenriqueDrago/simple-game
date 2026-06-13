@@ -15,7 +15,6 @@ function HpBar({ entity }) {
                     className="hp-fill" 
                     style={{ 
                         width: `${hpPercentage}%`,
-                        "backgroundColor": `${entity.dmgReduction > 0 || entity.defEffect > 1.0 ? "gray" : "red"}`
                     }}
                 />
             </div>

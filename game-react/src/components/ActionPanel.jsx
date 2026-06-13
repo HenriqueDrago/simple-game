@@ -89,6 +89,11 @@ const getNormalActions = (arrayActive) => [
         label: "Shadow Pact",
         hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
     },
+    {
+        name: "Wheel",
+        label: "Wheel",
+        hoverKeys: [],
+    },
 ];
 
 function ActionPanel({

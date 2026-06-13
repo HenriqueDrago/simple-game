@@ -1,0 +1,39 @@
+.elemental-wheel-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+
+    padding: 5px;
+    gap: 10px;
+}
+
+.individual-element-container {
+    padding: 10px;
+    border: 2px solid white;
+    border-radius: 10px;
+
+    font-weight: bolder;
+
+    min-width: 70px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.individual-element-container.nature-active {
+    color: rgb(95, 255, 47);
+    border-color: rgb(95, 255, 47);
+}
+
+.individual-element-container.frost-active {
+    color: cyan;
+    border-color: cyan;
+}
+
+.individual-element-container.scorch-active {
+    color: red;
+    border-color: red;
+}

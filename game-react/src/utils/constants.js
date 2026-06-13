@@ -24,8 +24,8 @@ const STAT_MULTIPLIERS = {
     def: 1,
 };
 
-const ALTERNATE_DR = 0.5;
-const ALTERNATE_DEF_EFFECTIVENESS = 1.5;
+const STANDARD_DR_INCREASE = 0.5;
+const STANDARD_DEF_EFFECT_INCREASE = 1.5;
 const GUARD_MANA_REGEN = 0.3;
 
 const SP_ATTACK_COST = 6;
@@ -41,6 +41,18 @@ const OVERHEAT_ACTION_COOLING = 3;
 
 const RADIANCE_GEN_MULT = 1.0;
 
+const ELEMENTAL_RESOURCE_GAIN = 5;
+const SCORCH_DMG = 3;
+
+const SAC_HP_CONSUMPTION = 0.5;
+
+const SHADOW_PACT_BURN = 5;
+
+const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
+
+const NATURE_MANA_REGEN = 3;
+const NATURE_HP_REGEN = 2;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -48,19 +60,20 @@ const DISTRIBUTION_MODES = [
     "Custom",
 ];
 
-const resources = [
+const freeResources = [
     "shadowflame",
+    "unrelentingShadows",
     "lingeringEmber",
     "cinders",
     "poison",
     "manaOverflow",
     "shackledMana",
-    "overheat",
     "bloodSacrifice",
+    "fadingLight",
     "radiance",
-    "currMana",
-    "currHp",
 ];
+
+const limitedResources = ["currMana", "currHp"];
 
 export const constants = {
     INITIAL_POINTS_AVAILABLE,
@@ -75,11 +88,19 @@ export const constants = {
     MAX_OVERHEAT,
     OVERHEAT_ACTION_COOLING,
     DISTRIBUTION_MODES,
-    ALTERNATE_DR,
-    ALTERNATE_DEF_EFFECTIVENESS,
+    STANDARD_DR_INCREASE,
+    STANDARD_DEF_EFFECT_INCREASE,
     GUARD_MANA_REGEN,
-    resources,
+    freeResources,
     RADIANCE_GEN_MULT,
+    ELEMENTAL_RESOURCE_GAIN,
+    SCORCH_DMG,
+    SAC_HP_CONSUMPTION,
+    limitedResources,
+    SHADOW_PACT_BURN,
+    RADIANT_DEF_EFFECT_MULTIPLIER,
+    NATURE_HP_REGEN,
+    NATURE_MANA_REGEN,
 };
 
 export const presetAi = {
@@ -110,8 +131,8 @@ export const presetAi = {
     [aiKeys.WARLOCK]: {
         name: "Warlock",
         best: {
-            str: 5,
-            def: 5,
+            str: 10,
+            def: 0,
         },
         caller: warlockAI,
     },
@@ -142,8 +163,8 @@ export const presetAi = {
     [aiKeys.ADAPTATIVE]: {
         name: "Adaptative",
         best: {
-            str: 4,
-            def: 6,
+            str: 5,
+            def: 5,
         },
         caller: adaptativeAI,
     },

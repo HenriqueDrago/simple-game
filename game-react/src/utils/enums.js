@@ -13,7 +13,7 @@ export const turnStatus = Object.freeze({
 export const entityKeys = Object.freeze({
     PLAYER_ONE: "p1",
     PLAYER_TWO: "p2",
-})
+});
 
 export const aiKeys = Object.freeze({
     HUMAN: "human",
@@ -23,11 +23,18 @@ export const aiKeys = Object.freeze({
     PALADIN: "paladin",
     HEXER: "hexer",
     SHADOW_SORCERER: "shadowSorcerer",
-    ADAPTATIVE: "adaptative"
-})
+    ADAPTATIVE: "adaptative",
+});
 
 export const sdmKeys = Object.freeze({
     RANDOM: "random",
     CUSTOM: "custom",
-    BEST: "best"
-})
+    BEST: "best",
+});
+
+export const elementalKeys = Object.freeze({
+    INACTIVE: 0,
+    NATURE: 1,
+    FROST: 2,
+    SCORCH: 3,
+});

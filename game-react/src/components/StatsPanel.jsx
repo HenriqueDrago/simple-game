@@ -2,9 +2,10 @@ import HpBar from "./HpBar.jsx";
 import ManaBar from "./ManaBar.jsx";
 import AttrLine from "./AttrLine.jsx";
 import StackCounter from "./StackCounter.jsx";
+import ElementalCounter from "./ElementalCounter.jsx";
 
 import { constants } from "../utils/constants.js";
-import { sdmKeys } from "../utils/enums.js";
+import { sdmKeys, elementalKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 
@@ -27,7 +28,7 @@ const stackCounters = [
         "#9370db",
         "rgba(147, 112, 219, 0.1)",
     ],
-    ["Overheat", "overheat", "#ff8c00", "rgba(255, 140, 0, 0.15)"],
+    ["Fading Light", "fadingLight", "#ffe8a1", "rgba(245, 170, 0, 0.15)"],
 ];
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
@@ -35,6 +36,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
     const distributionMode = game.entities[entityKey].statDistributionMode;
 
     const states = game.entities[entityKey].states;
+    const resources = game.entities[entityKey].resources;
 
     const activeStates = [];
     if (states.guarding) activeStates.push("state-guarding");
@@ -56,7 +58,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 <StackCounter
                     key={field}
                     label={label}
-                    value={game.entities[entityKey][field]}
+                    value={resources[field]}
                     color={color}
                     backgroundColor={backgroundColor}
                 />
@@ -75,6 +77,8 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                     />
                 ))}
             </div>
+
+            {game.elementalWheel !== elementalKeys.INACTIVE && <ElementalCounter entity={game.entities[entityKey]}></ElementalCounter>}
         </div>
     );
 }

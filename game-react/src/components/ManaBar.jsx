@@ -1,15 +1,15 @@
 import './ManaBar.css';
 
 function ManaBar({ entity }) {
-    const hasOverflow = entity.manaOverflow > 0;
-    const totalMana = entity.currMana + entity.manaOverflow;
+    const hasOverflow = entity.resources.manaOverflow > 0;
+    const totalMana = entity.currMana + entity.resources.manaOverflow;
 
     // Calculate percentages
-    const overflowPercentage = Math.min(100, (entity.manaOverflow / entity.maxMana) * 100);
+    const overflowPercentage = Math.min(100, (entity.resources.manaOverflow / entity.maxMana) * 100);
     const remainingSpace = 100 - overflowPercentage;
     const manaPercentage = Math.min(remainingSpace, (entity.currMana / entity.maxMana) * 100);
 
-    const backgroundColor = entity.bloodSacrifice > 0 ? "purple" : "blue";
+    const backgroundColor = entity.resources.bloodSacrifice > 0 ? "purple" : "blue";
     const textColor = hasOverflow ? "cyan" : "inherit";
 
     return (

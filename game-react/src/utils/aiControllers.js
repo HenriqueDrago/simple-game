@@ -1,5 +1,6 @@
 import { constants } from "./constants.js";
 import { simulators } from "./simulators.js";
+import { consumeResources } from "./entities.js";
 
 export function simpleAI(context) {
     const {
@@ -45,16 +46,16 @@ export function bloodknightAI(context) {
     const missingHp = agent.maxHp - agent.currHp;
 
     // 1. The Array Pivot & Thorns Avoidance
-    if (isArrayActive && agent.attributes.str.value > 3) {
+    if (isArrayActive && agent.attributes.str.value < agent.currHp) {
         handleAction("Guard", agentKey, nonAgentKey);
         return;
     }
 
     // 2. Dump the Hot Potato (Overflow) & Emergency Heal
-    if (agent.manaOverflow > 0 || agent.currHp <= agent.maxHp * 0.5) {
+    if (agent.resources.manaOverflow > 0 || agent.currHp <= agent.maxHp * 0.5) {
         // Only use SpAtk if we MUST dump overflow, AND Heal wouldn't burn enough mana to save us
         if (
-            agent.manaOverflow > 0 &&
+            agent.resources.manaOverflow > 0 &&
             hasManaForSpecial &&
             missingHp < constants.SP_ATTACK_COST
         ) {
@@ -69,7 +70,7 @@ export function bloodknightAI(context) {
     // 3. The Sacrifice Engine
     if (
         agent.currHp > agent.maxHp * 0.65 &&
-        agent.bloodSacrifice + agent.attributes.str.value < agent.maxHp * 1.4
+        agent.resources.bloodSacrifice + agent.attributes.str.value < agent.maxHp * 1.4
     ) {
         handleAction("Sacrifice", agentKey, nonAgentKey);
         return;
@@ -77,7 +78,7 @@ export function bloodknightAI(context) {
 
     // 4. Bleeding out without fuel? Guard to ensure Mana Bleed can heal you next turn.
     if (
-        agent.bloodSacrifice > 0 &&
+        agent.resources.bloodSacrifice > 0 &&
         agent.currMana < missingHp &&
         missingHp >= agent.maxHp * 0.3
     ) {
@@ -129,8 +130,8 @@ export function paladinAI(context) {
         return;
     }
 
-    const effectiveHp = agent.currHp + agent.radiance;
-    const lethalThreat = agent.poison + agent.manaOverflow;
+    const effectiveHp = agent.currHp + agent.resources.radiance;
+    const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
 
     if (effectiveHp - lethalThreat <= agent.maxHp * 0.5 && totalMana >= 3) {
         handleAction("Heal", agentKey, nonAgentKey);
@@ -181,15 +182,11 @@ export function hexerAI(context) {
         }
 
         // Exception 2: Poison is going to kill us during Upkeep
-        if (agent.poison >= agent.currHp) {
+        if (agent.resources.poison >= agent.currHp) {
             handleAction("Heal", agentKey, nonAgentKey);
             return;
         }
 
-        // if (agent.overheat < constants.MAX_OVERHEAT - 1 && agent.currMana > 0) {
-        //     handleAction("Laser", agentKey, nonAgentKey);
-        //     return;
-        // }
 
         // Exception 3: Opponent has considerably less mana, nuke them to force mana onto their sheet
         const manaDiff = agent.currMana - nonAgent.currMana;
@@ -244,10 +241,10 @@ export function warlockAI(context) {
     }
 
     // 3. Overflow Management & Survival (Dynamic 50% Threshold)
-    const lethalThreat = agent.poison + agent.manaOverflow;
+    const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
 
     if (
-        agent.manaOverflow > 0 ||
+        agent.resources.manaOverflow > 0 ||
         agent.currHp - lethalThreat <= agent.maxHp * 0.5
     ) {
         if (hasManaForSpecial) {
@@ -277,17 +274,16 @@ export function shadowSorcererAI(context) {
         nonAgentKey,
         isArrayActive,
         handleAction,
-        consumeResources,
     } = context;
 
     // 1. The Array/Curse Exception (When outside Umbral Core)
-    if (isArrayActive && !agent.umbralCore) {
-        if (!nonAgent.dimmingDarkness) {
+    if (isArrayActive && !agent.states.umbralCore) {
+        if (!nonAgent.states.dimmingDarkness) {
             const lethalPoison =
                 nonAgent.currMana +
-                nonAgent.manaOverflow +
-                nonAgent.shackledMana +
-                nonAgent.poison;
+                nonAgent.resources.manaOverflow +
+                nonAgent.resources.shackledMana +
+                nonAgent.resources.poison;
             if (lethalPoison >= nonAgent.currHp) {
                 handleAction("Curse", agentKey, nonAgentKey);
                 return;
@@ -296,13 +292,15 @@ export function shadowSorcererAI(context) {
     }
 
     // 2. The Entry Priority
-    if (!agent.umbralCore) {
+    if (!agent.states.umbralCore) {
         handleAction("ShadowPact", agentKey, nonAgentKey);
         return;
     }
 
     // --- UMBRAL CORE LOGIC ---
-    if (agent.manaOverflow > agent.currHp) {
+
+    // Overflow escape
+    if (agent.resources.manaOverflow > agent.currHp) {
         handleAction("DarkPromise", agentKey, nonAgentKey);
         return;
     }
@@ -361,12 +359,12 @@ export function shadowSorcererAI(context) {
     }
 
     // 4. Burn Management (Ritual of Ash vs Shadow Mantle)
-    const draftTarget = consumeResources
-        ? consumeResources(agent, agent.shadowflame, "shadowflame")
-        : agent;
+    const draftTarget = consumeResources(agent, agent.resources.shadowflame, "shadowflame")
+
+    console.log("test", agent, draftTarget)
 
     if (draftTarget.currHp < agent.currHp) {
-        if (agent.currHp <= agent.maxHp * 0.5 && agent.shadowflame >= 10) {
+        if (agent.currHp <= agent.maxHp * 0.5 && agent.resources.shadowflame >= 10) {
             handleAction("ShadowMantle", agentKey, nonAgentKey);
         } else {
             handleAction("RitualOfAsh", agentKey, nonAgentKey);
@@ -432,7 +430,7 @@ export function adaptativeAI(context) {
 
     if (
         !isArrayActive &&
-        nonAgent.currMana + nonAgent.manaOverflow >= constants.SP_ATTACK_COST
+        nonAgent.currMana + nonAgent.resources.manaOverflow >= constants.SP_ATTACK_COST
     ) {
         const simEnemySpecial = simulators.simulateSpecialAttack({
             agent: nonAgent,
@@ -447,8 +445,8 @@ export function adaptativeAI(context) {
     }
 
     if (
-        agent.manaOverflow > 0 &&
-        agent.currHp - agent.manaOverflow <= agent.maxHp * 0.3
+        agent.resources.manaOverflow > 0 &&
+        agent.currHp - agent.resources.manaOverflow <= agent.maxHp * 0.3
     ) {
         if (hasManaForSpecial)
             handleAction("SpecialAttack", agentKey, nonAgentKey);
@@ -471,7 +469,7 @@ export function adaptativeAI(context) {
 
     if (hasManaForSpecial && specialDmg > normalDmg) {
         handleAction("SpecialAttack", agentKey, nonAgentKey);
-    } else if (!hasManaForSpecial && agent.radiance < agent.maxHp * 0.3) {
+    } else if (!hasManaForSpecial && agent.resources.radiance < agent.maxHp * 0.3) {
         handleAction("Aegis", agentKey, nonAgentKey);
     } else {
         if (simNormal[agentKey].currHp <= 0) {

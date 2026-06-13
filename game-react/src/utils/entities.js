@@ -4,79 +4,112 @@ import { sdmKeys } from "./enums.js";
 export function consumeResources(entity, amount, cause) {
     let draftEntity = {
         ...entity,
+        resources: { ...entity.resources },
     };
 
-    const ogAmount = amount;
-
+    let resourcesConsumed = {};
     let resourceIndex = 0;
-    while (amount > 0) {
-        if (
-            draftEntity.currHp <= 0 ||
-            resourceIndex >= constants.resources.length
-        ) {
-            break;
-        }
+    let totalConsumption = 0;
 
+    // Free resources consumption
+    while (amount > 0 && resourceIndex < constants.freeResources.length) {
+        const currResourceKey = constants.freeResources[resourceIndex];
+
+        // Avoid shadowflame (and related actions) burning unintended resources
         if (
             !(
                 (cause === "shadowflame" ||
                     cause === "shadowPact" ||
                     cause === "blackMayhem") &&
-                (constants.resources[resourceIndex] === "shadowflame" ||
-                    constants.resources[resourceIndex] === "lingeringEmber")
+                (currResourceKey === "shadowflame" ||
+                    currResourceKey === "lingeringEmber" ||
+                    currResourceKey === "unrelentingShadows")
             )
         ) {
-            const consumption = Math.min(
-                draftEntity[constants.resources[resourceIndex]],
-                amount,
-            );
+            const currentAmount = draftEntity.resources[currResourceKey];
+            const consumption = Math.min(currentAmount, amount);
 
-            draftEntity[constants.resources[resourceIndex]] -= consumption;
+            draftEntity = {
+                ...draftEntity,
+                resources: {
+                    ...draftEntity.resources,
+                    [currResourceKey]: currentAmount - consumption,
+                },
+            };
+
+            resourcesConsumed = {
+                ...resourcesConsumed,
+                [currResourceKey]: consumption,
+            };
+
+            totalConsumption += consumption;
             amount -= consumption;
         }
 
         resourceIndex++;
     }
 
-    if (cause === "shadowflame" || cause === "shadowPact") {
-        const consumed = ogAmount - amount;
-        draftEntity.shadowflame += consumed;
-    }
+    resourceIndex = 0;
 
-    if (cause === "blackMayhem") {
-        return {
-            draftEntity,
-            consumed: ogAmount - amount,
+    // Limited resource consumption
+    while (
+        amount > 0 &&
+        resourceIndex < constants.limitedResources.length &&
+        draftEntity.currHp > 0
+    ) {
+        const currResourceKey = constants.limitedResources[resourceIndex];
+
+        const currentAmount = draftEntity[currResourceKey];
+        const consumption = Math.min(currentAmount, amount);
+
+        draftEntity = {
+            ...draftEntity,
+            [currResourceKey]: currentAmount - consumption,
         };
+
+        resourcesConsumed = {
+            ...resourcesConsumed,
+            [currResourceKey]: consumption,
+        };
+
+        totalConsumption += consumption;
+        amount -= consumption;
+
+        resourceIndex++;
     }
 
-    return draftEntity;
+    resourcesConsumed = {
+        ...resourcesConsumed,
+        totalConsumption: totalConsumption,
+    };
+
+    return {
+        draftEntity,
+        resourcesConsumed,
+    };
 }
 
 export function restoreResources(entity, amount) {
-    const missingHp = entity.maxHp - entity.currHp;
+    let draftEntity = {
+        ...entity,
+        resources: { ...entity.resources },
+    };
+
+    const missingHp = draftEntity.maxHp - draftEntity.currHp;
     const restoredHp = Math.min(missingHp, amount);
 
-    entity.currHp += restoredHp;
+    draftEntity.currHp += restoredHp;
     amount -= restoredHp;
 
-    if (amount <= 0) {
-        return entity;
-    }
-
-    const missingMana = entity.maxMana - entity.currMana;
+    const missingMana = draftEntity.maxMana - draftEntity.currMana;
     const restoredMana = Math.min(missingMana, amount);
 
-    entity.currMana += restoredMana;
+    draftEntity.currMana += restoredMana;
     amount -= restoredMana;
 
-    if (amount <= 0) {
-        return entity;
-    }
+    draftEntity.resources.manaOverflow += amount;
 
-    entity.manaOverflow += amount;
-
-    return entity;
+    return draftEntity;
 }
 
 export function distributePoints(entity, mode, bestStats = null) {
@@ -167,16 +200,21 @@ export function createBaseEntity() {
         currHp: constants.BASE_STATS.hp,
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
-        manaOverflow: 0,
-        bloodSacrifice: 0,
-        radiance: 0,
-        shackledMana: 0,
-        poison: 0,
-        shadowflame: 0,
-        cinders: 0,
-        lingeringEmber: 0,
-        unrelentingShadows: 0,
-        overheat: 0,
+        resources: {
+            manaOverflow: 0,
+            bloodSacrifice: 0,
+            radiance: 0,
+            shackledMana: 0,
+            poison: 0,
+            shadowflame: 0,
+            cinders: 0,
+            lingeringEmber: 0,
+            unrelentingShadows: 0,
+            fadingLight: 0,
+            permafrost: 0,
+            overgrowth: 0,
+            scoria: 0,
+        },
         states: {
             guarding: false,
             sacrificial: false,
@@ -195,13 +233,13 @@ export function processEntityDR(entity) {
     let drMult = 1.0;
     console.log(entity);
     if (entity.states.guarding) {
-        drMult *= constants.ALTERNATE_DR;
+        drMult *= constants.STANDARD_DR_INCREASE;
     }
     if (entity.states.sacrificial) {
-        drMult *= constants.ALTERNATE_DR;
+        drMult *= constants.STANDARD_DR_INCREASE;
     }
     if (entity.states.darkEmbrace) {
-        drMult *= constants.ALTERNATE_DR;
+        drMult *= constants.STANDARD_DR_INCREASE;
     }
 
     return drMult;
@@ -210,10 +248,10 @@ export function processEntityDR(entity) {
 export function processEntityDefEffect(entity) {
     let defEffect = 1.0;
     if (entity.states.guarding) {
-        defEffect *= constants.ALTERNATE_DEF_EFFECTIVENESS;
+        defEffect *= constants.STANDARD_DEF_EFFECT_INCREASE;
     }
     if (entity.states.radiant) {
-        defEffect *= 0;
+        defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
     }
 
     return defEffect;

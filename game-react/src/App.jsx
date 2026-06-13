@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
@@ -8,7 +9,13 @@ import { constants, presetAi } from "./utils/constants.js";
 import { processUpkeep, commitTurn } from "./utils/turnManagement.js";
 import { distributePoints, createBaseEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
-import { entityKeys, turnStatus, aiKeys, sdmKeys } from "./utils/enums.js";
+import {
+    entityKeys,
+    turnStatus,
+    aiKeys,
+    sdmKeys,
+    elementalKeys,
+} from "./utils/enums.js";
 
 import "./App.css";
 
@@ -17,7 +24,8 @@ function App() {
     const [game, setGame] = useState({
         status: turnStatus.SETUP,
         nextStatus: null,
-        shacklingCurse: 0,
+        remainingArray: 0,
+        elementalWheel: elementalKeys.INACTIVE,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -36,27 +44,30 @@ function App() {
     function handleAction(action, agentKey, nonAgentKey) {
         console.log(`Used: ${action}`);
         setGame((prev) => {
-            const agent = game.entities[agentKey];
-            const nonAgent = game.entities[nonAgentKey];
+            // Skipping ghost clicks
+            if (
+                prev.status !== turnStatus.PLAYER_ONE_TURN &&
+                prev.status !== turnStatus.PLAYER_TWO_TURN
+            ) {
+                return prev;
+            }
+
+            const agent = prev.entities[agentKey];
+            const nonAgent = prev.entities[nonAgentKey];
 
             const context = {
                 agent,
                 agentKey,
                 nonAgent,
                 nonAgentKey,
+                currElement: prev.elementalWheel,
             };
 
             const sim = simulators[`simulate${action}`];
 
-            const draftEntities = sim(context);
+            const result = sim(context);
 
-            return commitTurn(
-                prev,
-                draftEntities,
-                nonAgentKey,
-                agentKey,
-                action,
-            );
+            return commitTurn(prev, result, nonAgentKey, agentKey, action);
         });
     }
 
@@ -109,42 +120,89 @@ function App() {
     };
 
     function handleReset() {
-        setGame((prev) => ({
-            ...prev,
-            status: turnStatus.SETUP,
-            remainingArray: 0,
-            nextStatus: null,
-            entities: {
-                [entityKeys.PLAYER_ONE]: {
-                    ...distributePoints(
-                        createBaseEntity(),
-                        prev.entities[entityKeys.PLAYER_ONE]
-                            .statDistributionMode,
-                        presetAi[
-                            prev.entities[entityKeys.PLAYER_ONE].controller
-                        ].best,
-                    ),
-                    controller: prev.entities[entityKeys.PLAYER_ONE].controller,
-                    statDistributionMode:
-                        prev.entities[entityKeys.PLAYER_ONE]
-                            .statDistributionMode,
+        setGame((prev) => {
+            const playerOne =
+                prev.entities[entityKeys.PLAYER_ONE].statDistributionMode ===
+                sdmKeys.CUSTOM
+                    ? {
+                          ...createBaseEntity(),
+                          attributes: {
+                              ...prev.entities[entityKeys.PLAYER_ONE]
+                                  .attributes,
+                          },
+                          controller:
+                              prev.entities[entityKeys.PLAYER_ONE].controller,
+                          statDistributionMode:
+                              prev.entities[entityKeys.PLAYER_ONE]
+                                  .statDistributionMode,
+                          unspentPoints:
+                              prev.entities[entityKeys.PLAYER_ONE]
+                                  .unspentPoints,
+                      }
+                    : {
+                          ...distributePoints(
+                              createBaseEntity(),
+                              prev.entities[entityKeys.PLAYER_ONE]
+                                  .statDistributionMode,
+                              presetAi[
+                                  prev.entities[entityKeys.PLAYER_ONE]
+                                      .controller
+                              ].best,
+                          ),
+                          controller:
+                              prev.entities[entityKeys.PLAYER_ONE].controller,
+                          statDistributionMode:
+                              prev.entities[entityKeys.PLAYER_ONE]
+                                  .statDistributionMode,
+                      };
+
+            const playerTwo =
+                prev.entities[entityKeys.PLAYER_TWO].statDistributionMode ===
+                sdmKeys.CUSTOM
+                    ? {
+                          ...createBaseEntity(),
+                          attributes: {
+                              ...prev.entities[entityKeys.PLAYER_TWO]
+                                  .attributes,
+                          },
+                          controller:
+                              prev.entities[entityKeys.PLAYER_TWO].controller,
+                          statDistributionMode:
+                              prev.entities[entityKeys.PLAYER_TWO]
+                                  .statDistributionMode,
+                          unspentPoints:
+                              prev.entities[entityKeys.PLAYER_TWO]
+                                  .unspentPoints,
+                      }
+                    : {
+                          ...distributePoints(
+                              createBaseEntity(),
+                              prev.entities[entityKeys.PLAYER_TWO]
+                                  .statDistributionMode,
+                              presetAi[
+                                  prev.entities[entityKeys.PLAYER_TWO]
+                                      .controller
+                              ].best,
+                          ),
+                          controller:
+                              prev.entities[entityKeys.PLAYER_TWO].controller,
+                          statDistributionMode:
+                              prev.entities[entityKeys.PLAYER_TWO]
+                                  .statDistributionMode,
+                      };
+
+            return {
+                ...prev,
+                status: turnStatus.SETUP,
+                remainingArray: 0,
+                nextStatus: null,
+                elementalWheel: elementalKeys.INACTIVE,
+                entities: {
+                    [entityKeys.PLAYER_ONE]: playerOne,
+                    [entityKeys.PLAYER_TWO]: playerTwo,
                 },
-                [entityKeys.PLAYER_TWO]: {
-                    ...distributePoints(
-                        createBaseEntity(),
-                        prev.entities[entityKeys.PLAYER_TWO]
-                            .statDistributionMode,
-                        presetAi[
-                            prev.entities[entityKeys.PLAYER_TWO].controller
-                        ].best,
-                    ),
-                    controller: prev.entities[entityKeys.PLAYER_TWO].controller,
-                    statDistributionMode:
-                        prev.entities[entityKeys.PLAYER_TWO]
-                            .statDistributionMode,
-                },
-            },
-        }));
+            };
+        });
     }
 
     function handleStart() {
@@ -152,6 +210,7 @@ function App() {
             ...prev,
             status: turnStatus.PLAYER_ONE_TURN,
             remainingArray: 0,
+            elementalWheel: elementalKeys.INACTIVE,
         }));
     }
 
@@ -218,7 +277,7 @@ function App() {
                 const nonAgent = game.entities[nonAgentKey];
                 const isArrayActive = game.remainingArray > 0;
 
-                const totalMana = agent.currMana + agent.manaOverflow;
+                const totalMana = agent.currMana + agent.resources.manaOverflow;
                 const hasManaForSpecial = totalMana >= constants.SP_ATTACK_COST;
 
                 const context = {
@@ -240,7 +299,7 @@ function App() {
 
             return () => clearTimeout(timer);
         }
-    }, [game.status, game.entities, game.remainingArray]);
+    }, [game.status]);
 
     useEffect(() => {
         if (game.status === turnStatus.TRANSITION) {
