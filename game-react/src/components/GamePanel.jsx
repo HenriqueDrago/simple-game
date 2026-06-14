@@ -2,7 +2,6 @@ import "./GamePanel.css";
 import ControlPanel from "./ControlPanel";
 import StatsPanel from "./StatsPanel";
 import ElementalWheel from "./ElementalWheel";
-import SonorityCounter from "./SonorityCounter";
 
 import { entityKeys, turnStatus } from "../utils/enums";
 
@@ -43,7 +42,6 @@ function GamePanel({
                         entityKey={entityKeys.PLAYER_TWO}
                     ></StatsPanel>
                 </div>
-                <SonorityCounter sonority={game.sonority}></SonorityCounter>
             </div>
             {game.status === turnStatus.SETUP && (
                 <ControlPanel

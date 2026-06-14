@@ -23,7 +23,6 @@ export const aiKeys = Object.freeze({
     PALADIN: "paladin",
     HEXER: "hexer",
     SHADOW_SORCERER: "shadowSorcerer",
-    ADAPTATIVE: "adaptative",
 });
 
 export const sdmKeys = Object.freeze({
@@ -44,6 +43,12 @@ export const whoStartsKeys = Object.freeze({
     PLAYER_ONE: 1,
     PLAYER_TWO: 2,
 });
+
+export const dmgTypes = Object.freeze({
+    PHYSICAL: "phys",
+    PIERCING: "pierce",
+    TRUE: "true",
+})
 
 export const actionKeys = Object.freeze({
     ATTACK: "attack",
@@ -66,6 +71,7 @@ export const actionKeys = Object.freeze({
     DEPLOY: "deploy",
     LASER: "laser",
     MELTDOWN: "meltdown",
+    BABEL: "babel",
 });
 
 export const effectKeys = Object.freeze({
@@ -88,7 +94,6 @@ export const effectKeys = Object.freeze({
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
-    FADING_LIGHT: "fadingLight",
     ELEMENTAL_WHEEL: "elementalWheel",
     FROST: "frost",
     NATURE: "nature",
@@ -97,8 +102,10 @@ export const effectKeys = Object.freeze({
     OVERGROWTH: "overgrowth",
     SCORIA: "scoria",
     SONORITY: "sonority",
-    HARMONY: "harmony",
-    DISSONANCE: "dissonance",
-    HARMONIOUS: "harmonious",
-    DISSONANT: "dissonant",
+    RESONANT: "resonant",
+    HALO: "halo",
+    DIVINITY: "divinity",
+    PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
+    PIERCING_DAMAGE: dmgTypes.PIERCING,
+    TRUE_DAMAGE: dmgTypes.TRUE,
 });

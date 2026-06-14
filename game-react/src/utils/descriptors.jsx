@@ -3,38 +3,38 @@ import { actionKeys, effectKeys } from "./enums";
 export const ACTION_DESCRIPTIONS = {
     [actionKeys.ATTACK]: (
         <div>
-            <strong>ATTACK:</strong> Deals damage equal to the user's STR. Final
-            damage is reduced by the target's DEF and DAMAGE REDUCTION.
+            <strong>ATTACK:</strong> Deals PHYSICAL DAMAGE equal to the user's
+            STR.
         </div>
     ),
 
     [actionKeys.HEAL]: (
         <div>
-            <strong>HEAL:</strong> Converts MANA into HP. Healing cannot exceed
-            MAX HP, and MANA cannot drop below 0. Maximum healing is limited by
-            both missing HP and current MANA. Cleanses POISON.
+            <strong>HEAL:</strong> Converts MANA into HP. Maximum healing is
+            limited by both missing HP and current MANA. Cleanses POISON.
         </div>
     ),
 
     [actionKeys.GUARD]: (
         <div>
             <strong>GUARD:</strong> Restores MANA equal to 30% of MAX MANA and
-            enters GUARDING state until next turn start.
+            enters GUARDING state until next turn start. Cannot gain MANA
+            OVERFLOW this way.
         </div>
     ),
 
     [actionKeys.SPECIAL_ATTACK]: (
         <div>
-            <strong>SPECIAL ATTACK:</strong> Consumes 6 MANA. Deals damage equal
-            to the user's STR + MANA IMBALANCE. This damage ignores DEF. The
-            target restores MANA equal to the MANA IMBALANCE value. If this
-            restoration exceeds MAX MANA, the excess becomes MANA OVERFLOW.
+            <strong>SPECIAL ATTACK:</strong> Consumes 6 MANA. Deals PIERCING
+            DAMAGE equal to the user's STR + MANA IMBALANCE. The target restores
+            MANA equal to the MANA IMBALANCE value. If this restoration exceeds
+            MAX MANA, the excess becomes MANA OVERFLOW.
         </div>
     ),
 
     [actionKeys.SACRIFICE]: (
         <div>
-            <strong>SELF-SACRIFICE:</strong> Takes damage equal to half of
+            <strong>SELF-SACRIFICE:</strong> Takes TRUE DAMAGE equal to half of
             current HP. Gains BLOOD SACRIFICE and MAX MANA equal to the HP lost
             this way, then enters SACRIFICIAL state until next turn start.
         </div>
@@ -60,8 +60,8 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.AEGIS]: (
         <div>
-            <strong>AEGIS:</strong> Gains RADIANCE equal to the user's DEF.
-            Enters RADIANT state until next turn start.
+            <strong>AEGIS:</strong> Enters RADIANT state. Gains HALO equal to
+            the user's DEF.
         </div>
     ),
 
@@ -69,8 +69,7 @@ export const ACTION_DESCRIPTIONS = {
         <div>
             <strong>SHADOW PACT:</strong> Enters UMBRAL CORE. Burns 5 RESOURCES,
             then gains SHADOWFLAME equal to the amount burned. Cannot burn
-            SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS. When burning
-            RADIANCE, gains UNRELENTING SHADOWS by the amount burned.
+            SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS.
         </div>
     ),
 
@@ -80,8 +79,7 @@ export const ACTION_DESCRIPTIONS = {
             the user's SHADOWFLAME. Grants CINDERS to the target equal to the
             RESOURCES burnt. When burning CINDERS, grants LINGERING EMBER to
             self instead. Cannot burn SHADOWFLAME, LINGERING EMBER and
-            UNRELENTING SHADOWS. When burning RADIANCE, gains UNRELENTING
-            SHADOWS by the amount burned.
+            UNRELENTING SHADOWS.
         </div>
     ),
 
@@ -118,24 +116,30 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.ATTUNE]: (
         <div>
-            <strong>ATTUNE:</strong> Enters HARMONIOUS state and forces the
-            target into DISSONANT state. Enables SONORITY on the battlefield.
+            <strong>ATTUNE:</strong> Enters RESONANT state.
         </div>
     ),
 
     [actionKeys.DA_CAPO]: (
         <div>
-            <strong>DA CAPO:</strong> Exits HARMONIOUS state and ejects the
-            target from DISSONANT state. All entities gain DISSONANCE based on
-            negative SONORITY. Disables SONORITY on the battlefield.
+            <strong>DA CAPO:</strong> Usable at 0 SONORITY. Restores the user's
+            condition to what it was at the beginning of battle.
         </div>
     ),
 
     [actionKeys.SOUND_OF_SILENCE]: (
         <div>
-            <strong>THE SOUND OF SILENCE:</strong> Exits DISSONANT state and
-            ejects the target from HARMONIOUS state. All entities gain HARMONY
-            based on positive SONORITY. Disables SONORITY on the battlefield.
+            <strong>THE SOUND OF SILENCE:</strong> Usable at negative SONORITY.
+            Reverses current SONORITY and restores RESOURCES on self by the
+            difference.
+        </div>
+    ),
+
+    [actionKeys.BABEL]: (
+        <div>
+            <strong>BABEL:</strong> Usable at positive SONORITY. Reverses
+            current SONORITY and deals TRUE DAMAGE to the opponent by the
+            difference.
         </div>
     ),
 };
@@ -160,7 +164,7 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[MANA OVERFLOW]:</strong> Used before MANA by abilities that
             consume MANA. At turn end, all MANA OVERFLOW is lost and self takes
-            damage equal to the amount lost.
+            TRUE DAMAGE equal to the amount lost.
         </div>
     ),
 
@@ -182,8 +186,8 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[THORNED SHACKLES]:</strong> At turn end, consumes all MANA
             and MANA OVERFLOW, then grants SHACKLED MANA equal to the amount
-            consumed. When attacked, the attacker takes damage equal to their
-            own STR.
+            consumed. When attacked, the attacker takes TRUE DAMAGE equal to
+            their own STR.
         </div>
     ),
 
@@ -198,16 +202,15 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.POISON]: (
         <div>
-            <strong>[POISON]:</strong> At turn start, takes damage equal to
+            <strong>[POISON]:</strong> At turn start, takes TRUE DAMAGE equal to
             current POISON stacks.
         </div>
     ),
 
     [effectKeys.RADIANCE]: (
         <div>
-            <strong>[RADIANCE]:</strong> When using ATTACK or SPECIAL ATTACK,
-            consumes RADIANCE to increase damage dealt. When suffering damage
-            from enemy attacks, consumes RADIANCE to reduce damage taken.
+            <strong>[RADIANCE]:</strong> When using ATTACK, consumes RADIANCE to
+            increase PHYSICAL DAMAGE dealt.
         </div>
     ),
 
@@ -215,10 +218,9 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[RESOURCES]:</strong> Includes SHADOWFLAME, UNRELENTING
             SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED
-            MANA, BLOOD SACRIFICE, FADING LIGHT, RADIANCE, MANA, and HP.
-            Resources are consumed in this order and restored in reverse. HP
-            cannot exceed MAX HP. Excess MANA gained this way becomes MANA
-            OVERFLOW.
+            MANA, BLOOD SACRIFICE, RADIANCE, MANA, and HP. Resources are
+            consumed in this order and restored in reverse. HP cannot exceed MAX
+            HP. Excess MANA gained this way becomes MANA OVERFLOW.
         </div>
     ),
 
@@ -249,10 +251,10 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.LINGERING_EMBER]: (
         <div>
             <strong>[LINGERING EMBER]:</strong> Cannot be consumed by
-            SHADOWFLAME. When suffering damage from enemy attacks, consumes
-            LINGERING EMBER to reduce damage taken. Gains CINDERS equal to the
-            amount lost this way. At turn start, converts half of current
-            LINGERING EMBER into both SHADOWFLAME and CINDERS.
+            SHADOWFLAME. When suffering PHYSICAL or PIERCING DAMAGE from enemy
+            attacks, consumes LINGERING EMBER to reduce the damage taken. Gains
+            CINDERS equal to the amount lost this way. At turn start, converts
+            half of current LINGERING EMBER into both SHADOWFLAME and CINDERS.
         </div>
     ),
 
@@ -271,17 +273,14 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.RADIANT]: (
         <div>
-            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS. When
-            attacked, all RADIANCE lost on self is converted into FADING LIGHT
-            for the attacker. Additionally, as long as self has MANA, take
-            damage on MANA instead of HP.
+            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS.
         </div>
     ),
 
     [effectKeys.BLOOD_SACRIFICE]: (
         <div>
-            <strong>[BLOOD SACRIFICE]:</strong> Increases damage dealt by the
-            stack when using ATTACK. Causes MANA BLEED at turn start.
+            <strong>[BLOOD SACRIFICE]:</strong> Increases PHYSICAL DAMAGE dealt
+            by the stack when using ATTACK. Causes MANA BLEED at turn start.
         </div>
     ),
 
@@ -290,15 +289,6 @@ export const EFFECT_DESCRIPTIONS = {
             <strong>[UNRELENTING SHADOWS]:</strong> At turn start, loses all
             UNRELENTING SHADOWS. Then, gains RESOURCES based on the UNRELENTING
             SHADOWS lost this way.
-        </div>
-    ),
-
-    [effectKeys.FADING_LIGHT]: (
-        <div>
-            <strong>[FADING LIGHT]:</strong> When suffering damage from enemy
-            attacks, consumes FADING LIGHT to reduce damage taken. At turn
-            start, loses all FADING LIGHT and restores HP by the amount lost
-            this way.
         </div>
     ),
 
@@ -313,8 +303,8 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.FROST]: (
         <div>
             <strong>[FROST]:</strong> Passive: Does not activate POISON, MANA
-            OVERFLOW, FADING LIGHT, and MANA BLEED effects on self. Active:
-            Gains 5 PERMAFROST.
+            OVERFLOW, and MANA BLEED effects on self. Active: Gains 5
+            PERMAFROST.
         </div>
     ),
 
@@ -328,16 +318,15 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SCORCH]: (
         <div>
-            <strong>[SCORCH]:</strong> Passive: At turn end, deals 3 damage to
-            all entities. This damage ignores DEF and DAMAGE REDUCTION. Active:
-            Gains 5 SCORIA.
+            <strong>[SCORCH]:</strong> Passive: At turn end, deals 3 TRUE DAMAGE
+            to all entities. Active: Gains 5 SCORIA.
         </div>
     ),
 
     [effectKeys.PERMAFROST]: (
         <div>
-            <strong>[PERMAFROST]:</strong> Reduces damage taken from ATTACK and
-            SPECIAL ATTACK by current PERMAFROST.
+            <strong>[PERMAFROST]:</strong> Reduces PHYSICAL and PIERCING DAMAGE
+            taken by current PERMAFROST.
         </div>
     ),
 
@@ -350,8 +339,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SCORIA]: (
         <div>
-            <strong>[SCORIA]:</strong> Increases ATTACK and SPECIAL ATTACK
-            damage by current SCORIA.
+            <strong>[SCORIA]:</strong> Increases PHYSICAL and PIERCING DAMAGE
+            dealt by current SCORIA.
         </div>
     ),
 
@@ -363,34 +352,53 @@ export const EFFECT_DESCRIPTIONS = {
         </div>
     ),
 
-    [effectKeys.HARMONIOUS]: (
+    [effectKeys.RESONANT]: (
         <div>
-            <strong>[HARMONIOUS]:</strong> Deals higher or lower damage
-            proportionally to current SONORITY. Replaces ATTUNE with DA CAPO.
+            <strong>[RESONANT]:</strong> Enables SONORITY. Deals higher or lower
+            PHYSICAL and PIERCING DAMAGE according to SONORITY. Takes higher or
+            lower PHYSICAL and PIERCING DAMAGE according to SONORITY. At
+            positive SONORITY, replaces ATTUNE with BABEL. At negative SONORITY,
+            replaces ATTUNE with THE SOUND OF SILENCE. At 0 SONORITY, replaces
+            ATTUNE with DA CAPO.
         </div>
     ),
 
-    [effectKeys.DISSONANT]: (
+    [effectKeys.HALO]: (
         <div>
-            <strong>[DISSONANT]:</strong> Deals higher or lower damage
-            proportionally to inverse SONORITY. Replaces ATTUNE with THE SOUND
-            OF SILENCE.
+            <strong>[HALO]:</strong> When taking PHYSICAL or PIERCING DAMAGE,
+            consumes HALO to reduce the damage taken. Gain RADIANCE equal to the
+            HALO lost this way.
         </div>
     ),
 
-    [effectKeys.HARMONY]: (
+    [effectKeys.DIVINITY]: (
         <div>
-            <strong>[HARMONY]:</strong> Gained based on positive SONORITY. At
-            turn end, consumes all HARMONY and restores HP equal to the amount
-            consumed.
+            <strong>[DIVINITY]:</strong> Raises DAMAGE REDUCTION by 1% per
+            DIVINITY on self.
         </div>
     ),
 
-    [effectKeys.DISSONANCE]: (
+    [effectKeys.PHYSICAL_DAMAGE]: (
         <div>
-            <strong>[DISSONANCE]:</strong> Gained based on negative SONORITY. At
-            turn start, consumes all DISSONANCE and takes damage equal to the
-            amount consumed.
+            <strong>[PHYSICAL_DAMAGE]:</strong> Reduces the target HP. Can be
+            blocked by DEF, reduced by DAMAGE REDUCTION and mitigated by
+            shielding effects.
+        </div>
+    ),
+
+    [effectKeys.PIERCING_DAMAGE]: (
+        <div>
+            <strong>[PIERCING_DAMAGE]:</strong> Reduces the target HP. Ignores
+            DEF, but can be reduced by DAMAGE REDUCTION and mitigated by
+            shielding effects.
+        </div>
+    ),
+
+    [effectKeys.TRUE_DAMAGE]: (
+        <div>
+            <strong>[TRUE_DAMAGE]:</strong> Reduces the target HP. Cannot be
+            blocked by DEF, reduced by DAMAGE REDUCTION or mitigated by
+            shielding effects.
         </div>
     ),
 };

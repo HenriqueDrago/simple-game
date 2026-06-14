@@ -18,7 +18,6 @@ Effect activation order on turn start:
     5. Lingering Ember Passive Conversion
     6. Poison Damage (if not in Dimming Darkness)
     7. Mana Bleed (if not in Dimming Darkness)
-    8. Fading Light
 Effect activation order on turn end:
     1. Shackle Mana conversion
     2. Mana Overflow Damage (if not in Dimming Darkness)
@@ -198,24 +197,6 @@ export function processUpkeep(prev) {
         };
     }
 
-    // Dissonance
-    if (
-        draftTarget.resources.dissonance > 0
-    ) {
-        const newHp = Math.max(
-            0,
-            draftTarget.currHp - draftTarget.resources.dissonance,
-        );
-        draftTarget = {
-            ...draftTarget,
-            currHp: newHp,
-            resources: {
-                ...draftTarget.resources,
-                dissonance: 0,
-            }
-        };
-    }
-
     // Blood Sacrifice
     if (
         draftTarget.resources.bloodSacrifice > 0 &&
@@ -238,26 +219,6 @@ export function processUpkeep(prev) {
             ...draftTarget,
             currMana: targetNewCurrMana,
             currHp: newHp,
-        };
-    }
-
-    // Fading Light
-    if (
-        draftTarget.resources.fadingLight > 0
-        // currElement !== elementalKeys.FROST
-    ) {
-        const newHp = Math.min(
-            draftTarget.maxHp,
-            draftTarget.currHp + draftTarget.resources.fadingLight,
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            currHp: newHp,
-            resources: {
-                ...draftTarget.resources,
-                fadingLight: 0,
-            },
         };
     }
 
@@ -288,6 +249,20 @@ export function processUpkeep(prev) {
                 manaOverflow: dtNewManaOverflow,
             },
         };
+    }
+
+    // Halo
+    if(draftTarget.resources.halo > 0) {
+        const newDivinity = draftTarget.resources.halo + draftTarget.resources.divinity;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                halo: 0,
+                divinity: newDivinity,
+            }
+        }
     }
 
     // Calcula o próximo turno e verifica as mortes
@@ -347,8 +322,8 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     const currActor = draftEntities[currActorKey];
     const nextActor = draftEntities[nextActorKey];
 
-    let newSonority = newGame.sonority;
-    if (newSonority != null) {
+    let newSonority = currActor.sonority;
+    if (currActor.states.resonant) {
         newSonority = actionsClass.offensiveActions.includes(action)
             ? Math.max(constants.SONORITY_LOWER_LIMIT, newSonority - 1)
             : actionsClass.defensiveActions.includes(action)
@@ -398,9 +373,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     // Thorned Shackles
     const thornedShackles = currArray > 0;
 
-    // Harmony
-    newHp = newHp + currActor.resources.harmony
-
     // Check for deaths after end of turn effects have been applied
     const enemyDead =
         draftEntities[entityKeys.PLAYER_TWO].currHp <= 0 ||
@@ -425,23 +397,25 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         nextStatus = turnStatus.VICTORY;
     }
 
+    console.log(newHp)
+
     return {
         ...newGame,
         status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
         remainingArray: currArray,
-        sonority: newSonority,
         entities: {
             ...draftEntities,
             [currActorKey]: {
                 ...currActor,
                 currHp: newHp,
                 currMana: currMana,
+                sonority: newSonority,
                 resources: {
                     ...currActor.resources,
                     shackledMana: shackledMana,
                     manaOverflow: currManaOverflow,
-                    harmony: 0,
+
                 },
                 states: {
                     ...currActor.states,

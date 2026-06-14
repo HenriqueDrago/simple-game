@@ -4,11 +4,10 @@ import {
     paladinAI,
     hexerAI,
     warlockAI,
-    adaptativeAI,
     shadowSorcererAI,
 } from "./aiControllers.js";
 
-import { aiKeys, actionKeys } from "./enums.js";
+import { aiKeys, actionKeys, effectKeys } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
 
@@ -38,7 +37,7 @@ const MANA_SHACKLE_TURN_GAIN = 3;
 
 const MAX_OVERHEAT = 10;
 
-const RADIANCE_GEN_MULT = 1.0;
+const HALO_GEN_MULT = 1;
 
 const ELEMENTAL_RESOURCE_GAIN = 5;
 const SCORCH_DMG = 3;
@@ -56,6 +55,8 @@ const STARTING_SONORORITY = 0;
 const SONORITY_LOWER_LIMIT = -5;
 const SONORITY_HIGHER_LIMIT = 5;
 
+const DIVINITY_DR = 0.01;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -64,16 +65,17 @@ const DISTRIBUTION_MODES = [
 ];
 
 const freeResources = [
-    "shadowflame",
-    "unrelentingShadows",
-    "lingeringEmber",
-    "cinders",
-    "poison",
-    "manaOverflow",
-    "shackledMana",
-    "bloodSacrifice",
-    "fadingLight",
-    "radiance",
+    effectKeys.SHADOWFLAME,
+    effectKeys.UNRELENTING_SHADOWS,
+    effectKeys.LINGERING_EMBER,
+    effectKeys.CINDERS,
+    effectKeys.POISON,
+    effectKeys.MANA_OVERFLOW,
+    effectKeys.SHACKLED_MANA,
+    effectKeys.BLOOD_SACRIFICE,
+    effectKeys.DIVINITY,
+    effectKeys.HALO,
+    effectKeys.RADIANCE
 ];
 
 const limitedResources = ["currMana", "currHp", "currOverheat"];
@@ -94,7 +96,7 @@ export const constants = {
     STANDARD_DEF_EFFECT_INCREASE,
     GUARD_MANA_REGEN,
     freeResources,
-    RADIANCE_GEN_MULT,
+    HALO_GEN_MULT,
     ELEMENTAL_RESOURCE_GAIN,
     SCORCH_DMG,
     SAC_HP_CONSUMPTION,
@@ -105,7 +107,8 @@ export const constants = {
     NATURE_MANA_REGEN,
     STARTING_SONORORITY,
     SONORITY_LOWER_LIMIT,
-    SONORITY_HIGHER_LIMIT
+    SONORITY_HIGHER_LIMIT,
+    DIVINITY_DR,
 };
 
 export const presetAi = {
@@ -165,31 +168,17 @@ export const presetAi = {
         },
         caller: shadowSorcererAI,
     },
-    [aiKeys.ADAPTATIVE]: {
-        name: "Adaptative",
-        best: {
-            str: 5,
-            def: 5,
-        },
-        caller: adaptativeAI,
-    },
 };
 
 const offensiveActions = [
     actionKeys.ATTACK,
     actionKeys.SPECIAL_ATTACK,
-    actionKeys.BLACK_MAYHEM,
     actionKeys.LASER,
     actionKeys.MELTDOWN,
     actionKeys.SACRIFICE,
 ];
 
-const defensiveActions = [
-    actionKeys.HEAL,
-    actionKeys.GUARD,
-    actionKeys.AEGIS,
-    actionKeys.SHADOW_MANTLE,
-];
+const defensiveActions = [actionKeys.HEAL, actionKeys.GUARD, actionKeys.AEGIS];
 
 const transformativeActions = [
     actionKeys.ARRAY,
@@ -202,6 +191,9 @@ const transformativeActions = [
     actionKeys.CURSE,
     actionKeys.RITUAL_OF_ASH,
     actionKeys.SOUND_OF_SILENCE,
+    actionKeys.BABEL,
+    actionKeys.SHADOW_MANTLE,
+    actionKeys.BLACK_MAYHEM,
 ];
 
 export const actionsClass = {

@@ -27,7 +27,6 @@ function App() {
         nextStatus: null,
         remainingArray: 0,
         elementalWheel: elementalKeys.INACTIVE,
-        sonority: null,
         whoStarts: whoStartsKeys.PLAYER_ONE,
         entities: {
             [entityKeys.PLAYER_ONE]: {
@@ -199,7 +198,6 @@ function App() {
                 status: turnStatus.SETUP,
                 remainingArray: 0,
                 nextStatus: null,
-                sonority: null,
                 elementalWheel: elementalKeys.INACTIVE,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,

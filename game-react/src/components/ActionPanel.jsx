@@ -93,25 +93,31 @@ const getNormalActions = (arrayActive, currEntity) => [
     {
         key: actionKeys.WHEEL,
         label: "Wheel",
-        hoverKeys: [],
+        hoverKeys: [actionKeys.WHEEL],
     },
-    currEntity.states.harmonious
+    !currEntity.states.resonant
         ? {
-              key: actionKeys.DA_CAPO,
-              label: "Da Capo",
-              hoverKeys: [],
+              key: actionKeys.ATTUNE,
+              label: "Attune",
+              hoverKeys: [actionKeys.ATTUNE],
           }
-        : currEntity.states.dissonant
+        : currEntity.sonority > 0
           ? {
-                key: actionKeys.SOUND_OF_SILENCE,
-                label: "The Sound of Silence",
-                hoverKeys: [],
+                key: actionKeys.BABEL,
+                label: "Babel",
+                hoverKeys: [actionKeys.BABEL],
             }
-          : {
-                key: actionKeys.ATTUNE,
-                label: "Attune",
-                hoverKeys: [],
-            },
+          : currEntity.sonority < 0
+            ? {
+                  key: actionKeys.SOUND_OF_SILENCE,
+                  label: "The Sound of Silence",
+                  hoverKeys: [actionKeys.SOUND_OF_SILENCE],
+              }
+            : {
+                  key: actionKeys.DA_CAPO,
+                  label: "Da Capo",
+                  hoverKeys: [actionKeys.DA_CAPO],
+              },
 ];
 
 function ActionPanel({

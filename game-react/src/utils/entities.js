@@ -1,5 +1,5 @@
 import { constants } from "./constants.js";
-import { sdmKeys, actionKeys, effectKeys } from "./enums.js";
+import { sdmKeys, actionKeys, effectKeys, dmgTypes } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
     let draftEntity = {
@@ -202,6 +202,7 @@ export function createBaseEntity() {
         currMana: constants.BASE_STATS.mana,
         maxOverheat: constants.MAX_OVERHEAT,
         currOverheat: 0,
+        sonority: 0,
         resources: {
             manaOverflow: 0,
             bloodSacrifice: 0,
@@ -212,12 +213,11 @@ export function createBaseEntity() {
             cinders: 0,
             lingeringEmber: 0,
             unrelentingShadows: 0,
-            fadingLight: 0,
             permafrost: 0,
             overgrowth: 0,
             scoria: 0,
-            harmony: 0,
-            dissonance: 0,
+            halo: 0,
+            divinity: 0,
         },
         states: {
             guarding: false,
@@ -227,11 +227,10 @@ export function createBaseEntity() {
             darkEmbrace: false,
             dimmingDarkness: false,
             umbralCore: false,
-            harmonious: false,
-            dissonant: false,
             deployment: false,
             weaponsDeployed: false,
             thermalOverload: false,
+            resonant: false,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -242,14 +241,19 @@ export function processEntityDR(entity) {
     let drMult = 1.0;
     console.log(entity);
     if (entity.states.guarding) {
-        drMult *= constants.STANDARD_DR_INCREASE;
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states.sacrificial) {
-        drMult *= constants.STANDARD_DR_INCREASE;
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states.darkEmbrace) {
-        drMult *= constants.STANDARD_DR_INCREASE;
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
+
+    drMult *= Math.max(
+        0,
+        1 - entity.resources.divinity * constants.DIVINITY_DR,
+    );
 
     return drMult;
 }
@@ -264,4 +268,88 @@ export function processEntityDefEffect(entity) {
     }
 
     return defEffect;
+}
+
+export function dealDamage(
+    attacker,
+    defender,
+    baseDmg,
+    dmgType,
+    isArrayActive,
+) {
+    const additionalDmg =
+        dmgType === dmgTypes.PHYSICAL
+            ? attacker.str.value +
+              attacker.resources.radiance +
+              attacker.resources.scoria +
+              attacker.resources.bloodSacrifice +
+              attacker.sonority
+            : dmgType === dmgTypes.PIERCING
+              ? attacker.str.value +
+                attacker.resources.scoria +
+                attacker.sonority
+              : 0;
+
+    const effectiveDef =
+        dmgType === dmgTypes.PHYSICAL
+            ? defender.attributes.def.value * processEntityDefEffect(defender)
+            : 0;
+
+    const drMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityDR(defender)
+            : 1.0;
+
+    const flatDr =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? defender.sonority + defender.resources.permafrost
+            : 0;
+
+    const finalDmg = Math.max(
+        1,
+        Math.floor((baseDmg + additionalDmg - effectiveDef - flatDr) * drMult),
+    );
+
+    // Mitigation
+    const haloConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg, defender.resources.halo)
+            : 0;
+    const emberConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(
+                  finalDmg - haloConsumed,
+                  defender.resources.lingeringEmber,
+              )
+            : 0;
+
+    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
+
+    const defenderNewHp = Math.max(0, defender.currHp - damagePostMitigation);
+
+    const defenderNewHalo = defender.resources.halo - haloConsumed;
+    const defenderNewEmbers = defender.resources.lingeringEmber - emberConsumed;
+    const defenderNewRadiance = defender.resources.radiance + haloConsumed;
+
+    const thornsDmg =
+        isArrayActive && dmgType === dmgTypes.PHYSICAL ? attacker.str.value : 0;
+
+    const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
+
+    return {
+        attacker: {
+            ...attacker,
+            currHp: attackerNewHP,
+        },
+        defender: {
+            ...defender,
+            currHp: defenderNewHp,
+            resources: {
+                ...defender.resources,
+                halo: defenderNewHalo,
+                lingeringEmber: defenderNewEmbers,
+                radiance: defenderNewRadiance,
+            },
+        },
+    };
 }

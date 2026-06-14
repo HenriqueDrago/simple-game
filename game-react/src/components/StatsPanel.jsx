@@ -8,6 +8,7 @@ import { constants } from "../utils/constants.js";
 import { sdmKeys, elementalKeys, effectKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
+import SonorityCounter from "./SonorityCounter.jsx";
 
 const stackCounters = [
     ["Blood Sacrifice", effectKeys.BLOOD_SACRIFICE, "#ff4d4d", "rgba(255, 77, 77, 0.1)"],
@@ -28,9 +29,8 @@ const stackCounters = [
         "#9370db",
         "rgba(147, 112, 219, 0.1)",
     ],
-    ["Fading Light", effectKeys.FADING_LIGHT, "#ffe8a1", "rgba(245, 170, 0, 0.15)"],
-    ["Harmony", effectKeys.HARMONY, "#00bfff", "rgba(0, 191, 255, 0.15)"],
-    ["Dissonance", effectKeys.DISSONANCE, "#ff4500", "rgba(255, 69, 0, 0.15)"],
+    ["Halo", effectKeys.HALO, "#ffe8a1", "rgba(245, 170, 0, 0.15)"],
+    ["Divinity", effectKeys.DIVINITY, "#acd6ff", "rgba(176, 196, 222, 0.15)"]
 ];
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
@@ -48,8 +48,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
     if (states.radiant) activeStates.push("state-radiant");
     if (states.dimmingDarkness) activeStates.push("state-dimming");
     if (states.umbralCore) activeStates.push("state-umbral");
-    if (states.harmonious) activeStates.push("state-harmonious");
-    if (states.dissonant) activeStates.push("state-dissonant");
+    if (states.resonant) activeStates.push("state-resonant");
 
     const statesClass = activeStates.join(" ");
 
@@ -57,7 +56,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
         <div className={`stats-panel-container ${statesClass}`}>
             <HpBar entity={game.entities[entityKey]} label="Player One" />
             <ManaBar entity={game.entities[entityKey]} label="Player One" />
-
+            
             {stackCounters.map(([label, field, color, backgroundColor]) => (
                 <StackCounter
                     key={field}
@@ -81,6 +80,8 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                     />
                 ))}
             </div>
+
+            {states.resonant && <SonorityCounter sonority={game.entities[entityKey].sonority}></SonorityCounter>}
 
             {game.elementalWheel !== elementalKeys.INACTIVE && (
                 <ElementalCounter entity={game.entities[entityKey]}></ElementalCounter>
