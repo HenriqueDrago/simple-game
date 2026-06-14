@@ -3,6 +3,8 @@ import "./ActionPanel.css";
 
 import { ACTION_DESCRIPTIONS, EFFECT_DESCRIPTIONS } from "../utils/descriptors";
 import { entityKeys, turnStatus, aiKeys, actionKeys } from "../utils/enums";
+import { constants, presetAi } from "../utils/constants";
+import { laserCost } from "../utils/entities";
 
 const UMBRAL_ACTIONS = [
     {
@@ -41,84 +43,117 @@ const UMBRAL_ACTIONS = [
     },
 ];
 
-const getNormalActions = (arrayActive, currEntity) => [
-    { key: actionKeys.ATTACK, label: "Attack", hoverKeys: ["attack"] },
-    {
-        key: actionKeys.GUARD,
-        label: "Guard",
-        hoverKeys: ["guard", "guardingState"],
-    },
-    { key: actionKeys.HEAL, label: "Heal", hoverKeys: ["heal", "poison"] },
-    {
-        key: actionKeys.SPECIAL_ATTACK,
-        label: "Special Attack",
-        hoverKeys: ["spAtk", "manaImbalance", "manaOverflow"],
-    },
-    arrayActive
-        ? {
-              key: actionKeys.CURSE,
-              label: "Curse",
-              hoverKeys: ["curse", "shackledMana", "poison"],
-          }
-        : {
-              key: actionKeys.ARRAY,
-              label: "Array",
-              hoverKeys: [
-                  "array",
-                  "shackledMana",
-                  "thornedShackles",
-                  "manaOverflow",
-              ],
-          },
-    {
-        key: actionKeys.SACRIFICE,
-        label: "Self Sacrifice",
-        hoverKeys: [
-            "sacrifice",
-            "bloodSacrifice",
-            "sacrificialState",
-            "manaBleed",
-        ],
-    },
-    {
-        key: actionKeys.AEGIS,
-        label: "Aegis",
-        hoverKeys: ["aegis", "radiance", "holyProtection"],
-    },
-    {
-        key: actionKeys.SHADOW_PACT,
-        label: "Shadow Pact",
-        hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
-    },
-    {
-        key: actionKeys.WHEEL,
-        label: "Wheel",
-        hoverKeys: [actionKeys.WHEEL],
-    },
-    !currEntity.states.resonant
-        ? {
-              key: actionKeys.ATTUNE,
-              label: "Attune",
-              hoverKeys: [actionKeys.ATTUNE],
-          }
-        : currEntity.sonority > 0
-          ? {
-                key: actionKeys.BABEL,
-                label: "Babel",
-                hoverKeys: [actionKeys.BABEL],
-            }
-          : currEntity.sonority < 0
+const getNormalActions = (
+    arrayActive,
+    currEntity,
+    canUseSpAtk,
+    canUseLaser,
+    canUseDeploy,
+) => {
+    if (currEntity.states.thermalOverload) {
+        return [
+            {
+                key: actionKeys.MELTDOWN,
+                label: "Meltdown",
+                hoverKeys: [actionKeys.MELTDOWN],
+                isMeltdown: true,
+            },
+        ];
+    }
+
+    return [
+        { key: actionKeys.ATTACK, label: "Attack", hoverKeys: ["attack"] },
+        {
+            key: actionKeys.GUARD,
+            label: "Guard",
+            hoverKeys: ["guard", "guardingState"],
+        },
+        { key: actionKeys.HEAL, label: "Heal", hoverKeys: ["heal", "poison"] },
+        {
+            key: actionKeys.SPECIAL_ATTACK,
+            label: "Special Attack",
+            hoverKeys: ["spAtk", "manaImbalance", "manaOverflow"],
+            disabled: !canUseSpAtk,
+        },
+        arrayActive
             ? {
-                  key: actionKeys.SOUND_OF_SILENCE,
-                  label: "The Sound of Silence",
-                  hoverKeys: [actionKeys.SOUND_OF_SILENCE],
+                  key: actionKeys.CURSE,
+                  label: "Curse",
+                  hoverKeys: ["curse", "shackledMana", "poison"],
               }
             : {
-                  key: actionKeys.DA_CAPO,
-                  label: "Da Capo",
-                  hoverKeys: [actionKeys.DA_CAPO],
+                  key: actionKeys.ARRAY,
+                  label: "Array",
+                  hoverKeys: [
+                      "array",
+                      "shackledMana",
+                      "thornedShackles",
+                      "manaOverflow",
+                  ],
               },
-];
+        {
+            key: actionKeys.SACRIFICE,
+            label: "Self Sacrifice",
+            hoverKeys: [
+                "sacrifice",
+                "bloodSacrifice",
+                "sacrificialState",
+                "manaBleed",
+            ],
+        },
+        {
+            key: actionKeys.AEGIS,
+            label: "Aegis",
+            hoverKeys: ["aegis", "radiance", "holyProtection"],
+        },
+        {
+            key: actionKeys.SHADOW_PACT,
+            label: "Shadow Pact",
+            hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
+        },
+        {
+            key: actionKeys.WHEEL,
+            label: "Wheel",
+            hoverKeys: [actionKeys.WHEEL],
+        },
+        !currEntity.states.resonant
+            ? {
+                  key: actionKeys.ATTUNE,
+                  label: "Attune",
+                  hoverKeys: [actionKeys.ATTUNE],
+              }
+            : currEntity.sonority > 0
+              ? {
+                    key: actionKeys.BABEL,
+                    label: "Babel",
+                    hoverKeys: [actionKeys.BABEL],
+                }
+              : currEntity.sonority < 0
+                ? {
+                      key: actionKeys.SOUND_OF_SILENCE,
+                      label: "The Sound of Silence",
+                      hoverKeys: [actionKeys.SOUND_OF_SILENCE],
+                  }
+                : {
+                      key: actionKeys.DA_CAPO,
+                      label: "Da Capo",
+                      hoverKeys: [actionKeys.DA_CAPO],
+                  },
+        currEntity.states.weaponsDeployed
+            ? {
+                  key: actionKeys.LASER,
+                  label: "Laser",
+                  hoverKeys: [actionKeys.LASER],
+                  disabled: !canUseLaser,
+              }
+            : {
+                  key: actionKeys.DEPLOY,
+                  label: "Deploy",
+                  hoverKeys: [actionKeys.DEPLOY],
+                  disabled: !canUseDeploy,
+              },
+    ];
+};
 
 function ActionPanel({
     handleAction,
@@ -157,6 +192,34 @@ function ActionPanel({
         battleState === turnStatus.PLAYER_ONE_TURN &&
         playerController !== aiKeys.HUMAN;
 
+    const canUseSpAtk =
+        currEntity.currMana + currEntity.resources.manaOverflow >=
+        constants.SP_ATTACK_COST;
+    const canUseLaser =
+        currEntity.currMana + currEntity.resources.manaOverflow >=
+        laserCost(currEntity);
+    const canUseDeploy = !currEntity.states.venting;
+
+    const enemyLabel =
+        enemyController === aiKeys.HUMAN && playerController !== aiKeys.HUMAN
+            ? "Player Turn"
+            : enemyController === aiKeys.HUMAN &&
+                playerController === aiKeys.HUMAN
+              ? "Player Two Turn"
+              : playerController === enemyController
+                ? `${presetAi[enemyController].name} + " Two"`
+                : presetAi[enemyController].name;
+
+    const playerLabel =
+        playerController === aiKeys.HUMAN && enemyController !== aiKeys.HUMAN
+            ? "Player Turn"
+            : playerController === aiKeys.HUMAN &&
+                enemyController === aiKeys.HUMAN
+              ? "Player One Turn"
+              : playerController === enemyController
+                ? `${presetAi[playerController].name} + " One"`
+                : presetAi[playerController].name;
+
     // Centralized action handler
     const handleActionButton = (actionKey) => {
         setHoveredAction(null);
@@ -171,16 +234,26 @@ function ActionPanel({
 
     const currentActions = showUmbralButtons
         ? UMBRAL_ACTIONS
-        : getNormalActions(arrayActive, currEntity);
+        : getNormalActions(
+              arrayActive,
+              currEntity,
+              canUseSpAtk,
+              canUseLaser,
+              canUseDeploy,
+          );
+
+    // Determine the container class based on state
+    let containerClass = "button-grid";
+    if (currEntity.states.thermalOverload) {
+        containerClass = "meltdown-container";
+    } else if (showUmbralButtons) {
+        containerClass = "shadow-button-grid";
+    }
 
     return (
         <div className="action-panel-container">
             {showButtons && (
-                <div
-                    className={
-                        showUmbralButtons ? "shadow-button-grid" : "button-grid"
-                    }
-                >
+                <div className={containerClass}>
                     {currentActions.map((action) => (
                         <button
                             key={action.key}
@@ -188,6 +261,10 @@ function ActionPanel({
                                 setHoveredAction(action.hoverKeys)
                             }
                             onClick={() => handleActionButton(action.key)}
+                            disabled={action.disabled}
+                            className={
+                                action.isMeltdown ? "meltdown-button" : ""
+                            }
                         >
                             {action.label}
                         </button>
@@ -195,8 +272,8 @@ function ActionPanel({
                 </div>
             )}
 
-            {showEnemyWait && <span className="enemy-wait">Enemy Turn</span>}
-            {showPlayerWait && <span className="enemy-wait">Player Turn</span>}
+            {showEnemyWait && <span className="enemy-wait">{enemyLabel}</span>}
+            {showPlayerWait && <span className="enemy-wait">{playerLabel}</span>}
 
             {showButtons && (
                 <div className="action-description-box">

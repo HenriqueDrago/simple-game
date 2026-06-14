@@ -323,7 +323,17 @@ function App() {
         if (game.status === turnStatus.TRANSITION) {
             const timer = setTimeout(() => {
                 setGame((prev) => ({ ...prev, status: prev.nextStatus }));
-            }, 800);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game.status]);
+
+    useEffect(() => {
+        if (game.status === turnStatus.SHORT_TRANSITION) {
+            const timer = setTimeout(() => {
+                setGame((prev) => ({ ...prev, status: prev.nextStatus }));
+            }, 400);
 
             return () => clearTimeout(timer);
         }

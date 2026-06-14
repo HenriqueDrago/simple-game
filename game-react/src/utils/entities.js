@@ -203,6 +203,7 @@ export function createBaseEntity() {
         maxOverheat: constants.MAX_OVERHEAT,
         currOverheat: 0,
         sonority: 0,
+        lasersUsedThisTurn: 0,
         resources: {
             manaOverflow: 0,
             bloodSacrifice: 0,
@@ -231,6 +232,7 @@ export function createBaseEntity() {
             weaponsDeployed: false,
             thermalOverload: false,
             resonant: false,
+            venting: false,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -247,6 +249,9 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states.darkEmbrace) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
+    if (entity.states.deployment) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
 
@@ -279,15 +284,14 @@ export function dealDamage(
 ) {
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? attacker.str.value +
-              attacker.resources.radiance +
+            ? attacker.resources.radiance +
               attacker.resources.scoria +
               attacker.resources.bloodSacrifice +
               attacker.sonority
             : dmgType === dmgTypes.PIERCING
-              ? attacker.str.value +
-                attacker.resources.scoria +
-                attacker.sonority
+              ? attacker.resources.scoria +
+                attacker.sonority +
+                attacker.resources.radiance
               : 0;
 
     const effectiveDef =
@@ -332,7 +336,9 @@ export function dealDamage(
     const defenderNewRadiance = defender.resources.radiance + haloConsumed;
 
     const thornsDmg =
-        isArrayActive && dmgType === dmgTypes.PHYSICAL ? attacker.str.value : 0;
+        isArrayActive && dmgType === dmgTypes.PHYSICAL
+            ? attacker.attributes.str.value
+            : 0;
 
     const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
 
@@ -352,4 +358,78 @@ export function dealDamage(
             },
         },
     };
+}
+
+export function dealDamageSelf(entity, baseDmg, dmgType, isArrayActive) {
+    const additionalDmg =
+        dmgType === dmgTypes.PHYSICAL
+            ? entity.resources.radiance +
+              entity.resources.scoria +
+              entity.resources.bloodSacrifice +
+              entity.sonority
+            : dmgType === dmgTypes.PIERCING
+              ? entity.resources.scoria + entity.sonority
+              : 0;
+
+    const effectiveDef =
+        dmgType === dmgTypes.PHYSICAL
+            ? entity.attributes.def.value * processEntityDefEffect(entity)
+            : 0;
+
+    const drMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityDR(entity)
+            : 1.0;
+
+    const flatDr =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? entity.sonority + entity.resources.permafrost
+            : 0;
+
+    const finalDmg = Math.max(
+        1,
+        Math.floor((baseDmg + additionalDmg - effectiveDef - flatDr) * drMult),
+    );
+
+    // Mitigation
+    const haloConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg, entity.resources.halo)
+            : 0;
+    const emberConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg - haloConsumed, entity.resources.lingeringEmber)
+            : 0;
+
+    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
+
+    let newHp = Math.max(0, entity.currHp - damagePostMitigation);
+
+    const newHalo = entity.resources.halo - haloConsumed;
+    const newEmbers = entity.resources.lingeringEmber - emberConsumed;
+    const newRadiance = entity.resources.radiance + haloConsumed;
+
+    const thornsDmg =
+        isArrayActive && dmgType === dmgTypes.PHYSICAL
+            ? entity.attributes.str.value
+            : 0;
+
+    newHp = Math.max(0, newHp - thornsDmg);
+
+    return {
+        entity: {
+            ...entity,
+            currHp: newHp,
+            resources: {
+                ...entity.resources,
+                halo: newHalo,
+                lingeringEmber: newEmbers,
+                radiance: newRadiance,
+            },
+        },
+    };
+}
+
+export function laserCost(agent) {
+    return Math.max(1, Math.ceil((agent.currOverheat - 3) / 2));
 }

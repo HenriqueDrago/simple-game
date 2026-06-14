@@ -4,6 +4,7 @@ import {
     createBaseEntity,
     restoreResources,
     dealDamage,
+    laserCost,
 } from "./entities.js";
 import { elementalKeys, actionKeys, dmgTypes } from "./enums.js";
 
@@ -26,6 +27,9 @@ export const simulators = {
     [actionKeys.DA_CAPO]: simulateDaCapo,
     [actionKeys.SOUND_OF_SILENCE]: simulateSoundOfSilence,
     [actionKeys.BABEL]: simulateBabel,
+    [actionKeys.DEPLOY]: simulateDeploy,
+    [actionKeys.LASER]: simulateLaser,
+    [actionKeys.MELTDOWN]: simulateMeltdown,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -114,7 +118,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        0,
+        agent.attributes.str.value,
         dmgTypes.PHYSICAL,
         prev.remainingArray > 0,
     );
@@ -152,7 +156,7 @@ function simulateSpecialAttack({
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        manaDiff,
+        manaDiff + agent.attributes.str.value,
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
     );
@@ -323,10 +327,6 @@ function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         ...draftEntity,
     };
 
-    const newUnrelShadows =
-        draftAgent.resources.unrelentingShadows +
-        (resourcesConsumed.radiance || 0);
-
     return {
         ...prev,
         entities: {
@@ -335,12 +335,11 @@ function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             [agentKey]: {
                 ...draftAgent,
                 states: {
-                    ...draftAgent.states,
+                    ...createBaseEntity().states,
                     umbralCore: true,
                 },
                 resources: {
                     ...draftAgent.resources,
-                    unrelentingShadows: newUnrelShadows,
                     shadowflame: resourcesConsumed.totalConsumption,
                 },
             },
@@ -443,11 +442,7 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     const burntNonCindersNonRad =
         resourcesConsumed.totalConsumption -
-        (resourcesConsumed.cinders || 0) -
-        (resourcesConsumed.radiance || 0);
-
-    const newUnrelShadows =
-        agent.resources.unrelentingShadows + (resourcesConsumed.radiance || 0);
+        (resourcesConsumed.cinders || 0);
 
     const newNonAgentCinders =
         draftNonAgent.resources.cinders + burntNonCindersNonRad;
@@ -470,7 +465,6 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 resources: {
                     ...agent.resources,
                     lingeringEmber: newAgentLE,
-                    unrelentingShadows: newUnrelShadows,
                 },
             },
         },
@@ -609,6 +603,107 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             [agentKey]: {
                 ...attacker,
                 sonority: newSonority,
+            },
+            [nonAgentKey]: {
+                ...defender,
+            },
+        },
+    };
+}
+
+function simulateDeploy({ prev, agent, agentKey }) {
+    if (agent.states.venting) {
+        return prev;
+    }
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                states: {
+                    ...agent.states,
+                    deployment: true,
+                },
+            },
+        },
+    };
+}
+
+function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const manaCost = laserCost(agent);
+
+    if (agent.currMana + agent.resources.manaOverflow < manaCost) {
+        return prev;
+    }
+
+    const { attacker, defender } = dealDamage(
+        agent,
+        nonAgent,
+        1,
+        dmgTypes.PIERCING,
+        prev.remainingArray > 0,
+    );
+
+    const newOverheat = attacker.currOverheat + 1 + attacker.lasersUsedThisTurn;
+    const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
+    const overflowConsumed = Math.min(manaCost, agent.resources.manaOverflow);
+    const manaConsumed = manaCost - overflowConsumed;
+
+    const newManaOverflow = agent.resources.manaOverflow - overflowConsumed;
+    const newMana = agent.currMana - manaConsumed;
+
+    const thermalOverload = newOverheat >= constants.MAX_OVERHEAT;
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...attacker,
+                currOverheat: newOverheat,
+                currMana: newMana,
+                lasersUsedThisTurn: newlasersUsedThisTurn,
+                states: {
+                    ...attacker.states,
+                    weaponsDeployed: !thermalOverload,
+                    thermalOverload: thermalOverload,
+                },
+                resources: {
+                    ...attacker.resources,
+                    manaOverflow: newManaOverflow,
+                },
+            },
+            [nonAgentKey]: {
+                ...defender,
+            },
+        },
+    };
+}
+
+function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const baseDmg = agent.currOverheat;
+
+    const { attacker, defender } = dealDamage(
+        agent,
+        nonAgent,
+        baseDmg,
+        dmgTypes.PHYSICAL,
+        prev.remainingArray > 0,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...attacker,
+                states: {
+                    ...agent.states,
+                    thermalOverload: false,
+                    venting: true,
+                },
             },
             [nonAgentKey]: {
                 ...defender,

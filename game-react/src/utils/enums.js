@@ -8,6 +8,7 @@ export const turnStatus = Object.freeze({
     DEFEAT: 6,
     DRAW: 7,
     TRANSITION: 8,
+    SHORT_TRANSITION: 9,
 });
 
 export const entityKeys = Object.freeze({
@@ -108,4 +109,9 @@ export const effectKeys = Object.freeze({
     PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
     PIERCING_DAMAGE: dmgTypes.PIERCING,
     TRUE_DAMAGE: dmgTypes.TRUE,
+    DEPLOYMENT: "deployment",
+    WEAPONS_DEPLOYED: "weaponsDeployed",
+    OVERHEAT: "overheat",
+    THERMAL_OVERLOAD: "thermalOverload",
+    VENTING: "venting",
 });

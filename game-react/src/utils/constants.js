@@ -32,10 +32,11 @@ const SP_ATTACK_COST = 6;
 const MANA_BLEED_MULT = 0.5;
 const BLOOD_SACRIFICE_MULT = 1.0;
 
-const ARRAY_DURATION = 3;
+const ARRAY_DURATION = 2;
 const MANA_SHACKLE_TURN_GAIN = 3;
 
 const MAX_OVERHEAT = 10;
+const VENTING_OVERHEAT_LOSS = 5;
 
 const HALO_GEN_MULT = 1;
 
@@ -78,7 +79,7 @@ const freeResources = [
     effectKeys.RADIANCE
 ];
 
-const limitedResources = ["currMana", "currHp", "currOverheat"];
+const limitedResources = ["currOverheat", "currMana", "currHp"];
 
 export const constants = {
     INITIAL_POINTS_AVAILABLE,
@@ -109,6 +110,7 @@ export const constants = {
     SONORITY_LOWER_LIMIT,
     SONORITY_HIGHER_LIMIT,
     DIVINITY_DR,
+    VENTING_OVERHEAT_LOSS,
 };
 
 export const presetAi = {
@@ -121,7 +123,7 @@ export const presetAi = {
         caller: simpleAI,
     },
     [aiKeys.SIMPLE]: {
-        name: "Simple",
+        name: "Mundane",
         best: {
             str: 6,
             def: 4,

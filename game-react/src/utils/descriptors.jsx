@@ -43,10 +43,10 @@ export const ACTION_DESCRIPTIONS = {
     [actionKeys.ARRAY]: (
         <div>
             <strong>ARRAY:</strong> Envelops the battlefield in a magical array
-            for 3 turns. Consumes all MANA and MANA OVERFLOW from every entity,
-            then grants SHACKLED MANA equal to the amount consumed on each
-            entity. While active, all entities gain THORNED SHACKLES, and ARRAY
-            is replaced with CURSE.
+            for the next 2 turns. Consumes all MANA and MANA OVERFLOW from every
+            entity, then grants SHACKLED MANA equal to the amount consumed on
+            each entity. While active, all entities gain THORNED SHACKLES, and
+            ARRAY is replaced with CURSE.
         </div>
     ),
 
@@ -69,7 +69,8 @@ export const ACTION_DESCRIPTIONS = {
         <div>
             <strong>SHADOW PACT:</strong> Enters UMBRAL CORE. Burns 5 RESOURCES,
             then gains SHADOWFLAME equal to the amount burned. Cannot burn
-            SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS.
+            SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS. Exits all
+            other states, except THORNED SHACKLES.
         </div>
     ),
 
@@ -142,6 +143,27 @@ export const ACTION_DESCRIPTIONS = {
             difference.
         </div>
     ),
+
+    [actionKeys.DEPLOY]: (
+        <div>
+            <strong>DEPLOY:</strong> Enters DEPLOYMENT state.
+        </div>
+    ),
+
+    [actionKeys.LASER]: (
+        <div>
+            <strong>LASER:</strong> Consumes MANA based on current OVERHEAT.
+            Deals 1 PIERCING DAMAGE and gains OVERHEAT based on the amount of
+            times LASER was used this turn. Does not end the turn.
+        </div>
+    ),
+
+    [actionKeys.MELTDOWN]: (
+        <div>
+            <strong>MELTDOWN:</strong> Deals PHYSICAL DAMAGE to all entities
+            based on current OVERHEAT, then enters VENTING state.
+        </div>
+    ),
 };
 
 export const EFFECT_DESCRIPTIONS = {
@@ -178,7 +200,6 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[MANA BLEED]:</strong> At turn start, loses MANA equal to
             half of current BLOOD SACRIFICE and restores an equal amount of HP.
-            MANA cannot drop below 0, and HP cannot exceed MAX HP.
         </div>
     ),
 
@@ -210,7 +231,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.RADIANCE]: (
         <div>
             <strong>[RADIANCE]:</strong> When using ATTACK, consumes RADIANCE to
-            increase PHYSICAL DAMAGE dealt.
+            increase PHYSICAL and PIERCING DAMAGE dealt.
         </div>
     ),
 
@@ -218,9 +239,9 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[RESOURCES]:</strong> Includes SHADOWFLAME, UNRELENTING
             SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED
-            MANA, BLOOD SACRIFICE, RADIANCE, MANA, and HP. Resources are
-            consumed in this order and restored in reverse. HP cannot exceed MAX
-            HP. Excess MANA gained this way becomes MANA OVERFLOW.
+            MANA, BLOOD SACRIFICE, DIVINITY, HALO, RADIANCE, OVERHEAT, MANA, and
+            HP. When RESOURCES are consumed, they are consumed in this order.
+            When RESOURCES are restored, they are restored in reverse order.
         </div>
     ),
 
@@ -399,6 +420,39 @@ export const EFFECT_DESCRIPTIONS = {
             <strong>[TRUE_DAMAGE]:</strong> Reduces the target HP. Cannot be
             blocked by DEF, reduced by DAMAGE REDUCTION or mitigated by
             shielding effects.
+        </div>
+    ),
+    [effectKeys.DEPLOYMENT]: (
+        <div>
+            <strong>[DEPLOYMENT]:</strong> Raises DAMAGE REDUCTION by 50%. At
+            turn start, becomes WEAPONS DEPLOYED.
+        </div>
+    ),
+
+    [effectKeys.WEAPONS_DEPLOYED]: (
+        <div>
+            <strong>[WEAPONS DEPLOYED]:</strong> Enables OVERHEAT. Replaces
+            DEPLOY with LASER. At 10 or more OVERHEAT, becomes THERMAL OVERLOAD.
+        </div>
+    ),
+
+    [effectKeys.OVERHEAT]: (
+        <div>
+            <strong>[OVERHEAT]:</strong> Increases the MANA cost of LASER.
+        </div>
+    ),
+
+    [effectKeys.THERMAL_OVERLOAD]: (
+        <div>
+            <strong>[THERMAL OVERLOAD]:</strong> Enables OVERHEAT. Replaces all
+            actions with MELTDOWN.
+        </div>
+    ),
+
+    [effectKeys.VENTING]: (
+        <div>
+            <strong>[VENTING]:</strong> Enables OVERHEAT. Cannot use DEPLOY. At
+            turn start, loses 5 OVERHEAT. At 0 OVERHEAT, lose this state.
         </div>
     ),
 };

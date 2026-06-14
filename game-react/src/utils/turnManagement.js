@@ -45,7 +45,10 @@ export function processUpkeep(prev) {
         ...prev.entities[nonTargetKey],
     };
 
-    if (draftTarget.states.thornedShackles || draftNonTarget.states.thornedShackles) {
+    if (
+        draftTarget.states.thornedShackles ||
+        draftNonTarget.states.thornedShackles
+    ) {
         if (isArrayActive) {
             const newTargetShackledMana =
                 draftTarget.resources.shackledMana +
@@ -113,39 +116,6 @@ export function processUpkeep(prev) {
         }
     }
 
-    // Shadowflame
-    if (
-        draftTarget.resources.shadowflame > 0 &&
-        !draftTarget.states.darkEmbrace
-    ) {
-        console.log(draftTarget.resources.shadowflame)
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            draftTarget.resources.shadowflame,
-            effectKeys.SHADOWFLAME,
-        );
-
-        draftTarget = {
-            ...draftEntity,
-        };
-
-        const newUnrelShadows =
-            (resourcesConsumed.radiance || 0) +
-            draftTarget.resources.unrelentingShadows;
-
-        const newShadowflame =
-            draftTarget.resources.shadowflame + resourcesConsumed.totalConsumption;
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                unrelentingShadows: newUnrelShadows,
-                shadowflame: newShadowflame,
-            },
-        };
-    }
-
     // Unrelenting Shadows
     if (draftTarget.resources.unrelentingShadows > 0) {
         draftTarget = restoreResources(
@@ -158,6 +128,35 @@ export function processUpkeep(prev) {
             resources: {
                 ...draftTarget.resources,
                 unrelentingShadows: 0,
+            },
+        };
+    }
+
+    // Shadowflame
+    if (
+        draftTarget.resources.shadowflame > 0 &&
+        !draftTarget.states.darkEmbrace
+    ) {
+        console.log(draftTarget.resources.shadowflame);
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            draftTarget.resources.shadowflame,
+            effectKeys.SHADOWFLAME,
+        );
+
+        draftTarget = {
+            ...draftEntity,
+        };
+
+        const newShadowflame =
+            draftTarget.resources.shadowflame +
+            resourcesConsumed.totalConsumption;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                shadowflame: newShadowflame,
             },
         };
     }
@@ -252,8 +251,9 @@ export function processUpkeep(prev) {
     }
 
     // Halo
-    if(draftTarget.resources.halo > 0) {
-        const newDivinity = draftTarget.resources.halo + draftTarget.resources.divinity;
+    if (draftTarget.resources.halo > 0) {
+        const newDivinity =
+            draftTarget.resources.halo + draftTarget.resources.divinity;
 
         draftTarget = {
             ...draftTarget,
@@ -261,8 +261,36 @@ export function processUpkeep(prev) {
                 ...draftTarget.resources,
                 halo: 0,
                 divinity: newDivinity,
-            }
-        }
+            },
+        };
+    }
+
+    // Deployment
+    if (draftTarget.states.deployment) {
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                deployment: false,
+                weaponsDeployed: true,
+            },
+        };
+    }
+
+    // Venting
+    if (draftTarget.states.venting) {
+        const newOverheat = Math.max(
+            0,
+            draftTarget.currOverheat - constants.VENTING_OVERHEAT_LOSS,
+        );
+        draftTarget = {
+            ...draftTarget,
+            currOverheat: newOverheat,
+            states: {
+                ...draftTarget.states,
+                venting: newOverheat > 0,
+            },
+        };
     }
 
     // Calcula o próximo turno e verifica as mortes
@@ -317,75 +345,130 @@ export function processUpkeep(prev) {
 }
 
 export function commitTurn(newGame, currActorKey, nextActorKey, action) {
-    const draftEntities = newGame.entities;
+    let draftCurrActor = newGame.entities[currActorKey];
+    let draftNextActor = newGame.entities[nextActorKey];
 
-    const currActor = draftEntities[currActorKey];
-    const nextActor = draftEntities[nextActorKey];
+    if (action !== actionKeys.LASER) {
+        // Shackled Mana
+        if (draftCurrActor.states.thornedShackles) {
+            const shackledMana =
+                draftCurrActor.resources.shackledMana +
+                draftCurrActor.currMana +
+                draftCurrActor.resources.manaOverflow;
 
-    let newSonority = currActor.sonority;
-    if (currActor.states.resonant) {
-        newSonority = actionsClass.offensiveActions.includes(action)
-            ? Math.max(constants.SONORITY_LOWER_LIMIT, newSonority - 1)
-            : actionsClass.defensiveActions.includes(action)
-              ? Math.min(constants.SONORITY_HIGHER_LIMIT, newSonority + 1)
-              : newSonority;
+            draftCurrActor = {
+                ...draftCurrActor,
+                currMana: 0,
+                resources: {
+                    ...draftCurrActor.resources,
+                    shackledMana: shackledMana,
+                    manaOverflow: 0,
+                },
+            };
+        }
+
+        // Mana Overflow
+        if (
+            draftCurrActor.resources.manaOverflow > 0 &&
+            !draftCurrActor.states.dimmingDarkness &&
+            newGame.elementalWheel !== elementalKeys.FROST
+        ) {
+            const newHp = Math.max(
+                0,
+                draftCurrActor.currHp - draftCurrActor.resources.manaOverflow,
+            );
+
+            draftCurrActor = {
+                ...draftCurrActor,
+                currHp: newHp,
+                resources: {
+                    ...draftCurrActor.resources,
+                    manaOverflow: 0,
+                },
+            };
+        }
+
+        // Scorch
+        if (newGame.elementalWheel === elementalKeys.SCORCH) {
+            const newHp = Math.max(
+                0,
+                draftCurrActor.currHp - constants.SCORCH_DMG,
+            );
+
+            draftCurrActor = {
+                ...draftCurrActor,
+                currHp: newHp,
+            };
+        }
+
+        // Laser used
+        draftCurrActor = {
+            ...draftCurrActor,
+            lasersUsedThisTurn: 0,
+        };
     }
 
-    // Mana Shackle
-    const shackledMana = currActor.states.thornedShackles
-        ? currActor.resources.shackledMana +
-          currActor.currMana +
-          currActor.resources.manaOverflow
-        : 0;
+    // Sonority
+    if (draftCurrActor.states.resonant) {
+        const newSonority = actionsClass.offensiveActions.includes(action)
+            ? Math.max(
+                  constants.SONORITY_LOWER_LIMIT,
+                  draftCurrActor.sonority - 1,
+              )
+            : actionsClass.defensiveActions.includes(action)
+              ? Math.min(
+                    constants.SONORITY_HIGHER_LIMIT,
+                    draftCurrActor.sonority + 1,
+                )
+              : draftCurrActor.sonority;
 
-    const currMana = currActor.states.thornedShackles ? 0 : currActor.currMana;
-    let currManaOverflow = currActor.states.thornedShackles
-        ? 0
-        : currActor.resources.manaOverflow;
-
-    // Mana Overflow
-    let newHp =
-        currActor.states.dimmingDarkness ||
-        newGame.elementalWheel === elementalKeys.FROST
-            ? currActor.currHp
-            : Math.max(0, currActor.currHp - currManaOverflow);
-
-    currManaOverflow =
-        currActor.states.dimmingDarkness ||
-        newGame.elementalWheel === elementalKeys.FROST
-            ? currActor.resources.manaOverflow
-            : 0;
-
-    // Scorch
-    newHp =
-        newGame.elementalWheel === elementalKeys.SCORCH
-            ? Math.max(0, newHp - constants.SCORCH_DMG)
-            : newHp;
+        draftCurrActor = {
+            ...draftCurrActor,
+            sonority: newSonority,
+        };
+    }
 
     // Array
     const currArray =
         action === actionKeys.ARRAY
-            ? constants.ARRAY_DURATION - 1
+            ? constants.ARRAY_DURATION
             : action === actionKeys.CURSE
               ? 0
               : Math.max(0, newGame.remainingArray - 1);
 
     // Thorned Shackles
-    const thornedShackles = currArray > 0;
+    draftCurrActor = {
+        ...draftCurrActor,
+        states: {
+            ...draftCurrActor.states,
+            thornedShackles: currArray > 0,
+        },
+    };
 
     // Check for deaths after end of turn effects have been applied
-    const enemyDead =
-        draftEntities[entityKeys.PLAYER_TWO].currHp <= 0 ||
-        (newHp <= 0 && currActorKey === entityKeys.PLAYER_TWO);
+    const finalPlayerOneHp =
+        currActorKey === entityKeys.PLAYER_ONE
+            ? draftCurrActor.currHp
+            : draftNextActor.currHp;
+    const finalPlayerTwoHp =
+        currActorKey === entityKeys.PLAYER_TWO
+            ? draftCurrActor.currHp
+            : draftNextActor.currHp;
 
-    const playerDead =
-        draftEntities[entityKeys.PLAYER_ONE].currHp <= 0 ||
-        (newHp <= 0 && currActorKey === entityKeys.PLAYER_ONE);
+    const playerDead = finalPlayerOneHp <= 0;
+    const enemyDead = finalPlayerTwoHp <= 0;
 
     let nextStatus =
         nextActorKey === entityKeys.PLAYER_ONE
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
+
+    if (action === actionKeys.LASER) {
+        nextStatus =
+            currActorKey === entityKeys.PLAYER_ONE
+                ? turnStatus.PLAYER_ONE_TURN
+                : turnStatus.PLAYER_TWO_TURN;
+    }
 
     if (playerDead) {
         if (enemyDead) {
@@ -397,37 +480,23 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         nextStatus = turnStatus.VICTORY;
     }
 
-    console.log(newHp)
+    const newStatus =
+        action === actionKeys.LASER
+            ? turnStatus.SHORT_TRANSITION
+            : turnStatus.TRANSITION;
 
     return {
         ...newGame,
-        status: turnStatus.TRANSITION,
+        status: newStatus,
         nextStatus: nextStatus,
         remainingArray: currArray,
         entities: {
-            ...draftEntities,
+            ...newGame.entities,
             [currActorKey]: {
-                ...currActor,
-                currHp: newHp,
-                currMana: currMana,
-                sonority: newSonority,
-                resources: {
-                    ...currActor.resources,
-                    shackledMana: shackledMana,
-                    manaOverflow: currManaOverflow,
-
-                },
-                states: {
-                    ...currActor.states,
-                    thornedShackles: thornedShackles,
-                },
+                ...draftCurrActor,
             },
             [nextActorKey]: {
-                ...nextActor,
-                states: {
-                    ...nextActor.states,
-                    thornedShackles: thornedShackles,
-                },
+                ...draftNextActor,
             },
         },
     };
