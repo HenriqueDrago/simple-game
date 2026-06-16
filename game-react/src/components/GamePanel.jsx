@@ -11,6 +11,7 @@ function GamePanel({
     handleDistributionModeChange,
     handleAiChange,
 }) {
+    console.log(game.remainingArray)
     return (
         <div className="game-panel-container">
             {game.status === turnStatus.SETUP && (

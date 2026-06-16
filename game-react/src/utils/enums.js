@@ -9,6 +9,8 @@ export const turnStatus = Object.freeze({
     DRAW: 7,
     TRANSITION: 8,
     SHORT_TRANSITION: 9,
+    WHEEL_TURN: 10,
+    ARRAY_TURN: 11,
 });
 
 export const entityKeys = Object.freeze({
@@ -49,7 +51,7 @@ export const dmgTypes = Object.freeze({
     PHYSICAL: "phys",
     PIERCING: "pierce",
     TRUE: "true",
-})
+});
 
 export const actionKeys = Object.freeze({
     ATTACK: "attack",
@@ -65,7 +67,6 @@ export const actionKeys = Object.freeze({
     SHADOW_MANTLE: "shadowMantle",
     RITUAL_OF_ASH: "ritualOfAsh",
     DARK_PROMISE: "darkPromise",
-    WHEEL: "wheel",
     ATTUNE: "attune",
     DA_CAPO: "daCapo",
     SOUND_OF_SILENCE: "soundOfSilence",
@@ -73,6 +74,8 @@ export const actionKeys = Object.freeze({
     LASER: "laser",
     MELTDOWN: "meltdown",
     BABEL: "babel",
+    ALIGN: "align",
+    HALT: "halt",
 });
 
 export const effectKeys = Object.freeze({
@@ -95,7 +98,7 @@ export const effectKeys = Object.freeze({
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
-    ELEMENTAL_WHEEL: "elementalWheel",
+    WHEEL: "elementalWheel",
     FROST: "frost",
     NATURE: "nature",
     SCORCH: "scorch",
@@ -114,4 +117,13 @@ export const effectKeys = Object.freeze({
     OVERHEAT: "overheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
+    ELEMENTAL_ESSENCE: "elementalEssence",
+    CRYOGENESIS: "cryogenesis",
+    FADING_LIGHT: "fadingLight",
+    CUTOFF_WINGS: "cutoffWings"
 });
+
+export const directionKeys = Object.freeze({
+    CLOCKWISE: 0,
+    COUNTERCLOCKWISE: 1,
+})

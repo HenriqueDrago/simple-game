@@ -12,7 +12,8 @@ const STATE_MAPPINGS = [
     { key: "radiant", label: "Radiant" },
     { key: "darkEmbrace", label: "Dark Embrace" },
     { key: "dimmingDarkness", label: "Dimming Darkness" },
-    { key: "thornedShackles", label: "Thorned Shackles" }
+    { key: "thornedShackles", label: "Thorned Shackles" },
+    { key: "cutoffWings", label: "Cutoff Wings"}
 ];
 
 function StateBadges({ states }) {

@@ -15,7 +15,7 @@ const ATTRIBUTE_NAMES = ["str", "def"];
 const BASE_STATS = {
     str: 0,
     def: 0,
-    hp: 15,
+    hp: 20,
     mana: 10,
 };
 const STAT_MULTIPLIERS = {
@@ -32,7 +32,7 @@ const SP_ATTACK_COST = 6;
 const MANA_BLEED_MULT = 0.5;
 const BLOOD_SACRIFICE_MULT = 1.0;
 
-const ARRAY_DURATION = 2;
+const ARRAY_DURATION = 3;
 const MANA_SHACKLE_TURN_GAIN = 3;
 
 const MAX_OVERHEAT = 10;
@@ -40,8 +40,8 @@ const VENTING_OVERHEAT_LOSS = 5;
 
 const HALO_GEN_MULT = 1;
 
-const ELEMENTAL_RESOURCE_GAIN = 5;
-const SCORCH_DMG = 3;
+const ELEMENTAL_RESOURCE_GAIN = 3;
+const INITIAL_ELEMENTAL_ESSENCE_GAINED = 0;
 
 const SAC_HP_CONSUMPTION = 0.5;
 
@@ -73,10 +73,11 @@ const freeResources = [
     effectKeys.POISON,
     effectKeys.MANA_OVERFLOW,
     effectKeys.SHACKLED_MANA,
-    effectKeys.BLOOD_SACRIFICE,
+    effectKeys.CRYOGENESIS,
     effectKeys.DIVINITY,
     effectKeys.HALO,
-    effectKeys.RADIANCE
+    effectKeys.RADIANCE,
+    effectKeys.BLOOD_SACRIFICE,
 ];
 
 const limitedResources = ["currOverheat", "currMana", "currHp"];
@@ -99,7 +100,7 @@ export const constants = {
     freeResources,
     HALO_GEN_MULT,
     ELEMENTAL_RESOURCE_GAIN,
-    SCORCH_DMG,
+    INITIAL_ELEMENTAL_ESSENCE_GAINED,
     SAC_HP_CONSUMPTION,
     limitedResources,
     SHADOW_PACT_BURN,
@@ -196,6 +197,8 @@ const transformativeActions = [
     actionKeys.BABEL,
     actionKeys.SHADOW_MANTLE,
     actionKeys.BLACK_MAYHEM,
+    actionKeys.ALIGN,
+    actionKeys.HALT,
 ];
 
 export const actionsClass = {

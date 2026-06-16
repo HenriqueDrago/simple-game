@@ -1,27 +1,59 @@
 import { constants, actionsClass } from "./constants.js";
-import { consumeResources, restoreResources } from "./entities.js";
+import {
+    consumeResources,
+    gainMana,
+    loseMana,
+    restoreResources,
+    takeDamage,
+} from "./entities.js";
 import {
     turnStatus,
     entityKeys,
     elementalKeys,
     actionKeys,
     effectKeys,
+    directionKeys,
+    dmgTypes,
 } from "./enums.js";
 
-/*
-Notes for self:
-Effect activation order on turn start:
-    1. Shackled Mana Distribution (if Array unactive)
-    2. Shackled Mana Passive Increase (if Array active)
-    3. Unrelenting Shadows resource restoration
-    4. Shadowflame Resource Burn (if not in Dark Embrace and not in Dimming Darkness)
-    5. Lingering Ember Passive Conversion
-    6. Poison Damage (if not in Dimming Darkness)
-    7. Mana Bleed (if not in Dimming Darkness)
-Effect activation order on turn end:
-    1. Shackle Mana conversion
-    2. Mana Overflow Damage (if not in Dimming Darkness)
-*/
+function processEntityDeathStates(entity) {
+    let draft = { ...entity };
+
+    // Radiant death check
+    if (draft.currHp <= 0 && draft.states.radiant) {
+        draft = {
+            ...draft,
+            resources: {
+                ...draft.resources,
+                divinity: 0,
+                fadingLight: draft.resources.divinity,
+            },
+            states: {
+                ...draft.states,
+                radiant: false,
+                cutoffWings: true,
+            },
+        };
+    }
+
+    return draft;
+}
+
+function isEntityDead(entity) {
+    return entity.currHp <= 0 && !entity.states.cutoffWings;
+}
+
+function evaluateMatchStatus(playerOne, playerTwo, defaultNextStatus) {
+    const p1Dead = isEntityDead(playerOne);
+    const p2Dead = isEntityDead(playerTwo);
+
+    if (p1Dead) {
+        return p2Dead ? turnStatus.DRAW : turnStatus.DEFEAT;
+    } else if (p2Dead) {
+        return turnStatus.VICTORY;
+    }
+    return defaultNextStatus;
+}
 
 export function processUpkeep(prev) {
     const targetKey =
@@ -33,10 +65,6 @@ export function processUpkeep(prev) {
             ? entityKeys.PLAYER_TWO
             : entityKeys.PLAYER_ONE;
 
-    const isArrayActive = prev.remainingArray > 0;
-
-    const currElement = prev.elementalWheel;
-
     let draftTarget = {
         ...prev.entities[targetKey],
     };
@@ -44,77 +72,6 @@ export function processUpkeep(prev) {
     let draftNonTarget = {
         ...prev.entities[nonTargetKey],
     };
-
-    if (
-        draftTarget.states.thornedShackles ||
-        draftNonTarget.states.thornedShackles
-    ) {
-        if (isArrayActive) {
-            const newTargetShackledMana =
-                draftTarget.resources.shackledMana +
-                constants.MANA_SHACKLE_TURN_GAIN;
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    shackledMana: newTargetShackledMana,
-                },
-            };
-        } else {
-            let targetNewMana = draftTarget.currMana;
-            let nonTargetNewMana = draftNonTarget.currMana;
-
-            const totalShackledMana =
-                draftTarget.resources.shackledMana +
-                draftNonTarget.resources.shackledMana;
-            const manaShare = Math.floor(totalShackledMana / 2);
-
-            // Target
-            const targetExcess = Math.max(
-                0,
-                targetNewMana + manaShare - draftTarget.maxMana,
-            );
-            targetNewMana = Math.min(
-                draftTarget.maxMana,
-                targetNewMana + manaShare,
-            );
-            const targetManaOverflow =
-                draftTarget.resources.manaOverflow + targetExcess;
-
-            // nonTarget
-            const nonTargetExcess = Math.max(
-                0,
-                nonTargetNewMana + manaShare - draftNonTarget.maxMana,
-            );
-            nonTargetNewMana = Math.min(
-                draftNonTarget.maxMana,
-                nonTargetNewMana + manaShare,
-            );
-            const nonTargetManaOverflow =
-                draftNonTarget.resources.manaOverflow + nonTargetExcess;
-
-            // Atribuindo os novos stats
-            draftTarget = {
-                ...draftTarget,
-                currMana: targetNewMana,
-                resources: {
-                    ...draftTarget.resources,
-                    shackledMana: 0,
-                    manaOverflow: targetManaOverflow,
-                },
-            };
-
-            draftNonTarget = {
-                ...draftNonTarget,
-                currMana: nonTargetNewMana,
-                resources: {
-                    ...draftNonTarget.resources,
-                    shackledMana: 0,
-                    manaOverflow: nonTargetManaOverflow,
-                },
-            };
-        }
-    }
 
     // Unrelenting Shadows
     if (draftTarget.resources.unrelentingShadows > 0) {
@@ -180,11 +137,25 @@ export function processUpkeep(prev) {
         };
     }
 
+    // Umbral Core
+    if (
+        draftTarget.states.umbralCore &&
+        draftTarget.resources.lingeringEmber <= 0 &&
+        draftTarget.resources.shadowflame <= 0
+    ) {
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                umbralCore: false,
+            },
+        };
+    }
+
     // Poison
     if (
         draftTarget.resources.poison > 0 &&
-        !draftTarget.states.dimmingDarkness &&
-        currElement !== elementalKeys.FROST
+        !draftTarget.states.dimmingDarkness
     ) {
         const newHp = Math.max(
             0,
@@ -197,56 +168,27 @@ export function processUpkeep(prev) {
     }
 
     // Blood Sacrifice
-    if (
-        draftTarget.resources.bloodSacrifice > 0 &&
-        currElement !== elementalKeys.FROST
-    ) {
+    if (draftTarget.resources.bloodSacrifice > 0) {
         const manaBleed = Math.min(
-            draftTarget.currMana,
+            draftTarget.currMana + draftTarget.resources.manaOverflow,
             Math.ceil(
                 draftTarget.resources.bloodSacrifice *
                     constants.MANA_BLEED_MULT,
             ),
         );
-        const targetNewCurrMana = Math.max(0, draftTarget.currMana - manaBleed); // Perde mana
+
+        draftTarget = {
+            ...loseMana(draftTarget, manaBleed),
+        };
+
         const newHp = Math.min(
-            draftTarget.maxHp,
+            draftTarget.maxHp + draftTarget.overgrowth,
             draftTarget.currHp + manaBleed,
         ); // Recupera Hp
 
         draftTarget = {
             ...draftTarget,
-            currMana: targetNewCurrMana,
             currHp: newHp,
-        };
-    }
-
-    // Nature
-    if (prev.elementalWheel === elementalKeys.NATURE) {
-        const dtHp = Math.min(
-            draftTarget.maxHp,
-            draftTarget.currHp + constants.NATURE_HP_REGEN,
-        );
-        const dtMissingMana = draftTarget.maxMana - draftTarget.currMana;
-
-        const dtNewMana = Math.min(
-            draftTarget.maxMana,
-            draftTarget.currMana + constants.NATURE_MANA_REGEN,
-        );
-        const dtNewManaOverflow = Math.max(
-            draftTarget.resources.manaOverflow,
-            draftTarget.resources.manaOverflow +
-                (constants.NATURE_MANA_REGEN - dtMissingMana),
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            currHp: dtHp,
-            currMana: dtNewMana,
-            resources: {
-                ...draftTarget.resources,
-                manaOverflow: dtNewManaOverflow,
-            },
         };
     }
 
@@ -293,28 +235,25 @@ export function processUpkeep(prev) {
         };
     }
 
-    // Calcula o próximo turno e verifica as mortes
-    const enemyDead =
-        prev.entities[entityKeys.PLAYER_TWO].currHp <= 0 ||
-        (draftTarget.currHp <= 0 && targetKey === entityKeys.PLAYER_TWO);
-    const playerDead =
-        prev.entities[entityKeys.PLAYER_ONE].currHp <= 0 ||
-        (draftTarget.currHp <= 0 && targetKey === entityKeys.PLAYER_ONE);
+    // Death logic
+    draftTarget = processEntityDeathStates(draftTarget);
+    draftNonTarget = processEntityDeathStates(draftNonTarget);
+
+    const playerOneEntity =
+        targetKey === entityKeys.PLAYER_ONE ? draftTarget : draftNonTarget;
+    const playerTwoEntity =
+        targetKey === entityKeys.PLAYER_TWO ? draftTarget : draftNonTarget;
 
     let nextStatus =
         targetKey === entityKeys.PLAYER_ONE
             ? turnStatus.PLAYER_ONE_TURN
             : turnStatus.PLAYER_TWO_TURN;
 
-    if (playerDead) {
-        if (enemyDead) {
-            nextStatus = turnStatus.DRAW;
-        } else {
-            nextStatus = turnStatus.DEFEAT;
-        }
-    } else if (enemyDead) {
-        nextStatus = turnStatus.VICTORY;
-    }
+    nextStatus = evaluateMatchStatus(
+        playerOneEntity,
+        playerTwoEntity,
+        nextStatus,
+    );
 
     const draftTargetStates = {
         ...draftTarget.states,
@@ -328,6 +267,7 @@ export function processUpkeep(prev) {
     return {
         ...prev,
         status: nextStatus,
+        lastPlayerTurn: targetKey,
         entities: {
             ...prev.entities,
             [targetKey]: {
@@ -349,29 +289,10 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     let draftNextActor = newGame.entities[nextActorKey];
 
     if (action !== actionKeys.LASER) {
-        // Shackled Mana
-        if (draftCurrActor.states.thornedShackles) {
-            const shackledMana =
-                draftCurrActor.resources.shackledMana +
-                draftCurrActor.currMana +
-                draftCurrActor.resources.manaOverflow;
-
-            draftCurrActor = {
-                ...draftCurrActor,
-                currMana: 0,
-                resources: {
-                    ...draftCurrActor.resources,
-                    shackledMana: shackledMana,
-                    manaOverflow: 0,
-                },
-            };
-        }
-
         // Mana Overflow
         if (
             draftCurrActor.resources.manaOverflow > 0 &&
-            !draftCurrActor.states.dimmingDarkness &&
-            newGame.elementalWheel !== elementalKeys.FROST
+            !draftCurrActor.states.dimmingDarkness
         ) {
             const newHp = Math.max(
                 0,
@@ -385,19 +306,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                     ...draftCurrActor.resources,
                     manaOverflow: 0,
                 },
-            };
-        }
-
-        // Scorch
-        if (newGame.elementalWheel === elementalKeys.SCORCH) {
-            const newHp = Math.max(
-                0,
-                draftCurrActor.currHp - constants.SCORCH_DMG,
-            );
-
-            draftCurrActor = {
-                ...draftCurrActor,
-                currHp: newHp,
             };
         }
 
@@ -428,40 +336,54 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         };
     }
 
-    // Array
-    const currArray =
-        action === actionKeys.ARRAY
-            ? constants.ARRAY_DURATION
-            : action === actionKeys.CURSE
-              ? 0
-              : Math.max(0, newGame.remainingArray - 1);
+    // Cryogenesis
+    const newCryogenesis = actionsClass.offensiveActions.includes(action)
+        ? 0
+        : draftCurrActor.resources.cryogenesis;
 
-    // Thorned Shackles
     draftCurrActor = {
         ...draftCurrActor,
-        states: {
-            ...draftCurrActor.states,
-            thornedShackles: currArray > 0,
+        resources: {
+            ...draftCurrActor.resources,
+            cryogenesis: newCryogenesis,
         },
     };
 
-    // Check for deaths after end of turn effects have been applied
-    const finalPlayerOneHp =
-        currActorKey === entityKeys.PLAYER_ONE
-            ? draftCurrActor.currHp
-            : draftNextActor.currHp;
-    const finalPlayerTwoHp =
-        currActorKey === entityKeys.PLAYER_TWO
-            ? draftCurrActor.currHp
-            : draftNextActor.currHp;
+    // Death Logic
+    draftCurrActor = processEntityDeathStates(draftCurrActor);
+    draftNextActor = processEntityDeathStates(draftNextActor);
 
-    const playerDead = finalPlayerOneHp <= 0;
-    const enemyDead = finalPlayerTwoHp <= 0;
+    // Wings removal
+    if (draftCurrActor.states.cutoffWings && draftCurrActor.resources.fadingLight <= 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            states: {
+                ...draftCurrActor.states,
+                cutoffWings: false,
+            },
+        };
+    }
+
+    if (draftNextActor.states.cutoffWings && draftNextActor.resources.fadingLight <= 0) {
+        draftNextActor = {
+            ...draftNextActor,
+            states: {
+                ...draftNextActor.states,
+                cutoffWings: false,
+            },
+        };
+    }
 
     let nextStatus =
         nextActorKey === entityKeys.PLAYER_ONE
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
+
+    if (newGame.elementalWheel !== elementalKeys.INACTIVE) {
+        nextStatus = turnStatus.WHEEL_TURN;
+    } else if (newGame.remainingArray > 0) {
+        nextStatus = turnStatus.ARRAY_TURN;
+    }
 
     if (action === actionKeys.LASER) {
         nextStatus =
@@ -470,15 +392,20 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                 : turnStatus.PLAYER_TWO_TURN;
     }
 
-    if (playerDead) {
-        if (enemyDead) {
-            nextStatus = turnStatus.DRAW;
-        } else {
-            nextStatus = turnStatus.DEFEAT;
-        }
-    } else if (enemyDead) {
-        nextStatus = turnStatus.VICTORY;
-    }
+    const playerOneEntity =
+        currActorKey === entityKeys.PLAYER_ONE
+            ? draftCurrActor
+            : draftNextActor;
+    const playerTwoEntity =
+        currActorKey === entityKeys.PLAYER_TWO
+            ? draftCurrActor
+            : draftNextActor;
+
+    nextStatus = evaluateMatchStatus(
+        playerOneEntity,
+        playerTwoEntity,
+        nextStatus,
+    );
 
     const newStatus =
         action === actionKeys.LASER
@@ -489,7 +416,7 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         ...newGame,
         status: newStatus,
         nextStatus: nextStatus,
-        remainingArray: currArray,
+        wheelHalted: action === actionKeys.HALT,
         entities: {
             ...newGame.entities,
             [currActorKey]: {
@@ -498,6 +425,280 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             [nextActorKey]: {
                 ...draftNextActor,
             },
+        },
+    };
+}
+
+export function processWheelTurn(prev) {
+    let nextStatus =
+        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
+            ? turnStatus.UPKEEP_PLAYER_TWO
+            : turnStatus.UPKEEP_PLAYER_ONE;
+
+    if (prev.remainingArray > 0) {
+        nextStatus = turnStatus.ARRAY_TURN;
+    }
+
+    if (prev.elementalWheel === elementalKeys.INACTIVE) {
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: nextStatus,
+        };
+    }
+
+    let newElement = prev.elementalWheel;
+
+    if (!prev.wheelHalted) {
+        if (prev.wheelDirection === directionKeys.CLOCKWISE) {
+            newElement =
+                prev.elementalWheel === elementalKeys.NATURE
+                    ? elementalKeys.FROST
+                    : prev.elementalWheel === elementalKeys.FROST
+                      ? elementalKeys.SCORCH
+                      : elementalKeys.NATURE;
+        } else {
+            newElement =
+                prev.elementalWheel === elementalKeys.NATURE
+                    ? elementalKeys.SCORCH
+                    : prev.elementalWheel === elementalKeys.SCORCH
+                      ? elementalKeys.FROST
+                      : elementalKeys.NATURE;
+        }
+    }
+
+    let elementalResourceKey;
+    switch (prev.elementalWheel) {
+        case elementalKeys.NATURE:
+            elementalResourceKey = effectKeys.OVERGROWTH;
+            break;
+        case elementalKeys.FROST:
+            elementalResourceKey = effectKeys.PERMAFROST;
+            break;
+        case elementalKeys.SCORCH:
+            elementalResourceKey = effectKeys.SCORIA;
+            break;
+        default:
+            elementalResourceKey = null;
+    }
+
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
+
+    if (elementalResourceKey !== null && !prev.wheelHalted) {
+        playerOne = playerOne.states.aligned
+            ? {
+                  ...playerOne,
+                  [elementalResourceKey]:
+                      playerOne[elementalResourceKey] +
+                      constants.ELEMENTAL_RESOURCE_GAIN,
+              }
+            : playerOne;
+        playerTwo = playerTwo.states.aligned
+            ? {
+                  ...playerTwo,
+                  [elementalResourceKey]:
+                      playerTwo[elementalResourceKey] +
+                      constants.ELEMENTAL_RESOURCE_GAIN,
+              }
+            : playerTwo;
+    }
+
+    if (!prev.wheelHalted) {
+        switch (newElement) {
+            case elementalKeys.NATURE: {
+                const overgrowthUsedP1 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerOne.overgrowth
+                        : playerTwo.overgrowth;
+                const overgrowthUsedP2 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerTwo.overgrowth
+                        : playerOne.overgrowth;
+
+                playerOne = restoreResources(playerOne, overgrowthUsedP1);
+                playerTwo = restoreResources(playerTwo, overgrowthUsedP2);
+                break;
+            }
+            case elementalKeys.FROST: {
+                const permafrostUsedP1 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerOne.permafrost
+                        : playerTwo.permafrost;
+                const permafrostUsedP2 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerTwo.permafrost
+                        : playerOne.permafrost;
+
+                playerOne = {
+                    ...playerOne,
+                    resources: {
+                        ...playerOne.resources,
+                        cryogenesis:
+                            playerOne.resources.cryogenesis + permafrostUsedP1,
+                    },
+                };
+                playerTwo = {
+                    ...playerTwo,
+                    resources: {
+                        ...playerTwo.resources,
+                        cryogenesis:
+                            playerTwo.resources.cryogenesis + permafrostUsedP2,
+                    },
+                };
+                break;
+            }
+            case elementalKeys.SCORCH: {
+                const scoriaUsedP1 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerOne.scoria
+                        : playerTwo.scoria;
+                const scoriaUsedP2 =
+                    prev.wheelDirection === directionKeys.CLOCKWISE
+                        ? playerTwo.scoria
+                        : playerOne.scoria;
+
+                playerOne = takeDamage(
+                    playerOne,
+                    scoriaUsedP1,
+                    dmgTypes.PIERCING,
+                );
+                playerTwo = takeDamage(
+                    playerTwo,
+                    scoriaUsedP2,
+                    dmgTypes.PIERCING,
+                );
+                break;
+            }
+        }
+    }
+
+    // Death Logic
+    playerOne = processEntityDeathStates(playerOne);
+    playerTwo = processEntityDeathStates(playerTwo);
+
+    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
+
+    return {
+        ...prev,
+        status: turnStatus.TRANSITION,
+        nextStatus: nextStatus,
+        elementalWheel: newElement,
+        entities: {
+            ...prev.entities,
+            [entityKeys.PLAYER_ONE]: { ...playerOne },
+            [entityKeys.PLAYER_TWO]: { ...playerTwo },
+        },
+    };
+}
+
+export function processArrayTurn(prev) {
+    let nextStatus =
+        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
+            ? turnStatus.UPKEEP_PLAYER_TWO
+            : turnStatus.UPKEEP_PLAYER_ONE;
+
+    if (prev.remainingArray <= 0) {
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: nextStatus,
+        };
+    }
+
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
+
+    const newArray = prev.remainingArray - 1;
+
+    if (newArray <= 0) {
+        // If Array dead, redistribute mana
+        const totalShackledMana =
+            playerOne.resources.shackledMana + playerTwo.resources.shackledMana;
+        const manaShare = Math.floor(totalShackledMana / 2);
+
+        playerOne = gainMana(playerOne, manaShare);
+        playerOne = {
+            ...playerOne,
+            resources: {
+                ...playerOne.resources,
+                shackledMana: 0,
+            },
+        };
+
+        playerTwo = gainMana(playerTwo, manaShare);
+        playerTwo = {
+            ...playerTwo,
+            resources: {
+                ...playerTwo.resources,
+                shackledMana: 0,
+            },
+        };
+    } else {
+        // If Array alive and kicking, convert mana and add to it
+        const p1NewManaShackle =
+            playerOne.currMana +
+            playerOne.resources.shackledMana +
+            playerOne.resources.manaOverflow +
+            constants.MANA_SHACKLE_TURN_GAIN;
+        const p2NewManaShackle =
+            playerTwo.currMana +
+            playerTwo.resources.shackledMana +
+            playerTwo.resources.manaOverflow +
+            constants.MANA_SHACKLE_TURN_GAIN;
+
+        playerOne = {
+            ...playerOne,
+            currMana: 0,
+            resources: {
+                ...playerOne.resources,
+                manaOverflow: 0,
+                shackledMana: p1NewManaShackle,
+            },
+        };
+
+        playerTwo = {
+            ...playerTwo,
+            currMana: 0,
+            resources: {
+                ...playerTwo.resources,
+                manaOverflow: 0,
+                shackledMana: p2NewManaShackle,
+            },
+        };
+    }
+
+    // Thorned Shackles
+    playerOne = {
+        ...playerOne,
+        states: {
+            ...playerOne.states,
+            thornedShackles: newArray > 0,
+        },
+    };
+
+    playerTwo = {
+        ...playerTwo,
+        states: {
+            ...playerTwo.states,
+            thornedShackles: newArray > 0,
+        },
+    };
+
+    // Death logic (tecnically they can't die here, but... why not?)
+    playerOne = processEntityDeathStates(playerOne);
+    playerTwo = processEntityDeathStates(playerTwo);
+
+    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
+
+    return {
+        ...prev,
+        status: turnStatus.TRANSITION,
+        nextStatus: nextStatus,
+        remainingArray: newArray,
+        entities: {
+            [entityKeys.PLAYER_ONE]: { ...playerOne },
+            [entityKeys.PLAYER_TWO]: { ...playerTwo },
         },
     };
 }

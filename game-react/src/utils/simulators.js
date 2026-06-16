@@ -4,9 +4,16 @@ import {
     createBaseEntity,
     restoreResources,
     dealDamage,
+    takeDamage,
     laserCost,
 } from "./entities.js";
-import { elementalKeys, actionKeys, dmgTypes } from "./enums.js";
+import {
+    elementalKeys,
+    actionKeys,
+    dmgTypes,
+    directionKeys,
+    effectKeys,
+} from "./enums.js";
 
 export const simulators = {
     [actionKeys.AEGIS]: simulateAegis,
@@ -22,7 +29,6 @@ export const simulators = {
     [actionKeys.SHADOW_MANTLE]: simulateShadowMantle,
     [actionKeys.SHADOW_PACT]: simulateShadowPact,
     [actionKeys.SPECIAL_ATTACK]: simulateSpecialAttack,
-    [actionKeys.WHEEL]: simulateWheel,
     [actionKeys.ATTUNE]: simulateAttune,
     [actionKeys.DA_CAPO]: simulateDaCapo,
     [actionKeys.SOUND_OF_SILENCE]: simulateSoundOfSilence,
@@ -30,6 +36,8 @@ export const simulators = {
     [actionKeys.DEPLOY]: simulateDeploy,
     [actionKeys.LASER]: simulateLaser,
     [actionKeys.MELTDOWN]: simulateMeltdown,
+    [actionKeys.ALIGN]: simulateAlign,
+    [actionKeys.HALT]: simulateHalt,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -58,7 +66,10 @@ function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newHalo =
         agent.resources.halo +
-        Math.ceil(agent.attributes.def.value * constants.HALO_GEN_MULT);
+        Math.ceil(
+            (agent.attributes.def.value + agent.permafrost) *
+                constants.HALO_GEN_MULT,
+        );
 
     return {
         ...prev,
@@ -118,7 +129,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent.attributes.str.value,
+        agent.attributes.str.value + agent.scoria,
         dmgTypes.PHYSICAL,
         prev.remainingArray > 0,
     );
@@ -156,7 +167,7 @@ function simulateSpecialAttack({
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        manaDiff + agent.attributes.str.value,
+        manaDiff + agent.attributes.str.value + agent.scoria,
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
     );
@@ -204,10 +215,13 @@ function simulateSpecialAttack({
 
 function simulateHeal({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const base_heal = Math.min(
-        agent.maxHp - agent.currHp,
+        agent.maxHp + agent.overgrowth - agent.currHp,
         agent.currMana + agent.resources.manaOverflow,
     );
-    const newHp = Math.min(agent.currHp + base_heal, agent.maxHp);
+    const newHp = Math.min(
+        agent.currHp + base_heal,
+        agent.maxHp + agent.overgrowth,
+    );
 
     const overflowConsumed = Math.min(base_heal, agent.resources.manaOverflow);
     const manaConsumed = base_heal - overflowConsumed;
@@ -242,6 +256,7 @@ function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     return {
         ...prev,
+        remainingArray: 0,
         entities: {
             ...prev.entities,
             [nonAgentKey]: {
@@ -284,6 +299,7 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     return {
         ...prev,
+        remainingArray: constants.ARRAY_DURATION,
         entities: {
             ...prev.entities,
             [nonAgentKey]: {
@@ -441,8 +457,7 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     };
 
     const burntNonCindersNonRad =
-        resourcesConsumed.totalConsumption -
-        (resourcesConsumed.cinders || 0);
+        resourcesConsumed.totalConsumption - (resourcesConsumed.cinders || 0);
 
     const newNonAgentCinders =
         draftNonAgent.resources.cinders + burntNonCindersNonRad;
@@ -466,61 +481,6 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     ...agent.resources,
                     lingeringEmber: newAgentLE,
                 },
-            },
-        },
-    };
-}
-
-function simulateWheel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    let newElement;
-
-    let newPermafrost = agent.resources.permafrost;
-    let newOvergrowth = agent.resources.overgrowth;
-    let newScoria = agent.resources.scoria;
-
-    let newHp = agent.currHp;
-    let newMaxHp = agent.maxHp;
-    const currElement = prev.elementalWheel;
-
-    switch (currElement) {
-        case elementalKeys.NATURE:
-            newElement = elementalKeys.FROST;
-            newPermafrost += constants.ELEMENTAL_RESOURCE_GAIN;
-            break;
-
-        case elementalKeys.FROST:
-            newElement = elementalKeys.SCORCH;
-            newScoria += constants.ELEMENTAL_RESOURCE_GAIN;
-            break;
-
-        // Scorch and Inactive fall here
-        default:
-            newElement = elementalKeys.NATURE;
-            newOvergrowth += constants.ELEMENTAL_RESOURCE_GAIN;
-
-            newHp += constants.ELEMENTAL_RESOURCE_GAIN;
-            newMaxHp += constants.ELEMENTAL_RESOURCE_GAIN;
-            break;
-    }
-
-    return {
-        ...prev,
-        elementalWheel: newElement,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                currHp: newHp,
-                maxHp: newMaxHp,
-                resources: {
-                    ...agent.resources,
-                    permafrost: newPermafrost,
-                    overgrowth: newOvergrowth,
-                    scoria: newScoria,
-                },
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
             },
         },
     };
@@ -685,28 +645,105 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const baseDmg = agent.currOverheat;
 
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
-        baseDmg,
-        dmgTypes.PHYSICAL,
-        prev.remainingArray > 0,
-    );
+    const draftAgent = takeDamage(agent, baseDmg, dmgTypes.PHYSICAL);
+
+    const draftNonAgent = takeDamage(nonAgent, baseDmg, dmgTypes.PHYSICAL);
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...attacker,
+                ...draftAgent,
                 states: {
-                    ...agent.states,
+                    ...draftAgent.states,
                     thermalOverload: false,
                     venting: true,
                 },
             },
             [nonAgentKey]: {
-                ...defender,
+                ...draftNonAgent,
+            },
+        },
+    };
+}
+
+function simulateAlign({ prev, agent, agentKey }) {
+    const newElement =
+        prev.elementalWheel === elementalKeys.INACTIVE
+            ? elementalKeys.NATURE
+            : prev.elementalWheel;
+
+    const newDirection =
+        prev.elementalWheel === elementalKeys.INACTIVE
+            ? directionKeys.CLOCKWISE
+            : prev.wheelDirection;
+
+    return {
+        ...prev,
+        elementalWheel: newElement,
+        wheelDirection: newDirection,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                scoria: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
+                permafrost: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
+                overgrowth: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
+                states: {
+                    ...agent.states,
+                    aligned: true,
+                },
+            },
+        },
+    };
+}
+
+function simulateHalt({ prev, agent, agentKey }) {
+    if (
+        prev.elementalWheel === elementalKeys.INACTIVE ||
+        !agent.states.aligned
+    ) {
+        return prev;
+    }
+
+    const newDirection =
+        prev.wheelDirection === directionKeys.CLOCKWISE
+            ? directionKeys.COUNTERCLOCKWISE
+            : directionKeys.CLOCKWISE;
+
+    let essenceKey;
+    switch (prev.elementalWheel) {
+        case elementalKeys.NATURE:
+            essenceKey = effectKeys.OVERGROWTH;
+            break;
+
+        case elementalKeys.FROST:
+            essenceKey = effectKeys.PERMAFROST;
+            break;
+
+        case elementalKeys.SCORCH:
+            essenceKey = effectKeys.SCORIA;
+            break;
+
+        default:
+            console.error(`elementalWheel: ${prev.elementalWheel}`);
+            essenceKey = null;
+    }
+
+    return {
+        ...prev,
+        wheelDirection: newDirection,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                [essenceKey]:
+                    agent[essenceKey] + constants.ELEMENTAL_RESOURCE_GAIN,
+                states: {
+                    ...agent.states,
+                    aligned: true,
+                },
             },
         },
     };

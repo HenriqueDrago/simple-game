@@ -1,21 +1,21 @@
 import './ElementalCounter.css';
 
 function ElementalCounter({ entity }) {
-    const permafrostActive = entity.resources.permafrost > 0;
-    const overgrowthActive = entity.resources.overgrowth > 0;
-    const scoriaActive = entity.resources.scoria > 0;
+    const permafrostActive = entity.permafrost > 0;
+    const overgrowthActive = entity.overgrowth > 0;
+    const scoriaActive = entity.scoria > 0;
     return (
         <div className='elemental-counter-container'>
             <div className='individual-elemental-counter-container'>
-                <span>{entity.resources.overgrowth}</span>
+                <span>{entity.overgrowth}</span>
                 <div className={`diamond ${overgrowthActive ? "overgrowth-active" : ""}`}></div>
             </div>
             <div className='individual-elemental-counter-container'>
-                <span>{entity.resources.permafrost}</span>
+                <span>{entity.permafrost}</span>
                 <div className={`diamond ${permafrostActive ? "permafrost-active" : ""}`}></div>
             </div>
             <div className='individual-elemental-counter-container'>
-                <span>{entity.resources.scoria}</span>
+                <span>{entity.scoria}</span>
                 <div className={`diamond ${scoriaActive ? "scoria-active" : ""}`}></div>
             </div>
         </div>

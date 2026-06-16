@@ -47,7 +47,7 @@ export function bloodknightAI(context) {
     const missingHp = agent.maxHp - agent.currHp;
 
     // 1. The Array Pivot & Thorns Avoidance
-    if (isArrayActive && agent.attributes.str.value < agent.currHp) {
+    if (isArrayActive && agent.attributes.str.value + agent.scoria < agent.currHp) {
         handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
     }
@@ -71,7 +71,7 @@ export function bloodknightAI(context) {
     // 3. The Sacrifice Engine
     if (
         agent.currHp > agent.maxHp * 0.65 &&
-        agent.resources.bloodSacrifice + agent.attributes.str.value < agent.maxHp * 1.4
+        agent.resources.bloodSacrifice + agent.attributes.str.value + agent.scoria < agent.maxHp * 1.4
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
         return;
@@ -369,9 +369,7 @@ export function shadowSorcererAI(context) {
     // 4. Burn Management (Ritual of Ash vs Shadow Mantle)
     const { draftEntity: draftTarget } = consumeResources(agent, agent.resources.shadowflame, effectKeys.SHADOWFLAME)
 
-    console.log("test", agent, draftTarget)
-
-    if (draftTarget.currHp < agent.currHp) {
+    if (draftTarget.currHp <= 0) {
         if (agent.currHp <= agent.maxHp * 0.5 && agent.resources.shadowflame >= 10) {
             handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
         } else {

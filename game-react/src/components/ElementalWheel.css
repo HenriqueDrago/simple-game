@@ -21,6 +21,8 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+
+    transition: color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
 .individual-element-container.nature-active {

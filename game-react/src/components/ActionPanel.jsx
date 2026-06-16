@@ -111,11 +111,17 @@ const getNormalActions = (
             label: "Shadow Pact",
             hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
         },
-        {
-            key: actionKeys.WHEEL,
-            label: "Wheel",
-            hoverKeys: [actionKeys.WHEEL],
-        },
+        currEntity.states.aligned
+            ? {
+                  key: actionKeys.HALT,
+                  label: "Halt",
+                  hoverKeys: [actionKeys.HALT],
+              }
+            : {
+                  key: actionKeys.ALIGN,
+                  label: "Align",
+                  hoverKeys: [actionKeys.ALIGN],
+              },
         !currEntity.states.resonant
             ? {
                   key: actionKeys.ATTUNE,
@@ -152,6 +158,12 @@ const getNormalActions = (
                   hoverKeys: [actionKeys.DEPLOY],
                   disabled: !canUseDeploy,
               },
+        {
+            key: actionKeys.SUMMON,
+            label: "Summon",
+            hoverKeys: [],
+            disabled: true,
+        },
     ];
 };
 
@@ -185,13 +197,6 @@ function ActionPanel({
             battleState === turnStatus.PLAYER_TWO_TURN &&
             game.entities[entityKeys.PLAYER_TWO].states.umbralCore);
 
-    const showEnemyWait =
-        battleState === turnStatus.PLAYER_TWO_TURN &&
-        enemyController !== aiKeys.HUMAN;
-    const showPlayerWait =
-        battleState === turnStatus.PLAYER_ONE_TURN &&
-        playerController !== aiKeys.HUMAN;
-
     const canUseSpAtk =
         currEntity.currMana + currEntity.resources.manaOverflow >=
         constants.SP_ATTACK_COST;
@@ -219,6 +224,24 @@ function ActionPanel({
               : playerController === enemyController
                 ? `${presetAi[playerController].name} + " One"`
                 : presetAi[playerController].name;
+
+    const arrayLabel = "Array Turn";
+    const wheelLabel = "Wheel Turn";
+
+    const waitLabel =
+        battleState === turnStatus.PLAYER_TWO_TURN &&
+        enemyController !== aiKeys.HUMAN
+            ? enemyLabel
+            : battleState === turnStatus.PLAYER_ONE_TURN &&
+                playerController !== aiKeys.HUMAN
+              ? playerLabel
+              : battleState === turnStatus.WHEEL_TURN
+                ? wheelLabel
+                : battleState === turnStatus.ARRAY_TURN
+                  ? arrayLabel
+                  : null;
+
+    const showWait = waitLabel !== null;
 
     // Centralized action handler
     const handleActionButton = (actionKey) => {
@@ -272,8 +295,7 @@ function ActionPanel({
                 </div>
             )}
 
-            {showEnemyWait && <span className="enemy-wait">{enemyLabel}</span>}
-            {showPlayerWait && <span className="enemy-wait">{playerLabel}</span>}
+            {showWait && <span className="enemy-wait">{waitLabel}</span>}
 
             {showButtons && (
                 <div className="action-description-box">

@@ -6,7 +6,12 @@ import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
 import { simpleAI } from "./utils/aiControllers.js";
 import { constants, presetAi } from "./utils/constants.js";
-import { processUpkeep, commitTurn } from "./utils/turnManagement.js";
+import {
+    processUpkeep,
+    commitTurn,
+    processWheelTurn,
+    processArrayTurn,
+} from "./utils/turnManagement.js";
 import { distributePoints, createBaseEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
@@ -16,6 +21,7 @@ import {
     sdmKeys,
     elementalKeys,
     whoStartsKeys,
+    directionKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -25,9 +31,12 @@ function App() {
     const [game, setGame] = useState({
         status: turnStatus.SETUP,
         nextStatus: null,
+        lastPlayerTurn: null,
         remainingArray: 0,
         elementalWheel: elementalKeys.INACTIVE,
         whoStarts: whoStartsKeys.PLAYER_ONE,
+        wheelDirection: directionKeys.CLOCKWISE,
+        wheelHalted: false,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -64,6 +73,8 @@ function App() {
                 nonAgentKey,
                 prev,
             };
+
+            console.log(simulators);
 
             const sim = simulators[action];
 
@@ -196,9 +207,13 @@ function App() {
             return {
                 ...prev,
                 status: turnStatus.SETUP,
-                remainingArray: 0,
                 nextStatus: null,
+                lastPlayerTurn: null,
+                remainingArray: 0,
                 elementalWheel: elementalKeys.INACTIVE,
+                whoStarts: whoStartsKeys.PLAYER_ONE,
+                wheelDirection: directionKeys.CLOCKWISE,
+                wheelHalted: false,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -218,8 +233,7 @@ function App() {
             return {
                 ...prev,
                 status: initialStatus,
-                remainingArray: 0,
-                elementalWheel: elementalKeys.INACTIVE,
+                lastPlayerTurn: entityKeys.PLAYER_ONE,
             };
         });
     }
@@ -338,6 +352,27 @@ function App() {
             return () => clearTimeout(timer);
         }
     }, [game.status]);
+
+    useEffect(() => {
+        if (game.status === turnStatus.WHEEL_TURN) {
+            const timer = setTimeout(() => {
+                setGame(processWheelTurn);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game.status]);
+
+    useEffect(() => {
+        if (game.status === turnStatus.ARRAY_TURN) {
+            const timer = setTimeout(() => {
+                setGame(processArrayTurn);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game.status]);
+
 
     // Turn Start effects
     useEffect(() => {

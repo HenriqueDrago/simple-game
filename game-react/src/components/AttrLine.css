@@ -29,3 +29,11 @@
     width: 100%;
     text-align: center;
 }
+
+.str-scoria {
+    color: red;
+}
+
+.def-permafrost {
+    color: cyan;
+}
