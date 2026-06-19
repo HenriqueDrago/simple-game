@@ -5,7 +5,6 @@ import {
     restoreResources,
     dealDamage,
     takeDamage,
-    laserCost,
 } from "./entities.js";
 import {
     elementalKeys,
@@ -38,6 +37,10 @@ export const simulators = {
     [actionKeys.MELTDOWN]: simulateMeltdown,
     [actionKeys.ALIGN]: simulateAlign,
     [actionKeys.HALT]: simulateHalt,
+    [actionKeys.SPARK_OF_DIVINITY]: simulateSpark,
+    [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
+    [actionKeys.SERAPH_OF_RECLAMATION]: simulateSeraph,
+    [actionKeys.HEAVENLY_SCALE]: simulateScale,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -333,6 +336,10 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    if(agent.states.bleakDeception) {
+        return prev;
+    }
+    
     const { draftEntity, resourcesConsumed } = consumeResources(
         { ...agent },
         constants.SHADOW_PACT_BURN,
@@ -592,12 +599,6 @@ function simulateDeploy({ prev, agent, agentKey }) {
 }
 
 function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const manaCost = laserCost(agent);
-
-    if (agent.currMana + agent.resources.manaOverflow < manaCost) {
-        return prev;
-    }
-
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
@@ -608,11 +609,6 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     const newOverheat = attacker.currOverheat + 1 + attacker.lasersUsedThisTurn;
     const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
-    const overflowConsumed = Math.min(manaCost, agent.resources.manaOverflow);
-    const manaConsumed = manaCost - overflowConsumed;
-
-    const newManaOverflow = agent.resources.manaOverflow - overflowConsumed;
-    const newMana = agent.currMana - manaConsumed;
 
     const thermalOverload = newOverheat >= constants.MAX_OVERHEAT;
 
@@ -623,16 +619,11 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             [agentKey]: {
                 ...attacker,
                 currOverheat: newOverheat,
-                currMana: newMana,
                 lasersUsedThisTurn: newlasersUsedThisTurn,
                 states: {
                     ...attacker.states,
                     weaponsDeployed: !thermalOverload,
                     thermalOverload: thermalOverload,
-                },
-                resources: {
-                    ...attacker.resources,
-                    manaOverflow: newManaOverflow,
                 },
             },
             [nonAgentKey]: {
@@ -727,7 +718,6 @@ function simulateHalt({ prev, agent, agentKey }) {
             break;
 
         default:
-            console.error(`elementalWheel: ${prev.elementalWheel}`);
             essenceKey = null;
     }
 
@@ -744,6 +734,120 @@ function simulateHalt({ prev, agent, agentKey }) {
                     ...agent.states,
                     aligned: true,
                 },
+            },
+        },
+    };
+}
+
+
+function simulateSeraph({prev, agent, agentKey, nonAgent, nonAgentKey}) {
+
+    const totalFlames = agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
+
+    const draftAgent = restoreResources(agent, totalFlames);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    sacredFlames: 0,
+                }
+            },
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    sacredFlames: 0,
+                }
+            },
+        },
+    };
+}
+
+function simulateSpark({prev, agent, agentKey, nonAgent, nonAgentKey}) {
+
+    const newDefenderFlames = nonAgent.resources.sacredFlames + agent.revelation;
+    const newAttackerFlames = agent.resources.sacredFlames + agent.revelation;
+
+    const toBeRestored = agent.resources.inspiration;
+
+    let draftAgent = {
+        ...agent,
+        resources: {
+            ...agent.resources,
+            inspiration: 0,
+        }
+    }
+
+    const draftNonAgent = restoreResources(nonAgent, toBeRestored);
+    draftAgent = restoreResources(draftAgent, toBeRestored);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    sacredFlames: newAttackerFlames,
+                }
+            },
+            [nonAgentKey]: {
+                ...draftNonAgent,
+                resources: {
+                    ...draftNonAgent.resources,
+                    sacredFlames: newDefenderFlames,
+                }
+            },
+        },
+    };
+}
+
+function simulateScale({prev, agent, agentKey}) {
+
+    const totalKnowledge = agent.currEnlit + agent.currInsight + agent.resources.inspiration;
+
+    const halfKnow = Math.floor(totalKnowledge/2) 
+
+    const newEnlit = Math.min(agent.maxEnlit, halfKnow);
+    const newInsight = Math.min(agent.maxInsight, halfKnow);
+
+    const newInspiration = Math.max(0, totalKnowledge - agent.maxEnlit - agent.maxInsight);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                currEnlit: newEnlit,
+                currInsight: newInsight,   
+                resources: {
+                    ...agent.resources,
+                    inspiration: newInspiration,
+                }
+            },
+        },
+    };
+}
+
+function simulateWordMadeFlesh({ prev, agent, agentKey, nonAgent }) {
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...nonAgent,
+                attributes: {
+                    ...nonAgent.attributes,
+                },
+                controller: agent.controller,
+                statDistributionMode: agent.statDistributionMode,
             },
         },
     };

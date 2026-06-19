@@ -9,13 +9,16 @@ function Header({ game, handleStart, handleReset, handleWhoStartsChange }) {
             <div className="header-announcement-container">
                 <h1 className="main-header-text">Basic RPG (React)</h1>
                 {battleState === turnStatus.VICTORY && (
-                    <h2 className="win-text">Player One Wins!</h2>
+                    <h2 className="sub-announcer-text">Player One Wins!</h2>
                 )}
                 {battleState === turnStatus.DEFEAT && (
-                    <h2 className="lose-text">Player Two Wins!</h2>
+                    <h2 className="sub-announcer-text">Player Two Wins!</h2>
                 )}
                 {battleState === turnStatus.DRAW && (
-                    <h2 className="lose-text">Draw!</h2>
+                    <h2 className="sub-announcer-text">Draw!</h2>
+                )}
+                {battleState !== turnStatus.SETUP && (
+                    <h3 className="sub-announcer-text">Turn {game.turnCount}</h3>
                 )}
             </div>
 

@@ -1,6 +1,7 @@
 import { constants, actionsClass } from "./constants.js";
 import {
     consumeResources,
+    createBaseEntity,
     gainMana,
     loseMana,
     restoreResources,
@@ -19,28 +20,13 @@ import {
 function processEntityDeathStates(entity) {
     let draft = { ...entity };
 
-    // Radiant death check
-    if (draft.currHp <= 0 && draft.states.radiant) {
-        draft = {
-            ...draft,
-            resources: {
-                ...draft.resources,
-                divinity: 0,
-                fadingLight: draft.resources.divinity,
-            },
-            states: {
-                ...draft.states,
-                radiant: false,
-                cutoffWings: true,
-            },
-        };
-    }
-
     return draft;
 }
 
 function isEntityDead(entity) {
-    return entity.currHp <= 0 && !entity.states.cutoffWings;
+    return entity.states.cutoffWings
+        ? entity.currEnlit <= 0
+        : entity.currHp <= 0;
 }
 
 function evaluateMatchStatus(playerOne, playerTwo, defaultNextStatus) {
@@ -94,7 +80,6 @@ export function processUpkeep(prev) {
         draftTarget.resources.shadowflame > 0 &&
         !draftTarget.states.darkEmbrace
     ) {
-        console.log(draftTarget.resources.shadowflame);
         const { draftEntity, resourcesConsumed } = consumeResources(
             draftTarget,
             draftTarget.resources.shadowflame,
@@ -148,6 +133,7 @@ export function processUpkeep(prev) {
             states: {
                 ...draftTarget.states,
                 umbralCore: false,
+                bleakDeception: true,
             },
         };
     }
@@ -194,15 +180,17 @@ export function processUpkeep(prev) {
 
     // Halo
     if (draftTarget.resources.halo > 0) {
-        const newDivinity =
-            draftTarget.resources.halo + draftTarget.resources.divinity;
+        const newEnlit = Math.min(
+            draftTarget.maxEnlit,
+            draftTarget.resources.halo + draftTarget.currEnlit,
+        );
 
         draftTarget = {
             ...draftTarget,
+            currEnlit: newEnlit,
             resources: {
                 ...draftTarget.resources,
                 halo: 0,
-                divinity: newDivinity,
             },
         };
     }
@@ -231,6 +219,65 @@ export function processUpkeep(prev) {
             states: {
                 ...draftTarget.states,
                 venting: newOverheat > 0,
+            },
+        };
+    }
+
+    // Enlightenment
+    if (draftTarget.currEnlit >= 100 && !draftTarget.states.cutoffWings) {
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            Infinity,
+            effectKeys.ENLIGHTENMENT,
+        );
+
+        draftTarget = {
+            ...draftEntity,
+            currInsight: resourcesConsumed.totalConsumption,
+            currEnlit: 100,
+            states: {
+                ...createBaseEntity().states,
+                cutoffWings: true,
+            },
+        };
+    }
+
+    // Revelation
+    if (draftTarget.states.cutoffWings) {
+        const newRev = Math.floor(
+            draftTarget.currInsight * constants.INSIGHT_TO_REV_MULT,
+        );
+        draftTarget = {
+            ...draftTarget,
+            revelation: newRev,
+        };
+    }
+
+    // Sacred Flames
+    if (draftTarget.resources.sacredFlames > 0) {
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            draftTarget.resources.sacredFlames,
+            effectKeys.SACRED_FLAMES,
+        );
+
+        console.log(resourcesConsumed);
+
+        const burnedKnowledge =
+            (resourcesConsumed.currEnlit || 0) +
+            (resourcesConsumed.currInsight || 0) +
+            (resourcesConsumed.inspiration || 0);
+        const toBeRestored =
+            resourcesConsumed.totalConsumption - burnedKnowledge;
+
+        draftTarget = restoreResources(draftEntity, toBeRestored);
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                sacredFlames:
+                    draftTarget.resources.sacredFlames + burnedKnowledge,
             },
         };
     }
@@ -288,6 +335,8 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     let draftCurrActor = newGame.entities[currActorKey];
     let draftNextActor = newGame.entities[nextActorKey];
 
+    let newTurnCount = newGame.turnCount;
+
     if (action !== actionKeys.LASER) {
         // Mana Overflow
         if (
@@ -334,6 +383,8 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ...draftCurrActor,
             sonority: newSonority,
         };
+
+        newTurnCount += 1;
     }
 
     // Cryogenesis
@@ -352,27 +403,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     // Death Logic
     draftCurrActor = processEntityDeathStates(draftCurrActor);
     draftNextActor = processEntityDeathStates(draftNextActor);
-
-    // Wings removal
-    if (draftCurrActor.states.cutoffWings && draftCurrActor.resources.fadingLight <= 0) {
-        draftCurrActor = {
-            ...draftCurrActor,
-            states: {
-                ...draftCurrActor.states,
-                cutoffWings: false,
-            },
-        };
-    }
-
-    if (draftNextActor.states.cutoffWings && draftNextActor.resources.fadingLight <= 0) {
-        draftNextActor = {
-            ...draftNextActor,
-            states: {
-                ...draftNextActor.states,
-                cutoffWings: false,
-            },
-        };
-    }
 
     let nextStatus =
         nextActorKey === entityKeys.PLAYER_ONE
@@ -417,6 +447,7 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         status: newStatus,
         nextStatus: nextStatus,
         wheelHalted: action === actionKeys.HALT,
+        turnCount: newTurnCount,
         entities: {
             ...newGame.entities,
             [currActorKey]: {
@@ -504,72 +535,68 @@ export function processWheelTurn(prev) {
             : playerTwo;
     }
 
-    if (!prev.wheelHalted) {
-        switch (newElement) {
-            case elementalKeys.NATURE: {
-                const overgrowthUsedP1 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerOne.overgrowth
-                        : playerTwo.overgrowth;
-                const overgrowthUsedP2 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerTwo.overgrowth
-                        : playerOne.overgrowth;
+    switch (newElement) {
+        case elementalKeys.NATURE: {
+            const overgrowthUsedP1 = prev.wheelHalted
+                ? playerOne.overgrowth + playerTwo.overgrowth
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerOne.overgrowth
+                  : playerTwo.overgrowth;
+            const overgrowthUsedP2 = prev.wheelHalted
+                ? playerOne.overgrowth + playerTwo.overgrowth
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerTwo.overgrowth
+                  : playerOne.overgrowth;
 
-                playerOne = restoreResources(playerOne, overgrowthUsedP1);
-                playerTwo = restoreResources(playerTwo, overgrowthUsedP2);
-                break;
-            }
-            case elementalKeys.FROST: {
-                const permafrostUsedP1 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerOne.permafrost
-                        : playerTwo.permafrost;
-                const permafrostUsedP2 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerTwo.permafrost
-                        : playerOne.permafrost;
+            playerOne = restoreResources(playerOne, overgrowthUsedP1);
+            playerTwo = restoreResources(playerTwo, overgrowthUsedP2);
+            break;
+        }
+        case elementalKeys.FROST: {
+            const permafrostUsedP1 = prev.wheelHalted
+                ? playerOne.permafrost + playerTwo.permafrost
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerOne.permafrost
+                  : playerTwo.permafrost;
+            const permafrostUsedP2 = prev.wheelHalted
+                ? playerOne.permafrost + playerTwo.permafrost
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerTwo.permafrost
+                  : playerOne.permafrost;
 
-                playerOne = {
-                    ...playerOne,
-                    resources: {
-                        ...playerOne.resources,
-                        cryogenesis:
-                            playerOne.resources.cryogenesis + permafrostUsedP1,
-                    },
-                };
-                playerTwo = {
-                    ...playerTwo,
-                    resources: {
-                        ...playerTwo.resources,
-                        cryogenesis:
-                            playerTwo.resources.cryogenesis + permafrostUsedP2,
-                    },
-                };
-                break;
-            }
-            case elementalKeys.SCORCH: {
-                const scoriaUsedP1 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerOne.scoria
-                        : playerTwo.scoria;
-                const scoriaUsedP2 =
-                    prev.wheelDirection === directionKeys.CLOCKWISE
-                        ? playerTwo.scoria
-                        : playerOne.scoria;
+            playerOne = {
+                ...playerOne,
+                resources: {
+                    ...playerOne.resources,
+                    cryogenesis:
+                        playerOne.resources.cryogenesis + permafrostUsedP1,
+                },
+            };
+            playerTwo = {
+                ...playerTwo,
+                resources: {
+                    ...playerTwo.resources,
+                    cryogenesis:
+                        playerTwo.resources.cryogenesis + permafrostUsedP2,
+                },
+            };
+            break;
+        }
+        case elementalKeys.SCORCH: {
+            const scoriaUsedP1 = prev.wheelHalted
+                ? playerOne.scoria + playerTwo.scoria
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerOne.scoria
+                  : playerTwo.scoria;
+            const scoriaUsedP2 = prev.wheelHalted
+                ? playerOne.scoria + playerTwo.scoria
+                : prev.wheelDirection === directionKeys.CLOCKWISE
+                  ? playerTwo.scoria
+                  : playerOne.scoria;
 
-                playerOne = takeDamage(
-                    playerOne,
-                    scoriaUsedP1,
-                    dmgTypes.PIERCING,
-                );
-                playerTwo = takeDamage(
-                    playerTwo,
-                    scoriaUsedP2,
-                    dmgTypes.PIERCING,
-                );
-                break;
-            }
+            playerOne = takeDamage(playerOne, scoriaUsedP1, dmgTypes.PHYSICAL);
+            playerTwo = takeDamage(playerTwo, scoriaUsedP2, dmgTypes.PHYSICAL);
+            break;
         }
     }
 

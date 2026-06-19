@@ -37,6 +37,7 @@ function App() {
         whoStarts: whoStartsKeys.PLAYER_ONE,
         wheelDirection: directionKeys.CLOCKWISE,
         wheelHalted: false,
+        turnCount: 0,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -53,7 +54,7 @@ function App() {
 
     // Handles
     function handleAction(action, agentKey, nonAgentKey) {
-        console.log(`Used: ${action}`);
+        console.log(`[agentKey] Used: ${action}`);
         setGame((prev) => {
             // Skipping ghost clicks
             if (
@@ -73,8 +74,6 @@ function App() {
                 nonAgentKey,
                 prev,
             };
-
-            console.log(simulators);
 
             const sim = simulators[action];
 
@@ -211,9 +210,9 @@ function App() {
                 lastPlayerTurn: null,
                 remainingArray: 0,
                 elementalWheel: elementalKeys.INACTIVE,
-                whoStarts: whoStartsKeys.PLAYER_ONE,
                 wheelDirection: directionKeys.CLOCKWISE,
                 wheelHalted: false,
+                turnCount: 0,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -234,6 +233,7 @@ function App() {
                 ...prev,
                 status: initialStatus,
                 lastPlayerTurn: entityKeys.PLAYER_ONE,
+                turnCount: 1,
             };
         });
     }

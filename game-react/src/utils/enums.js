@@ -76,6 +76,11 @@ export const actionKeys = Object.freeze({
     BABEL: "babel",
     ALIGN: "align",
     HALT: "halt",
+    SPARK_OF_DIVINITY: "sparkOfDivinity", 
+    HEAVENLY_SCALE: "heavenlyScale",
+    SERAPH_OF_RECLAMATION: "seraphOfReclamation",
+    THE_WORD_MADE_FLESH: "theWordMadeFlesh",
+    CHART: "chart",
 });
 
 export const effectKeys = Object.freeze({
@@ -108,7 +113,7 @@ export const effectKeys = Object.freeze({
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
-    DIVINITY: "divinity",
+    ENLIGHTENMENT: "enlightenment",
     PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
     PIERCING_DAMAGE: dmgTypes.PIERCING,
     TRUE_DAMAGE: dmgTypes.TRUE,
@@ -119,8 +124,13 @@ export const effectKeys = Object.freeze({
     VENTING: "venting",
     ELEMENTAL_ESSENCE: "elementalEssence",
     CRYOGENESIS: "cryogenesis",
-    FADING_LIGHT: "fadingLight",
-    CUTOFF_WINGS: "cutoffWings"
+    CUTOFF_WINGS: "cutoffWings",
+    INSIGHT: "insight",
+    BLEAK_DECEPTION: "bleakDeception",
+    SACRED_FLAMES: "sacredFlames",
+    REVELATION: "revelation",
+    RUNIC_ARRAY: "runicArray",
+    INSPIRATION: "inspiration",
 });
 
 export const directionKeys = Object.freeze({

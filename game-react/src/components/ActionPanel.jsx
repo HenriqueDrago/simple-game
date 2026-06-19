@@ -2,170 +2,14 @@ import { useState } from "react";
 import "./ActionPanel.css";
 
 import { ACTION_DESCRIPTIONS, EFFECT_DESCRIPTIONS } from "../utils/descriptors";
-import { entityKeys, turnStatus, aiKeys, actionKeys } from "../utils/enums";
-import { constants, presetAi } from "../utils/constants";
-import { laserCost } from "../utils/entities";
-
-const UMBRAL_ACTIONS = [
-    {
-        key: actionKeys.BLACK_MAYHEM,
-        label: "Black Mayhem",
-        hoverKeys: [
-            "blackMayhem",
-            "resources",
-            "shadowflame",
-            "lingeringEmber",
-            "cinders",
-        ],
-    },
-    {
-        key: actionKeys.SHADOW_MANTLE,
-        label: "Shadow Mantle",
-        hoverKeys: ["shadowMantle", "darkEmbrace", "shadowflame", "resources"],
-    },
-    {
-        key: actionKeys.RITUAL_OF_ASH,
-        label: "Ritual Of Ash",
-        hoverKeys: ["ritualOfAsh", "shadowflame", "lingeringEmber", "cinders"],
-    },
-    {
-        key: actionKeys.DARK_PROMISE,
-        label: "Dark Promise",
-        hoverKeys: [
-            "darkPromise",
-            "umbralCore",
-            "dimmingDarkness",
-            "shadowflame",
-            "lingeringEmber",
-            "cinders",
-            "resources",
-        ],
-    },
-];
-
-const getNormalActions = (
-    arrayActive,
-    currEntity,
-    canUseSpAtk,
-    canUseLaser,
-    canUseDeploy,
-) => {
-    if (currEntity.states.thermalOverload) {
-        return [
-            {
-                key: actionKeys.MELTDOWN,
-                label: "Meltdown",
-                hoverKeys: [actionKeys.MELTDOWN],
-                isMeltdown: true,
-            },
-        ];
-    }
-
-    return [
-        { key: actionKeys.ATTACK, label: "Attack", hoverKeys: ["attack"] },
-        {
-            key: actionKeys.GUARD,
-            label: "Guard",
-            hoverKeys: ["guard", "guardingState"],
-        },
-        { key: actionKeys.HEAL, label: "Heal", hoverKeys: ["heal", "poison"] },
-        {
-            key: actionKeys.SPECIAL_ATTACK,
-            label: "Special Attack",
-            hoverKeys: ["spAtk", "manaImbalance", "manaOverflow"],
-            disabled: !canUseSpAtk,
-        },
-        arrayActive
-            ? {
-                  key: actionKeys.CURSE,
-                  label: "Curse",
-                  hoverKeys: ["curse", "shackledMana", "poison"],
-              }
-            : {
-                  key: actionKeys.ARRAY,
-                  label: "Array",
-                  hoverKeys: [
-                      "array",
-                      "shackledMana",
-                      "thornedShackles",
-                      "manaOverflow",
-                  ],
-              },
-        {
-            key: actionKeys.SACRIFICE,
-            label: "Self Sacrifice",
-            hoverKeys: [
-                "sacrifice",
-                "bloodSacrifice",
-                "sacrificialState",
-                "manaBleed",
-            ],
-        },
-        {
-            key: actionKeys.AEGIS,
-            label: "Aegis",
-            hoverKeys: ["aegis", "radiance", "holyProtection"],
-        },
-        {
-            key: actionKeys.SHADOW_PACT,
-            label: "Shadow Pact",
-            hoverKeys: ["shadowPact", "umbralCore", "resources", "shadowflame"],
-        },
-        currEntity.states.aligned
-            ? {
-                  key: actionKeys.HALT,
-                  label: "Halt",
-                  hoverKeys: [actionKeys.HALT],
-              }
-            : {
-                  key: actionKeys.ALIGN,
-                  label: "Align",
-                  hoverKeys: [actionKeys.ALIGN],
-              },
-        !currEntity.states.resonant
-            ? {
-                  key: actionKeys.ATTUNE,
-                  label: "Attune",
-                  hoverKeys: [actionKeys.ATTUNE],
-              }
-            : currEntity.sonority > 0
-              ? {
-                    key: actionKeys.BABEL,
-                    label: "Babel",
-                    hoverKeys: [actionKeys.BABEL],
-                }
-              : currEntity.sonority < 0
-                ? {
-                      key: actionKeys.SOUND_OF_SILENCE,
-                      label: "The Sound of Silence",
-                      hoverKeys: [actionKeys.SOUND_OF_SILENCE],
-                  }
-                : {
-                      key: actionKeys.DA_CAPO,
-                      label: "Da Capo",
-                      hoverKeys: [actionKeys.DA_CAPO],
-                  },
-        currEntity.states.weaponsDeployed
-            ? {
-                  key: actionKeys.LASER,
-                  label: "Laser",
-                  hoverKeys: [actionKeys.LASER],
-                  disabled: !canUseLaser,
-              }
-            : {
-                  key: actionKeys.DEPLOY,
-                  label: "Deploy",
-                  hoverKeys: [actionKeys.DEPLOY],
-                  disabled: !canUseDeploy,
-              },
-        {
-            key: actionKeys.SUMMON,
-            label: "Summon",
-            hoverKeys: [],
-            disabled: true,
-        },
-    ];
-};
+import { entityKeys, turnStatus, aiKeys } from "../utils/enums";
+import {
+    constants,
+    presetAi,
+    ANGEL_ACTIONS,
+    UMBRAL_ACTIONS,
+    getNormalActions,
+} from "../utils/constants";
 
 function ActionPanel({
     handleAction,
@@ -197,12 +41,17 @@ function ActionPanel({
             battleState === turnStatus.PLAYER_TWO_TURN &&
             game.entities[entityKeys.PLAYER_TWO].states.umbralCore);
 
+    const showAngelButtons =
+        (playerController === aiKeys.HUMAN &&
+            battleState === turnStatus.PLAYER_ONE_TURN &&
+            game.entities[entityKeys.PLAYER_ONE].states.cutoffWings) ||
+        (enemyController === aiKeys.HUMAN &&
+            battleState === turnStatus.PLAYER_TWO_TURN &&
+            game.entities[entityKeys.PLAYER_TWO].states.cutoffWings);
+
     const canUseSpAtk =
         currEntity.currMana + currEntity.resources.manaOverflow >=
         constants.SP_ATTACK_COST;
-    const canUseLaser =
-        currEntity.currMana + currEntity.resources.manaOverflow >=
-        laserCost(currEntity);
     const canUseDeploy = !currEntity.states.venting;
 
     const enemyLabel =
@@ -243,6 +92,9 @@ function ActionPanel({
 
     const showWait = waitLabel !== null;
 
+    const currActorLabel =
+        battleState === turnStatus.PLAYER_ONE_TURN ? playerLabel : enemyLabel;
+
     // Centralized action handler
     const handleActionButton = (actionKey) => {
         setHoveredAction(null);
@@ -255,26 +107,35 @@ function ActionPanel({
         );
     };
 
-    const currentActions = showUmbralButtons
-        ? UMBRAL_ACTIONS
-        : getNormalActions(
-              arrayActive,
-              currEntity,
-              canUseSpAtk,
-              canUseLaser,
-              canUseDeploy,
-          );
+    const currentActions = showAngelButtons
+        ? ANGEL_ACTIONS
+        : showUmbralButtons
+          ? UMBRAL_ACTIONS
+          : getNormalActions(
+                arrayActive,
+                currEntity,
+                canUseSpAtk,
+                canUseDeploy,
+            );
 
     // Determine the container class based on state
     let containerClass = "button-grid";
     if (currEntity.states.thermalOverload) {
         containerClass = "meltdown-container";
+    } else if (showAngelButtons) {
+        containerClass = "angel-button-grid";
     } else if (showUmbralButtons) {
         containerClass = "shadow-button-grid";
     }
 
     return (
         <div className="action-panel-container">
+            {showButtons && (
+                <div className="action-panel-turn-announcer">
+                    <span>{currActorLabel}</span>
+                </div>
+            )}
+
             {showButtons && (
                 <div className={containerClass}>
                     {currentActions.map((action) => (

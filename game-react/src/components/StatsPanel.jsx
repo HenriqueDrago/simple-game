@@ -4,112 +4,29 @@ import AttrLine from "./AttrLine.jsx";
 import StackCounter from "./StackCounter.jsx";
 import ElementalCounter from "./ElementalCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
-
-import { constants } from "../utils/constants.js";
-import { sdmKeys, elementalKeys, effectKeys } from "../utils/enums.js";
-
-import "./StatsPanel.css";
+import InsightBar from "./InsightBar.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 import OverheatBar from "./OverheatBar.jsx";
+import EnlightenmentBar from "./EnlightenmentBar.jsx";
 
-const stackCounters = [
-    [
-        "Blood Sacrifice",
-        effectKeys.BLOOD_SACRIFICE,
-        "#ff4d4d",
-        "rgba(255, 77, 77, 0.1)",
-    ],
-    [
-        "Poison", 
-        effectKeys.POISON, 
-        "#32cd32", 
-        "rgba(50, 205, 50, 0.1)"
-    ],
-    [
-        "Shackled Mana",
-        effectKeys.SHACKLED_MANA,
-        "#3f51b5",
-        "rgba(63, 81, 181, 0.15)",
-    ],
-    [
-        "Shadowflame",
-        effectKeys.SHADOWFLAME,
-        "#ff1493",
-        "rgba(255, 20, 147, 0.15)",
-    ],
-    [
-        "Lingering Ember",
-        effectKeys.LINGERING_EMBER,
-        "#e998fd",
-        "rgba(245, 208, 254, 0.12)",
-    ],
-    [
-        "Cinders", 
-        effectKeys.CINDERS, 
-        "#a9a9a9", 
-        "rgba(169, 169, 169, 0.15)"
-    ],
-    [
-        "Unrelenting Shadows",
-        effectKeys.UNRELENTING_SHADOWS,
-        "#9370db",
-        "rgba(147, 112, 219, 0.1)",
-    ],
-    [
-        "Cryogenesis", 
-        effectKeys.CRYOGENESIS, 
-        "#00ffff", 
-        "rgba(176, 216, 222, 0.15)"
-    ],
-    [
-        "Radiance", 
-        effectKeys.RADIANCE, 
-        "#fff59d", 
-        "rgba(255, 245, 157, 0.15)"
-    ],
-    [
-        "Halo", 
-        effectKeys.HALO, 
-        "#fff9c4", 
-        "rgba(255, 249, 196, 0.15)"
-    ],
-    [
-        "Divinity", 
-        effectKeys.DIVINITY, 
-        "#fffde7", 
-        "rgba(255, 253, 231, 0.15)"
-    ],
-    [
-        "Fading Light", 
-        effectKeys.FADING_LIGHT, 
-        "#ffffff", 
-        "rgba(255, 255, 255, 0.15)"
-    ],
-];
+import {
+    constants,
+    stackCounters,
+    getSonorityColor,
+} from "../utils/constants.js";
+import { sdmKeys, elementalKeys } from "../utils/enums.js";
 
-const getSonorityColor = (sonority) => {
-    const colors = {
-        "-5": "#ff4500",
-        "-4": "#ff6a33",
-        "-3": "#ff8f66",
-        "-2": "#ffb499",
-        "-1": "#ffdacc",
-        0: "#ffffff",
-        1: "#ccf2ff",
-        2: "#99e5ff",
-        3: "#66d9ff",
-        4: "#33ccff",
-        5: "#00bfff",
-    };
-    return colors[sonority] || "#ffffff";
-};
+import "./StatsPanel.css";
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
+    const entity = game.entities[entityKey];
     const battleState = game.status;
-    const distributionMode = game.entities[entityKey].statDistributionMode;
+    const distributionMode = entity.statDistributionMode;
 
-    const states = game.entities[entityKey].states;
-    const resources = game.entities[entityKey].resources;
+    const states = entity.states;
+    const resources = entity.resources;
+
+    const isAngelView = states.cutoffWings;
 
     const activeStates = [];
 
@@ -125,7 +42,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
     if (states.guarding) activeStates.push("state-guarding");
     if (states.sacrificial) activeStates.push("state-sacrificial");
     if (states.radiant) activeStates.push("state-radiant");
-    if (states.cutoffWings) activeStates.push("state-cutoff-wings");
+    if (isAngelView) activeStates.push("state-cutoff-wings");
     if (states.deployment) activeStates.push("state-deployment");
     if (states.darkEmbrace) activeStates.push("state-dark-embrace");
     if (states.dimmingDarkness) activeStates.push("state-dimming");
@@ -135,7 +52,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
 
     const statesClass = activeStates.join(" ");
 
-    const sonorityValue = game.entities[entityKey].sonority;
+    const sonorityValue = entity.sonority;
 
     // Create a dynamic style object to pass the CSS variable
     const dynamicStyles = {};
@@ -150,9 +67,17 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
         >
             <StateBadges states={states} />
 
-            <HpBar entity={game.entities[entityKey]} />
-            <ManaBar entity={game.entities[entityKey]} />
-            <OverheatBar entity={game.entities[entityKey]} />
+            <EnlightenmentBar entity={entity} />
+
+            {isAngelView ? (
+                <InsightBar entity={entity} />
+            ) : (
+                <>
+                    <HpBar entity={entity} />
+                    <ManaBar entity={entity} />
+                    <OverheatBar entity={entity} />
+                </>
+            )}
 
             {stackCounters.map(([label, field, color, backgroundColor]) => (
                 <StackCounter
@@ -164,30 +89,34 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 />
             ))}
 
-            <div className="attributes-wrapper">
-                {constants.ATTRIBUTE_NAMES.map((attr) => (
-                    <AttrLine
-                        key={attr}
-                        battleState={battleState}
-                        handleStatusChange={updateStatsPoints}
-                        entity={game.entities[entityKey]}
-                        entityKey={entityKey}
-                        attr={attr}
-                        modifiable={distributionMode === sdmKeys.CUSTOM}
-                    />
-                ))}
-            </div>
+            {!isAngelView && (
+                <>
+                    <div className="attributes-wrapper">
+                        {constants.ATTRIBUTE_NAMES.map((attr) => (
+                            <AttrLine
+                                key={attr}
+                                battleState={battleState}
+                                handleStatusChange={updateStatsPoints}
+                                entity={entity}
+                                entityKey={entityKey}
+                                attr={attr}
+                                modifiable={distributionMode === sdmKeys.CUSTOM}
+                            />
+                        ))}
+                    </div>
 
-            {states.resonant && (
-                <SonorityCounter
-                    sonority={game.entities[entityKey].sonority}
-                ></SonorityCounter>
+                    {states.resonant && (
+                        <SonorityCounter sonority={entity.sonority} />
+                    )}
+                </>
             )}
 
-            {game.elementalWheel !== elementalKeys.INACTIVE && (
-                <ElementalCounter
-                    entity={game.entities[entityKey]}
-                ></ElementalCounter>
+            {!isAngelView && (
+                <>
+                    {game.elementalWheel !== elementalKeys.INACTIVE && (
+                        <ElementalCounter entity={entity} />
+                    )}
+                </>
             )}
         </div>
     );

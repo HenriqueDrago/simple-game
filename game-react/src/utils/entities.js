@@ -55,25 +55,33 @@ export function consumeResources(entity, amount, cause) {
     while (
         amount > 0 &&
         resourceIndex < constants.limitedResources.length &&
-        draftEntity.currHp > 0
+        (draftEntity.currHp > 0 || (draftEntity.states.cutoffWings && draftEntity.currEnlit > 0))
     ) {
         const currResourceKey = constants.limitedResources[resourceIndex];
 
-        const currentAmount = draftEntity[currResourceKey];
-        const consumption = Math.min(currentAmount, amount);
+        if (
+            !(
+                cause === effectKeys.ENLIGHTENMENT &&
+                (currResourceKey === "currEnlit" ||
+                    currResourceKey === "currInsight")
+            )
+        ) {
+            const currentAmount = draftEntity[currResourceKey];
+            const consumption = Math.min(currentAmount, amount);
 
-        draftEntity = {
-            ...draftEntity,
-            [currResourceKey]: currentAmount - consumption,
-        };
+            draftEntity = {
+                ...draftEntity,
+                [currResourceKey]: currentAmount - consumption,
+            };
 
-        resourcesConsumed = {
-            ...resourcesConsumed,
-            [currResourceKey]: consumption,
-        };
+            resourcesConsumed = {
+                ...resourcesConsumed,
+                [currResourceKey]: consumption,
+            };
 
-        totalConsumption += consumption;
-        amount -= consumption;
+            totalConsumption += consumption;
+            amount -= consumption;
+        }
 
         resourceIndex++;
     }
@@ -95,20 +103,32 @@ export function restoreResources(entity, amount) {
         resources: { ...entity.resources },
     };
 
-    const missingHp =
-        draftEntity.maxHp + draftEntity.overgrowth - draftEntity.currHp;
-    const restoredHp = Math.min(missingHp, amount);
+    if (entity.states.cutoffWings) {
+        const missingEnlit = draftEntity.maxEnlit - draftEntity.currEnlit;
+        const restoredEnlit = Math.min(missingEnlit, amount);
 
-    draftEntity.currHp += restoredHp;
-    amount -= restoredHp;
+        amount -= restoredEnlit;
 
-    const missingMana = draftEntity.maxMana - draftEntity.currMana;
-    const restoredMana = Math.min(missingMana, amount);
+        draftEntity = {
+            ...draftEntity,
+            currEnlit: draftEntity.currEnlit + restoredEnlit,
+        };
 
-    draftEntity.currMana += restoredMana;
-    amount -= restoredMana;
+        draftEntity = gainInsight(draftEntity, amount);
+    } else {
+        const missingHp =
+            draftEntity.maxHp + draftEntity.overgrowth - draftEntity.currHp;
+        const restoredHp = Math.min(missingHp, amount);
 
-    draftEntity.resources.manaOverflow += amount;
+        amount -= restoredHp;
+
+        draftEntity = {
+            ...draftEntity,
+            currHp: draftEntity.currHp + restoredHp,
+        };
+
+        draftEntity = gainMana(draftEntity, amount);
+    }
 
     return draftEntity;
 }
@@ -203,11 +223,16 @@ export function createBaseEntity() {
         currMana: constants.BASE_STATS.mana,
         maxOverheat: constants.MAX_OVERHEAT,
         currOverheat: 0,
+        maxEnlit: constants.MAX_ENLIT,
+        currEnlit: 0,
+        maxInsight: constants.MAX_ENLIT,
+        currInsight: 0,
         sonority: 0,
         lasersUsedThisTurn: 0,
         permafrost: 0,
         overgrowth: 0,
         scoria: 0,
+        revelation: 0,
         resources: {
             manaOverflow: 0,
             bloodSacrifice: 0,
@@ -219,9 +244,9 @@ export function createBaseEntity() {
             lingeringEmber: 0,
             unrelentingShadows: 0,
             halo: 0,
-            divinity: 0,
             cryogenesis: 0,
-            fadingLight: 0,
+            inspiration: 0,
+            sacredFlames: 0,
         },
         states: {
             guarding: false,
@@ -237,7 +262,7 @@ export function createBaseEntity() {
             resonant: false,
             venting: false,
             aligned: false,
-            cutoffWings: false
+            cutoffWings: false,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -246,7 +271,6 @@ export function createBaseEntity() {
 
 export function processEntityDR(entity) {
     let drMult = 1.0;
-    console.log(entity);
     if (entity.states.guarding) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
@@ -259,11 +283,6 @@ export function processEntityDR(entity) {
     if (entity.states.deployment) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
-
-    drMult *= Math.max(
-        0,
-        1 - entity.resources.divinity * constants.DIVINITY_DR,
-    );
 
     return drMult;
 }
@@ -287,96 +306,140 @@ export function dealDamage(
     dmgType,
     isArrayActive,
 ) {
+    let draftAttacker = {
+        ...attacker,
+    };
+
+    let draftDefender = {
+        ...defender,
+    };
+
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? attacker.resources.radiance +
-              attacker.scoria +
-              attacker.resources.bloodSacrifice +
-              attacker.sonority
+            ? draftAttacker.resources.radiance +
+              draftAttacker.scoria +
+              draftAttacker.resources.bloodSacrifice +
+              draftAttacker.sonority
             : dmgType === dmgTypes.PIERCING
-              ? attacker.scoria +
-                attacker.sonority +
-                attacker.resources.radiance
+              ? draftAttacker.scoria + draftAttacker.sonority
               : 0;
 
-    const effectiveDef =
-        dmgType === dmgTypes.PHYSICAL
-            ? (defender.attributes.def.value + defender.permafrost) *
-              processEntityDefEffect(defender)
-            : 0;
+    if (defender.states.cutoffWings) {
+        const finalDmg = Math.max(1, Math.floor(baseDmg + additionalDmg));
 
-    const drMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityDR(defender)
-            : 1.0;
+        const defenderNewEnlit = Math.max(0, defender.currEnlit - finalDmg);
 
-    const flatDr =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? defender.sonority + defender.permafrost
-            : 0;
+        draftDefender = {
+            ...draftDefender,
+            currEnlit: defenderNewEnlit,
+        };
+    } else {
+        const effectiveDef =
+            dmgType === dmgTypes.PHYSICAL
+                ? (draftDefender.attributes.def.value +
+                      draftDefender.permafrost) *
+                  processEntityDefEffect(draftDefender)
+                : 0;
 
-    const finalDmg = Math.max(
-        1,
-        Math.floor((baseDmg + additionalDmg - effectiveDef - flatDr) * drMult),
-    );
+        const drMult =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? processEntityDR(draftDefender)
+                : 1.0;
 
-    // Mitigation
-    const haloConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(finalDmg, defender.resources.halo)
-            : 0;
-    const cryoConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(finalDmg - haloConsumed, defender.resources.cryogenesis)
-            : 0;
-    const emberConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  finalDmg - haloConsumed - cryoConsumed,
-                  defender.resources.lingeringEmber,
-              )
-            : 0;
+        const flatDr =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? draftDefender.sonority + draftDefender.permafrost
+                : 0;
 
-    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
+        const finalDmg = Math.max(
+            1,
+            Math.floor(
+                (baseDmg + additionalDmg - effectiveDef - flatDr) * drMult,
+            ),
+        );
 
-    const defenderNewHp = Math.max(0, defender.currHp - damagePostMitigation);
+        // Mitigation
+        const haloConsumed =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? Math.min(finalDmg, draftDefender.resources.halo)
+                : 0;
+        const cryoConsumed =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? Math.min(
+                      finalDmg - haloConsumed,
+                      draftDefender.resources.cryogenesis,
+                  )
+                : 0;
+        const emberConsumed =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? Math.min(
+                      finalDmg - haloConsumed - cryoConsumed,
+                      draftDefender.resources.lingeringEmber,
+                  )
+                : 0;
 
-    const defenderNewHalo = defender.resources.halo - haloConsumed;
-    const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
-    const defenderNewEmbers = defender.resources.lingeringEmber - emberConsumed;
-    const defenderNewRadiance = defender.resources.radiance + haloConsumed;
+        const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
 
-    const thornsDmg =
-        isArrayActive && dmgType === dmgTypes.PHYSICAL
-            ? attacker.attributes.str.value + attacker.scoria
-            : 0;
+        const defenderNewHp = Math.max(
+            0,
+            defender.currHp - damagePostMitigation,
+        );
 
-    const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
+        const defenderNewHalo = defender.resources.halo - haloConsumed;
+        const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
+        const defenderNewEmbers =
+            defender.resources.lingeringEmber - emberConsumed;
+        const defenderNewRadiance = defender.resources.radiance + haloConsumed;
 
-    return {
-        attacker: {
-            ...attacker,
+        const thornsDmg =
+            isArrayActive && dmgType === dmgTypes.PHYSICAL
+                ? attacker.attributes.str.value + attacker.scoria
+                : 0;
+
+        const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
+
+        draftAttacker = {
+            ...draftAttacker,
             currHp: attackerNewHP,
             resources: {
-                ...attacker.resources,
+                ...draftAttacker.resources,
                 radiance: 0,
-            }
-        },
-        defender: {
-            ...defender,
+            },
+        };
+
+        draftDefender = {
+            ...draftDefender,
             currHp: defenderNewHp,
             resources: {
-                ...defender.resources,
+                ...draftDefender.resources,
                 halo: defenderNewHalo,
                 lingeringEmber: defenderNewEmbers,
                 radiance: defenderNewRadiance,
                 cryogenesis: defenderNewCryo,
             },
+        };
+    }
+
+    return {
+        attacker: {
+            ...draftAttacker,
+        },
+        defender: {
+            ...draftDefender,
         },
     };
 }
 
 export function takeDamage(entity, baseDmg, dmgType) {
+    if(entity.states.cutoffWings) {
+        const newEnlit = Math.max(0, entity.currEnlit - baseDmg);
+        return {
+            ...entity,
+            currEnlit: newEnlit,
+        }
+    }
+
+
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
             ? (entity.attributes.def.value + entity.permafrost) *
@@ -437,10 +500,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
     };
 }
 
-export function laserCost(agent) {
-    return Math.max(1, Math.floor((agent.currOverheat - 3) / 2));
-}
-
 export function gainMana(entity, amount) {
     const missingMana = entity.maxMana - entity.currMana;
 
@@ -459,8 +518,11 @@ export function gainMana(entity, amount) {
 }
 
 export function loseMana(entity, amount) {
-    const overflowConsumed = Math.max(amount, entity.resources.manaOverflow);
-    const newOverflow = Math.max(0, entity.resources.manaOverflow - overflowConsumed);
+    const overflowConsumed = Math.min(amount, entity.resources.manaOverflow);
+    const newOverflow = Math.max(
+        0,
+        entity.resources.manaOverflow - overflowConsumed,
+    );
 
     const newMana = Math.max(0, entity.currMana - amount - overflowConsumed);
 
@@ -470,6 +532,23 @@ export function loseMana(entity, amount) {
         resources: {
             ...entity.resources,
             manaOverflow: newOverflow,
+        },
+    };
+}
+
+export function gainInsight(entity, amount) {
+    const missingInsight = entity.maxInsight - entity.currInsight;
+
+    const newInsight = Math.min(entity.maxInsight, entity.currInsight + amount);
+    const newInspiration =
+        entity.resources.inspiration + Math.max(0, amount - missingInsight);
+
+    return {
+        ...entity,
+        currInsight: newInsight,
+        resources: {
+            ...entity.resources,
+            inspiration: newInspiration,
         },
     };
 }

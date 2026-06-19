@@ -13,17 +13,20 @@ const STATE_MAPPINGS = [
     { key: "darkEmbrace", label: "Dark Embrace" },
     { key: "dimmingDarkness", label: "Dimming Darkness" },
     { key: "thornedShackles", label: "Thorned Shackles" },
-    { key: "cutoffWings", label: "Cutoff Wings"}
+    { key: "cutoffWings", label: "Cutoff Wings" },
+    { key: "aligned", label: "Aligned" },
 ];
 
 function StateBadges({ states }) {
-    const activeBadges = STATE_MAPPINGS.filter(mapping => states[mapping.key]);
+    const activeBadges = STATE_MAPPINGS.filter(
+        (mapping) => states[mapping.key],
+    );
 
     if (activeBadges.length === 0) return null;
 
     return (
         <div className="state-badges-container">
-            {activeBadges.map(mapping => (
+            {activeBadges.map((mapping) => (
                 <span key={mapping.key} className="state-badge">
                     {mapping.label}
                 </span>

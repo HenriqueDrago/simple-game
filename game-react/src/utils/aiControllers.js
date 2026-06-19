@@ -13,7 +13,7 @@ export function simpleAI(context) {
         handleAction,
     } = context;
 
-    // 1. Emergency Survival: Heal if we have at least 3 mana, otherwise Guard
+    // In low hp: heal if enough mana, otherwise gaurd
     if (agent.currHp <= agent.maxHp * 0.5) {
         if (totalMana >= 3) {
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
@@ -23,61 +23,38 @@ export function simpleAI(context) {
         return;
     }
 
-    // 2. Dump the Nuke: If we hit 6 mana, fire it immediately
-    if (hasManaForSpecial) {
-        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-        return;
-    }
-
-    // 3. Standard Punch
+    // atandard attack
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
 }
 
 export function bloodknightAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgentKey,
-        isArrayActive,
-        totalMana,
-        hasManaForSpecial,
-        handleAction,
-    } = context;
+    const { agent, agentKey, nonAgentKey, isArrayActive, handleAction } =
+        context;
 
     const missingHp = agent.maxHp - agent.currHp;
 
-    // 1. The Array Pivot & Thorns Avoidance
-    if (isArrayActive && agent.attributes.str.value + agent.scoria < agent.currHp) {
+    // Avoid throns
+    if (
+        isArrayActive &&
+        agent.attributes.str.value + agent.scoria > agent.currHp
+    ) {
         handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
     }
 
-    // 2. Dump the Hot Potato (Overflow) & Emergency Heal
-    if (agent.resources.manaOverflow > 0 || agent.currHp <= agent.maxHp * 0.5) {
-        // Only use SpAtk if we MUST dump overflow, AND Heal wouldn't burn enough mana to save us
-        if (
-            agent.resources.manaOverflow > 0 &&
-            hasManaForSpecial &&
-            missingHp < constants.SP_ATTACK_COST
-        ) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        } else if (totalMana >= 3) {
-            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
-            return;
-        }
-    }
-
-    // 3. The Sacrifice Engine
+    // Use Sacrifice if not enouhg accumulated dmg
     if (
-        agent.currHp > agent.maxHp * 0.65 &&
-        agent.resources.bloodSacrifice + agent.attributes.str.value + agent.scoria < agent.maxHp * 1.4
+        agent.currHp >= agent.maxHp * 0.6 &&
+        agent.resources.bloodSacrifice +
+            agent.attributes.str.value +
+            agent.scoria <
+            agent.maxHp
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
         return;
     }
 
-    // 4. Bleeding out without fuel? Guard to ensure Mana Bleed can heal you next turn.
+    // Guard if dying to recover mana (and thus, hp)
     if (
         agent.resources.bloodSacrifice > 0 &&
         agent.currMana < missingHp &&
@@ -87,7 +64,7 @@ export function bloodknightAI(context) {
         return;
     }
 
-    // 5. Default: Unleash the buffed Attack
+    // Standard Attack
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
 }
 
@@ -103,40 +80,12 @@ export function paladinAI(context) {
         prev,
     } = context;
 
-    const simNormal = simulators[actionKeys.ATTACK]({
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        prev,
-    });
-    const simSpecial = simulators[actionKeys.SPECIAL_ATTACK]({
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        prev,
-    });
-
-    if (
-        hasManaForSpecial &&
-        simSpecial.entities[nonAgentKey].currHp <= 0 &&
-        simSpecial.entities[agentKey].currHp > 0
-    ) {
-        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-        return;
-    }
-
-    if (simNormal.entities[nonAgentKey].currHp <= 0 && simNormal.entities[agentKey].currHp > 0) {
-        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
-        return;
-    }
-
-    const effectiveHp = agent.currHp + agent.resources.radiance;
-    const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
-
-    if (effectiveHp - lethalThreat <= agent.maxHp * 0.5 && totalMana >= 3) {
-        handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+    if (agent.resources.radiance >= 5) {
+        if (hasManaForSpecial) {
+            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+        }
         return;
     }
 
@@ -152,53 +101,42 @@ export function hexerAI(context) {
         isArrayActive,
         hasManaForSpecial,
         handleAction,
-        prev
+        prev,
     } = context;
 
-    const simSpecial = simulators[actionKeys.SPECIAL_ATTACK]({
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        prev
-    });
     const simCurse = isArrayActive
-        ? simulators[actionKeys.CURSE]({ agent, agentKey, nonAgent, nonAgentKey, prev })
+        ? simulators[actionKeys.CURSE]({
+              agent,
+              agentKey,
+              nonAgent,
+              nonAgentKey,
+              prev,
+          })
         : null;
 
     if (isArrayActive) {
-        // 1. If Curse applies enough poison to kill the opponent next turn, detonate!
-        if (simCurse.entities[nonAgentKey].resources.poison >= simCurse.entities[nonAgentKey].currHp) {
+        if (
+            simCurse.entities[nonAgentKey].resources.poison >=
+                simCurse.entities[nonAgentKey].currHp ||
+            simCurse.entities[agentKey].resources.poison <
+                simCurse.entities[agentKey].currHp
+        ) {
             handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
             return;
         }
-
-        // 2. Otherwise, Guard to generate mana which feeds the Thorned Shackles at turn end
-        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
     } else {
-        // --- NOT IN ARRAY EXCEPTIONS ---
-
-        // Exception 1: SpAtk is guaranteed lethal
-        if (hasManaForSpecial && simSpecial.entities[nonAgentKey].currHp <= 0) {
+        if (hasManaForSpecial) {
             handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
             return;
         }
 
-        // Exception 2: Poison is going to kill us during Upkeep
         if (agent.resources.poison >= agent.currHp) {
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
             return;
         }
 
-        // Exception 3: Opponent has considerably less mana, nuke them to force mana onto their sheet
-        const manaDiff = agent.currMana - nonAgent.currMana;
-        if (hasManaForSpecial && manaDiff >= 4) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        }
-
-        // Default: Trap them in the Array
+        // Array
         handleAction(actionKeys.ARRAY, agentKey, nonAgentKey);
     }
 }
@@ -224,28 +162,35 @@ export function warlockAI(context) {
         prev,
     });
     const simCurse = isArrayActive
-        ? simulators[actionKeys.CURSE]({ agent, agentKey, nonAgent, nonAgentKey, prev })
+        ? simulators[actionKeys.CURSE]({
+              agent,
+              agentKey,
+              nonAgent,
+              nonAgentKey,
+              prev,
+          })
         : null;
 
-    // 1. Absolute Lethality (Always take the shot if it wins the game)
+    // Attacks if simulation returns a kill
     if (hasManaForSpecial && simSpecial.entities[nonAgentKey].currHp <= 0) {
         handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
         return;
     }
 
-    // 2. Array Management (Fixing the Panic Curse)
+    // Use curse if it kills the opponent
     if (isArrayActive) {
-        // Detonate ONLY if it guarantees the enemy dies to poison
-        if (simCurse.entities[nonAgentKey].resources.poison >= simCurse.entities[nonAgentKey].currHp) {
+        if (
+            simCurse.entities[nonAgentKey].resources.poison >=
+            simCurse.entities[nonAgentKey].currHp
+        ) {
             handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
             return;
         }
-        // Otherwise, stall the array to survive Thorns and incoming damage
         handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
     }
 
-    // 3. Overflow Management & Survival (Dynamic 50% Threshold)
+    // Clears Poison/Overflow
     const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
 
     if (
@@ -253,17 +198,15 @@ export function warlockAI(context) {
         agent.currHp - lethalThreat <= agent.maxHp * 0.5
     ) {
         if (hasManaForSpecial) {
-            // Priority 1: Dump the massive overflow onto the enemy as a weapon!
             handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
             return;
         } else if (totalMana >= 3 && agent.currHp < agent.maxHp) {
-            // Priority 2: Cleanse poison / heal the damage buffer
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
             return;
         }
     }
 
-    // 4. Default: The Warlock Engine
+    // Attack/Guard
     if (hasManaForSpecial) {
         handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
     } else {
@@ -282,36 +225,46 @@ export function shadowSorcererAI(context) {
         prev,
     } = context;
 
-    // 1. The Array/Curse Exception (When outside Umbral Core)
+    const simCurse = isArrayActive
+        ? simulators[actionKeys.CURSE]({
+              agent,
+              agentKey,
+              nonAgent,
+              nonAgentKey,
+              prev,
+          })
+        : null;
+
+    // === Outside Umbral ===
+
+    // if in an array, kills the opponent with poison if possible
     if (isArrayActive && !agent.states.umbralCore) {
         if (!nonAgent.states.dimmingDarkness) {
-            const lethalPoison =
-                nonAgent.currMana +
-                nonAgent.resources.manaOverflow +
-                nonAgent.resources.shackledMana +
-                nonAgent.resources.poison;
-            if (lethalPoison >= nonAgent.currHp) {
+            if (
+                simCurse.entities[nonAgentKey].resources.poison >=
+                simCurse.entities[nonAgentKey].currHp
+            ) {
                 handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
                 return;
             }
         }
     }
 
-    // 2. The Entry Priority
+    // Umbral Entry
     if (!agent.states.umbralCore) {
         handleAction(actionKeys.SHADOW_PACT, agentKey, nonAgentKey);
         return;
     }
 
-    // --- UMBRAL CORE LOGIC ---
+    // === Umbral ===
 
-    // Overflow escape
-    if (agent.resources.manaOverflow > agent.currHp) {
+    // Uses DP to escape overflow death
+    if (agent.resources.manaOverflow >= agent.currHp) {
         handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
         return;
     }
 
-    // 3. The Dark Promise Bomb (Lethality & Survival Check)
+    // Check if should do Dark Promise
     const simPromise = simulators[actionKeys.DARK_PROMISE]({
         agent,
         agentKey,
@@ -338,7 +291,8 @@ export function shadowSorcererAI(context) {
         const savedBySpAtk =
             Math.max(
                 0,
-                postPromiseEnemy.resources.manaOverflow - constants.SP_ATTACK_COST,
+                postPromiseEnemy.resources.manaOverflow -
+                    constants.SP_ATTACK_COST,
             ) < postPromiseEnemy.currHp;
         const savedByShadows = postPromiseEnemy.states.umbralCore;
 
@@ -359,18 +313,29 @@ export function shadowSorcererAI(context) {
                 prev,
             });
 
-            if (simAtk.entities[agentKey].currHp > 0 && simSpAtk.entities[agentKey].currHp > 0) {
+            if (
+                simAtk.entities[agentKey].currHp > 0 &&
+                simSpAtk.entities[agentKey].currHp > 0
+            ) {
                 handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
                 return;
             }
         }
     }
 
-    // 4. Burn Management (Ritual of Ash vs Shadow Mantle)
-    const { draftEntity: draftTarget } = consumeResources(agent, agent.resources.shadowflame, effectKeys.SHADOWFLAME)
+    // Burn Management
+    const { draftEntity: draftTarget } = consumeResources(
+        agent,
+        agent.resources.shadowflame,
+        effectKeys.SHADOWFLAME,
+    );
 
     if (draftTarget.currHp <= 0) {
-        if (agent.currHp <= agent.maxHp * 0.5 && agent.resources.shadowflame >= 10) {
+        if (
+            agent.currHp < agent.maxHp * 0.5 &&
+            agent.resources.shadowflame <
+                agent.currHp + (agent.maxMana - agent.currMana)
+        ) {
             handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
         } else {
             handleAction(actionKeys.RITUAL_OF_ASH, agentKey, nonAgentKey);
@@ -378,6 +343,6 @@ export function shadowSorcererAI(context) {
         return;
     }
 
-    // 5. Default Engine
+    // Default Attack (Black Mayhem)
     handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
 }

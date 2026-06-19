@@ -10,6 +10,10 @@ function AttrLine({
     entity,
     entityKey,
 }) {
+    if(entity.attributes[attr].value == null) {
+        return null;
+    }
+
     const showControls = modifiable && battleState === turnStatus.SETUP;
 
     const specialClass =

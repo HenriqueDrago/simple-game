@@ -10,8 +10,8 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.HEAL]: (
         <div>
-            <strong>HEAL:</strong> Converts MANA into HP. Maximum healing is
-            limited by both missing HP and current MANA. Cleanses POISON.
+            <strong>HEAL:</strong> Converts MANA into HP and cleanses POISON.
+            Maximum healing is limited by both missing HP and current MANA.
         </div>
     ),
 
@@ -60,16 +60,16 @@ export const ACTION_DESCRIPTIONS = {
     [actionKeys.AEGIS]: (
         <div>
             <strong>AEGIS:</strong> Enters RADIANT state until next turn start.
-            Gains HALO equal to the user's DEF.
+            Gains HALO equal to twice the user's DEF.
         </div>
     ),
 
     [actionKeys.SHADOW_PACT]: (
         <div>
-            <strong>SHADOW PACT:</strong> Enters UMBRAL CORE. Burns 5 RESOURCES,
-            then gains SHADOWFLAME equal to the amount burned. Cannot burn
-            SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS. Exits all
-            other states.
+            <strong>SHADOW PACT:</strong> Enters UMBRAL CORE and exits all other
+            states. Burns 5 RESOURCES, then gains SHADOWFLAME equal to the
+            amount burned. Cannot burn SHADOWFLAME, LINGERING EMBER and
+            UNRELENTING SHADOWS.
         </div>
     ),
 
@@ -77,9 +77,9 @@ export const ACTION_DESCRIPTIONS = {
         <div>
             <strong>BLACK MAYHEM:</strong> Burns the target's RESOURCES equal to
             the user's SHADOWFLAME. Grants CINDERS to the target equal to the
-            RESOURCES burnt. When burning CINDERS, grants LINGERING EMBER to
-            self instead. Cannot burn SHADOWFLAME, LINGERING EMBER and
-            UNRELENTING SHADOWS.
+            RESOURCES burnt. When burning CINDERS, gains LINGERING EMBER on self
+            instead. Cannot burn SHADOWFLAME, LINGERING EMBER and UNRELENTING
+            SHADOWS.
         </div>
     ),
 
@@ -93,8 +93,8 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.RITUAL_OF_ASH]: (
         <div>
-            <strong>RITUAL OF ASH:</strong> Extinguishes all SHADOWFLAME, then
-            gains LINGERING EMBER equal to the amount lost.
+            <strong>RITUAL OF ASH:</strong> Extinguishes all SHADOWFLAME on
+            self, then gains LINGERING EMBER equal to the amount lost.
         </div>
     ),
 
@@ -144,9 +144,9 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.LASER]: (
         <div>
-            <strong>LASER:</strong> Consumes MANA based on current OVERHEAT.
-            Deals 1 PIERCING DAMAGE and gains OVERHEAT based on the amount of
-            times LASER was used this turn. Does not end turn.
+            <strong>LASER:</strong> Deals 1 PIERCING DAMAGE and gains OVERHEAT
+            based on the amount of times LASER was used this turn. Does not end
+            turn.
         </div>
     ),
 
@@ -166,9 +166,40 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.HALT]: (
         <div>
-            <strong>HALT:</strong> Gains 3 ELEMENTAL ESSENCE of the current
+            <strong>HALT:</strong> Gains 5 ELEMENTAL ESSENCE of the current
             element. Prevents the WHEEL from turning at the next WHEEL TURN,
             then, reverses its direction.
+        </div>
+    ),
+
+    [actionKeys.SPARK_OF_DIVINITY]: (
+        <div>
+            <strong>SPARK OF DIVINITY:</strong> Inflicts SACRED FLAMES on the
+            opponent based on REVELATION on self. Additionally, consumes all
+            INSPIRATION on self, then restores RESOURCES to the target based on
+            the amount consumed.
+        </div>
+    ),
+
+    [actionKeys.HEAVENLY_SCALE]: (
+        <div>
+            <strong>HEAVENLY SCALE:</strong> Consumes all ENLIGHTENMENT, INSIGHT
+            and INSPIRATION on self. Then, redistributes them equally as
+            ENLIGHTENMENT and INSIGHT. Any excess is converted into INSPIRATION.
+        </div>
+    ),
+
+    [actionKeys.SERAPH_OF_RECLAMATION]: (
+        <div>
+            <strong>SERAPH OF RECLAMATION:</strong> Consumes all SACRED FLAMES
+            on the battlefield. Then, gain INSIGHT based on the amount consumed.
+        </div>
+    ),
+
+    [actionKeys.THE_WORD_MADE_FLESH]: (
+        <div>
+            <strong>THE WORD MADE FLESH:</strong> Exits CUTOFF WINGS. Then,
+            copies the opponent's current condition.
         </div>
     ),
 };
@@ -233,7 +264,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SHACKLED_MANA]: (
         <div>
-            <strong>[SHACKLED MANA]:</strong> Cannot be used as MANA.
+            <strong>[SHACKLED MANA]:</strong> Inactive. Cannot be used as MANA.
         </div>
     ),
 
@@ -246,8 +277,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.RADIANCE]: (
         <div>
-            <strong>[RADIANCE]:</strong> When dealing PHYSICAL or PIERCING
-            DAMAGE, consumes RADIANCE to increase damage dealt.
+            <strong>[RADIANCE]:</strong> When dealing PHYSICAL DAMAGE, consumes
+            RADIANCE to increase damage dealt.
         </div>
     ),
 
@@ -255,10 +286,11 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[RESOURCES]:</strong> Includes SHADOWFLAME, UNRELENTING
             SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED
-            MANA, CRYOGENESIS, DIVINITY, HALO, RADIANCE, BLOOD SACRIFICE,
-            OVERHEAT, MANA, and HP. When RESOURCES are consumed, they are
-            consumed in this order. When RESOURCES are restored, they are
-            restored in reverse order.
+            MANA, CRYOGENESIS, HALO, RADIANCE, BLOOD SACRIFICE, INSPIRATION,
+            OVERHEAT, MANA, HP, INSIGHT and ENLIGHTENMENT. When RESOURCES are
+            consumed, they are consumed in this order. When RESOURCES are
+            restored, they are restored in reverse order. Cannot restore INSIGHT
+            or ENLIGHTENMENT outside of CUTOFF WINGS state.
         </div>
     ),
 
@@ -267,7 +299,7 @@ export const EFFECT_DESCRIPTIONS = {
             <strong>[UMBRAL CORE]:</strong> Replaces all actions with SHADOW
             MANTLE, BLACK MAYHEM, RITUAL OF ASH, and DARK PROMISE. At turn
             start, if at no SHADOWFLAME and LINGERING EMBER on self, exit UMBRAL
-            CORE.
+            CORE and gain BLEAK DECEPTION.
         </div>
     ),
 
@@ -313,9 +345,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.RADIANT]: (
         <div>
-            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS. When taking
-            lethal damage, does not die. Instead, exit all states, convert all
-            DIVINITY on self into FADING LIGHT, and enter CUTOFF WINGS state.
+            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS.
         </div>
     ),
 
@@ -338,7 +368,8 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[ALIGNED]:</strong> Replaces ALIGN with HALT. During WHEEL
             TURN, when the WHEEL cycles, gains 3 ELEMENTAL ESSENCE corresponding
-            to the outgoing element.
+            to the outgoing element. When exiting this state, loses all
+            ELEMENTAL ESSENCE on self.
         </div>
     ),
 
@@ -346,24 +377,25 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[WHEEL]:</strong> Cycles between NATURE, FROST and SCORCH.
             During the WHEEL TURN phase, cycles to the next element and
-            activates the incoming element's effect.
+            activates the incoming element's effect. If halted, activates the
+            current element's effect instead.
         </div>
     ),
     [effectKeys.NATURE]: (
         <div>
             <strong>[NATURE]:</strong> When the WHEEL cycles, restores RESOURCES
-            on the current entity based on OVERGROWTH. If turning clockwise,
-            uses the current entity's OVERGROWTH. Otherwise, uses the opponent's
-            OVERGROWTH.
+            on all entities based on OVERGROWTH. If turning clockwise, uses the
+            entity's own OVERGROWTH. If turning counter-clockwise, uses the
+            opponent's OVERGROWTH. If halted, uses the sum of both.
         </div>
     ),
 
     [effectKeys.FROST]: (
         <div>
             <strong>[FROST]:</strong> When the WHEEL cycles, grants CRYOGENESIS
-            to the current entity based on PERMAFROST. If turning clockwise,
-            uses the current entity's PERMAFROST. Otherwise, uses the opponent's
-            PERMAFROST.
+            to all entities based on PERMAFROST. If turning clockwise, uses the
+            entity's own PERMAFROST. If turning counter-clockwise, uses the
+            opponent's PERMAFROST. If halted, uses the sum of both.
         </div>
     ),
 
@@ -377,10 +409,10 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SCORCH]: (
         <div>
-            <strong>[SCORCH]:</strong> When the WHEEL cycles, deals PIERCING
-            DAMAGE to the current entity based on SCORIA. If turning clockwise,
-            uses the current entity's SCORIA. Otherwise, uses the opponent's
-            SCORIA.
+            <strong>[SCORCH]:</strong> When the WHEEL cycles, deals PHYSICAL
+            DAMAGE to all entities based on SCORIA. If turning clockwise, uses
+            the entity's own SCORIA. If turning counter-clockwise, uses the
+            opponent's SCORIA. If halted, uses the sum of both.
         </div>
     ),
 
@@ -434,20 +466,22 @@ export const EFFECT_DESCRIPTIONS = {
             <strong>[HALO]:</strong> When taking PHYSICAL or PIERCING DAMAGE,
             consumes HALO to reduce the damage taken. Gain RADIANCE equal to the
             HALO lost this way. At turn start, converts all HALO on self into
-            DIVINITY.
+            ENLIGHTENMENT.
         </div>
     ),
 
-    [effectKeys.DIVINITY]: (
+    [effectKeys.ENLIGHTENMENT]: (
         <div>
-            <strong>[DIVINITY]:</strong> Raises DAMAGE REDUCTION by 1% per
-            DIVINITY on self.
+            <strong>[ENLIGHTENMENT]:</strong> Capped at 100. At turn start, if
+            at MAX ENLIGHTENMENT, enter CUTOFF WINGS state. While on CUTOFF
+            WINGS state, when taking any DAMAGE, lose ENLIGHTENMENT instead of
+            HP.
         </div>
     ),
 
     [effectKeys.PHYSICAL_DAMAGE]: (
         <div>
-            <strong>[PHYSICAL_DAMAGE]:</strong> Reduces the target HP. Can be
+            <strong>[PHYSICAL DAMAGE]:</strong> Reduces the target HP. Can be
             blocked by DEF, reduced by DAMAGE REDUCTION and mitigated by
             shielding effects.
         </div>
@@ -455,7 +489,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.PIERCING_DAMAGE]: (
         <div>
-            <strong>[PIERCING_DAMAGE]:</strong> Reduces the target HP. Ignores
+            <strong>[PIERCING DAMAGE]:</strong> Reduces the target HP. Ignores
             DEF, but can be reduced by DAMAGE REDUCTION and mitigated by
             shielding effects.
         </div>
@@ -463,7 +497,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.TRUE_DAMAGE]: (
         <div>
-            <strong>[TRUE_DAMAGE]:</strong> Reduces the target HP. Cannot be
+            <strong>[TRUE DAMAGE]:</strong> Reduces the target HP. Cannot be
             blocked by DEF, reduced by DAMAGE REDUCTION or mitigated by
             shielding effects.
         </div>
@@ -484,8 +518,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.OVERHEAT]: (
         <div>
-            <strong>[OVERHEAT]:</strong> Gained when using LASER. Increases MANA
-            cost of LASER.
+            <strong>[OVERHEAT]:</strong> Gained when using LASER. Using LASER
+            multiple times a turn increases OVERHEAT generation.
         </div>
     ),
 
@@ -499,21 +533,55 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.VENTING]: (
         <div>
             <strong>[VENTING]:</strong> Enables OVERHEAT. Cannot use DEPLOY. At
-            turn start, loses 5 OVERHEAT. At 0 OVERHEAT, lose this state.
+            turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, lose
+            this state.
         </div>
     ),
 
     [effectKeys.CUTOFF_WINGS]: (
         <div>
-            <strong>[CUTOFF WINGS]:</strong> Cannot die by normal means. At any
-            player's turn end, if at no FADING LIGHT on self, die.
+            <strong>[CUTOFF WINGS]:</strong> Upon entering this state, exits all
+            other states and consume all RESOURCES on self. Then gains INSIGHT
+            based on the RESOURCES consumed. While on this state, does not die
+            when reaching 0 HP. Instead, dies when reaching 0 ENLIGHTENMENT.
+            Replaces all actions with SPARK OF DIVINITY, HEAVENLY SCALE, SERAPH
+            OF RECLAMATION, and THE WORD MADE FLESH.
         </div>
     ),
 
-    [effectKeys.FADING_LIGHT]: (
+    [effectKeys.BLEAK_DECEPTION]: (
         <div>
-            <strong>[FADING LIGHT]:</strong> When taking damage, lose FADING
-            LIGHT instead of HP.
+            <strong>[BLEAK DECEPTION]:</strong> Cannot use SHADOW PACT.
+        </div>
+    ),
+
+    [effectKeys.SACRED_FLAMES]: (
+        <div>
+            <strong>[SACRED FLAMES]:</strong> At turn start, consume RESOURCES
+            by the stack. Then, restores RESOURCES based on the amount consumed.
+            When consuming ENLIGHTENMENT, INSIGHT or INSPIRATION, does not
+            restore RESOURCES, instead, gain SACRED FLAMES by the amount
+            consumed.
+        </div>
+    ),
+
+    [effectKeys.INSIGHT]: (
+        <div>
+            <strong>[INSIGHT]:</strong> Capped at 100. When gaining INSIGHT, any
+            excess is converted into INSPIRATION.
+        </div>
+    ),
+
+    [effectKeys.REVELATION]: (
+        <div>
+            <strong>[REVELATION]:</strong> At turn start, loses all REVELATION.
+            Then, gain 1 REVELATION for every 10 INSIGHT on self.
+        </div>
+    ),
+
+    [effectKeys.INSPIRATION]: (
+        <div>
+            <strong>[INSPIRATION]:</strong> Used by certain abilities.
         </div>
     ),
 };
