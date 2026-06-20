@@ -5,7 +5,6 @@ import {
     gainMana,
     loseMana,
     restoreResources,
-    takeDamage,
 } from "./entities.js";
 import {
     turnStatus,
@@ -13,8 +12,6 @@ import {
     elementalKeys,
     actionKeys,
     effectKeys,
-    directionKeys,
-    dmgTypes,
 } from "./enums.js";
 
 function processEntityDeathStates(entity) {
@@ -64,6 +61,7 @@ export function processUpkeep(prev) {
         draftTarget = restoreResources(
             draftTarget,
             draftTarget.resources.unrelentingShadows,
+            prev.elementalWheel
         );
 
         draftTarget = {
@@ -261,8 +259,6 @@ export function processUpkeep(prev) {
             effectKeys.SACRED_FLAMES,
         );
 
-        console.log(resourcesConsumed);
-
         const burnedKnowledge =
             (resourcesConsumed.currEnlit || 0) +
             (resourcesConsumed.currInsight || 0) +
@@ -270,7 +266,7 @@ export function processUpkeep(prev) {
         const toBeRestored =
             resourcesConsumed.totalConsumption - burnedKnowledge;
 
-        draftTarget = restoreResources(draftEntity, toBeRestored);
+        draftTarget = restoreResources(draftEntity, toBeRestored, prev.elementalWheel);
 
         draftTarget = {
             ...draftTarget,
@@ -363,6 +359,8 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ...draftCurrActor,
             lasersUsedThisTurn: 0,
         };
+
+        newTurnCount += 1;
     }
 
     // Sonority
@@ -383,8 +381,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ...draftCurrActor,
             sonority: newSonority,
         };
-
-        newTurnCount += 1;
     }
 
     // Cryogenesis
@@ -409,7 +405,10 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
 
-    if (newGame.elementalWheel !== elementalKeys.INACTIVE) {
+    if (
+        newGame.elementalWheel !== elementalKeys.INACTIVE &&
+        newGame.whoStarts !== currActorKey
+    ) {
         nextStatus = turnStatus.WHEEL_TURN;
     } else if (newGame.remainingArray > 0) {
         nextStatus = turnStatus.ARRAY_TURN;
@@ -446,7 +445,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         ...newGame,
         status: newStatus,
         nextStatus: nextStatus,
-        wheelHalted: action === actionKeys.HALT,
         turnCount: newTurnCount,
         entities: {
             ...newGame.entities,
@@ -478,126 +476,18 @@ export function processWheelTurn(prev) {
         };
     }
 
-    let newElement = prev.elementalWheel;
-
-    if (!prev.wheelHalted) {
-        if (prev.wheelDirection === directionKeys.CLOCKWISE) {
-            newElement =
-                prev.elementalWheel === elementalKeys.NATURE
-                    ? elementalKeys.FROST
-                    : prev.elementalWheel === elementalKeys.FROST
-                      ? elementalKeys.SCORCH
-                      : elementalKeys.NATURE;
-        } else {
-            newElement =
-                prev.elementalWheel === elementalKeys.NATURE
-                    ? elementalKeys.SCORCH
-                    : prev.elementalWheel === elementalKeys.SCORCH
-                      ? elementalKeys.FROST
-                      : elementalKeys.NATURE;
-        }
-    }
-
-    let elementalResourceKey;
-    switch (prev.elementalWheel) {
-        case elementalKeys.NATURE:
-            elementalResourceKey = effectKeys.OVERGROWTH;
-            break;
-        case elementalKeys.FROST:
-            elementalResourceKey = effectKeys.PERMAFROST;
-            break;
-        case elementalKeys.SCORCH:
-            elementalResourceKey = effectKeys.SCORIA;
-            break;
-        default:
-            elementalResourceKey = null;
-    }
+    let newElement =
+        prev.elementalWheel === elementalKeys.NATURE
+            ? elementalKeys.FROST
+            : prev.elementalWheel === elementalKeys.FROST
+              ? elementalKeys.SCORCH
+              : elementalKeys.NATURE;
 
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    if (elementalResourceKey !== null && !prev.wheelHalted) {
-        playerOne = playerOne.states.aligned
-            ? {
-                  ...playerOne,
-                  [elementalResourceKey]:
-                      playerOne[elementalResourceKey] +
-                      constants.ELEMENTAL_RESOURCE_GAIN,
-              }
-            : playerOne;
-        playerTwo = playerTwo.states.aligned
-            ? {
-                  ...playerTwo,
-                  [elementalResourceKey]:
-                      playerTwo[elementalResourceKey] +
-                      constants.ELEMENTAL_RESOURCE_GAIN,
-              }
-            : playerTwo;
-    }
-
-    switch (newElement) {
-        case elementalKeys.NATURE: {
-            const overgrowthUsedP1 = prev.wheelHalted
-                ? playerOne.overgrowth + playerTwo.overgrowth
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerOne.overgrowth
-                  : playerTwo.overgrowth;
-            const overgrowthUsedP2 = prev.wheelHalted
-                ? playerOne.overgrowth + playerTwo.overgrowth
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerTwo.overgrowth
-                  : playerOne.overgrowth;
-
-            playerOne = restoreResources(playerOne, overgrowthUsedP1);
-            playerTwo = restoreResources(playerTwo, overgrowthUsedP2);
-            break;
-        }
-        case elementalKeys.FROST: {
-            const permafrostUsedP1 = prev.wheelHalted
-                ? playerOne.permafrost + playerTwo.permafrost
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerOne.permafrost
-                  : playerTwo.permafrost;
-            const permafrostUsedP2 = prev.wheelHalted
-                ? playerOne.permafrost + playerTwo.permafrost
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerTwo.permafrost
-                  : playerOne.permafrost;
-
-            playerOne = {
-                ...playerOne,
-                resources: {
-                    ...playerOne.resources,
-                    cryogenesis:
-                        playerOne.resources.cryogenesis + permafrostUsedP1,
-                },
-            };
-            playerTwo = {
-                ...playerTwo,
-                resources: {
-                    ...playerTwo.resources,
-                    cryogenesis:
-                        playerTwo.resources.cryogenesis + permafrostUsedP2,
-                },
-            };
-            break;
-        }
-        case elementalKeys.SCORCH: {
-            const scoriaUsedP1 = prev.wheelHalted
-                ? playerOne.scoria + playerTwo.scoria
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerOne.scoria
-                  : playerTwo.scoria;
-            const scoriaUsedP2 = prev.wheelHalted
-                ? playerOne.scoria + playerTwo.scoria
-                : prev.wheelDirection === directionKeys.CLOCKWISE
-                  ? playerTwo.scoria
-                  : playerOne.scoria;
-
-            playerOne = takeDamage(playerOne, scoriaUsedP1, dmgTypes.PHYSICAL);
-            playerTwo = takeDamage(playerTwo, scoriaUsedP2, dmgTypes.PHYSICAL);
-            break;
-        }
+    if (!playerOne.states.aligned && !playerTwo.states.aligned) {
+        newElement = elementalKeys.INACTIVE;
     }
 
     // Death Logic

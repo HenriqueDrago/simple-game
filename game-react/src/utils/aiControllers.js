@@ -4,18 +4,11 @@ import { consumeResources } from "./entities.js";
 import { actionKeys, effectKeys } from "./enums.js";
 
 export function simpleAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgentKey,
-        totalMana,
-        hasManaForSpecial,
-        handleAction,
-    } = context;
+    const { agent, agentKey, nonAgentKey, totalMana, handleAction } = context;
 
     // In low hp: heal if enough mana, otherwise gaurd
     if (agent.currHp <= agent.maxHp * 0.5) {
-        if (totalMana >= 3) {
+        if (totalMana >= 4) {
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
         } else {
             handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
@@ -23,7 +16,7 @@ export function simpleAI(context) {
         return;
     }
 
-    // atandard attack
+    // standard attack
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
 }
 
@@ -42,9 +35,9 @@ export function bloodknightAI(context) {
         return;
     }
 
-    // Use Sacrifice if not enouhg accumulated dmg
+    // Use Sacrifice if not enough accumulated dmg
     if (
-        agent.currHp >= agent.maxHp * 0.6 &&
+        agent.currHp >= agent.maxHp * 0.5 &&
         agent.resources.bloodSacrifice +
             agent.attributes.str.value +
             agent.scoria <
@@ -55,13 +48,17 @@ export function bloodknightAI(context) {
     }
 
     // Guard if dying to recover mana (and thus, hp)
-    if (
-        agent.resources.bloodSacrifice > 0 &&
-        agent.currMana < missingHp &&
-        missingHp >= agent.maxHp * 0.3
-    ) {
-        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-        return;
+    if (missingHp >= agent.maxHp * 0.7) {
+        if (agent.resources.bloodSacrifice <= 0) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+            return;
+        } else if (agent.currMana < missingHp) {
+            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+            return;
+        } else {
+            handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+            return;
+        }
     }
 
     // Standard Attack
@@ -345,4 +342,39 @@ export function shadowSorcererAI(context) {
 
     // Default Attack (Black Mayhem)
     handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
+}
+
+export function cyborgAI(context) {
+    const {
+        agent,
+        agentKey,
+        nonAgent,
+        nonAgentKey,
+        isArrayActive,
+        handleAction,
+        prev,
+    } = context;
+
+    // Use Meltdown if in overload
+    if (agent.states.thermalOverload) {
+        handleAction(actionKeys.MELTDOWN, agentKey, nonAgentKey);
+    }
+
+    // Healing if needed
+    if (agent.currHp <= agent.maxHp * 0.5 && agent.currMana >= 5) {
+        handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+    }
+
+    // Use Laser if weapons deployed
+    if (agent.states.weaponsDeployed) {
+        handleAction(actionKeys.LASER, agentKey, nonAgentKey);
+    }
+
+    // Use guard if venting
+    if (agent.states.venting) {
+        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+    }
+
+    // else, enter deployment
+    handleAction(actionKeys.DEPLOY, agentKey, nonAgentKey);
 }

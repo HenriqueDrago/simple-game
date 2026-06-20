@@ -159,16 +159,10 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.ALIGN]: (
         <div>
-            <strong>ALIGN:</strong> Enters ALIGNED state. If the WHEEL is
-            inactive, activates it in the clockwise direction.
-        </div>
-    ),
-
-    [actionKeys.HALT]: (
-        <div>
-            <strong>HALT:</strong> Gains 5 ELEMENTAL ESSENCE of the current
-            element. Prevents the WHEEL from turning at the next WHEEL TURN,
-            then, reverses its direction.
+            <strong>ALIGN:</strong> If not on ALIGNED state, enters ALIGNED
+            state. If WHEEL is inactive, activates WHEEL on NATURE and gain 3 of
+            each ELEMENTAL ESSENCE. Otherwise, gains 5 ELEMENTAL ESSENCE of the
+            current element.
         </div>
     ),
 
@@ -366,36 +360,33 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.ALIGNED]: (
         <div>
-            <strong>[ALIGNED]:</strong> Replaces ALIGN with HALT. During WHEEL
-            TURN, when the WHEEL cycles, gains 3 ELEMENTAL ESSENCE corresponding
-            to the outgoing element. When exiting this state, loses all
-            ELEMENTAL ESSENCE on self.
+            <strong>[ALIGNED]:</strong> While the WHEEL is active, suffers the
+            effects of the current element's passive effect. If at least one
+            player has ALIGNED in the battlefield, enables WHEEL TURN after the
+            non-starting player's turn.
         </div>
     ),
 
     [effectKeys.WHEEL]: (
         <div>
-            <strong>[WHEEL]:</strong> Cycles between NATURE, FROST and SCORCH.
-            During the WHEEL TURN phase, cycles to the next element and
-            activates the incoming element's effect. If halted, activates the
-            current element's effect instead.
+            <strong>[WHEEL]:</strong> During WHEEL TURN, cycles to the next
+            element and enables its passive effect. Follows the order: NATURE →
+            FROST → SCORCH, then repeats.
         </div>
     ),
     [effectKeys.NATURE]: (
         <div>
-            <strong>[NATURE]:</strong> When the WHEEL cycles, restores RESOURCES
-            on all entities based on OVERGROWTH. If turning clockwise, uses the
-            entity's own OVERGROWTH. If turning counter-clockwise, uses the
-            opponent's OVERGROWTH. If halted, uses the sum of both.
+            <strong>[NATURE]:</strong> Passive Effect - All ALIGNED entities
+            restore +50% RESOURCES. Active Effect - Restore RESOURCES by
+            OVERGROWTH on self.
         </div>
     ),
 
     [effectKeys.FROST]: (
         <div>
-            <strong>[FROST]:</strong> When the WHEEL cycles, grants CRYOGENESIS
-            to all entities based on PERMAFROST. If turning clockwise, uses the
-            entity's own PERMAFROST. If turning counter-clockwise, uses the
-            opponent's PERMAFROST. If halted, uses the sum of both.
+            <strong>[FROST]:</strong> Passive Effect - All ALIGNED entities deal
+            and take -50% damage. Active Effect - Gain CRYOGENESIS by PERMAFROST
+            on self.
         </div>
     ),
 
@@ -409,10 +400,9 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SCORCH]: (
         <div>
-            <strong>[SCORCH]:</strong> When the WHEEL cycles, deals PHYSICAL
-            DAMAGE to all entities based on SCORIA. If turning clockwise, uses
-            the entity's own SCORIA. If turning counter-clockwise, uses the
-            opponent's SCORIA. If halted, uses the sum of both.
+            <strong>[SCORCH]:</strong> Passive Effect - All ALIGNED entities
+            deal and take +50% damage. Active Effect - Take damage by SCORIA on
+            self.
         </div>
     ),
 

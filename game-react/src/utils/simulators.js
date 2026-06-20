@@ -6,13 +6,7 @@ import {
     dealDamage,
     takeDamage,
 } from "./entities.js";
-import {
-    elementalKeys,
-    actionKeys,
-    dmgTypes,
-    directionKeys,
-    effectKeys,
-} from "./enums.js";
+import { elementalKeys, actionKeys, dmgTypes } from "./enums.js";
 
 export const simulators = {
     [actionKeys.AEGIS]: simulateAegis,
@@ -36,7 +30,6 @@ export const simulators = {
     [actionKeys.LASER]: simulateLaser,
     [actionKeys.MELTDOWN]: simulateMeltdown,
     [actionKeys.ALIGN]: simulateAlign,
-    [actionKeys.HALT]: simulateHalt,
     [actionKeys.SPARK_OF_DIVINITY]: simulateSpark,
     [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
     [actionKeys.SERAPH_OF_RECLAMATION]: simulateSeraph,
@@ -135,6 +128,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         agent.attributes.str.value + agent.scoria,
         dmgTypes.PHYSICAL,
         prev.remainingArray > 0,
+        prev.elementalWheel,
     );
 
     return {
@@ -173,6 +167,7 @@ function simulateSpecialAttack({
         manaDiff + agent.attributes.str.value + agent.scoria,
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
+        prev.elementalWheel,
     );
 
     const defenderNewTotalMana = nonAgent.currMana + manaDiff;
@@ -336,10 +331,10 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    if(agent.states.bleakDeception) {
+    if (agent.states.bleakDeception) {
         return prev;
     }
-    
+
     const { draftEntity, resourcesConsumed } = consumeResources(
         { ...agent },
         constants.SHADOW_PACT_BURN,
@@ -536,7 +531,11 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
 
     const musicalShift = Math.abs(newSonority * 2);
 
-    const draftAgent = restoreResources(agent, musicalShift);
+    const draftAgent = restoreResources(
+        agent,
+        musicalShift,
+        prev.elementalWheel,
+    );
 
     return {
         ...prev,
@@ -561,6 +560,7 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         musicalShift,
         dmgTypes.TRUE,
         prev.remainingArray > 0,
+        prev.elementalWheel,
     );
 
     return {
@@ -605,6 +605,7 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         1,
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
+        prev.elementalWheel,
     );
 
     const newOverheat = attacker.currOverheat + 1 + attacker.lasersUsedThisTurn;
@@ -636,9 +637,19 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const baseDmg = agent.currOverheat;
 
-    const draftAgent = takeDamage(agent, baseDmg, dmgTypes.PHYSICAL);
+    const draftAgent = takeDamage(
+        agent,
+        baseDmg,
+        dmgTypes.PHYSICAL,
+        prev.elementalWheel,
+    );
 
-    const draftNonAgent = takeDamage(nonAgent, baseDmg, dmgTypes.PHYSICAL);
+    const draftNonAgent = takeDamage(
+        nonAgent,
+        baseDmg,
+        dmgTypes.PHYSICAL,
+        prev.elementalWheel,
+    );
 
     return {
         ...prev,
@@ -660,29 +671,76 @@ function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateAlign({ prev, agent, agentKey }) {
+    let draftAgent = {
+        ...agent,
+    };
+
     const newElement =
         prev.elementalWheel === elementalKeys.INACTIVE
             ? elementalKeys.NATURE
             : prev.elementalWheel;
 
-    const newDirection =
-        prev.elementalWheel === elementalKeys.INACTIVE
-            ? directionKeys.CLOCKWISE
-            : prev.wheelDirection;
+    let newScoria = draftAgent.scoria;
+    let newOvergrowth = draftAgent.overgrowth;
+    let newPermafrost = draftAgent.permafrost;
+
+    switch (prev.elementalWheel) {
+        case elementalKeys.NATURE: {
+            newOvergrowth += constants.ELEMENTAL_RESOURCE_GAIN;
+            draftAgent = restoreResources(
+                draftAgent,
+                newOvergrowth,
+                prev.elementalWheel,
+            );
+            break;
+        }
+        case elementalKeys.SCORCH: {
+            newScoria += constants.ELEMENTAL_RESOURCE_GAIN;
+            draftAgent = takeDamage(
+                draftAgent,
+                newScoria,
+                dmgTypes.PHYSICAL,
+                prev.elementalWheel,
+            );
+            break;
+        }
+        case elementalKeys.FROST: {
+            newPermafrost += constants.ELEMENTAL_RESOURCE_GAIN;
+            const newCryo = draftAgent.resources.cryogenesis + newPermafrost;
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    cryogenesis: newCryo,
+                },
+            };
+            break;
+        }
+
+        case elementalKeys.INACTIVE: {
+            newOvergrowth += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
+            newScoria += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
+            newPermafrost += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
 
     return {
         ...prev,
         elementalWheel: newElement,
-        wheelDirection: newDirection,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...agent,
-                scoria: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
-                permafrost: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
-                overgrowth: constants.INITIAL_ELEMENTAL_ESSENCE_GAINED,
+                ...draftAgent,
+                scoria: newScoria,
+                permafrost: newPermafrost,
+                overgrowth: newOvergrowth,
                 states: {
-                    ...agent.states,
+                    ...draftAgent.states,
                     aligned: true,
                 },
             },
@@ -690,61 +748,15 @@ function simulateAlign({ prev, agent, agentKey }) {
     };
 }
 
-function simulateHalt({ prev, agent, agentKey }) {
-    if (
-        prev.elementalWheel === elementalKeys.INACTIVE ||
-        !agent.states.aligned
-    ) {
-        return prev;
-    }
+function simulateSeraph({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const totalFlames =
+        agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
 
-    const newDirection =
-        prev.wheelDirection === directionKeys.CLOCKWISE
-            ? directionKeys.COUNTERCLOCKWISE
-            : directionKeys.CLOCKWISE;
-
-    let essenceKey;
-    switch (prev.elementalWheel) {
-        case elementalKeys.NATURE:
-            essenceKey = effectKeys.OVERGROWTH;
-            break;
-
-        case elementalKeys.FROST:
-            essenceKey = effectKeys.PERMAFROST;
-            break;
-
-        case elementalKeys.SCORCH:
-            essenceKey = effectKeys.SCORIA;
-            break;
-
-        default:
-            essenceKey = null;
-    }
-
-    return {
-        ...prev,
-        wheelDirection: newDirection,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                [essenceKey]:
-                    agent[essenceKey] + constants.ELEMENTAL_RESOURCE_GAIN,
-                states: {
-                    ...agent.states,
-                    aligned: true,
-                },
-            },
-        },
-    };
-}
-
-
-function simulateSeraph({prev, agent, agentKey, nonAgent, nonAgentKey}) {
-
-    const totalFlames = agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
-
-    const draftAgent = restoreResources(agent, totalFlames);
+    const draftAgent = restoreResources(
+        agent,
+        totalFlames,
+        prev.elementalWheel,
+    );
 
     return {
         ...prev,
@@ -755,22 +767,22 @@ function simulateSeraph({prev, agent, agentKey, nonAgent, nonAgentKey}) {
                 resources: {
                     ...draftAgent.resources,
                     sacredFlames: 0,
-                }
+                },
             },
             [nonAgentKey]: {
                 ...nonAgent,
                 resources: {
                     ...nonAgent.resources,
                     sacredFlames: 0,
-                }
+                },
             },
         },
     };
 }
 
-function simulateSpark({prev, agent, agentKey, nonAgent, nonAgentKey}) {
-
-    const newDefenderFlames = nonAgent.resources.sacredFlames + agent.revelation;
+function simulateSpark({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const newDefenderFlames =
+        nonAgent.resources.sacredFlames + agent.revelation;
     const newAttackerFlames = agent.resources.sacredFlames + agent.revelation;
 
     const toBeRestored = agent.resources.inspiration;
@@ -780,11 +792,15 @@ function simulateSpark({prev, agent, agentKey, nonAgent, nonAgentKey}) {
         resources: {
             ...agent.resources,
             inspiration: 0,
-        }
-    }
+        },
+    };
 
     const draftNonAgent = restoreResources(nonAgent, toBeRestored);
-    draftAgent = restoreResources(draftAgent, toBeRestored);
+    draftAgent = restoreResources(
+        draftAgent,
+        toBeRestored,
+        prev.elementalWheel,
+    );
 
     return {
         ...prev,
@@ -795,29 +811,32 @@ function simulateSpark({prev, agent, agentKey, nonAgent, nonAgentKey}) {
                 resources: {
                     ...draftAgent.resources,
                     sacredFlames: newAttackerFlames,
-                }
+                },
             },
             [nonAgentKey]: {
                 ...draftNonAgent,
                 resources: {
                     ...draftNonAgent.resources,
                     sacredFlames: newDefenderFlames,
-                }
+                },
             },
         },
     };
 }
 
-function simulateScale({prev, agent, agentKey}) {
+function simulateScale({ prev, agent, agentKey }) {
+    const totalKnowledge =
+        agent.currEnlit + agent.currInsight + agent.resources.inspiration;
 
-    const totalKnowledge = agent.currEnlit + agent.currInsight + agent.resources.inspiration;
-
-    const halfKnow = Math.floor(totalKnowledge/2) 
+    const halfKnow = Math.floor(totalKnowledge / 2);
 
     const newEnlit = Math.min(agent.maxEnlit, halfKnow);
     const newInsight = Math.min(agent.maxInsight, halfKnow);
 
-    const newInspiration = Math.max(0, totalKnowledge - agent.maxEnlit - agent.maxInsight);
+    const newInspiration = Math.max(
+        0,
+        totalKnowledge - agent.maxEnlit - agent.maxInsight,
+    );
 
     return {
         ...prev,
@@ -826,11 +845,11 @@ function simulateScale({prev, agent, agentKey}) {
             [agentKey]: {
                 ...agent,
                 currEnlit: newEnlit,
-                currInsight: newInsight,   
+                currInsight: newInsight,
                 resources: {
                     ...agent.resources,
                     inspiration: newInspiration,
-                }
+                },
             },
         },
     };

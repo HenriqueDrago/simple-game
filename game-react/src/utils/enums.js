@@ -26,6 +26,7 @@ export const aiKeys = Object.freeze({
     PALADIN: "paladin",
     HEXER: "hexer",
     SHADOW_SORCERER: "shadowSorcerer",
+    CYBORG: "cyborg",
 });
 
 export const sdmKeys = Object.freeze({
@@ -43,8 +44,8 @@ export const elementalKeys = Object.freeze({
 
 export const whoStartsKeys = Object.freeze({
     RANDOM: 0,
-    PLAYER_ONE: 1,
-    PLAYER_TWO: 2,
+    PLAYER_ONE: entityKeys.PLAYER_ONE,
+    PLAYER_TWO: entityKeys.PLAYER_TWO,
 });
 
 export const dmgTypes = Object.freeze({
@@ -133,7 +134,3 @@ export const effectKeys = Object.freeze({
     INSPIRATION: "inspiration",
 });
 
-export const directionKeys = Object.freeze({
-    CLOCKWISE: 0,
-    COUNTERCLOCKWISE: 1,
-})

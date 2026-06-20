@@ -1,5 +1,11 @@
 import { constants } from "./constants.js";
-import { sdmKeys, actionKeys, effectKeys, dmgTypes } from "./enums.js";
+import {
+    sdmKeys,
+    actionKeys,
+    effectKeys,
+    dmgTypes,
+    elementalKeys,
+} from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
     let draftEntity = {
@@ -55,7 +61,8 @@ export function consumeResources(entity, amount, cause) {
     while (
         amount > 0 &&
         resourceIndex < constants.limitedResources.length &&
-        (draftEntity.currHp > 0 || (draftEntity.states.cutoffWings && draftEntity.currEnlit > 0))
+        (draftEntity.currHp > 0 ||
+            (draftEntity.states.cutoffWings && draftEntity.currEnlit > 0))
     ) {
         const currResourceKey = constants.limitedResources[resourceIndex];
 
@@ -97,11 +104,15 @@ export function consumeResources(entity, amount, cause) {
     };
 }
 
-export function restoreResources(entity, amount) {
+export function restoreResources(entity, amount, wheel) {
     let draftEntity = {
         ...entity,
         resources: { ...entity.resources },
     };
+
+    if (wheel === elementalKeys.NATURE && entity.states.aligned) {
+        amount = Math.floor(amount * constants.NATURE_PASSIVE_MULT);
+    }
 
     if (entity.states.cutoffWings) {
         const missingEnlit = draftEntity.maxEnlit - draftEntity.currEnlit;
@@ -305,6 +316,7 @@ export function dealDamage(
     baseDmg,
     dmgType,
     isArrayActive,
+    wheel,
 ) {
     let draftAttacker = {
         ...attacker,
@@ -324,8 +336,37 @@ export function dealDamage(
               ? draftAttacker.scoria + draftAttacker.sonority
               : 0;
 
+    const scorchAtkMult =
+        wheel === elementalKeys.SCORCH && attacker.states.aligned
+            ? constants.SCORCH_PASSIVE_MULT
+            : 1.0;
+
+    const scorchDefMult =
+        wheel === elementalKeys.SCORCH && defender.states.aligned
+            ? constants.SCORCH_PASSIVE_MULT
+            : 1.0;
+
+    const frostAtkMult =
+        wheel === elementalKeys.FROST && attacker.states.aligned
+            ? constants.FROST_PASSIVE_MULT
+            : 1.0;
+
+    const frostDefMult =
+        wheel === elementalKeys.FROST && defender.states.aligned
+            ? constants.FROST_PASSIVE_MULT
+            : 1.0;
+
     if (defender.states.cutoffWings) {
-        const finalDmg = Math.max(1, Math.floor(baseDmg + additionalDmg));
+        const finalDmg = Math.max(
+            1,
+            Math.floor(
+                (baseDmg + additionalDmg) *
+                    scorchAtkMult *
+                    scorchDefMult *
+                    frostAtkMult *
+                    frostDefMult,
+            ),
+        );
 
         const defenderNewEnlit = Math.max(0, defender.currEnlit - finalDmg);
 
@@ -348,13 +389,18 @@ export function dealDamage(
 
         const flatDr =
             dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? draftDefender.sonority + draftDefender.permafrost
+                ? draftDefender.sonority
                 : 0;
 
         const finalDmg = Math.max(
             1,
             Math.floor(
-                (baseDmg + additionalDmg - effectiveDef - flatDr) * drMult,
+                (baseDmg + additionalDmg - effectiveDef - flatDr) *
+                    drMult *
+                    scorchAtkMult *
+                    scorchDefMult *
+                    frostAtkMult *
+                    frostDefMult,
             ),
         );
 
@@ -378,7 +424,7 @@ export function dealDamage(
                   )
                 : 0;
 
-        const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
+        const damagePostMitigation = finalDmg - emberConsumed - haloConsumed - cryoConsumed;
 
         const defenderNewHp = Math.max(
             0,
@@ -430,15 +476,27 @@ export function dealDamage(
     };
 }
 
-export function takeDamage(entity, baseDmg, dmgType) {
-    if(entity.states.cutoffWings) {
-        const newEnlit = Math.max(0, entity.currEnlit - baseDmg);
+export function takeDamage(entity, baseDmg, dmgType, wheel) {
+    const scorchMult =
+        wheel === elementalKeys.SCORCH && entity.states.aligned
+            ? constants.SCORCH_PASSIVE_MULT
+            : 1.0;
+
+    const frostMult =
+        wheel === elementalKeys.FROST && entity.states.aligned
+            ? constants.FROST_PASSIVE_MULT
+            : 1.0;
+
+    if (entity.states.cutoffWings) {
+        const newEnlit = Math.max(
+            0,
+            Math.floor((entity.currEnlit - baseDmg) * scorchMult * frostMult),
+        );
         return {
             ...entity,
             currEnlit: newEnlit,
-        }
+        };
     }
-
 
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
@@ -453,12 +511,12 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     const flatDr =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? entity.sonority + entity.permafrost
+            ? entity.sonority
             : 0;
 
     const finalDmg = Math.max(
         1,
-        Math.floor((baseDmg - effectiveDef - flatDr) * drMult),
+        Math.floor((baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult),
     );
 
     // Mitigation
@@ -478,7 +536,7 @@ export function takeDamage(entity, baseDmg, dmgType) {
               )
             : 0;
 
-    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed;
+    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed - cryoConsumed;
 
     let newHp = Math.max(0, entity.currHp - damagePostMitigation);
 

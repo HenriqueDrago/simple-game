@@ -5,6 +5,7 @@ import {
     hexerAI,
     warlockAI,
     shadowSorcererAI,
+    cyborgAI,
 } from "./aiControllers.js";
 
 import { aiKeys, actionKeys, effectKeys } from "./enums.js";
@@ -40,8 +41,8 @@ const VENTING_OVERHEAT_LOSS = 5;
 
 const HALO_GEN_MULT = 2;
 
-const ELEMENTAL_RESOURCE_GAIN = 3;
-const INITIAL_ELEMENTAL_ESSENCE_GAINED = 0;
+const ELEMENTAL_RESOURCE_GAIN = 5;
+const INITIAL_ELEMENTAL_ESSENCE_GAINED = 3;
 
 const SAC_HP_CONSUMPTION = 0.5;
 
@@ -49,16 +50,17 @@ const SHADOW_PACT_BURN = 5;
 
 const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
 
-const NATURE_MANA_REGEN = 3;
-const NATURE_HP_REGEN = 2;
-
 const STARTING_SONORORITY = 0;
 const SONORITY_LOWER_LIMIT = -5;
 const SONORITY_HIGHER_LIMIT = 5;
 
 const MAX_ENLIT = 100;
 
-const INSIGHT_TO_REV_MULT = 0.1
+const INSIGHT_TO_REV_MULT = 0.1;
+
+const NATURE_PASSIVE_MULT = 1.5;
+const FROST_PASSIVE_MULT = 0.5;
+const SCORCH_PASSIVE_MULT = 1.5;
 
 const DISTRIBUTION_MODES = [
     "Random",
@@ -112,14 +114,15 @@ export const constants = {
     limitedResources,
     SHADOW_PACT_BURN,
     RADIANT_DEF_EFFECT_MULTIPLIER,
-    NATURE_HP_REGEN,
-    NATURE_MANA_REGEN,
     STARTING_SONORORITY,
     SONORITY_LOWER_LIMIT,
     SONORITY_HIGHER_LIMIT,
     VENTING_OVERHEAT_LOSS,
     MAX_ENLIT,
-    INSIGHT_TO_REV_MULT
+    INSIGHT_TO_REV_MULT,
+    SCORCH_PASSIVE_MULT,
+    FROST_PASSIVE_MULT,
+    NATURE_PASSIVE_MULT,
 };
 
 export const presetAi = {
@@ -178,6 +181,14 @@ export const presetAi = {
             def: 10,
         },
         caller: shadowSorcererAI,
+    },
+    [aiKeys.CYBORG]: {
+        name: "Cyborg",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: cyborgAI,
     },
 };
 
@@ -403,32 +414,24 @@ export const getNormalActions = (
                 effectKeys.RESOURCES,
             ],
         },
-        currEntity.states.aligned
-            ? {
-                  key: actionKeys.HALT,
-                  label: "Halt",
-                  hoverKeys: [
-                      actionKeys.HALT,
-                      effectKeys.ELEMENTAL_ESSENCE,
-                      effectKeys.WHEEL,
-                  ],
-              }
-            : {
-                  key: actionKeys.ALIGN,
-                  label: "Align",
-                  hoverKeys: [
-                      actionKeys.ALIGN,
-                      effectKeys.ALIGNED,
-                      effectKeys.WHEEL,
-                      effectKeys.NATURE,
-                      effectKeys.OVERGROWTH,
-                      effectKeys.FROST,
-                      effectKeys.CRYOGENESIS,
-                      effectKeys.PERMAFROST,
-                      effectKeys.SCORCH,
-                      effectKeys.SCORIA
-                  ],
-              },
+
+        {
+            key: actionKeys.ALIGN,
+            label: "Align",
+            hoverKeys: [
+                actionKeys.ALIGN,
+                effectKeys.ALIGNED,
+                effectKeys.WHEEL,
+                effectKeys.ELEMENTAL_ESSENCE,
+                effectKeys.NATURE,
+                effectKeys.OVERGROWTH,
+                effectKeys.FROST,
+                effectKeys.CRYOGENESIS,
+                effectKeys.PERMAFROST,
+                effectKeys.SCORCH,
+                effectKeys.SCORIA,
+            ],
+        },
         !currEntity.states.resonant
             ? {
                   key: actionKeys.ATTUNE,
@@ -530,8 +533,18 @@ export const stackCounters = [
     ],
     ["Radiance", effectKeys.RADIANCE, "#fff59d", "rgba(255, 245, 157, 0.15)"],
     ["Halo", effectKeys.HALO, "#fff9c4", "rgba(255, 249, 196, 0.15)"],
-    ["Inspiration", effectKeys.INSPIRATION, "white", "rgba(255, 255, 255, 0.15)"],
-    ["Sacred Flames", effectKeys.SACRED_FLAMES, "gold", "rgba(255, 245, 157, 0.15)"],
+    [
+        "Inspiration",
+        effectKeys.INSPIRATION,
+        "white",
+        "rgba(255, 255, 255, 0.15)",
+    ],
+    [
+        "Sacred Flames",
+        effectKeys.SACRED_FLAMES,
+        "gold",
+        "rgba(255, 245, 157, 0.15)",
+    ],
 ];
 
 export const getSonorityColor = (sonority) => {

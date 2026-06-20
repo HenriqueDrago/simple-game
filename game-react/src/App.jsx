@@ -21,7 +21,6 @@ import {
     sdmKeys,
     elementalKeys,
     whoStartsKeys,
-    directionKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -35,8 +34,6 @@ function App() {
         remainingArray: 0,
         elementalWheel: elementalKeys.INACTIVE,
         whoStarts: whoStartsKeys.PLAYER_ONE,
-        wheelDirection: directionKeys.CLOCKWISE,
-        wheelHalted: false,
         turnCount: 0,
         entities: {
             [entityKeys.PLAYER_ONE]: {
@@ -210,8 +207,6 @@ function App() {
                 lastPlayerTurn: null,
                 remainingArray: 0,
                 elementalWheel: elementalKeys.INACTIVE,
-                wheelDirection: directionKeys.CLOCKWISE,
-                wheelHalted: false,
                 turnCount: 0,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
