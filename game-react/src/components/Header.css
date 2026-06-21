@@ -3,11 +3,10 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-
-    gap: 10px;
-    padding: 20px;
-    margin: 0px;
-    margin-bottom: -30px;
+    gap: 15px;
+    padding-top: 20px;
+    margin-bottom: 20px; 
+    width: 100%;
 }
 
 .header-announcement-container {
@@ -15,12 +14,26 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-
     gap: 10px;
-    padding: 20px;
-    margin: 0px;
+    padding: 20px 40px;
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    min-width: 400px;
+}
 
-    border: 2px solid white;
+.main-header-text {
+    margin: 0;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.sub-announcer-text {
+    margin: 0;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #ffffff;
 }
 
 .header-button-container {
@@ -28,41 +41,56 @@
     justify-content: center;
     align-items: center;
     flex-direction: row;
+    gap: 15px;
+}
 
-    gap: 10px;
-    padding: 20px;
-    margin: 0px;
+.sharp-btn {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0; 
+    padding: 10px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sharp-btn:hover {
+    background-color: #ffffff;
+    color: #000000;
 }
 
 .who-starts-select-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    max-width: 400px;
     gap: 15px;
     font-family: inherit;
+    background-color: #000000;
+    padding: 5px 15px;
+    border: 2px solid #ffffff;
+    border-radius: 0; 
 }
 
 .who-starts-select-container label {
     font-weight: bold;
-    text-align: left;
-    flex-shrink: 0; /* Prevents the text from squishing */
+    color: #ffffff;
 }
 
-.who-starts-select-container select {
-    flex-grow: 1; /* Makes the dropdowns stretch to match each other */
+.sharp-select {
     padding: 8px 10px;
-    border: 2px solid #ccc;
-    background-color: white;
-    color: black;
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0; 
     font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
-    transition: border-color 0.2s ease;
 }
 
-.who-starts-select-container select:focus {
-    outline: none;
-    border-color: #666; 
+.sharp-select option {
+    background-color: #000000;
+    color: #ffffff;
 }

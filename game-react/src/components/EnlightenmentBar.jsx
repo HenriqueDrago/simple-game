@@ -1,7 +1,7 @@
 import "./EnlightenmentBar.css";
 
 function EnlightenmentBar({ entity }) {
-    if (entity.currEnlit <= 0 && !entity.states.cutoffWings) {
+    if (entity.currEnlit <= 0 && !entity.states.ascendenceOfSpirit) {
         return null;
     }
 

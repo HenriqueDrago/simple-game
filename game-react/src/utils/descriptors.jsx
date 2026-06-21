@@ -59,8 +59,8 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.AEGIS]: (
         <div>
-            <strong>AEGIS:</strong> Enters RADIANT state until next turn start.
-            Gains HALO equal to twice the user's DEF.
+            <strong>AEGIS:</strong> Gains HALO equal to twice your DEF. Enter
+            RADIANT state until next turn.
         </div>
     ),
 
@@ -166,34 +166,62 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    [actionKeys.SPARK_OF_DIVINITY]: (
+    [actionKeys.GRACE_OF_HEAVENS]: (
         <div>
-            <strong>SPARK OF DIVINITY:</strong> Inflicts SACRED FLAMES on the
-            opponent based on REVELATION on self. Additionally, consumes all
-            INSPIRATION on self, then restores RESOURCES to the target based on
-            the amount consumed.
+            <strong>GRACE OF HEAVENS:</strong> Consumes all INSPIRATION on self.
+            Then, restores RESOURCES for the opponent based on the INSPIRATION
+            consumed.
         </div>
     ),
 
-    [actionKeys.HEAVENLY_SCALE]: (
+    [actionKeys.CELESTIAL_SCALE]: (
         <div>
-            <strong>HEAVENLY SCALE:</strong> Consumes all ENLIGHTENMENT, INSIGHT
-            and INSPIRATION on self. Then, redistributes them equally as
-            ENLIGHTENMENT and INSIGHT. Any excess is converted into INSPIRATION.
+            <strong>CELESTIAL SCALE:</strong> Redistributes ENLIGHTENMENT and
+            INSIGHT evenly on self.
         </div>
     ),
 
     [actionKeys.SERAPH_OF_RECLAMATION]: (
         <div>
-            <strong>SERAPH OF RECLAMATION:</strong> Consumes all SACRED FLAMES
-            on the battlefield. Then, gain INSIGHT based on the amount consumed.
+            <strong>SERAPH OF RECLAMATION:</strong> Absorbs all SACRED FLAMES on
+            the battlefield into self.
+        </div>
+    ),
+
+    [actionKeys.GIFT_OF_APOTHEOSIS]: (
+        <div>
+            <strong>GIFT OF APOTHEOSIS:</strong> Swaps your current condition
+            with the opponent's and vice-versa. Cannot be used if the opponent
+            is in the ASCENDENCE OF SPIRIT state.
+        </div>
+    ),
+
+    [actionKeys.SPARK_OF_DIVINITY]: (
+        <div>
+            <strong>SPARK OF DIVINITY:</strong> Inflicts SACRED FLAMES on the
+            opponent based on REVELATION on self.
+        </div>
+    ),
+
+    [actionKeys.BAPTISM_OF_THE_FLAMES]: (
+        <div>
+            <strong>BAPTISM OF THE FLAMES:</strong> Consumes all SACRED FLAMES
+            on self. Then, restores RESOURCES based on the amount consumed.
+        </div>
+    ),
+
+    [actionKeys.SACRAMENT]: (
+        <div>
+            <strong>SACRAMENT:</strong> Gains BENEDICTION based on REVELATION on
+            self.
         </div>
     ),
 
     [actionKeys.THE_WORD_MADE_FLESH]: (
         <div>
-            <strong>THE WORD MADE FLESH:</strong> Exits CUTOFF WINGS. Then,
-            copies the opponent's current condition.
+            <strong>THE WORD MADE FLESH:</strong> Exits ASCENDENCE OF SPIRIT and
+            enters CUTOFF WINGS state. Then, inflicts BURDEN OF STIGMA on the
+            opponent.
         </div>
     ),
 };
@@ -251,8 +279,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.THORNED_SHACKLES]: (
         <div>
-            <strong>[THORNED SHACKLES]:</strong> When suffering an ATTACK, the
-            attacker takes damage equal to their own STR.
+            <strong>[THORNED SHACKLES]:</strong> When suffering PHYSICAL DAMAGE, the
+            attacker takes TRUE DAMAGE equal to their own STR.
         </div>
     ),
 
@@ -271,8 +299,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.RADIANCE]: (
         <div>
-            <strong>[RADIANCE]:</strong> When dealing PHYSICAL DAMAGE, consumes
-            RADIANCE to increase damage dealt.
+            <strong>[RADIANCE]:</strong> When using ATTACK, consumes all
+            RADIANCE on self to increase the damage dealt.
         </div>
     ),
 
@@ -284,7 +312,7 @@ export const EFFECT_DESCRIPTIONS = {
             OVERHEAT, MANA, HP, INSIGHT and ENLIGHTENMENT. When RESOURCES are
             consumed, they are consumed in this order. When RESOURCES are
             restored, they are restored in reverse order. Cannot restore INSIGHT
-            or ENLIGHTENMENT outside of CUTOFF WINGS state.
+            or ENLIGHTENMENT outside of ASCENDENCE OF SPIRIT state.
         </div>
     ),
 
@@ -302,8 +330,7 @@ export const EFFECT_DESCRIPTIONS = {
             <strong>[SHADOWFLAME]:</strong> At turn start, burns RESOURCES equal
             to current SHADOWFLAME, then gains SHADOWFLAME equal to the amount
             burned. Cannot burn SHADOWFLAME, LINGERING EMBER and UNRELENTING
-            SHADOWS. When burning RADIANCE, gains UNRELENTING SHADOWS by the
-            amount burned.
+            SHADOWS.
         </div>
     ),
 
@@ -339,7 +366,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.RADIANT]: (
         <div>
-            <strong>[RADIANT]:</strong> Nullifies DEF EFFECTIVENESS.
+            <strong>[RADIANT]:</strong> Nullifies all DEF effectiveness.
         </div>
     ),
 
@@ -374,6 +401,7 @@ export const EFFECT_DESCRIPTIONS = {
             FROST → SCORCH, then repeats.
         </div>
     ),
+
     [effectKeys.NATURE]: (
         <div>
             <strong>[NATURE]:</strong> Passive Effect - All ALIGNED entities
@@ -454,18 +482,45 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.HALO]: (
         <div>
             <strong>[HALO]:</strong> When taking PHYSICAL or PIERCING DAMAGE,
-            consumes HALO to reduce the damage taken. Gain RADIANCE equal to the
-            HALO lost this way. At turn start, converts all HALO on self into
-            ENLIGHTENMENT.
+            loses HALO instead of HP, then gains RADIANCE based on the amount
+            lost. At turn start, converts into ENLIGHTENMENT.
         </div>
     ),
 
     [effectKeys.ENLIGHTENMENT]: (
         <div>
-            <strong>[ENLIGHTENMENT]:</strong> Capped at 100. At turn start, if
-            at MAX ENLIGHTENMENT, enter CUTOFF WINGS state. While on CUTOFF
-            WINGS state, when taking any DAMAGE, lose ENLIGHTENMENT instead of
-            HP.
+            <strong>[ENLIGHTENMENT]:</strong> At turn start, if at 100 or more
+            ENLIGHTENMENT, enters ASCENDENCE OF SPIRIT state. When gaining
+            ENLIGHTENMENT above 100, gains INSPIRATION instead.
+        </div>
+    ),
+
+    [effectKeys.ASCENDENCE_OF_SPIRIT]: (
+        <div>
+            <strong>[ASCENDENCE OF SPIRIT]:</strong> Upon entering this state,
+            exits all other states and loses all resources on self. Then, gains
+            INSIGHT based on the resources consumed. While in this state, cannot
+            die by normal means. Furthermore, when taking damage, loses
+            ENLIGHTENMENT instead of HP. Additionally, at turn start, converts
+            all resources except for ENLIGHTENMENT, INSIGHT and INSPIRATION into
+            SACRED FLAMES. If at least one player is in this state, awakens the
+            EYE OF HEAVENS. While the eye is open, replaces all actions with:
+            GRACE OF HEAVENS, CELESTIAL SCALE, SERAPH OF RECLAMATION and GIFT OF
+            APOTHEOSIS. While the eye is closed, replaces all actions with:
+            SPARK OF DIVINITY, BAPTISM OF THE FLAMES, SACRAMENT and THE WORD
+            MADE FLESH. When exiting this state, loses all RESOURCES on self.
+        </div>
+    ),
+
+    [effectKeys.EYE_OF_HEAVENS]: (
+        <div>
+            <strong>[EYE OF HEAVENS]:</strong> While awoken, enables EMINENCE
+            TURN every two turns. On EMINENCE TURN, if the eye is open, closes
+            the eye and consumes all INSIGHT on all entities. Then, grants
+            REVELATION to each entity for every 10 INSIGHT they lost on self. If
+            the eye is closed, opens the eye and, if an entity in the ASCENDENCE
+            OF SPIRIT state has 0 or less ENLIGHTENMENT, removes them from the
+            ASCENDENCE OF SPIRIT state and grants them the CUTOFF WINGS state.
         </div>
     ),
 
@@ -492,6 +547,7 @@ export const EFFECT_DESCRIPTIONS = {
             shielding effects.
         </div>
     ),
+
     [effectKeys.DEPLOYMENT]: (
         <div>
             <strong>[DEPLOYMENT]:</strong> Raises DAMAGE REDUCTION by 50%. At
@@ -530,12 +586,9 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.CUTOFF_WINGS]: (
         <div>
-            <strong>[CUTOFF WINGS]:</strong> Upon entering this state, exits all
-            other states and consume all RESOURCES on self. Then gains INSIGHT
-            based on the RESOURCES consumed. While on this state, does not die
-            when reaching 0 HP. Instead, dies when reaching 0 ENLIGHTENMENT.
-            Replaces all actions with SPARK OF DIVINITY, HEAVENLY SCALE, SERAPH
-            OF RECLAMATION, and THE WORD MADE FLESH.
+            <strong>[CUTOFF WINGS]:</strong> Cannot use AEGIS. Upon entering
+            this state, recovers 1 HP. Upon entering this state, at turn start and turn end, sets MAX HP
+            to 1 and reduces current HP accordingly.
         </div>
     ),
 
@@ -547,25 +600,36 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SACRED_FLAMES]: (
         <div>
-            <strong>[SACRED FLAMES]:</strong> At turn start, consume RESOURCES
-            by the stack. Then, restores RESOURCES based on the amount consumed.
-            When consuming ENLIGHTENMENT, INSIGHT or INSPIRATION, does not
-            restore RESOURCES, instead, gain SACRED FLAMES by the amount
-            consumed.
+            <strong>[SACRED FLAMES]:</strong> At turn start, loses ENLIGHTENMENT
+            on self by the stack.
+        </div>
+    ),
+
+    [effectKeys.BENEDICTION]: (
+        <div>
+            <strong>[BENEDICTION]:</strong> When losing ENLIGHTENMENT, loses
+            BENEDICTION instead. At turn start, converts into SACRED FLAMES.
+        </div>
+    ),
+
+    [effectKeys.BURDEN_OF_STIGMA]: (
+        <div>
+            <strong>[BURDEN OF STIGMA]:</strong> Cannot act. Removed at turn
+            end.
         </div>
     ),
 
     [effectKeys.INSIGHT]: (
         <div>
-            <strong>[INSIGHT]:</strong> Capped at 100. When gaining INSIGHT, any
-            excess is converted into INSPIRATION.
+            <strong>[INSIGHT]:</strong> When gaining INSIGHT above 100, gains
+            INSPIRATION instead.
         </div>
     ),
 
     [effectKeys.REVELATION]: (
         <div>
-            <strong>[REVELATION]:</strong> At turn start, loses all REVELATION.
-            Then, gain 1 REVELATION for every 10 INSIGHT on self.
+            <strong>[REVELATION]:</strong> Alternative stat. Used for certain
+            actions.
         </div>
     ),
 

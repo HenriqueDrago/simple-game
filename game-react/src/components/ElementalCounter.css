@@ -29,11 +29,11 @@
 }
 
 .diamond.permafrost-active {
-  background-color: cyan;
+  background-color: var(--frost-color);;
 }
 .diamond.overgrowth-active {
-  background-color: rgb(95, 255, 47);
+  background-color: var(--nature-color);;
 }
 .diamond.scoria-active {
-  background-color: red;
+  background-color: var(--scorch-color);;
 }

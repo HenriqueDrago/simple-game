@@ -30,6 +30,10 @@ export function consumeResources(entity, amount, cause) {
                 (currResourceKey === effectKeys.SHADOWFLAME ||
                     currResourceKey === effectKeys.LINGERING_EMBER ||
                     currResourceKey === effectKeys.UNRELENTING_SHADOWS)
+            ) &&
+            !(
+                cause === effectKeys.ASCENDENCE_OF_SPIRIT &&
+                currResourceKey === effectKeys.INSPIRATION
             )
         ) {
             const currentAmount = draftEntity.resources[currResourceKey];
@@ -62,13 +66,14 @@ export function consumeResources(entity, amount, cause) {
         amount > 0 &&
         resourceIndex < constants.limitedResources.length &&
         (draftEntity.currHp > 0 ||
-            (draftEntity.states.cutoffWings && draftEntity.currEnlit > 0))
+            (draftEntity.states.ascendenceOfSpirit &&
+                draftEntity.currEnlit > 0))
     ) {
         const currResourceKey = constants.limitedResources[resourceIndex];
 
         if (
             !(
-                cause === effectKeys.ENLIGHTENMENT &&
+                cause === effectKeys.ASCENDENCE_OF_SPIRIT &&
                 (currResourceKey === "currEnlit" ||
                     currResourceKey === "currInsight")
             )
@@ -114,7 +119,7 @@ export function restoreResources(entity, amount, wheel) {
         amount = Math.floor(amount * constants.NATURE_PASSIVE_MULT);
     }
 
-    if (entity.states.cutoffWings) {
+    if (entity.states.ascendenceOfSpirit) {
         const missingEnlit = draftEntity.maxEnlit - draftEntity.currEnlit;
         const restoredEnlit = Math.min(missingEnlit, amount);
 
@@ -258,6 +263,7 @@ export function createBaseEntity() {
             cryogenesis: 0,
             inspiration: 0,
             sacredFlames: 0,
+            benediction: 0,
         },
         states: {
             guarding: false,
@@ -274,6 +280,8 @@ export function createBaseEntity() {
             venting: false,
             aligned: false,
             cutoffWings: false,
+            ascendenceOfSpirit: false,
+            burdenOfStigma: false,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -328,13 +336,12 @@ export function dealDamage(
 
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? draftAttacker.resources.radiance +
-              draftAttacker.scoria +
-              draftAttacker.resources.bloodSacrifice +
-              draftAttacker.sonority
+            ? draftAttacker.resources.bloodSacrifice + draftAttacker.sonority
             : dmgType === dmgTypes.PIERCING
-              ? draftAttacker.scoria + draftAttacker.sonority
+              ? draftAttacker.sonority
               : 0;
+
+        console.log(additionalDmg)
 
     const scorchAtkMult =
         wheel === elementalKeys.SCORCH && attacker.states.aligned
@@ -356,7 +363,7 @@ export function dealDamage(
             ? constants.FROST_PASSIVE_MULT
             : 1.0;
 
-    if (defender.states.cutoffWings) {
+    if (defender.states.ascendenceOfSpirit) {
         const finalDmg = Math.max(
             1,
             Math.floor(
@@ -368,11 +375,26 @@ export function dealDamage(
             ),
         );
 
-        const defenderNewEnlit = Math.max(0, defender.currEnlit - finalDmg);
+        const beneConsumed =
+            dmgType === dmgTypes.TRUE_DAMAGE
+                ? 0
+                : Math.min(defender.resources.benediction, finalDmg);
+        const finalDmgPostMitigation = finalDmg - beneConsumed;
+
+        const defenderNewEnlit = Math.max(
+            0,
+            defender.currEnlit - finalDmgPostMitigation,
+        );
+
+        const newBene = defender.resources.benediction - beneConsumed;
 
         draftDefender = {
             ...draftDefender,
             currEnlit: defenderNewEnlit,
+            resources: {
+                ...draftDefender.resources,
+                benediction: newBene,
+            }
         };
     } else {
         const effectiveDef =
@@ -392,6 +414,8 @@ export function dealDamage(
                 ? draftDefender.sonority
                 : 0;
 
+        console.log([effectiveDef, drMult, flatDr])
+
         const finalDmg = Math.max(
             1,
             Math.floor(
@@ -403,6 +427,8 @@ export function dealDamage(
                     frostDefMult,
             ),
         );
+
+        console.log(finalDmg)
 
         // Mitigation
         const haloConsumed =
@@ -424,7 +450,8 @@ export function dealDamage(
                   )
                 : 0;
 
-        const damagePostMitigation = finalDmg - emberConsumed - haloConsumed - cryoConsumed;
+        const damagePostMitigation =
+            finalDmg - emberConsumed - haloConsumed - cryoConsumed;
 
         const defenderNewHp = Math.max(
             0,
@@ -436,22 +463,21 @@ export function dealDamage(
         const defenderNewEmbers =
             defender.resources.lingeringEmber - emberConsumed;
         const defenderNewRadiance = defender.resources.radiance + haloConsumed;
+        const newCinders = defender.resources.cinders + emberConsumed;
 
         const thornsDmg =
             isArrayActive && dmgType === dmgTypes.PHYSICAL
                 ? attacker.attributes.str.value + attacker.scoria
                 : 0;
 
-        const attackerNewHP = Math.max(0, attacker.currHp - thornsDmg);
-
-        draftAttacker = {
-            ...draftAttacker,
-            currHp: attackerNewHP,
-            resources: {
-                ...draftAttacker.resources,
-                radiance: 0,
-            },
-        };
+        if (thornsDmg > 0) {
+            draftAttacker = takeDamage(
+                draftAttacker,
+                thornsDmg,
+                dmgTypes.PHYSICAL,
+                wheel,
+            );
+        }
 
         draftDefender = {
             ...draftDefender,
@@ -462,6 +488,7 @@ export function dealDamage(
                 lingeringEmber: defenderNewEmbers,
                 radiance: defenderNewRadiance,
                 cryogenesis: defenderNewCryo,
+                cinders: newCinders,
             },
         };
     }
@@ -487,11 +514,20 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
             ? constants.FROST_PASSIVE_MULT
             : 1.0;
 
-    if (entity.states.cutoffWings) {
-        const newEnlit = Math.max(
-            0,
-            Math.floor((entity.currEnlit - baseDmg) * scorchMult * frostMult),
+    if (entity.states.ascendenceOfSpirit) {
+        const finalDmg = Math.max(
+            1,
+            Math.floor(baseDmg * scorchMult * frostMult),
         );
+
+        const beneConsumed =
+            dmgType === dmgTypes.TRUE_DAMAGE
+                ? 0
+                : Math.min(entity.resources.benediction, finalDmg);
+        const finalDmgPostMitigation = finalDmg - beneConsumed;
+
+        const newEnlit = Math.max(0, entity.currEnlit - finalDmgPostMitigation);
+
         return {
             ...entity,
             currEnlit: newEnlit,
@@ -516,7 +552,9 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
 
     const finalDmg = Math.max(
         1,
-        Math.floor((baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult),
+        Math.floor(
+            (baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult,
+        ),
     );
 
     // Mitigation
@@ -536,7 +574,8 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
               )
             : 0;
 
-    const damagePostMitigation = finalDmg - emberConsumed - haloConsumed - cryoConsumed;
+    const damagePostMitigation =
+        finalDmg - emberConsumed - haloConsumed - cryoConsumed;
 
     let newHp = Math.max(0, entity.currHp - damagePostMitigation);
 
@@ -544,6 +583,7 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     const newCryo = entity.resources.cryogenesis - cryoConsumed;
     const newEmbers = entity.resources.lingeringEmber - emberConsumed;
     const newRadiance = entity.resources.radiance + haloConsumed;
+    const newCinders = entity.resources.cinders + emberConsumed;
 
     return {
         ...entity,
@@ -554,6 +594,7 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
             lingeringEmber: newEmbers,
             radiance: newRadiance,
             cryogenesis: newCryo,
+            cinders: newCinders,
         },
     };
 }
@@ -582,7 +623,7 @@ export function loseMana(entity, amount) {
         entity.resources.manaOverflow - overflowConsumed,
     );
 
-    const newMana = Math.max(0, entity.currMana - amount - overflowConsumed);
+    const newMana = Math.max(0, entity.currMana - (amount - overflowConsumed));
 
     return {
         ...entity,

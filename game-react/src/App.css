@@ -1,10 +1,24 @@
+:root {
+  --nature-color: #32cd32;
+  --frost-color: cyan;
+  --scorch-color: #ff4500;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    color-scheme: dark;
+}
+
 .app-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-direction: column;
-
-    gap: 0px;
-    padding: 0px;
-    margin: 0px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-sizing: border-box;
 }

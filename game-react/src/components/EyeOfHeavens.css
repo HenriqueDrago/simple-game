@@ -1,0 +1,58 @@
+/* Container keeps the component stable and bounds the absolute elements */
+.eye-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The Base Diamond */
+.eye-frame {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+  border-style: solid;
+  transform: rotate(45deg);
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Frame State: Open (Radiant Gold) */
+.frame-open {
+  border-color: #FFD700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6), 
+              inset 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+/* Frame State: Closed (Dead Bronze/Brown) */
+.frame-closed {
+  border-color: #8B6508;
+  box-shadow: none;
+}
+
+/* The Base Pupil/Eyelid */
+.eye-slit {
+  position: absolute;
+  background-color: white;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Slight bounce effect */
+}
+
+/* Slit State: Open (Vertical, Glowing) */
+.slit-open {
+  width: 4px;
+  height: 36px;
+  background-color: #FFF8DC;
+  box-shadow: 0 0 10px #FFF8DC, 0 0 20px #FFD700;
+  border-radius: 2px;
+}
+
+/* Slit State: Closed (Horizontal, Flat) */
+.slit-closed {
+  width: 28px;
+  height: 3px;
+  background-color: #8B6508;
+  box-shadow: none;
+  border-radius: 1px;
+}

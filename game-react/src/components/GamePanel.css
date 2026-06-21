@@ -3,8 +3,14 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-
     gap: 20px;
+    width: 100%;
+}
+
+.central-game-panel {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
 }
 
 .stats-panels-container {
@@ -12,13 +18,38 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-
-    gap: 20px;
+    gap: 40px;
     padding: 40px;
+    
+    /* Base styling */
     border: 2px solid white;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    background: rgba(10, 10, 15, 0.6);
+    transition: all 0.4s ease-in-out;
 }
 
+/* Runic Array Active State */
 .stats-panels-container.array-active {
-    box-shadow: 0 0 20px 8px white;
+    border-color: #651fff; /* Deep runic purple */
+    box-shadow: 0 0 25px rgba(101, 31, 255, 0.3), inset 0 0 20px rgba(101, 31, 255, 0.15);
+    animation: runic-pulse 2s infinite alternate;
+}
+
+@keyframes runic-pulse {
+    from {
+        box-shadow: 0 0 20px rgba(101, 31, 255, 0.2), inset 0 0 15px rgba(101, 31, 255, 0.1);
+    }
+    to {
+        box-shadow: 0 0 35px rgba(101, 31, 255, 0.5), inset 0 0 30px rgba(101, 31, 255, 0.3);
+    }
+}
+
+.game-panel-upper-elements-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.game-panel-upper-elements-container.only-eye {
+    justify-content: center;
 }

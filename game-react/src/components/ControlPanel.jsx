@@ -1,8 +1,6 @@
 import "./ControlPanel.css";
-
-import {  presetAi } from "../utils/constants";
-
-import { sdmKeys } from "../utils/enums";
+import { presetAi } from "../utils/constants";
+import { sdmKeys, entityKeys } from "../utils/enums";
 
 function ControlPanel({
     handleAiChange,
@@ -11,12 +9,14 @@ function ControlPanel({
     statDistributionMode,
     controller
 }) {
+    const playerLabel = entityKey === entityKeys.PLAYER_ONE ? "Player One" : "Player Two";
+
     return (
         <div className="control-panel-container">
             <div className="ai-selector">
-                <label htmlFor="distribution-mode">Stat Distribution:</label>
+                <label htmlFor={`distribution-mode-${entityKey}`}>{playerLabel} Stats:</label>
                 <select
-                    id="distribution-mode"
+                    id={`distribution-mode-${entityKey}`}
                     value={statDistributionMode}
                     onChange={(e) =>
                         handleDistributionModeChange(e.target.value, entityKey)
@@ -29,9 +29,9 @@ function ControlPanel({
             </div>
 
             <div className="ai-selector">
-                <label htmlFor="player-ai">Player One AI:</label>
+                <label htmlFor={`player-ai-${entityKey}`}>{playerLabel} Controller:</label>
                 <select
-                    id="player-ai"
+                    id={`player-ai-${entityKey}`}
                     value={controller}
                     onChange={(e) => handleAiChange(e.target.value, entityKey)}
                 >

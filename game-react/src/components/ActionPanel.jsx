@@ -2,14 +2,15 @@ import { useState } from "react";
 import "./ActionPanel.css";
 
 import { ACTION_DESCRIPTIONS, EFFECT_DESCRIPTIONS } from "../utils/descriptors";
-import { entityKeys, turnStatus, aiKeys } from "../utils/enums";
+import { entityKeys, turnStatus, aiKeys, eyeKeys } from "../utils/enums";
+import { constants, presetAi } from "../utils/constants";
+
 import {
-    constants,
-    presetAi,
-    ANGEL_ACTIONS,
-    UMBRAL_ACTIONS,
+    getUmbralActions,
     getNormalActions,
-} from "../utils/constants";
+    getGoodAngelActions,
+    getBadAngelActions,
+} from "../utils/getters";
 
 function ActionPanel({
     handleAction,
@@ -19,111 +20,106 @@ function ActionPanel({
 }) {
     const battleState = game.status;
     const arrayActive = game.remainingArray > 0;
-    const currEntity =
-        battleState === turnStatus.PLAYER_ONE_TURN
-            ? game.entities[entityKeys.PLAYER_ONE]
-            : game.entities[entityKeys.PLAYER_TWO];
+
+    const isPlayerOneTurn = battleState === turnStatus.PLAYER_ONE_TURN;
+    const isPlayerTwoTurn = battleState === turnStatus.PLAYER_TWO_TURN;
+
+    const currEntity = isPlayerOneTurn
+        ? game.entities[entityKeys.PLAYER_ONE]
+        : game.entities[entityKeys.PLAYER_TWO];
+
     const descriptions = { ...ACTION_DESCRIPTIONS, ...EFFECT_DESCRIPTIONS };
 
     const [hoveredAction, setHoveredAction] = useState(null);
 
-    const showButtons =
-        (playerController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_ONE_TURN) ||
-        (enemyController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_TWO_TURN);
+    // Turn and Button Visibility Logic
+    const isHumanTurn =
+        (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
+        (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
 
-    const showUmbralButtons =
-        (playerController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_ONE_TURN &&
-            game.entities[entityKeys.PLAYER_ONE].states.umbralCore) ||
-        (enemyController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_TWO_TURN &&
-            game.entities[entityKeys.PLAYER_TWO].states.umbralCore);
-
+    const showButtons = isHumanTurn;
+    const showUmbralButtons = showButtons && currEntity?.states?.umbralCore;
     const showAngelButtons =
-        (playerController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_ONE_TURN &&
-            game.entities[entityKeys.PLAYER_ONE].states.cutoffWings) ||
-        (enemyController === aiKeys.HUMAN &&
-            battleState === turnStatus.PLAYER_TWO_TURN &&
-            game.entities[entityKeys.PLAYER_TWO].states.cutoffWings);
+        showButtons && currEntity?.states?.ascendenceOfSpirit;
 
     const canUseSpAtk =
         currEntity.currMana + currEntity.resources.manaOverflow >=
         constants.SP_ATTACK_COST;
     const canUseDeploy = !currEntity.states.venting;
 
-    const enemyLabel =
-        enemyController === aiKeys.HUMAN && playerController !== aiKeys.HUMAN
-            ? "Player Turn"
-            : enemyController === aiKeys.HUMAN &&
-                playerController === aiKeys.HUMAN
-              ? "Player Two Turn"
-              : playerController === enemyController
-                ? `${presetAi[enemyController].name} + " Two"`
-                : presetAi[enemyController].name;
-
-    const playerLabel =
-        playerController === aiKeys.HUMAN && enemyController !== aiKeys.HUMAN
-            ? "Player Turn"
-            : playerController === aiKeys.HUMAN &&
+    // Label Generation Helpers
+    const getActorLabel = (controller, isPlayerOne) => {
+        if (controller === aiKeys.HUMAN) {
+            if (
+                playerController === aiKeys.HUMAN &&
                 enemyController === aiKeys.HUMAN
-              ? "Player One Turn"
-              : playerController === enemyController
-                ? `${presetAi[playerController].name} + " One"`
-                : presetAi[playerController].name;
+            ) {
+                return isPlayerOne ? "Player One Turn" : "Player Two Turn";
+            }
+            return "Player Turn";
+        }
+        if (playerController === enemyController) {
+            return `${presetAi[controller].name} ${isPlayerOne ? "One" : "Two"}`;
+        }
+        return presetAi[controller].name;
+    };
 
-    const arrayLabel = "Array Turn";
-    const wheelLabel = "Wheel Turn";
+    const playerLabel = getActorLabel(playerController, true);
+    const enemyLabel = getActorLabel(enemyController, false);
+    const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
-    const waitLabel =
-        battleState === turnStatus.PLAYER_TWO_TURN &&
-        enemyController !== aiKeys.HUMAN
-            ? enemyLabel
-            : battleState === turnStatus.PLAYER_ONE_TURN &&
-                playerController !== aiKeys.HUMAN
-              ? playerLabel
-              : battleState === turnStatus.WHEEL_TURN
-                ? wheelLabel
-                : battleState === turnStatus.ARRAY_TURN
-                  ? arrayLabel
-                  : null;
+    let waitLabel = null;
+    if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
+        waitLabel = enemyLabel;
+    } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
+        waitLabel = playerLabel;
+    } else if (battleState === turnStatus.WHEEL_TURN) {
+        waitLabel = "Wheel Turn";
+    } else if (battleState === turnStatus.ARRAY_TURN) {
+        waitLabel = "Array Turn";
+    } else if (battleState === turnStatus.EMINENCE_TURN) {
+        waitLabel = "Eminence Turn";
+    }
 
     const showWait = waitLabel !== null;
 
-    const currActorLabel =
-        battleState === turnStatus.PLAYER_ONE_TURN ? playerLabel : enemyLabel;
-
-    // Centralized action handler
+    // Action Handler
     const handleActionButton = (actionKey) => {
         setHoveredAction(null);
-        const isPlayerOne = battleState === turnStatus.PLAYER_ONE_TURN;
-
         handleAction(
             actionKey,
-            isPlayerOne ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO,
-            isPlayerOne ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE,
+            isPlayerOneTurn ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO,
+            isPlayerOneTurn ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE,
         );
     };
 
-    const currentActions = showAngelButtons
-        ? ANGEL_ACTIONS
-        : showUmbralButtons
-          ? UMBRAL_ACTIONS
-          : getNormalActions(
-                arrayActive,
-                currEntity,
-                canUseSpAtk,
-                canUseDeploy,
-            );
+    // Determine Available Actions
+    let currentActions = [];
+    if (showAngelButtons) {
+        if (game.eyeOfHeavens === eyeKeys.OPEN) {
+            currentActions = getGoodAngelActions();
+        } else if (game.eyeOfHeavens === eyeKeys.CLOSED) {
+            currentActions = getBadAngelActions();
+        }
+    } else if (showUmbralButtons) {
+        currentActions = getUmbralActions();
+    } else if (showButtons) {
+        currentActions = getNormalActions(
+            arrayActive,
+            currEntity,
+            canUseSpAtk,
+            canUseDeploy,
+        );
+    }
 
-    // Determine the container class based on state
+    // Determine Container Class for CSS styling
     let containerClass = "button-grid";
-    if (currEntity.states.thermalOverload) {
+    if (currEntity?.states?.thermalOverload) {
         containerClass = "meltdown-container";
     } else if (showAngelButtons) {
-        containerClass = "angel-button-grid";
+        containerClass = game.eyeOfHeavens === eyeKeys.OPEN 
+            ? "good-angel-button-grid" 
+            : "bad-angel-button-grid";
     } else if (showUmbralButtons) {
         containerClass = "shadow-button-grid";
     }

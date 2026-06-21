@@ -20,22 +20,30 @@
 .ai-selector label {
     font-weight: bold;
     text-align: left;
-    flex-shrink: 0; /* Prevents the text from squishing */
+    flex-shrink: 0;
+    color: #ffffff;
+    letter-spacing: 0.5px;
 }
 
 .ai-selector select {
-    flex-grow: 1; /* Makes the dropdowns stretch to match each other */
-    padding: 8px 10px;
-    border: 2px solid #ccc;
-    background-color: white;
-    color: black;
+    flex-grow: 1;
+    padding: 8px 12px;
+    
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0;
     font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
-    transition: border-color 0.2s ease;
 }
 
 .ai-selector select:focus {
     outline: none;
-    border-color: #666; 
+    border: 1px solid #ffffff;
+}
+
+.ai-selector select option {
+    background-color: #000000;
+    color: #ffffff;
 }

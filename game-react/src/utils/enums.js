@@ -11,6 +11,7 @@ export const turnStatus = Object.freeze({
     SHORT_TRANSITION: 9,
     WHEEL_TURN: 10,
     ARRAY_TURN: 11,
+    EMINENCE_TURN: 12,
 });
 
 export const entityKeys = Object.freeze({
@@ -77,9 +78,13 @@ export const actionKeys = Object.freeze({
     BABEL: "babel",
     ALIGN: "align",
     HALT: "halt",
-    SPARK_OF_DIVINITY: "sparkOfDivinity", 
-    HEAVENLY_SCALE: "heavenlyScale",
+    GRACE_OF_HEAVENS: "graceOfHeavens",
+    CELESTIAL_SCALE: "celestialScale",
     SERAPH_OF_RECLAMATION: "seraphOfReclamation",
+    GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
+    SPARK_OF_DIVINITY: "sparkOfDivinity",
+    BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
+    SACRAMENT: "sacrament",
     THE_WORD_MADE_FLESH: "theWordMadeFlesh",
     CHART: "chart",
 });
@@ -104,6 +109,7 @@ export const effectKeys = Object.freeze({
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
+    ALIGNED: "aligned",
     WHEEL: "elementalWheel",
     FROST: "frost",
     NATURE: "nature",
@@ -115,6 +121,8 @@ export const effectKeys = Object.freeze({
     RESONANT: "resonant",
     HALO: "halo",
     ENLIGHTENMENT: "enlightenment",
+    ASCENDENCE_OF_SPIRIT: "ascendenceOfSpirit",
+    EYE_OF_HEAVENS: "eyeOfHeavens",
     PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
     PIERCING_DAMAGE: dmgTypes.PIERCING,
     TRUE_DAMAGE: dmgTypes.TRUE,
@@ -129,8 +137,15 @@ export const effectKeys = Object.freeze({
     INSIGHT: "insight",
     BLEAK_DECEPTION: "bleakDeception",
     SACRED_FLAMES: "sacredFlames",
+    BENEDICTION: "benediction",
+    BURDEN_OF_STIGMA: "burdenOfStigma",
     REVELATION: "revelation",
     RUNIC_ARRAY: "runicArray",
     INSPIRATION: "inspiration",
 });
 
+export const eyeKeys = Object.freeze({
+    DORMANT: 0,
+    OPEN: 1,
+    CLOSED: 2,
+});

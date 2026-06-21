@@ -26,16 +26,16 @@
 }
 
 .individual-element-container.nature-active {
-    color: rgb(95, 255, 47);
-    border-color: rgb(95, 255, 47);
+    color: var(--nature-color);
+    border-color: var(--nature-color);
 }
 
 .individual-element-container.frost-active {
-    color: cyan;
-    border-color: cyan;
+    color: var(--frost-color);
+    border-color: var(--frost-color);
 }
 
 .individual-element-container.scorch-active {
-    color: red;
-    border-color: red;
+    color: var(--scorch-color);
+    border-color: var(--scorch-color);
 }

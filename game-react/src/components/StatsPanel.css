@@ -5,82 +5,147 @@
     flex-direction: column;
 
     min-width: 300px;
-    gap: 8px;
+    gap: 12px;
     padding: 20px;
-    border: 2px solid white;
-
-    transition: all 0.2s ease;
+    
+    /* Default Base state */
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 15, 20, 0.85);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+    transition: all 0.3s ease-in-out;
 }
 
 /* =========================================
-   GROUP B: CORE STANCES (Mutually Exclusive)
-   ========================================= */
+   GROUP B: CORE STANCES
+========================================= */
+/* Ascendence: Full Phase 2 Transformation (Dynamic based on Eye State) */
+.stats-panel-container.state-ascendence {
+    border-color: var(--ascendence-color);
+    background: linear-gradient(to bottom, var(--ascendence-bg), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 20px var(--ascendence-shadow), inset 0 0 25px var(--ascendence-inset);
+}
+
 .stats-panel-container.state-umbral {
-    box-shadow: 0 0 12px 4px purple;
-    border-color: purple;
+    border-color: #9d00ff;
+    box-shadow: 0 0 15px rgba(157, 0, 255, 0.4), inset 0 0 20px rgba(74, 43, 102, 0.3);
 }
 
 .stats-panel-container.state-resonant {
-    box-shadow: 0 0 12px 4px var(--resonant-color, cyan);
     border-color: var(--resonant-color, cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.15);
 }
 
 .stats-panel-container.state-weapons-deployed {
-    box-shadow: 0 0 12px 4px darkorange;
-    border-color: darkorange;
+    border-color: #ff8c00;
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.4), inset 0 0 15px rgba(255, 140, 0, 0.2);
 }
 
 .stats-panel-container.state-thermal-overload {
-    box-shadow: 0 0 15px 6px orangered;
-    border-color: orangered;
+    border-color: #ff3300;
+    box-shadow: 0 0 20px rgba(255, 51, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.4);
+    animation: overload-pulse 1.5s infinite alternate;
 }
 
 .stats-panel-container.state-venting {
-    box-shadow: 0 0 12px 4px lightblue;
-    border-color: lightblue;
+    border-color: #87ceeb;
+    box-shadow: 0 0 15px rgba(135, 206, 235, 0.4), inset 0 0 15px rgba(135, 206, 235, 0.2);
 }
 
+/* Aligned: Dynamic based on Elemental Wheel */
 .stats-panel-container.state-aligned {
-    box-shadow: 0 0 12px 4px #98fb98;
-    border-color: #98fb98;
+    border-color: var(--aligned-color);
+    box-shadow: 0 0 15px var(--aligned-shadow), inset 0 0 15px var(--aligned-inset);
+    transition: all 0.5s ease-in-out; /* Smoothly fade between elements */
 }
 
 /* =========================================
-   GROUP A: 1-TURN STATES (Overrides Stances)
-   ========================================= */
+   GROUP A: 1-TURN STATES & OVERRIDES
+========================================= */
 .stats-panel-container.state-guarding {
-    box-shadow: 0 0 12px 4px gray;
-    border-color: gray;
+    border-color: #a9a9a9;
+    box-shadow: 0 0 12px rgba(169, 169, 169, 0.5), inset 0 0 10px rgba(169, 169, 169, 0.2);
 }
 
 .stats-panel-container.state-sacrificial {
-    box-shadow: 0 0 12px 4px red;
-    border-color: red;
+    border-color: #dc143c;
+    box-shadow: 0 0 15px rgba(220, 20, 60, 0.5), inset 0 0 15px rgba(220, 20, 60, 0.2);
 }
 
 .stats-panel-container.state-radiant {
-    box-shadow: 0 0 12px 4px #fff9c4;
     border-color: #fff9c4;
+    box-shadow: 0 0 15px rgba(255, 249, 196, 0.5), inset 0 0 15px rgba(255, 249, 196, 0.2);
 }
 
 .stats-panel-container.state-deployment {
-    box-shadow: 0 0 12px 4px silver;
-    border-color: silver;
+    border-color: #c0c0c0;
+    box-shadow: 0 0 12px rgba(192, 192, 192, 0.5), inset 0 0 10px rgba(192, 192, 192, 0.2);
+}
+
+/* --- New Heavy Debuff States --- */
+.stats-panel-container.state-bleak-deception {
+    border-color: #4a4a4a;
+    background: rgba(20, 20, 20, 0.95);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+.stats-panel-container.state-burden-of-stigma {
+    border-color: #8b0000;
+    background: linear-gradient(to bottom, rgba(139, 0, 0, 0.15), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.6), inset 0 0 20px rgba(139, 0, 0, 0.4);
+}
+
+.stats-panel-container.state-cutoff-wings {
+    border-color: #3b3528; /* Dull, dying bronze/dirt */
+    background: rgba(10, 8, 5, 0.95);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.95);
+    filter: grayscale(30%); /* Drains life out of the component */
 }
 
 /* Umbral Overrides */
 .stats-panel-container.state-dark-embrace {
-    box-shadow: 0 0 12px 4px rgb(30, 30, 30);
-    border-color: rgb(40, 40, 40);
+    border-color: #2b2b2b;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(30, 30, 30, 0.6);
 }
 
 .stats-panel-container.state-dimming {
-    box-shadow: 0 0 12px 4px rgb(40, 0, 40);
-    border-color: rgb(50, 10, 50);
+    border-color: #4b0082;
+    box-shadow: 0 0 15px rgba(75, 0, 130, 0.5), inset 0 0 20px rgba(40, 0, 40, 0.5);
 }
 
 /* Cutoff Wings */
 .stats-panel-container.state-cutoff-wings {
     border-color: #ffd700; 
-    box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 25px rgba(255, 255, 255, 0.4);
+}
+
+/* =========================================
+   UTILITIES
+========================================= */
+@keyframes overload-pulse {
+    from { box-shadow: 0 0 15px rgba(255, 51, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.2); }
+    to { box-shadow: 0 0 25px rgba(255, 51, 0, 0.8), inset 0 0 20px rgba(255, 0, 0, 0.6); }
+}
+
+.revelation-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 28px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    margin: 4px 0;
+}
+
+.revelation-container span {
+    font-weight: bold;
+    color: #FFD700;
+    letter-spacing: 1px;
+}
+
+.stacks-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
 }

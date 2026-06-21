@@ -11,6 +11,7 @@ import {
     commitTurn,
     processWheelTurn,
     processArrayTurn,
+    processEminenceTurn,
 } from "./utils/turnManagement.js";
 import { distributePoints, createBaseEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
@@ -21,6 +22,7 @@ import {
     sdmKeys,
     elementalKeys,
     whoStartsKeys,
+    eyeKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -35,6 +37,8 @@ function App() {
         elementalWheel: elementalKeys.INACTIVE,
         whoStarts: whoStartsKeys.PLAYER_ONE,
         turnCount: 0,
+        eyeOfHeavens: eyeKeys.DORMANT,
+        eyeTurnAwakened: null,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -208,6 +212,8 @@ function App() {
                 remainingArray: 0,
                 elementalWheel: elementalKeys.INACTIVE,
                 turnCount: 0,
+                eyeOfHeavens: eyeKeys.DORMANT,
+                eyeTurnAwakened: null,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -368,6 +374,15 @@ function App() {
         }
     }, [game.status]);
 
+    useEffect(() => {
+        if (game.status === turnStatus.EMINENCE_TURN) {
+            const timer = setTimeout(() => {
+                setGame(processEminenceTurn);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game.status]);
 
     // Turn Start effects
     useEffect(() => {

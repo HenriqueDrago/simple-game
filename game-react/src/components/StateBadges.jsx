@@ -15,6 +15,8 @@ const STATE_MAPPINGS = [
     { key: "thornedShackles", label: "Thorned Shackles" },
     { key: "cutoffWings", label: "Cutoff Wings" },
     { key: "aligned", label: "Aligned" },
+    { key: "burdenOfStigma", label: "Burden of Stigma" },
+    { key: "ascendenceOfSpirit", label: "Ascendence of Spirit" },
 ];
 
 function StateBadges({ states }) {

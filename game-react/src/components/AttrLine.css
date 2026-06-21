@@ -23,17 +23,48 @@
     justify-content: center;
     align-items: center;
     line-height: 1;
+    
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.point-assign-container > button:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.changeable-status {
+    color: #ffffff;
+    margin: 0;
+    font-weight: bold;
 }
 
 .non-changeable-status {
     width: 100%;
     text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.point-assign-container p {
+    color: #ffffff;
+    margin: 0;
+    font-weight: bold;
+
+    min-width: 20px;
+
+    text-align: center;
 }
 
 .str-scoria {
-    color: red;
+    color: var(--scorch-color);
 }
 
 .def-permafrost {
-    color: cyan;
+    color: var(--frost-color);
 }
