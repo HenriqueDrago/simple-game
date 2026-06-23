@@ -12,6 +12,7 @@ export const turnStatus = Object.freeze({
     WHEEL_TURN: 10,
     ARRAY_TURN: 11,
     EMINENCE_TURN: 12,
+    STARS_TURN: 13
 });
 
 export const entityKeys = Object.freeze({
@@ -36,6 +37,8 @@ export const sdmKeys = Object.freeze({
     RANDOM: "random",
     CUSTOM: "custom",
     BEST: "best",
+    FULL_DEF: "fullDef",
+    FULL_STR: "fullStr"
 });
 
 export const elementalKeys = Object.freeze({
@@ -144,6 +147,15 @@ export const effectKeys = Object.freeze({
     BURDEN_OF_STIGMA: "burdenOfStigma",
     REVELATION: "revelation",
     RUNIC_ARRAY: "runicArray",
+    HEALTH: "currHp",
+    MANA: "currMana",
+    TARNISHED_SIN: "tarnishedSin",
+    MAX_MANA: "maxMana",
+    MAX_HEALTH: "maxHp",
+    STR: "str",
+    DEF: "def",
+    DAMAGE_REDUCTION: "dr",
+    DEF_EFFECTIVENESS: "defEffect"
 });
 
 export const eyeKeys = Object.freeze({
@@ -156,8 +168,8 @@ export const entryTypes = Object.freeze({
     ACTION: "ACTION",
     STATE: "STATE",
     RESOURCE: "RESOURCE",
-    DAMAGE_TYPE: "DAMAGE_TYPE",
-    FIELD_EFFECT: "FIELD_EFFECT",
+    DAMAGE_TYPE: "DAMAGE TYPE",
+    FIELD_EFFECT: "FIELD EFFECT",
     MECHANIC: "MECHANIC",
     STAT: "STAT"
 });

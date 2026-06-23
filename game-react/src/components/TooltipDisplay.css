@@ -5,12 +5,11 @@
     
     /* Visuals */
     width: 320px;
-    background-color: #111827; /* Dark background */
-    border: 1px solid #374151; /* Subtle gray border */
-    border-radius: 6px;
+    background-color: black; /* Dark background */
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7); /* Deep shadow for depth */
-    color: #f3f4f6;
+    color: white;
 }
 
 .tooltip-header {
@@ -25,7 +24,7 @@
 .tooltip-title {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #ffffff;
+    color: white;
 }
 
 .tooltip-type {
@@ -42,3 +41,35 @@
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+.single-panel-scroll {
+    max-height: 400px; /* Limits the height to prevent vertical bleeding */
+    overflow-y: auto; /* Adds the scrollbar when text overflows */
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+.tooltip-stack-item {
+    /* Adds a little breathing room around each appended entry */
+    padding-bottom: 16px; 
+}
+
+.tooltip-divider {
+    border: 0;
+    height: 1px;
+    background-color: #4b5563; /* Subtle gray line */
+    margin: 16px 0 12px 0;
+}
+
+/* 
+.single-panel-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.single-panel-scroll::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 4px;
+}
+.single-panel-scroll::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+} */

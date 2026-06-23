@@ -156,7 +156,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "SERAPH OF CONDEMNATION",
         type: entryTypes.ACTION,
         description:
-            "Inflicts TARNISHED_SIN on the opponent equal to the REVELATION on self.",
+            "Inflicts TARNISHED SIN on the opponent equal to the REVELATION on self.",
     },
 
     [actionKeys.GIFT_OF_APOTHEOSIS]: {
@@ -269,7 +269,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.RESOURCES]: {
         name: "RESOURCES",
         type: entryTypes.MECHANIC,
-        description: "Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE, SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED_SIN, INSIGHT and ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in this order. When RESOURCES are restored, they are restored in reverse order. Cannot restore INSIGHT or ENLIGHTENMENT outside of ASCENDENCE OF SPIRIT state." 
+        description: "Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE, SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED SIN, INSIGHT and ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in this order. When RESOURCES are restored, they are restored in reverse order. Cannot restore INSIGHT or ENLIGHTENMENT outside of ASCENDENCE OF SPIRIT state." 
     },
 
     [effectKeys.UMBRAL_CORE]: {
@@ -530,14 +530,14 @@ export const EFFECT_DESCRIPTIONS = {
         description: "TODO: Add Max Mana description here." 
     },
 
-    [effectKeys.HP]: {
-        name: "HP",
+    [effectKeys.HEALTH]: {
+        name: "HEALTH",
         type: entryTypes.RESOURCE,
         description: "TODO: Add HP description here." 
     },
 
-    [effectKeys.MAX_HP]: {
-        name: "MAX HP",
+    [effectKeys.MAX_HEALTH]: {
+        name: "MAX HEALTH",
         type: entryTypes.STAT,
         description: "TODO: Add Max HP description here." 
     },

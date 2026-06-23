@@ -253,13 +253,31 @@ function App() {
         }));
     }
 
-    // Handles array tracking for nested tooltips. Defaults to depth 0 for standard buttons.
+    // Handles array tracking for nested tooltips
     const handleSetTooltip = (tooltipData, depth = 0) => {
-        console.log(tooltipData)
-        console.log(depth)
         setTooltipStack((prev) => {
-            const newStack = prev.slice(0, depth);
-            newStack.push(tooltipData);
+            const newStack = depth === 0 ? [] : [...prev];
+
+            // Prevent appending the exact same keyword back-to-back
+            if (depth > 0 && prev.length > 0 && prev[prev.length - 1].keyword === tooltipData.keyword) {
+                return prev; 
+            }
+
+            // Only calculate position for the initial box (Depth 0)
+            if (depth === 0) {
+                const TOOLTIP_WIDTH = 320; 
+                const MAX_TOOLTIP_HEIGHT = 400;
+                const MARGIN = 15; 
+
+                const clampedX = Math.max(MARGIN, Math.min(tooltipData.x, window.innerWidth - TOOLTIP_WIDTH - MARGIN));
+                const clampedY = Math.max(MARGIN, Math.min(tooltipData.y, window.innerHeight - MAX_TOOLTIP_HEIGHT - MARGIN));
+
+                newStack.push({ ...tooltipData, x: clampedX, y: clampedY });
+            } else {
+                // Child tooltips only appends, no need for coordinates
+                newStack.push(tooltipData);
+            }
+
             return newStack;
         });
     };

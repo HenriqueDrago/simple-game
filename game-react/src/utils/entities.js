@@ -216,6 +216,56 @@ export function distributePoints(entity, mode, bestStats = null) {
             }
             break;
 
+        case sdmKeys.FULL_DEF:
+            // Reset points and stats
+            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr] = {
+                    ...newEntity.attributes[attr],
+                    points: 0,
+                    value: constants.BASE_STATS[attr],
+                };
+            }
+
+            // Distribute points
+            newEntity.attributes.def = {
+                ...newEntity.attributes.def,
+                points: newEntity.unspentPoints,
+                value:
+                    constants.BASE_STATS.def +
+                    newEntity.unspentPoints * constants.STAT_MULTIPLIERS.def,
+            };
+
+            newEntity.unspentPoints = 0;
+
+            break;
+
+        case sdmKeys.FULL_STR:
+            // Reset points
+            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr] = {
+                    ...newEntity.attributes[attr],
+                    points: 0,
+                    value: constants.BASE_STATS[attr],
+                };
+            }
+
+            // Distribute points
+            newEntity.attributes.str = {
+                ...newEntity.attributes.str,
+                points: newEntity.unspentPoints,
+                value:
+                    constants.BASE_STATS.str +
+                    newEntity.unspentPoints * constants.STAT_MULTIPLIERS.str,
+            };
+
+            newEntity.unspentPoints = 0;
+
+            break;
+
         default:
             break;
     }

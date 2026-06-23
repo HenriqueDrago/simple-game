@@ -25,6 +25,8 @@ function ControlPanel({
                     <option value={sdmKeys.RANDOM}>Random</option>
                     <option value={sdmKeys.CUSTOM}>Custom</option>
                     <option value={sdmKeys.BEST}>"Best"</option>
+                    <option value={sdmKeys.FULL_DEF}>Full Def</option>
+                    <option value={sdmKeys.FULL_STR}>Full Str</option>
                 </select>
             </div>
 
