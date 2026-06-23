@@ -104,18 +104,48 @@ export function processUpkeep(prev) {
             resourcesConsumed.totalConsumption,
             prev.elementalWheel,
         );
+
+        const newRev =
+            draftTarget.revelation +
+            Math.floor(
+                draftTarget.currInsight / constants.INSIGHT_TO_REV_FACTOR,
+            );
+
+        draftTarget = {
+            ...draftTarget,
+            revelation: newRev,
+        };
     }
 
     // Sacred Flames
     if (draftTarget.resources.sacredFlames > 0) {
-        const newEnlit = Math.max(
-            0,
-            draftTarget.currEnlit - draftTarget.resources.sacredFlames,
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            draftTarget.resources.sacredFlames,
+            effectKeys.SACRED_FLAMES,
+        );
+
+        draftTarget = restoreResources(
+            draftEntity,
+            resourcesConsumed.totalConsumption,
+            prev.elementalWheel,
+        );
+    }
+
+    // Benediction
+    if (draftTarget.resources.benediction > 0) {
+        draftTarget = restoreResources(
+            draftTarget,
+            draftTarget.resources.benediction,
+            prev.elementalWheel,
         );
 
         draftTarget = {
             ...draftTarget,
-            currEnlit: newEnlit,
+            resources: {
+                ...draftTarget.resources,
+                benediction: 0,
+            },
         };
     }
 
@@ -225,7 +255,12 @@ export function processUpkeep(prev) {
         draftTarget.resources.poison > 0 &&
         !draftTarget.states.dimmingDarkness
     ) {
-        draftTarget = takeDamage(draftTarget, draftTarget.resources.poison, dmgTypes.TRUE, prev.elementalWheel);
+        draftTarget = takeDamage(
+            draftTarget,
+            draftTarget.resources.poison,
+            dmgTypes.TRUE,
+            prev.elementalWheel,
+        );
     }
 
     // Blood Sacrifice
@@ -277,6 +312,7 @@ export function processUpkeep(prev) {
             states: {
                 ...draftTarget.states,
                 venting: newOverheat > 0,
+                weaponsDeployed: newOverheat <= 0,
             },
         };
     }
@@ -311,7 +347,6 @@ export function processUpkeep(prev) {
     };
 
     let newEye = prev.eyeOfHeavens;
-    let eyeTurnAwakened = prev.eyeTurnAwakened;
 
     if (
         prev.eyeOfHeavens === eyeKeys.DORMANT &&
@@ -319,7 +354,6 @@ export function processUpkeep(prev) {
             draftNonTarget.states.ascendenceOfSpirit)
     ) {
         newEye = eyeKeys.OPEN;
-        eyeTurnAwakened = prev.turnCount;
     }
 
     return {
@@ -327,7 +361,7 @@ export function processUpkeep(prev) {
         status: nextStatus,
         lastPlayerTurn: targetKey,
         eyeOfHeavens: newEye,
-        eyeTurnAwakened: eyeTurnAwakened,
+        turnCount: prev.turnCount + 1,
         entities: {
             ...prev.entities,
             [targetKey]: {
@@ -347,8 +381,6 @@ export function processUpkeep(prev) {
 export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     let draftCurrActor = newGame.entities[currActorKey];
     let draftNextActor = newGame.entities[nextActorKey];
-
-    let newTurnCount = newGame.turnCount;
 
     if (action !== actionKeys.LASER) {
         // Mana Overflow
@@ -386,8 +418,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ...draftCurrActor,
             lasersUsedThisTurn: 0,
         };
-
-        newTurnCount += 1;
     }
 
     // Sonority
@@ -443,16 +473,20 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
 
+    console.log("turn count");
+    console.log(newGame.turnCount);
+    console.log(newGame.turnCount % 2 === 0);
+
     if (
-        newGame.elementalWheel !== elementalKeys.INACTIVE &&
-        newGame.whoStarts !== currActorKey
+        newGame.turnCount % 2 === 0 &&
+        newGame.elementalWheel !== elementalKeys.INACTIVE
     ) {
         nextStatus = turnStatus.WHEEL_TURN;
     } else if (newGame.remainingArray > 0) {
         nextStatus = turnStatus.ARRAY_TURN;
     } else if (
-        newGame.eyeTurnAwakened !== null &&
-        newGame.eyeTurnAwakened % 2 === newGame.turnCount % 2
+        newGame.turnCount % 2 === 0 &&
+        newGame.eyeOfHeavens !== eyeKeys.DORMANT
     ) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
@@ -488,7 +522,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         ...newGame,
         status: newStatus,
         nextStatus: nextStatus,
-        turnCount: newTurnCount,
         entities: {
             ...newGame.entities,
             [currActorKey]: {
@@ -509,10 +542,7 @@ export function processWheelTurn(prev) {
 
     if (prev.remainingArray > 0) {
         nextStatus = turnStatus.ARRAY_TURN;
-    } else if (
-        prev.eyeTurnAwakened !== null &&
-        prev.eyeTurnAwakened % 2 === prev.turnCount % 2
-    ) {
+    } else if (prev.eyeOfHeavens !== eyeKeys.DORMANT) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
 
@@ -563,12 +593,11 @@ export function processArrayTurn(prev) {
             ? turnStatus.UPKEEP_PLAYER_TWO
             : turnStatus.UPKEEP_PLAYER_ONE;
 
-    if (
-        prev.eyeTurnAwakened !== null &&
-        prev.eyeTurnAwakened % 2 === prev.turnCount % 2
-    ) {
+    if (prev.eyeOfHeavens !== eyeKeys.DORMANT) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
+
+    console.log(`array: ${prev.remainingArray}`);
 
     if (prev.remainingArray <= 0) {
         return {
@@ -583,8 +612,8 @@ export function processArrayTurn(prev) {
 
     const newArray = prev.remainingArray - 1;
 
+    // If Array dying, redistribute mana
     if (newArray <= 0) {
-        // If Array dead, redistribute mana
         const totalShackledMana =
             playerOne.resources.shackledMana + playerTwo.resources.shackledMana;
         const manaShare = Math.floor(totalShackledMana / 2);
@@ -702,14 +731,19 @@ export function processEminenceTurn(prev) {
             status: turnStatus.TRANSITION,
             nextStatus: nextStatus,
             eyeOfHeavens: eyeKeys.DORMANT,
-            eyeTurnAwakened: null,
         };
     } else {
         if (prev.eyeOfHeavens === eyeKeys.OPEN) {
             const p1NewRev =
-                playerOne.revelation + Math.floor(playerOne.currInsight / 10);
+                playerOne.revelation +
+                Math.floor(
+                    playerOne.currInsight / constants.INSIGHT_TO_REV_FACTOR,
+                );
             const p2NewRev =
-                playerTwo.revelation + Math.floor(playerTwo.currInsight / 10);
+                playerTwo.revelation +
+                Math.floor(
+                    playerTwo.currInsight / constants.INSIGHT_TO_REV_FACTOR,
+                );
 
             playerOne = {
                 ...playerOne,

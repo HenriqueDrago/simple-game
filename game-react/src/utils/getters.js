@@ -53,7 +53,6 @@ export const getGoodAngelActions = () => [
         label: "Grace of heavens",
         hoverKeys: [
             actionKeys.GRACE_OF_HEAVENS,
-            effectKeys.INSPIRATION,
             effectKeys.RESOURCES,
         ],
     },
@@ -64,14 +63,18 @@ export const getGoodAngelActions = () => [
             actionKeys.CELESTIAL_SCALE,
             effectKeys.ENLIGHTENMENT,
             effectKeys.INSIGHT,
-            effectKeys.INSPIRATION,
         ],
     },
     {
-        key: actionKeys.SERAPH_OF_RECLAMATION,
-        label: "Seraph of Reclamation",
-        hoverKeys: [actionKeys.SERAPH_OF_RECLAMATION, effectKeys.SACRED_FLAMES],
+        key: actionKeys.SACRAMENT,
+        label: "Sacrament",
+        hoverKeys: [
+            actionKeys.SACRAMENT,
+            effectKeys.BENEDICTION,
+            effectKeys.REVELATION,
+        ],
     },
+
     {
         key: actionKeys.GIFT_OF_APOTHEOSIS,
         label: "Gift of Apotheosis",
@@ -84,28 +87,18 @@ export const getGoodAngelActions = () => [
 
 export const getBadAngelActions = () => [
     {
-        key: actionKeys.SPARK_OF_DIVINITY,
-        label: "Spark of Divinity",
+        key: actionKeys.SERAPH_OF_CONDEMNATION,
+        label: "Seraph of Condemnation",
         hoverKeys: [
-            actionKeys.SPARK_OF_DIVINITY,
-            effectKeys.SACRED_FLAMES,
-            effectKeys.REVELATION,
+            actionKeys.SERAPH_OF_CONDEMNATION,
         ],
     },
     {
         key: actionKeys.BAPTISM_OF_THE_FLAMES,
         label: "Baptism of the Flames",
-        hoverKeys: [actionKeys.BAPTISM_OF_THE_FLAMES, effectKeys.RESOURCES],
+        hoverKeys: [actionKeys.BAPTISM_OF_THE_FLAMES, effectKeys.SACRED_FLAMES, effectKeys.RESOURCES],
     },
-    {
-        key: actionKeys.SACRAMENT,
-        label: "Sacrament",
-        hoverKeys: [
-            actionKeys.SACRAMENT,
-            effectKeys.BENEDICTION,
-            effectKeys.REVELATION,
-        ],
-    },
+
     {
         key: actionKeys.THE_WORD_MADE_FLESH,
         label: "The Word Made Flesh",
@@ -225,7 +218,6 @@ export const getNormalActions = (
                 effectKeys.ENLIGHTENMENT,
                 effectKeys.CUTOFF_WINGS,
                 effectKeys.INSIGHT,
-                effectKeys.INSPIRATION,
             ],
         },
         {

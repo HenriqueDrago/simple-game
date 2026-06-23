@@ -1,0 +1,44 @@
+.tooltip-display-container {
+    /* Critical Mechanics */
+    position: fixed; /* Rips the box out of the normal layout */
+    pointer-events: auto; /* Required so the box can detect when the mouse enters it */
+    
+    /* Visuals */
+    width: 320px;
+    background-color: #111827; /* Dark background */
+    border: 1px solid #374151; /* Subtle gray border */
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7); /* Deep shadow for depth */
+    color: #f3f4f6;
+}
+
+.tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #4b5563;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+
+.tooltip-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.tooltip-type {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+    background-color: #1f2937;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.tooltip-body {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}

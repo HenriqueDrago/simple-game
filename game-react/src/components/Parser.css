@@ -1,0 +1,10 @@
+.parsed-description-container {
+    line-height: 1.6;
+    font-size: 1rem;
+    color: white;
+}
+
+.parsed-description-container span {
+    /* To make sure all text chuncks aline with each other */
+    display: inline;
+}

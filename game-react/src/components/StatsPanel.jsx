@@ -14,6 +14,7 @@ import { sdmKeys, elementalKeys, eyeKeys } from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
+import DamnationBar from "./Damnationbar.jsx";
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
     const entity = game.entities[entityKey];
@@ -99,6 +100,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
         >
             <StateBadges states={states} />
 
+            <DamnationBar entity={entity} />
             <EnlightenmentBar entity={entity} />
 
             {isAngelView ? (

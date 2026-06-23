@@ -28,6 +28,8 @@ export const aiKeys = Object.freeze({
     HEXER: "hexer",
     SHADOW_SORCERER: "shadowSorcerer",
     CYBORG: "cyborg",
+    MAESTRO: "maestro",
+    ELEMENTALIST: "elementalist",
 });
 
 export const sdmKeys = Object.freeze({
@@ -80,13 +82,14 @@ export const actionKeys = Object.freeze({
     HALT: "halt",
     GRACE_OF_HEAVENS: "graceOfHeavens",
     CELESTIAL_SCALE: "celestialScale",
-    SERAPH_OF_RECLAMATION: "seraphOfReclamation",
+    SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
     GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
-    SPARK_OF_DIVINITY: "sparkOfDivinity",
+    EDICT_OF_SEVERANCE: "edictOfSeverance",
     BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
     SACRAMENT: "sacrament",
     THE_WORD_MADE_FLESH: "theWordMadeFlesh",
     CHART: "chart",
+    WAIT: "wait", // code only
 });
 
 export const effectKeys = Object.freeze({
@@ -141,11 +144,20 @@ export const effectKeys = Object.freeze({
     BURDEN_OF_STIGMA: "burdenOfStigma",
     REVELATION: "revelation",
     RUNIC_ARRAY: "runicArray",
-    INSPIRATION: "inspiration",
 });
 
 export const eyeKeys = Object.freeze({
     DORMANT: 0,
     OPEN: 1,
     CLOSED: 2,
+});
+
+export const entryTypes = Object.freeze({
+    ACTION: "ACTION",
+    STATE: "STATE",
+    RESOURCE: "RESOURCE",
+    DAMAGE_TYPE: "DAMAGE_TYPE",
+    FIELD_EFFECT: "FIELD_EFFECT",
+    MECHANIC: "MECHANIC",
+    STAT: "STAT"
 });

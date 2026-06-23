@@ -1,7 +1,19 @@
 import { constants } from "./constants.js";
 import { simulators } from "./simulators.js";
-import { consumeResources } from "./entities.js";
-import { actionKeys, effectKeys } from "./enums.js";
+import { consumeResources, restoreResources } from "./entities.js";
+import { actionKeys, effectKeys, elementalKeys } from "./enums.js";
+
+function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
+    return (actionKey, overrides = {}) =>
+        simulators[actionKey]({
+            agent,
+            agentKey,
+            nonAgent,
+            nonAgentKey,
+            prev,
+            ...overrides,
+        });
+}
 
 export function simpleAI(context) {
     const { agent, agentKey, nonAgentKey, totalMana, handleAction } = context;
@@ -66,16 +78,8 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        totalMana,
-        hasManaForSpecial,
-        handleAction,
-        prev,
-    } = context;
+    const { agent, agentKey, nonAgentKey, hasManaForSpecial, handleAction } =
+        context;
 
     if (agent.resources.radiance >= 5) {
         if (hasManaForSpecial) {
@@ -93,89 +97,72 @@ export function hexerAI(context) {
     const {
         agent,
         agentKey,
-        nonAgent,
         nonAgentKey,
         isArrayActive,
         hasManaForSpecial,
         handleAction,
-        prev,
     } = context;
 
-    const simCurse = isArrayActive
-        ? simulators[actionKeys.CURSE]({
-              agent,
-              agentKey,
-              nonAgent,
-              nonAgentKey,
-              prev,
-          })
-        : null;
-
     if (isArrayActive) {
-        if (
+        const simulate = createSimulator(context);
+        const simCurse = simulate(actionKeys.CURSE);
+
+        const killsOpponent =
             simCurse.entities[nonAgentKey].resources.poison >=
-                simCurse.entities[nonAgentKey].currHp ||
+            simCurse.entities[nonAgentKey].currHp;
+        const staysSafe =
             simCurse.entities[agentKey].resources.poison <
-                simCurse.entities[agentKey].currHp
-        ) {
+            simCurse.entities[agentKey].currHp;
+
+        if (killsOpponent || staysSafe) {
             handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
             return;
         }
+
+        // Not yet lethal/safe to curse
+        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
-    } else {
-        if (hasManaForSpecial) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        }
-
-        if (agent.resources.poison >= agent.currHp) {
-            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
-            return;
-        }
-
-        // Array
-        handleAction(actionKeys.ARRAY, agentKey, nonAgentKey);
     }
+
+    if (hasManaForSpecial) {
+        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+        return;
+    }
+
+    if (agent.resources.poison >= agent.currHp) {
+        handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+        return;
+    }
+
+    // Array
+    handleAction(actionKeys.ARRAY, agentKey, nonAgentKey);
 }
 
 export function warlockAI(context) {
     const {
         agent,
         agentKey,
-        nonAgent,
         nonAgentKey,
         isArrayActive,
         totalMana,
         hasManaForSpecial,
         handleAction,
-        prev,
     } = context;
 
-    const simSpecial = simulators[actionKeys.SPECIAL_ATTACK]({
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        prev,
-    });
-    const simCurse = isArrayActive
-        ? simulators[actionKeys.CURSE]({
-              agent,
-              agentKey,
-              nonAgent,
-              nonAgentKey,
-              prev,
-          })
-        : null;
+    const simulate = createSimulator(context);
 
     // Attacks if simulation returns a kill
-    if (hasManaForSpecial && simSpecial.entities[nonAgentKey].currHp <= 0) {
-        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-        return;
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (simSpecial.entities[nonAgentKey].currHp <= 0) {
+            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+            return;
+        }
     }
 
     // Use curse if it kills the opponent
     if (isArrayActive) {
+        const simCurse = simulate(actionKeys.CURSE);
         if (
             simCurse.entities[nonAgentKey].resources.poison >=
             simCurse.entities[nonAgentKey].currHp
@@ -219,104 +206,86 @@ export function shadowSorcererAI(context) {
         nonAgentKey,
         isArrayActive,
         handleAction,
-        prev,
     } = context;
 
-    const simCurse = isArrayActive
-        ? simulators[actionKeys.CURSE]({
-              agent,
-              agentKey,
-              nonAgent,
-              nonAgentKey,
-              prev,
-          })
-        : null;
+    const simulate = createSimulator(context);
 
     // === Outside Umbral ===
 
-    // if in an array, kills the opponent with poison if possible
-    if (isArrayActive && !agent.states.umbralCore) {
-        if (!nonAgent.states.dimmingDarkness) {
-            if (
-                simCurse.entities[nonAgentKey].resources.poison >=
-                simCurse.entities[nonAgentKey].currHp
-            ) {
-                handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
-                return;
-            }
+    // If in an array, kill the opponent with poison if possible
+    if (
+        isArrayActive &&
+        !agent.states.umbralCore &&
+        !nonAgent.states.dimmingDarkness
+    ) {
+        const simCurse = simulate(actionKeys.CURSE);
+        if (
+            simCurse.entities[nonAgentKey].resources.poison >=
+            simCurse.entities[nonAgentKey].currHp
+        ) {
+            handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
+            return;
         }
     }
 
     // Umbral Entry
+    // Skip if bleakDeception makes Shadow Pact unusable
     if (!agent.states.umbralCore) {
-        handleAction(actionKeys.SHADOW_PACT, agentKey, nonAgentKey);
+        if (agent.states.bleakDeception) {
+            handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.SHADOW_PACT, agentKey, nonAgentKey);
+        }
         return;
     }
 
-    // === Umbral ===
+    // === Inside Umbral ===
 
-    // Uses DP to escape overflow death
+    // Kill check
+    // Always do Black Mayhem if lethal
+    const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
+    if (simMayhem.entities[nonAgentKey].currHp <= 0) {
+        handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
+        return;
+    }
+
+    // Uses Dark Promise to escape overflow death
     if (agent.resources.manaOverflow >= agent.currHp) {
         handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
         return;
     }
 
-    // Check if should do Dark Promise
-    const simPromise = simulators[actionKeys.DARK_PROMISE]({
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        prev,
-    });
+    // Check if Dark Promise will trap the opponent in lethal overflow
+    const simPromise = simulate(actionKeys.DARK_PROMISE);
     const postPromiseEnemy = simPromise.entities[nonAgentKey];
     const postPromiseSelf = simPromise.entities[agentKey];
 
-    if (postPromiseEnemy.resources.manaOverflow >= postPromiseEnemy.currHp) {
-        const missingHp = postPromiseEnemy.maxHp - postPromiseEnemy.currHp;
-        const healBurn = Math.min(
-            missingHp,
-            postPromiseEnemy.currMana + postPromiseEnemy.resources.manaOverflow,
-        );
-        const overflowAfterHeal = Math.max(
-            0,
-            postPromiseEnemy.resources.manaOverflow - healBurn,
-        );
-        const hpAfterHeal = postPromiseEnemy.currHp + healBurn;
+    const toBeRestored = postPromiseEnemy.resources.unrelentingShadows;
+    const enemyAfterRestore = restoreResources(postPromiseEnemy, toBeRestored);
 
-        const savedByHeal = overflowAfterHeal < hpAfterHeal;
-        const savedBySpAtk =
-            Math.max(
-                0,
-                postPromiseEnemy.resources.manaOverflow -
-                    constants.SP_ATTACK_COST,
-            ) < postPromiseEnemy.currHp;
-        const savedByShadows = postPromiseEnemy.states.umbralCore;
+    const dieToOverflow =
+        enemyAfterRestore.resources.manaOverflow >= enemyAfterRestore.currHp;
 
-        if (!savedByHeal && !savedBySpAtk && !savedByShadows) {
-            // C. Survival Check: Will we survive their desperate final attack?
-            const simAtk = simulators[actionKeys.ATTACK]({
-                agent: postPromiseEnemy,
-                agentKey: nonAgentKey,
-                nonAgent: postPromiseSelf,
-                nonAgentKey: agentKey,
-                prev,
-            });
-            const simSpAtk = simulators[actionKeys.SPECIAL_ATTACK]({
-                agent: postPromiseEnemy,
-                agentKey: nonAgentKey,
-                nonAgent: postPromiseSelf,
-                nonAgentKey: agentKey,
-                prev,
-            });
+    if (dieToOverflow) {
+        const simAtk = simulate(actionKeys.ATTACK, {
+            agent: nonAgent,
+            agentKey: nonAgentKey,
+            nonAgent: postPromiseSelf,
+            nonAgentKey: agentKey,
+        });
+        const simSpAtk = simulate(actionKeys.SPECIAL_ATTACK, {
+            agent: nonAgent,
+            agentKey: nonAgentKey,
+            nonAgent: postPromiseSelf,
+            nonAgentKey: agentKey,
+        });
 
-            if (
-                simAtk.entities[agentKey].currHp > 0 &&
-                simSpAtk.entities[agentKey].currHp > 0
-            ) {
-                handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
-                return;
-            }
+        if (
+            simAtk.entities[agentKey].currHp > 0 &&
+            simSpAtk.entities[agentKey].currHp > 0
+        ) {
+            handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
+            return;
         }
     }
 
@@ -327,54 +296,139 @@ export function shadowSorcererAI(context) {
         effectKeys.SHADOWFLAME,
     );
 
+    // If low hp, use SM if beneficial
+    if (agent.currHp <= agent.maxHp * 0.5) {
+    const simMantle = simulate(actionKeys.SHADOW_MANTLE);
+    const postMantle = simMantle.entities[agentKey];
+
+    const toBeRestored = postMantle.resources.unrelentingShadows;
+    const agentAfterRestore = restoreResources(postMantle, toBeRestored);
+
+    const netHpGain =
+        agentAfterRestore.currHp -
+        agentAfterRestore.resources.manaOverflow -
+        agent.currHp;
+
+    if (netHpGain > 0) {
+        handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
+        return;
+    }
+}
+
+    // Avoid lethal burn
     if (draftTarget.currHp <= 0) {
-        if (
-            agent.currHp < agent.maxHp * 0.5 &&
-            agent.resources.shadowflame <
-                agent.currHp + (agent.maxMana - agent.currMana)
-        ) {
-            handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
+        handleAction(actionKeys.RITUAL_OF_ASH, agentKey, nonAgentKey);
+        return;
+    }
+
+    // Default: drain the opponent
+    handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
+}
+export function cyborgAI(context) {
+    const { agent, agentKey, nonAgentKey, handleAction } = context;
+
+    let action;
+    if (agent.states.thermalOverload) {
+        action = actionKeys.MELTDOWN;
+    } else if (agent.currHp <= agent.maxHp * 0.5) {
+        if (agent.currMana >= 5) {
+            action = actionKeys.HEAL;
         } else {
-            handleAction(actionKeys.RITUAL_OF_ASH, agentKey, nonAgentKey);
+            action = actionKeys.GUARD;
+        }
+    } else if (agent.states.weaponsDeployed) {
+        action = actionKeys.LASER;
+    } else if (agent.states.venting) {
+        action = actionKeys.GUARD;
+    } else {
+        action = actionKeys.DEPLOY;
+    }
+
+    handleAction(action, agentKey, nonAgentKey);
+}
+
+export function maestroAI(context) {
+    const { agent, agentKey, nonAgentKey, handleAction } = context;
+
+    let action;
+    if (agent.states.thermalOverload) {
+        action = actionKeys.MELTDOWN;
+    } else if (!agent.states.resonant) {
+        action = actionKeys.ATTUNE;
+    } else if (agent.sonority === constants.SONORITY_LOWER_LIMIT) {
+        action = actionKeys.SOUND_OF_SILENCE;
+    } else if (agent.sonority === constants.SONORITY_HIGHER_LIMIT) {
+        action = actionKeys.BABEL;
+    } else if (agent.states.weaponsDeployed) {
+        action = actionKeys.LASER;
+    } else if (
+        !agent.states.weaponsDeployed &&
+        !agent.states.deployment &&
+        !agent.states.weaponsDeployed &&
+        !agent.states.venting
+    ) {
+        action = actionKeys.DEPLOY;
+    } else {
+        action = actionKeys.GUARD;
+    }
+
+    handleAction(action, agentKey, nonAgentKey);
+}
+
+export function elementalistAI(context) {
+    const {
+        agent,
+        agentKey,
+        nonAgentKey,
+        totalMana,
+        hasManaForSpecial,
+        handleAction,
+        wheelElement,
+    } = context;
+
+    const simulate = createSimulator(context);
+
+    // Finish the fight if either attack option kills the opponent outright.
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (simAttack.entities[nonAgentKey].currHp <= 0) {
+        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+        return;
+    }
+
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (simSpecial.entities[nonAgentKey].currHp <= 0) {
+            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+            return;
+        }
+    }
+
+    // Survival: heal if affordable and in Scorch, otherwise guard.
+    if (
+        agent.currHp <= agent.maxHp * 0.5 &&
+        wheelElement === elementalKeys.SCORCH
+    ) {
+        if (totalMana >= 4) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         }
         return;
     }
 
-    // Default Attack (Black Mayhem)
-    handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
-}
+    // Simulate what Align would actually resolve into - essence gain plus
+    // the current element's active effect - and bail out if it's lethal.
+    const postAlign = simulate(actionKeys.ALIGN).entities[agentKey];
 
-export function cyborgAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        isArrayActive,
-        handleAction,
-        prev,
-    } = context;
+    const burnsToDeath = postAlign.currHp <= 0;
+    const overflowsToDeath =
+        postAlign.resources.manaOverflow >= postAlign.currHp;
 
-    // Use Meltdown if in overload
-    if (agent.states.thermalOverload) {
-        handleAction(actionKeys.MELTDOWN, agentKey, nonAgentKey);
+    if (burnsToDeath || overflowsToDeath) {
+        // Unsafe to align right now - attack instead.
+        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+        return;
     }
 
-    // Healing if needed
-    if (agent.currHp <= agent.maxHp * 0.5 && agent.currMana >= 5) {
-        handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
-    }
-
-    // Use Laser if weapons deployed
-    if (agent.states.weaponsDeployed) {
-        handleAction(actionKeys.LASER, agentKey, nonAgentKey);
-    }
-
-    // Use guard if venting
-    if (agent.states.venting) {
-        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-    }
-
-    // else, enter deployment
-    handleAction(actionKeys.DEPLOY, agentKey, nonAgentKey);
+    handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
 }

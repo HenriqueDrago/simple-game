@@ -6,6 +6,8 @@ import {
     warlockAI,
     shadowSorcererAI,
     cyborgAI,
+    maestroAI,
+    elementalistAI,
 } from "./aiControllers.js";
 
 import { aiKeys, actionKeys, effectKeys } from "./enums.js";
@@ -34,7 +36,7 @@ const MANA_BLEED_MULT = 0.5;
 const BLOOD_SACRIFICE_MULT = 1.0;
 
 const ARRAY_DURATION = 3;
-const MANA_SHACKLE_TURN_GAIN = 3;
+const MANA_SHACKLE_TURN_GAIN = 4;
 
 const MAX_OVERHEAT = 10;
 const VENTING_OVERHEAT_LOSS = 5;
@@ -55,12 +57,17 @@ const SONORITY_LOWER_LIMIT = -5;
 const SONORITY_HIGHER_LIMIT = 5;
 
 const MAX_ENLIT = 100;
+const MAX_INSIGHT = 100;
+const MAX_TARNISHED_SIN = 100;
 
-const INSIGHT_TO_REV_MULT = 0.1;
+const INSIGHT_TO_REV_FACTOR = 10;
 
 const NATURE_PASSIVE_MULT = 1.5;
 const FROST_PASSIVE_MULT = 0.5;
 const SCORCH_PASSIVE_MULT = 1.5;
+
+const FLAMES_ABSORPTION_MULTIPLIER = 1;
+const BENEDICTION_GEN = 2;
 
 const DISTRIBUTION_MODES = [
     "Random",
@@ -83,13 +90,13 @@ const freeResources = [
     effectKeys.RADIANCE,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.SACRED_FLAMES,
-    effectKeys.INSPIRATION,
 ];
 
 const limitedResources = [
     "currOverheat",
     "currMana",
     "currHp",
+    "currTarnishedSin",
     "currInsight",
     "currEnlit",
 ];
@@ -122,10 +129,14 @@ export const constants = {
     SONORITY_HIGHER_LIMIT,
     VENTING_OVERHEAT_LOSS,
     MAX_ENLIT,
-    INSIGHT_TO_REV_MULT,
+    INSIGHT_TO_REV_FACTOR,
     SCORCH_PASSIVE_MULT,
     FROST_PASSIVE_MULT,
     NATURE_PASSIVE_MULT,
+    BENEDICTION_GEN,
+    FLAMES_ABSORPTION_MULTIPLIER,
+    MAX_INSIGHT,
+    MAX_TARNISHED_SIN,
 };
 
 export const presetAi = {
@@ -145,14 +156,6 @@ export const presetAi = {
         },
         caller: simpleAI,
     },
-    [aiKeys.BLOODKNIGHT]: {
-        name: "Bloodknight",
-        best: {
-            str: 7,
-            def: 3,
-        },
-        caller: bloodknightAI,
-    },
     [aiKeys.WARLOCK]: {
         name: "Warlock",
         best: {
@@ -161,13 +164,13 @@ export const presetAi = {
         },
         caller: warlockAI,
     },
-    [aiKeys.PALADIN]: {
-        name: "Paladin",
+    [aiKeys.BLOODKNIGHT]: {
+        name: "Bloodknight",
         best: {
-            str: 0,
-            def: 10,
+            str: 7,
+            def: 3,
         },
-        caller: paladinAI,
+        caller: bloodknightAI,
     },
     [aiKeys.HEXER]: {
         name: "Hexer",
@@ -177,6 +180,22 @@ export const presetAi = {
         },
         caller: hexerAI,
     },
+    [aiKeys.CYBORG]: {
+        name: "Cyborg",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: cyborgAI,
+    },
+    [aiKeys.ELEMENTALIST]: {
+        name: "Elementalist",
+        best: {
+            str: 5,
+            def: 5,
+        },
+        caller: elementalistAI,
+    },
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
@@ -185,13 +204,21 @@ export const presetAi = {
         },
         caller: shadowSorcererAI,
     },
-    [aiKeys.CYBORG]: {
-        name: "Cyborg",
+    [aiKeys.MAESTRO]: {
+        name: "Maestro",
         best: {
             str: 0,
             def: 10,
         },
-        caller: cyborgAI,
+        caller: maestroAI,
+    },
+    [aiKeys.PALADIN]: {
+        name: "Paladin",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: paladinAI,
     },
 };
 
@@ -230,21 +257,60 @@ export const actionsClass = {
 };
 
 export const stackCounters = [
-    ["Blood Sacrifice", effectKeys.BLOOD_SACRIFICE, "#ff3333", "rgba(255, 51, 51, 0.15)"],
+    [
+        "Blood Sacrifice",
+        effectKeys.BLOOD_SACRIFICE,
+        "#ff3333",
+        "rgba(255, 51, 51, 0.15)",
+    ],
     ["Poison", effectKeys.POISON, "#00e676", "rgba(0, 230, 118, 0.15)"],
-    ["Cryogenesis", effectKeys.CRYOGENESIS, "#00e5ff", "rgba(0, 229, 255, 0.15)"],
-    ["Shackled Mana", effectKeys.SHACKLED_MANA, "#2979ff", "rgba(41, 121, 255, 0.15)"],
+    [
+        "Cryogenesis",
+        effectKeys.CRYOGENESIS,
+        "#00e5ff",
+        "rgba(0, 229, 255, 0.15)",
+    ],
+    [
+        "Shackled Mana",
+        effectKeys.SHACKLED_MANA,
+        "#2979ff",
+        "rgba(41, 121, 255, 0.15)",
+    ],
 
     // Shadowflame
-    ["Shadowflame", effectKeys.SHADOWFLAME, "#d500f9", "rgba(213, 0, 249, 0.15)"],
-    ["Unrelenting Shadows", effectKeys.UNRELENTING_SHADOWS, "#651fff", "rgba(101, 31, 255, 0.15)"],
-    ["Lingering Ember", effectKeys.LINGERING_EMBER, "#f50057", "rgba(245, 0, 87, 0.15)"],
+    [
+        "Shadowflame",
+        effectKeys.SHADOWFLAME,
+        "#d500f9",
+        "rgba(213, 0, 249, 0.15)",
+    ],
+    [
+        "Unrelenting Shadows",
+        effectKeys.UNRELENTING_SHADOWS,
+        "#651fff",
+        "rgba(101, 31, 255, 0.15)",
+    ],
+    [
+        "Lingering Ember",
+        effectKeys.LINGERING_EMBER,
+        "#f50057",
+        "rgba(245, 0, 87, 0.15)",
+    ],
     ["Cinders", effectKeys.CINDERS, "#9e9e9e", "rgba(158, 158, 158, 0.15)"],
-    
+
     // Holy Effects
     ["Radiance", effectKeys.RADIANCE, "#ffea00", "rgba(255, 234, 0, 0.15)"],
     ["Halo", effectKeys.HALO, "#fff59d", "rgba(255, 245, 157, 0.15)"],
-    ["Inspiration", effectKeys.INSPIRATION, "#ffffff", "rgba(255, 255, 255, 0.2)"],
-    ["Sacred Flames", effectKeys.SACRED_FLAMES, "#ffb300", "rgba(255, 179, 0, 0.15)"],
-    ["Benediction", effectKeys.BENEDICTION, "#80d8ff", "rgba(128, 216, 255, 0.15)"],
+    [
+        "Sacred Flames",
+        effectKeys.SACRED_FLAMES,
+        "#ffb300",
+        "rgba(255, 179, 0, 0.15)",
+    ],
+    [
+        "Benediction",
+        effectKeys.BENEDICTION,
+        "#80d8ff",
+        "rgba(128, 216, 255, 0.15)",
+    ],
 ];

@@ -32,11 +32,10 @@ export const simulators = {
     [actionKeys.LASER]: simulateLaser,
     [actionKeys.MELTDOWN]: simulateMeltdown,
     [actionKeys.ALIGN]: simulateAlign,
-    [actionKeys.SPARK_OF_DIVINITY]: simulateSpark,
     [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
-    [actionKeys.SERAPH_OF_RECLAMATION]: simulateSeraph,
+    [actionKeys.SERAPH_OF_CONDEMNATION]: simulateSeraphOfCondemnation,
     [actionKeys.CELESTIAL_SCALE]: simulateScale,
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: simulateBaptism,
+    [actionKeys.BAPTISM_OF_THE_FLAMES]: simulateBaptismOfTheFlames,
     [actionKeys.GRACE_OF_HEAVENS]: simulateGraceOfHeavens,
     [actionKeys.GIFT_OF_APOTHEOSIS]: simulateGiftOfApotheosis,
     [actionKeys.SACRAMENT]: simulateSacrament,
@@ -142,8 +141,8 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         resources: {
             ...attacker.resources,
             radiance: 0,
-        }
-    }
+        },
+    };
 
     return {
         ...prev,
@@ -187,7 +186,7 @@ function simulateSpecialAttack({
     const draftDefender = gainMana(defender, manaDiff);
     const draftAttacker = loseMana(attacker, constants.SP_ATTACK_COST);
 
-    console.log(draftAttacker)
+    console.log(draftAttacker);
 
     return {
         ...prev,
@@ -350,7 +349,9 @@ function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 },
                 resources: {
                     ...draftAgent.resources,
-                    shadowflame: draftAgent.resources.shadowflame + resourcesConsumed.totalConsumption,
+                    shadowflame:
+                        draftAgent.resources.shadowflame +
+                        resourcesConsumed.totalConsumption,
                 },
             },
         },
@@ -417,7 +418,8 @@ function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 ...nonAgent,
                 resources: {
                     ...nonAgent.resources,
-                    unrelentingShadows: nonAgent.resources.unrelentingShadows + toBeRestored,
+                    unrelentingShadows:
+                        nonAgent.resources.unrelentingShadows + toBeRestored,
                 },
             },
             [agentKey]: {
@@ -427,7 +429,8 @@ function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     shadowflame: 0,
                     lingeringEmber: 0,
                     cinders: 0,
-                    unrelentingShadows: agent.resources.unrelentingShadows + toBeRestored,
+                    unrelentingShadows:
+                        agent.resources.unrelentingShadows + toBeRestored,
                 },
                 states: {
                     ...agent.states,
@@ -691,7 +694,7 @@ function simulateAlign({ prev, agent, agentKey }) {
             draftAgent = takeDamage(
                 draftAgent,
                 newScoria,
-                dmgTypes.PHYSICAL,
+                dmgTypes.TRUE,
                 prev.elementalWheel,
             );
             break;
@@ -740,49 +743,19 @@ function simulateAlign({ prev, agent, agentKey }) {
     };
 }
 
-function simulateSeraph({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const totalFlames =
-        agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
+function simulateSeraphOfCondemnation({ prev, agent, nonAgent, nonAgentKey }) {
+    const newDamn = Math.min(
+        nonAgent.maxTarnishedSin,
+        nonAgent.currTarnishedSin + agent.revelation,
+    );
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    sacredFlames: totalFlames,
-                },
-            },
             [nonAgentKey]: {
                 ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    sacredFlames: 0,
-                },
-            },
-        },
-    };
-}
-
-function simulateSpark({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const newDefenderFlames =
-        nonAgent.resources.sacredFlames + agent.revelation;
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    sacredFlames: newDefenderFlames,
-                },
+                currTarnishedSin: newDamn,
             },
         },
     };
@@ -818,7 +791,7 @@ function simulateGraceOfHeavens({
 }) {
     const draftNonAgent = restoreResources(
         nonAgent,
-        agent.resources.inspiration,
+        agent.revelation,
         prev.elementalWheel,
     );
 
@@ -830,7 +803,6 @@ function simulateGraceOfHeavens({
                 ...agent,
                 resources: {
                     ...agent.resources,
-                    inspiration: 0,
                 },
             },
             [nonAgentKey]: {
@@ -840,10 +812,19 @@ function simulateGraceOfHeavens({
     };
 }
 
-function simulateBaptism({ prev, agent, agentKey }) {
+function simulateBaptismOfTheFlames({
+    prev,
+    agent,
+    agentKey,
+    nonAgent,
+    nonAgentKey,
+}) {
+    const totalFlames =
+        agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
+
     const draftAgent = restoreResources(
         agent,
-        agent.resources.sacredFlames,
+        totalFlames * constants.FLAMES_ABSORPTION_MULTIPLIER,
         prev.elementalWheel,
     );
 
@@ -858,6 +839,13 @@ function simulateBaptism({ prev, agent, agentKey }) {
                     sacredFlames: 0,
                 },
             },
+            [nonAgentKey]: {
+                ...nonAgent,
+                resources: {
+                    ...nonAgent.resources,
+                    sacredFlames: 0,
+                },
+            },
         },
     };
 }
@@ -869,11 +857,10 @@ function simulateGiftOfApotheosis({
     nonAgent,
     nonAgentKey,
 }) {
-
     if (nonAgent.states.ascendenceOfSpirit) {
         return prev;
     }
-    
+
     return {
         ...prev,
         entities: {
@@ -945,7 +932,9 @@ function simulateSacrament({ prev, agent, agentKey }) {
                 ...agent,
                 resources: {
                     ...agent.resources,
-                    benediction: agent.resources.benediction + agent.revelation,
+                    benediction:
+                        agent.resources.benediction +
+                        agent.revelation * constants.BENEDICTION_GEN,
                 },
             },
         },

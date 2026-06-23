@@ -10,8 +10,8 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.HEAL]: (
         <div>
-            <strong>HEAL:</strong> Converts MANA into HP and cleanses POISON.
-            Maximum healing is limited by both missing HP and current MANA.
+            <strong>HEAL:</strong> Converts MANA into HEALTH and cleanses POISON.
+            Maximum healing is limited by both missing HEALTH and current MANA.
         </div>
     ),
 
@@ -35,7 +35,7 @@ export const ACTION_DESCRIPTIONS = {
     [actionKeys.SACRIFICE]: (
         <div>
             <strong>SELF-SACRIFICE:</strong> Takes TRUE DAMAGE equal to half of
-            current HP. Gains BLOOD SACRIFICE and MAX MANA equal to the HP lost
+            current HEALTH. Gains BLOOD SACRIFICE and MAX MANA equal to the HEALTH lost
             this way, then enters SACRIFICIAL state until next turn start.
         </div>
     ),
@@ -168,23 +168,15 @@ export const ACTION_DESCRIPTIONS = {
 
     [actionKeys.GRACE_OF_HEAVENS]: (
         <div>
-            <strong>GRACE OF HEAVENS:</strong> Consumes all INSPIRATION on self.
-            Then, restores RESOURCES for the opponent based on the INSPIRATION
-            consumed.
+            <strong>GRACE OF HEAVENS:</strong> Restores RESOURCES for the
+            opponent equal to the REVELATION on self.
         </div>
     ),
 
-    [actionKeys.CELESTIAL_SCALE]: (
+    [actionKeys.SERAPH_OF_CONDEMNATION]: (
         <div>
-            <strong>CELESTIAL SCALE:</strong> Redistributes ENLIGHTENMENT and
-            INSIGHT evenly on self.
-        </div>
-    ),
-
-    [actionKeys.SERAPH_OF_RECLAMATION]: (
-        <div>
-            <strong>SERAPH OF RECLAMATION:</strong> Absorbs all SACRED FLAMES on
-            the battlefield into self.
+            <strong>SERAPH OF CONDEMNATION:</strong> Inflicts TARNISHED_SIN on
+            the opponent equal to the REVELATION on self.
         </div>
     ),
 
@@ -196,32 +188,40 @@ export const ACTION_DESCRIPTIONS = {
         </div>
     ),
 
-    [actionKeys.SPARK_OF_DIVINITY]: (
-        <div>
-            <strong>SPARK OF DIVINITY:</strong> Inflicts SACRED FLAMES on the
-            opponent based on REVELATION on self.
-        </div>
-    ),
-
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: (
-        <div>
-            <strong>BAPTISM OF THE FLAMES:</strong> Consumes all SACRED FLAMES
-            on self. Then, restores RESOURCES based on the amount consumed.
-        </div>
-    ),
-
-    [actionKeys.SACRAMENT]: (
-        <div>
-            <strong>SACRAMENT:</strong> Gains BENEDICTION based on REVELATION on
-            self.
-        </div>
-    ),
-
     [actionKeys.THE_WORD_MADE_FLESH]: (
         <div>
             <strong>THE WORD MADE FLESH:</strong> Exits ASCENDENCE OF SPIRIT and
             enters CUTOFF WINGS state. Then, inflicts BURDEN OF STIGMA on the
             opponent.
+        </div>
+    ),
+
+    [actionKeys.CELESTIAL_SCALE]: (
+        <div>
+            <strong>CELESTIAL SCALE:</strong> Redistributes ENLIGHTENMENT and
+            INSIGHT evenly on self.
+        </div>
+    ),
+
+    [actionKeys.BAPTISM_OF_THE_FLAMES]: (
+        <div>
+            <strong>BAPTISM OF THE FLAMES:</strong> Converts all RESOURCES on
+            self into SACRED FLAMES, and absorbs all SACRED FLAMES on the
+            battlefield into self. Then, consumes all SACRED FLAMES on self and
+            restores RESOURCES based on the amount consumed.
+        </div>
+    ),
+
+    [actionKeys.SACRAMENT]: (
+        <div>
+            <strong>SACRAMENT:</strong> Gains BENEDICTION based on twice the
+            REVELATION on self.
+        </div>
+    ),
+
+    [actionKeys.EDICT_OF_SEVERANCE]: (
+        <div>
+            <strong>EDICT OF SEVERANCE:</strong> ???
         </div>
     ),
 };
@@ -259,16 +259,16 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.MANA_BLEED]: (
         <div>
             <strong>[MANA BLEED]:</strong> At turn start, loses MANA equal to
-            half of current BLOOD SACRIFICE and restores an equal amount of HP.
+            half of current BLOOD SACRIFICE and restores an equal amount of HEALTH.
         </div>
     ),
 
     [effectKeys.RUNIC_ARRAY]: (
         <div>
-            <strong>[RUNIC ARRAY]:</strong> Takes a turn in-between player's
-            turns. On ARRAY TURN, consumes all MANA and MANA OVERFLOW from all
-            entities, then grants SHACKLED MANA equal to the amount consumed on
-            each entity. Furthermore, on ARRAY TURN, grants every player 3
+            <strong>[RUNIC ARRAY]:</strong> While active, enables ARRAY TURN at
+            round end. On ARRAY TURN, consumes all MANA and MANA OVERFLOW from
+            all entities, then grants SHACKLED MANA equal to the amount consumed
+            on each entity. Furthermore, on ARRAY TURN, grants every player 3
             SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consume
             all SHACKLED MANA on all entities, then distributes it evenly as
             MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is
@@ -279,8 +279,8 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.THORNED_SHACKLES]: (
         <div>
-            <strong>[THORNED SHACKLES]:</strong> When suffering PHYSICAL DAMAGE, the
-            attacker takes TRUE DAMAGE equal to their own STR.
+            <strong>[THORNED SHACKLES]:</strong> When suffering PHYSICAL DAMAGE,
+            the attacker takes TRUE DAMAGE equal to their own STR.
         </div>
     ),
 
@@ -308,11 +308,12 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[RESOURCES]:</strong> Includes SHADOWFLAME, UNRELENTING
             SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED
-            MANA, CRYOGENESIS, HALO, RADIANCE, BLOOD SACRIFICE, INSPIRATION,
-            OVERHEAT, MANA, HP, INSIGHT and ENLIGHTENMENT. When RESOURCES are
-            consumed, they are consumed in this order. When RESOURCES are
-            restored, they are restored in reverse order. Cannot restore INSIGHT
-            or ENLIGHTENMENT outside of ASCENDENCE OF SPIRIT state.
+            MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE,
+            SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED_SIN, INSIGHT and
+            ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in
+            this order. When RESOURCES are restored, they are restored in
+            reverse order. Cannot restore INSIGHT or ENLIGHTENMENT outside of
+            ASCENDENCE OF SPIRIT state.
         </div>
     ),
 
@@ -389,8 +390,8 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[ALIGNED]:</strong> While the WHEEL is active, suffers the
             effects of the current element's passive effect. If at least one
-            player has ALIGNED in the battlefield, enables WHEEL TURN after the
-            non-starting player's turn.
+            player has ALIGNED in the battlefield, enables WHEEL TURN at round
+            end.
         </div>
     ),
 
@@ -421,7 +422,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.CRYOGENESIS]: (
         <div>
             <strong>[CRYOGENESIS]:</strong> When taking PHYSICAL or PIERCING
-            DAMAGE, consumes CRYOGENESIS instead of HP. When using an OFFENSIVE
+            DAMAGE, consumes CRYOGENESIS instead of HEALTH. When using an OFFENSIVE
             ACTION, lose all CRYOGENESIS on self.
         </div>
     ),
@@ -429,14 +430,14 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.SCORCH]: (
         <div>
             <strong>[SCORCH]:</strong> Passive Effect - All ALIGNED entities
-            deal and take +50% damage. Active Effect - Take damage by SCORIA on
-            self.
+            deal and take +50% damage. Active Effect - Take TRUE DAMAGE by
+            SCORIA on self.
         </div>
     ),
 
     [effectKeys.OVERGROWTH]: (
         <div>
-            <strong>[OVERGROWTH]:</strong> Allows self to hold more HP.
+            <strong>[OVERGROWTH]:</strong> Allows self to hold more HEALTH.
         </div>
     ),
 
@@ -482,7 +483,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.HALO]: (
         <div>
             <strong>[HALO]:</strong> When taking PHYSICAL or PIERCING DAMAGE,
-            loses HALO instead of HP, then gains RADIANCE based on the amount
+            loses HALO instead of HEALTH, then gains RADIANCE based on the amount
             lost. At turn start, converts into ENLIGHTENMENT.
         </div>
     ),
@@ -490,8 +491,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.ENLIGHTENMENT]: (
         <div>
             <strong>[ENLIGHTENMENT]:</strong> At turn start, if at 100 or more
-            ENLIGHTENMENT, enters ASCENDENCE OF SPIRIT state. When gaining
-            ENLIGHTENMENT above 100, gains INSPIRATION instead.
+            ENLIGHTENMENT, enters ASCENDENCE OF SPIRIT state.
         </div>
     ),
 
@@ -501,32 +501,33 @@ export const EFFECT_DESCRIPTIONS = {
             exits all other states and loses all resources on self. Then, gains
             INSIGHT based on the resources consumed. While in this state, cannot
             die by normal means. Furthermore, when taking damage, loses
-            ENLIGHTENMENT instead of HP. Additionally, at turn start, converts
-            all resources except for ENLIGHTENMENT, INSIGHT and INSPIRATION into
-            SACRED FLAMES. If at least one player is in this state, awakens the
-            EYE OF HEAVENS. While the eye is open, replaces all actions with:
-            GRACE OF HEAVENS, CELESTIAL SCALE, SERAPH OF RECLAMATION and GIFT OF
-            APOTHEOSIS. While the eye is closed, replaces all actions with:
-            SPARK OF DIVINITY, BAPTISM OF THE FLAMES, SACRAMENT and THE WORD
-            MADE FLESH. When exiting this state, loses all RESOURCES on self.
+            ENLIGHTENMENT instead of HEALTH. If at least one player is in this
+            state, awakens the EYE OF HEAVENS. While the eye is open, replaces
+            all actions with: GRACE OF HEAVENS, CELESTIAL SCALE, SACRAMENT and
+            GIFT OF APOTHEOSIS. While the eye is closed, replaces all actions
+            with: SERAPH OF CONDEMNATION, BAPTISM OF THE FLAMES, EDICT OF
+            SEVERANCE and THE WORD MADE FLESH. When exiting this state, loses
+            all RESOURCES on self.
         </div>
     ),
 
     [effectKeys.EYE_OF_HEAVENS]: (
         <div>
             <strong>[EYE OF HEAVENS]:</strong> While awoken, enables EMINENCE
-            TURN every two turns. On EMINENCE TURN, if the eye is open, closes
-            the eye and consumes all INSIGHT on all entities. Then, grants
+            TURN at round end. On EMINENCE TURN, if the eye is open, closes the
+            eye and consumes all INSIGHT on all entities. Then, grants
             REVELATION to each entity for every 10 INSIGHT they lost on self. If
             the eye is closed, opens the eye and, if an entity in the ASCENDENCE
             OF SPIRIT state has 0 or less ENLIGHTENMENT, removes them from the
             ASCENDENCE OF SPIRIT state and grants them the CUTOFF WINGS state.
+            If there's no entity in the ASCENDENCE OF SPIRIT state in the
+            battlefield, returns to dormant state.
         </div>
     ),
 
     [effectKeys.PHYSICAL_DAMAGE]: (
         <div>
-            <strong>[PHYSICAL DAMAGE]:</strong> Reduces the target HP. Can be
+            <strong>[PHYSICAL DAMAGE]:</strong> Reduces the target HEALTH. Can be
             blocked by DEF, reduced by DAMAGE REDUCTION and mitigated by
             shielding effects.
         </div>
@@ -534,7 +535,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.PIERCING_DAMAGE]: (
         <div>
-            <strong>[PIERCING DAMAGE]:</strong> Reduces the target HP. Ignores
+            <strong>[PIERCING DAMAGE]:</strong> Reduces the target HEALTH. Ignores
             DEF, but can be reduced by DAMAGE REDUCTION and mitigated by
             shielding effects.
         </div>
@@ -542,7 +543,7 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.TRUE_DAMAGE]: (
         <div>
-            <strong>[TRUE DAMAGE]:</strong> Reduces the target HP. Cannot be
+            <strong>[TRUE DAMAGE]:</strong> Reduces the target HEALTH. Cannot be
             blocked by DEF, reduced by DAMAGE REDUCTION or mitigated by
             shielding effects.
         </div>
@@ -579,16 +580,16 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.VENTING]: (
         <div>
             <strong>[VENTING]:</strong> Enables OVERHEAT. Cannot use DEPLOY. At
-            turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, lose
-            this state.
+            turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, exits
+            VENTING and enters WEAPONS DEPLOYED.
         </div>
     ),
 
     [effectKeys.CUTOFF_WINGS]: (
         <div>
             <strong>[CUTOFF WINGS]:</strong> Cannot use AEGIS. Upon entering
-            this state, recovers 1 HP. Upon entering this state, at turn start and turn end, sets MAX HP
-            to 1 and reduces current HP accordingly.
+            this state, recovers 1 HEALTH. Upon entering this state, at turn start
+            and turn end, sets MAX HEALTH to 1 and reduces current HEALTH accordingly.
         </div>
     ),
 
@@ -600,15 +601,18 @@ export const EFFECT_DESCRIPTIONS = {
 
     [effectKeys.SACRED_FLAMES]: (
         <div>
-            <strong>[SACRED FLAMES]:</strong> At turn start, loses ENLIGHTENMENT
-            on self by the stack.
+            <strong>[SACRED FLAMES]:</strong> At turn start, consumes RESOURCES
+            on self by the stack. Then, restores RESOURCES on self by the stack
+            and lose all SACRED FLAMES on self.
         </div>
     ),
 
     [effectKeys.BENEDICTION]: (
         <div>
-            <strong>[BENEDICTION]:</strong> When losing ENLIGHTENMENT, loses
-            BENEDICTION instead. At turn start, converts into SACRED FLAMES.
+            <strong>[BENEDICTION]:</strong> When taking PHYSICAL or PIERCING
+            DAMAGE, lose BENEDICTION instead of ENLIGHTENMENT and grants SACRED
+            FLAMES to the attacker based on the amount lost. At turn start, lose
+            all BENEDICTION and restore RESOURCES based on the amount lost.
         </div>
     ),
 
@@ -622,7 +626,7 @@ export const EFFECT_DESCRIPTIONS = {
     [effectKeys.INSIGHT]: (
         <div>
             <strong>[INSIGHT]:</strong> When gaining INSIGHT above 100, gains
-            INSPIRATION instead.
+            SACRED FLAMES instead.
         </div>
     ),
 
@@ -630,12 +634,6 @@ export const EFFECT_DESCRIPTIONS = {
         <div>
             <strong>[REVELATION]:</strong> Alternative stat. Used for certain
             actions.
-        </div>
-    ),
-
-    [effectKeys.INSPIRATION]: (
-        <div>
-            <strong>[INSPIRATION]:</strong> Used by certain abilities.
         </div>
     ),
 };

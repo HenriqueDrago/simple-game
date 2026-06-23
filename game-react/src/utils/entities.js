@@ -22,6 +22,7 @@ export function consumeResources(entity, amount, cause) {
         const currResourceKey = constants.freeResources[resourceIndex];
 
         // Avoid shadowflame (and related actions) burning unintended resources
+        // Also avoid Sacred Flames burning themselves
         if (
             !(
                 (cause === effectKeys.SHADOWFLAME ||
@@ -32,8 +33,8 @@ export function consumeResources(entity, amount, cause) {
                     currResourceKey === effectKeys.UNRELENTING_SHADOWS)
             ) &&
             !(
-                cause === effectKeys.ASCENDENCE_OF_SPIRIT &&
-                currResourceKey === effectKeys.INSPIRATION
+                cause === effectKeys.SACRED_FLAMES &&
+                currResourceKey === effectKeys.SACRED_FLAMES
             )
         ) {
             const currentAmount = draftEntity.resources[currResourceKey];
@@ -241,8 +242,10 @@ export function createBaseEntity() {
         currOverheat: 0,
         maxEnlit: constants.MAX_ENLIT,
         currEnlit: 0,
-        maxInsight: constants.MAX_ENLIT,
+        maxInsight: constants.MAX_INSIGHT,
         currInsight: 0,
+        maxTarnishedSin: constants.MAX_TARNISHED_SIN,
+        currTarnishedSin: 0,
         sonority: 0,
         lasersUsedThisTurn: 0,
         permafrost: 0,
@@ -261,7 +264,6 @@ export function createBaseEntity() {
             unrelentingShadows: 0,
             halo: 0,
             cryogenesis: 0,
-            inspiration: 0,
             sacredFlames: 0,
             benediction: 0,
         },
@@ -341,7 +343,7 @@ export function dealDamage(
               ? draftAttacker.sonority
               : 0;
 
-        console.log(additionalDmg)
+    console.log(additionalDmg);
 
     const scorchAtkMult =
         wheel === elementalKeys.SCORCH && attacker.states.aligned
@@ -394,7 +396,16 @@ export function dealDamage(
             resources: {
                 ...draftDefender.resources,
                 benediction: newBene,
-            }
+            },
+        };
+
+        draftAttacker = {
+            ...draftAttacker,
+            resources: {
+                ...draftAttacker.resources,
+                sacredFlames:
+                    draftAttacker.resources.sacredFlames + beneConsumed,
+            },
         };
     } else {
         const effectiveDef =
@@ -411,10 +422,10 @@ export function dealDamage(
 
         const flatDr =
             dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? draftDefender.sonority
+                ? -draftDefender.sonority
                 : 0;
 
-        console.log([effectiveDef, drMult, flatDr])
+        console.log([effectiveDef, drMult, flatDr]);
 
         const finalDmg = Math.max(
             1,
@@ -428,7 +439,7 @@ export function dealDamage(
             ),
         );
 
-        console.log(finalDmg)
+        console.log(finalDmg);
 
         // Mitigation
         const haloConsumed =
@@ -547,7 +558,7 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
 
     const flatDr =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? entity.sonority
+            ? -entity.sonority
             : 0;
 
     const finalDmg = Math.max(
@@ -639,15 +650,15 @@ export function gainInsight(entity, amount) {
     const missingInsight = entity.maxInsight - entity.currInsight;
 
     const newInsight = Math.min(entity.maxInsight, entity.currInsight + amount);
-    const newInspiration =
-        entity.resources.inspiration + Math.max(0, amount - missingInsight);
+    const newSacredFlames =
+        entity.resources.sacredFlames + Math.max(0, amount - missingInsight);
 
     return {
         ...entity,
         currInsight: newInsight,
         resources: {
             ...entity.resources,
-            inspiration: newInspiration,
+            sacredFlames: newSacredFlames,
         },
     };
 }

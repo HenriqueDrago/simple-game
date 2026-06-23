@@ -23,9 +23,11 @@ import {
     elementalKeys,
     whoStartsKeys,
     eyeKeys,
+    actionKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
+import TooltipDisplay from "./components/TooltipDisplay.jsx";
 
 function App() {
     // Declare states
@@ -38,7 +40,6 @@ function App() {
         whoStarts: whoStartsKeys.PLAYER_ONE,
         turnCount: 0,
         eyeOfHeavens: eyeKeys.DORMANT,
-        eyeTurnAwakened: null,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -53,9 +54,11 @@ function App() {
         },
     });
 
+    const [tooltipStack, setTooltipStack] = useState([]);
+
     // Handles
     function handleAction(action, agentKey, nonAgentKey) {
-        console.log(`[agentKey] Used: ${action}`);
+        console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
             // Skipping ghost clicks
             if (
@@ -67,6 +70,11 @@ function App() {
 
             const agent = prev.entities[agentKey];
             const nonAgent = prev.entities[nonAgentKey];
+
+            // Skipping if sealed
+            if (agent.states.burdenOfStigma || action === actionKeys.WAIT) {
+                return commitTurn(prev, agentKey, nonAgentKey, actionKeys.WAIT);
+            }
 
             const context = {
                 agent,
@@ -213,7 +221,6 @@ function App() {
                 elementalWheel: elementalKeys.INACTIVE,
                 turnCount: 0,
                 eyeOfHeavens: eyeKeys.DORMANT,
-                eyeTurnAwakened: null,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -245,6 +252,22 @@ function App() {
             whoStarts: value,
         }));
     }
+
+    // Handles array tracking for nested tooltips. Defaults to depth 0 for standard buttons.
+    const handleSetTooltip = (tooltipData, depth = 0) => {
+        console.log(tooltipData)
+        console.log(depth)
+        setTooltipStack((prev) => {
+            const newStack = prev.slice(0, depth);
+            newStack.push(tooltipData);
+            return newStack;
+        });
+    };
+
+    // Clears the entire stack instantly
+    const handleClearTooltip = () => {
+        setTooltipStack([]);
+    };
 
     // Auxiliary Functions
     function updateStatsPoints(targetKey, statusKey, value) {
@@ -304,6 +327,15 @@ function App() {
                 : entityKeys.PLAYER_ONE;
         const agent = game.entities[agentKey];
 
+        if (agent.states.burdenOfStigma) {
+            const timer = setTimeout(
+                () => handleAction(actionKeys.WAIT, agentKey, nonAgentKey),
+                1000,
+            );
+
+            return () => clearTimeout(timer);
+        }
+
         if (agent.controller !== aiKeys.HUMAN) {
             const triggerAI = () => {
                 const nonAgent = game.entities[nonAgentKey];
@@ -321,6 +353,7 @@ function App() {
                     totalMana,
                     hasManaForSpecial,
                     handleAction,
+                    wheelElement: game.elementalWheel,
                     prev: game,
                 };
 
@@ -396,6 +429,24 @@ function App() {
 
     return (
         <div className="app-container">
+            {/* Invisible backdrop intercepts clicks outside of the tooltips */}
+            {tooltipStack.length > 0 && (
+                <div
+                    className="tooltip-backdrop"
+                    onClick={handleClearTooltip}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        handleClearTooltip();
+                    }}
+                />
+            )}
+
+            {/* Passing the stack down instead of activeTooltip */}
+            <TooltipDisplay
+                tooltipStack={tooltipStack}
+                handleSetTooltip={handleSetTooltip}
+                handleClearTooltip={handleClearTooltip}
+            />
             <Header
                 game={game}
                 handleStart={handleStart}
@@ -417,6 +468,8 @@ function App() {
                     game.entities[entityKeys.PLAYER_TWO].controller
                 }
                 game={game}
+                handleSetTooltip={handleSetTooltip}
+                handleClearTooltip={handleClearTooltip}
             />
         </div>
     );
