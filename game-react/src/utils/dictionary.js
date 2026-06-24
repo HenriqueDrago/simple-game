@@ -1,9 +1,8 @@
-import { ACTION_DESCRIPTIONS, EFFECT_DESCRIPTIONS } from "./descriptions.js";
+import { DESCRIPTIONS } from "./descriptions.js";
 
 // Combine all entries values (as an array without their keys)
 const allEntries = [
-    ...Object.values(ACTION_DESCRIPTIONS),
-    ...Object.values(EFFECT_DESCRIPTIONS)
+    ...Object.values(DESCRIPTIONS)
 ];
 
 // Generate a dict with the names as keys

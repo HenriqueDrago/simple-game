@@ -1,6 +1,6 @@
-import "./DamnationBar.css";
+import "./TarnishedBar.css";
 
-function DamnationBar({ entity }) {
+function TarnishedBar({ entity }) {
     if (entity.currTarnishedSin <= 0) {
         return null;
     }
@@ -37,4 +37,4 @@ function DamnationBar({ entity }) {
     );
 }
 
-export default DamnationBar;
+export default TarnishedBar;

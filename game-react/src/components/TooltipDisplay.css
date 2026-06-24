@@ -60,16 +60,3 @@
     background-color: #4b5563; /* Subtle gray line */
     margin: 16px 0 12px 0;
 }
-
-/* 
-.single-panel-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-.single-panel-scroll::-webkit-scrollbar-track {
-    background: #1f2937;
-    border-radius: 4px;
-}
-.single-panel-scroll::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 4px;
-} */

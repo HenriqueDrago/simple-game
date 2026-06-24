@@ -1,7 +1,13 @@
 import "./Header.css";
 import { turnStatus, whoStartsKeys } from "../utils/enums";
 
-function Header({ game, handleStart, handleReset, handleWhoStartsChange }) {
+function Header({
+    game,
+    handleStart,
+    handleReset,
+    handleWhoStartsChange,
+    handleGlossary,
+}) {
     const battleState = game.status;
     const whoStarts = game.whoStarts;
 
@@ -33,6 +39,16 @@ function Header({ game, handleStart, handleReset, handleWhoStartsChange }) {
                 <button className="sharp-btn" onClick={handleReset}>
                     Reset
                 </button>
+                {battleState === turnStatus.SETUP && (
+                    <button
+                        className="sharp-btn"
+                        onClick={() => {
+                            handleGlossary(true);
+                        }}
+                    >
+                        Glossary
+                    </button>
+                )}
 
                 {battleState === turnStatus.SETUP && (
                     <div className="who-starts-select-container">

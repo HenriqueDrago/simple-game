@@ -5,7 +5,7 @@ function KeywordTooltip({ keyword, type, handleSetTooltip, depth }) {
     
     const handleMouseDown = (e) => {
         // Trigger on mouse wheel
-        if (e.button === 1) {
+        if (e.button === 1 || e.button === 0) {
             e.preventDefault(); // Stops the auto-scroll icon
             e.stopPropagation(); // Prevents the backdrop from closing tooltips
             const entry = keywordDictionary[keyword];

@@ -28,6 +28,7 @@ import {
 
 import "./App.css";
 import TooltipDisplay from "./components/TooltipDisplay.jsx";
+import Glossary from "./components/Glossary.jsx";
 
 function App() {
     // Declare states
@@ -55,6 +56,8 @@ function App() {
     });
 
     const [tooltipStack, setTooltipStack] = useState([]);
+
+    const [glossaryActive, setGlossaryActive] = useState(false);
 
     // Handles
     function handleAction(action, agentKey, nonAgentKey) {
@@ -259,18 +262,34 @@ function App() {
             const newStack = depth === 0 ? [] : [...prev];
 
             // Prevent appending the exact same keyword back-to-back
-            if (depth > 0 && prev.length > 0 && prev[prev.length - 1].keyword === tooltipData.keyword) {
-                return prev; 
+            if (
+                depth > 0 &&
+                prev.length > 0 &&
+                prev[prev.length - 1].keyword === tooltipData.keyword
+            ) {
+                return prev;
             }
 
             // Only calculate position for the initial box (Depth 0)
             if (depth === 0) {
-                const TOOLTIP_WIDTH = 320; 
+                const TOOLTIP_WIDTH = 320;
                 const MAX_TOOLTIP_HEIGHT = 400;
-                const MARGIN = 15; 
+                const MARGIN = 15;
 
-                const clampedX = Math.max(MARGIN, Math.min(tooltipData.x, window.innerWidth - TOOLTIP_WIDTH - MARGIN));
-                const clampedY = Math.max(MARGIN, Math.min(tooltipData.y, window.innerHeight - MAX_TOOLTIP_HEIGHT - MARGIN));
+                const clampedX = Math.max(
+                    MARGIN,
+                    Math.min(
+                        tooltipData.x,
+                        window.innerWidth - TOOLTIP_WIDTH - MARGIN,
+                    ),
+                );
+                const clampedY = Math.max(
+                    MARGIN,
+                    Math.min(
+                        tooltipData.y,
+                        window.innerHeight - MAX_TOOLTIP_HEIGHT - MARGIN,
+                    ),
+                );
 
                 newStack.push({ ...tooltipData, x: clampedX, y: clampedY });
             } else {
@@ -286,6 +305,10 @@ function App() {
     const handleClearTooltip = () => {
         setTooltipStack([]);
     };
+
+    function handleGlossary(value) {
+        setGlossaryActive(value);
+    }
 
     // Auxiliary Functions
     function updateStatsPoints(targetKey, statusKey, value) {
@@ -447,10 +470,9 @@ function App() {
 
     return (
         <div className="app-container">
-            {/* Invisible backdrop intercepts clicks outside of the tooltips */}
             {tooltipStack.length > 0 && (
                 <div
-                    className="tooltip-backdrop"
+                    className="backdrop"
                     onClick={handleClearTooltip}
                     onContextMenu={(e) => {
                         e.preventDefault();
@@ -459,7 +481,21 @@ function App() {
                 />
             )}
 
-            {/* Passing the stack down instead of activeTooltip */}
+            {glossaryActive && (
+                <div
+                    className="backdrop"
+                    onClick={() => {
+                        handleGlossary(false);
+                    }}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        handleGlossary(false);
+                    }}
+                />
+            )}
+
+            {glossaryActive && <Glossary handleGlossary={handleGlossary} />}
+
             <TooltipDisplay
                 tooltipStack={tooltipStack}
                 handleSetTooltip={handleSetTooltip}
@@ -470,6 +506,7 @@ function App() {
                 handleStart={handleStart}
                 handleReset={handleReset}
                 handleWhoStartsChange={handleWhoStartsChange}
+                handleGlossary={handleGlossary}
             />
             <GamePanel
                 game={game}

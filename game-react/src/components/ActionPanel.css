@@ -5,7 +5,6 @@
     flex-direction: column;
     width: 100%;
     margin-top: 10px;
-    gap: 15px; 
 }
 
 .button-grid {
@@ -35,7 +34,7 @@
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.button-grid button:hover {
+.button-grid button:not(:disabled):hover {
     background-color: #ffffff;
     color: #000000;
 }
@@ -81,15 +80,16 @@
 button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    pointer-events: auto; 
+    pointer-events: none;
     filter: grayscale(80%);
+    
+    animation: none !important;
+    box-shadow: none !important;
 }
 
 button:disabled:hover {
-    transform: none;
-    box-shadow: none; 
-    background-color: #000000;
-    color: #ffffff;
+    transform: none !important;
+
 }
 
 .meltdown-container {
@@ -114,7 +114,7 @@ button:disabled:hover {
     animation: pulse-fire 1.2s infinite alternate;
 }
 
-.meltdown-button:hover {
+.meltdown-button:not(:disabled):hover {
     background-color: #400000;
     border-color: #ff6600;
 }
@@ -159,17 +159,16 @@ button:disabled:hover {
     cursor: pointer;
 }
 
-.shadow-button-grid button:hover {
+.shadow-button-grid button:not(:disabled):hover {
     background-color: #2b1147;
     color: #f2e6ff;
     border-color: #9d00ff; 
     box-shadow: 0 6px 12px rgba(157, 0, 255, 0.3), inset 0 0 15px rgba(157, 0, 255, 0.5);
     transform: translateY(-2px);
 }
-
 .good-angel-button-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     max-width: 600px;
     width: 100%;
@@ -197,17 +196,16 @@ button:disabled:hover {
     letter-spacing: 1px;
 }
 
-.good-angel-button-grid button:hover {
+.good-angel-button-grid button:not(:disabled):hover {
     background-color: #FFF8DC; 
     color: #b89600; 
     border-color: #FFD700;
     box-shadow: 0 6px 15px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.8);
     transform: translateY(-2px);
 }
-
 .bad-angel-button-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     max-width: 600px;
     width: 100%;
@@ -235,10 +233,33 @@ button:disabled:hover {
     letter-spacing: 1px;
 }
 
-.bad-angel-button-grid button:hover {
+.bad-angel-button-grid button:not(:disabled):hover {
     background-color: #8B6508; 
     color: #ffffff; 
     border-color: #a67c00;
     box-shadow: 0 6px 10px rgba(139, 101, 8, 0.5);
     transform: translateY(-2px);
+}
+
+.actions-buttons-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+}
+
+.actions-mouse-wheel-explainer {
+    display: block; /* Ensures it takes up its own line */
+    text-align: center;
+    font-size: 0.9rem;
+    color: #9ca3af; /* Soft, muted gray */
+    font-style: italic;
+    
+    letter-spacing: 0.03em;
+    opacity: 0.8;
+
+    user-select: none;
+
+    padding: 5px;
 }

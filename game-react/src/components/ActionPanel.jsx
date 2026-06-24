@@ -1,18 +1,14 @@
 import "./ActionPanel.css";
 
-import {
-    ACTION_DESCRIPTIONS,
-    EFFECT_DESCRIPTIONS,
-} from "../utils/descriptions";
 import { entityKeys, turnStatus, aiKeys, eyeKeys } from "../utils/enums";
 import { constants, presetAi } from "../utils/constants";
 
 import {
     getUmbralActions,
     getNormalActions,
-    getGoodAngelActions,
-    getBadAngelActions,
+    getAngelActions
 } from "../utils/getters";
+import { DESCRIPTIONS } from "../utils/descriptions";
 
 function ActionPanel({
     handleAction,
@@ -32,8 +28,6 @@ function ActionPanel({
     const playerTwo = game.entities[entityKeys.PLAYER_TWO];
 
     const currEntity = isPlayerOneTurn ? playerOne : playerTwo;
-
-    const descriptions = { ...ACTION_DESCRIPTIONS, ...EFFECT_DESCRIPTIONS };
 
     // Turn and Button Visibility Logic
     const isHumanTurn =
@@ -110,11 +104,7 @@ function ActionPanel({
     if (currEntity.states.burdenOfStigma) {
         currentActions = [];
     } else if (showAngelButtons) {
-        if (game.eyeOfHeavens === eyeKeys.OPEN) {
-            currentActions = getGoodAngelActions();
-        } else if (game.eyeOfHeavens === eyeKeys.CLOSED) {
-            currentActions = getBadAngelActions();
-        }
+            currentActions = getAngelActions(game.eyeOfHeavens === eyeKeys.OPEN);
     } else if (showUmbralButtons) {
         currentActions = getUmbralActions();
     } else if (showButtons) {
@@ -148,39 +138,43 @@ function ActionPanel({
             )}
 
             {showButtons && (
-                <div className={containerClass}>
-                    {currentActions.map((action) => (
-                        <button
-                            key={action.key}
-                            onClick={() => {
-                                // LEFT CLICK = Execute Action
-                                handleClearTooltip();
-                                handleActionButton(action.key);
-                            }}
-                            onMouseDown={(e) => {
-                                // MIDDLE CLICK (Mousewheel) = Open Tooltip
-                                if (e.button === 1) {
-                                    e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
-                                    const entry = descriptions[action.key];
-                                    if (entry) {
-                                        handleSetTooltip({
-                                            keyword: entry.name,
-                                            type: entry.type,
-                                            description: entry.description,
-                                            x: e.clientX,
-                                            y: e.clientY - 30, // Spawns the box slightly above the cursor
-                                        });
+                <div className="actions-buttons-text-container">
+                    <span className="actions-mouse-wheel-explainer">
+                        Mouse wheel click to see action details...
+                    </span>
+                    <div className={containerClass}>
+                        {currentActions.map((action) => (
+                            <button
+                                key={action.key}
+                                onClick={() => {
+                                    handleClearTooltip();
+                                    handleActionButton(action.key);
+                                }}
+                                onMouseDown={(e) => {
+                                    // Mouse wheel opens tooltip
+                                    if (e.button === 1) {
+                                        e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
+                                        const entry = DESCRIPTIONS[action.key];
+                                        if (entry) {
+                                            handleSetTooltip({
+                                                keyword: entry.name,
+                                                type: entry.type,
+                                                description: entry.description,
+                                                x: e.clientX,
+                                                y: e.clientY - 30,
+                                            });
+                                        }
                                     }
+                                }}
+                                disabled={action.disabled}
+                                className={
+                                    action.specialClass || ""
                                 }
-                            }}
-                            disabled={action.disabled}
-                            className={
-                                action.isMeltdown ? "meltdown-button" : ""
-                            }
-                        >
-                            {action.label}
-                        </button>
-                    ))}
+                            >
+                                {action.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 

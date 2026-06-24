@@ -1,0 +1,114 @@
+/* Centers the modal and covers most of the screen */
+.glossary-container {
+    position: fixed;
+    top: 5vh;
+    left: 5vw;
+    right: 5vw;
+    bottom: 5vh;
+    background-color: black;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 64px 32px 32px 32px;
+    z-index: 9998;
+
+    /* Layout for the columns */
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+
+    /* Scrolling for large amounts of data */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+}
+
+.glossary-column-container {
+    flex-shrink: 0; 
+    width: 320px; /* Set a fixed width for your columns so they trigger the X scroll */
+    
+    /* Scrolling for columns: Y only */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    
+    padding-right: 12px; 
+}
+
+/* Archetype Column Headers */
+.glossary-column-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    border-bottom: 2px solid #4b5563;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+}
+
+/* Individual Terms */
+.glossary-item {
+    margin-bottom: 24px;
+    min-width: 300px;
+}
+
+.glossary-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #4b5563;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.glossary-item-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.glossary-item-type {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+    background-color: #1f2937;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.glossary-item-body {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #e5e7eb; /* Slightly softened white for readability */
+}
+
+.glossary-close-button {
+    position: fixed; 
+    top: calc(5vh + 16px);
+    right: calc(5vw + 16px);
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    font-size: 2.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.glossary-close-button:hover {
+    color: white;
+    background: transparent;
+}

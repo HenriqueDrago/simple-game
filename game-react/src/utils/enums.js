@@ -12,7 +12,7 @@ export const turnStatus = Object.freeze({
     WHEEL_TURN: 10,
     ARRAY_TURN: 11,
     EMINENCE_TURN: 12,
-    STARS_TURN: 13
+    STARS_TURN: 13,
 });
 
 export const entityKeys = Object.freeze({
@@ -38,7 +38,7 @@ export const sdmKeys = Object.freeze({
     CUSTOM: "custom",
     BEST: "best",
     FULL_DEF: "fullDef",
-    FULL_STR: "fullStr"
+    FULL_STR: "fullStr",
 });
 
 export const elementalKeys = Object.freeze({
@@ -82,7 +82,6 @@ export const actionKeys = Object.freeze({
     MELTDOWN: "meltdown",
     BABEL: "babel",
     ALIGN: "align",
-    HALT: "halt",
     GRACE_OF_HEAVENS: "graceOfHeavens",
     CELESTIAL_SCALE: "celestialScale",
     SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
@@ -92,7 +91,7 @@ export const actionKeys = Object.freeze({
     SACRAMENT: "sacrament",
     THE_WORD_MADE_FLESH: "theWordMadeFlesh",
     CHART: "chart",
-    WAIT: "wait", // code only
+    ASCEND: "ascend",
 });
 
 export const effectKeys = Object.freeze({
@@ -116,7 +115,7 @@ export const effectKeys = Object.freeze({
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
     ALIGNED: "aligned",
-    WHEEL: "elementalWheel",
+    ELEMENTAL_WHEEL: "elementalWheel",
     FROST: "frost",
     NATURE: "nature",
     SCORCH: "scorch",
@@ -126,7 +125,8 @@ export const effectKeys = Object.freeze({
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
-    ENLIGHTENMENT: "enlightenment",
+    ENLIGHTENMENT: "currEnlit",
+    MAX_ENLIGHTENMENT: "maxEnlit",
     ASCENDENCE_OF_SPIRIT: "ascendenceOfSpirit",
     EYE_OF_HEAVENS: "eyeOfHeavens",
     PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
@@ -134,13 +134,15 @@ export const effectKeys = Object.freeze({
     TRUE_DAMAGE: dmgTypes.TRUE,
     DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
-    OVERHEAT: "overheat",
+    OVERHEAT: "currOverheat",
+    MAX_OVERHEAT: "maxOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
     ELEMENTAL_ESSENCE: "elementalEssence",
     CRYOGENESIS: "cryogenesis",
     CUTOFF_WINGS: "cutoffWings",
-    INSIGHT: "insight",
+    INSIGHT: "currInsight",
+    MAX_INSIGHT: "maxInsight",
     BLEAK_DECEPTION: "bleakDeception",
     SACRED_FLAMES: "sacredFlames",
     BENEDICTION: "benediction",
@@ -149,13 +151,16 @@ export const effectKeys = Object.freeze({
     RUNIC_ARRAY: "runicArray",
     HEALTH: "currHp",
     MANA: "currMana",
-    TARNISHED_SIN: "tarnishedSin",
+    TARNISHED_SIN: "currTarnishedSin",
+    MAX_TARNISHED_SIN: "maxTarnishedSin",
     MAX_MANA: "maxMana",
     MAX_HEALTH: "maxHp",
     STR: "str",
     DEF: "def",
     DAMAGE_REDUCTION: "dr",
-    DEF_EFFECTIVENESS: "defEffect"
+    DEF_EFFECTIVENESS: "defEffect",
+    MITIGATION_RESOURCES: "mitigationResources",
+    ZENITH_OF_MORTALITY: "zenithOfMortality"
 });
 
 export const eyeKeys = Object.freeze({
@@ -167,9 +172,11 @@ export const eyeKeys = Object.freeze({
 export const entryTypes = Object.freeze({
     ACTION: "ACTION",
     STATE: "STATE",
-    RESOURCE: "RESOURCE",
     DAMAGE_TYPE: "DAMAGE TYPE",
     FIELD_EFFECT: "FIELD EFFECT",
     MECHANIC: "MECHANIC",
-    STAT: "STAT"
+    STAT: "STAT",
+    MITIGATION_RESOURCE: "MITIGATION RESOURCE",
+    FREE_RESOURCE: "FREE RESOURCE",
+    LIMITED_RESOURCE: "LIMITED RESOURCE",
 });
