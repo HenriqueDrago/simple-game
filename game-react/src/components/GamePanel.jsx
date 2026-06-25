@@ -32,6 +32,7 @@ function GamePanel({
                             .statDistributionMode
                     }
                     controller={game.entities[entityKeys.PLAYER_ONE].controller}
+                    game={game}
                 />
             )}
 
@@ -104,6 +105,7 @@ function GamePanel({
                             .statDistributionMode
                     }
                     controller={game.entities[entityKeys.PLAYER_TWO].controller}
+                    game={game}
                 />
             )}
         </div>

@@ -1,19 +1,20 @@
 import "./ControlPanel.css";
 import { presetAi } from "../utils/constants";
-import { sdmKeys, entityKeys } from "../utils/enums";
+import { sdmKeys, entityKeys, progKeys, aiKeys } from "../utils/enums";
 
 function ControlPanel({
     handleAiChange,
     handleDistributionModeChange,
     entityKey,
     statDistributionMode,
-    controller
+    controller,
+    game
 }) {
     const playerLabel = entityKey === entityKeys.PLAYER_ONE ? "Player One" : "Player Two";
 
     return (
         <div className="control-panel-container">
-            <div className="ai-selector">
+            {!(game.progressMode && entityKey === entityKeys.PLAYER_TWO) && (<div className="ai-selector">
                 <label htmlFor={`distribution-mode-${entityKey}`}>{playerLabel} Stats:</label>
                 <select
                     id={`distribution-mode-${entityKey}`}
@@ -24,13 +25,13 @@ function ControlPanel({
                 >
                     <option value={sdmKeys.RANDOM}>Random</option>
                     <option value={sdmKeys.CUSTOM}>Custom</option>
-                    <option value={sdmKeys.BEST}>"Best"</option>
+                    <option value={sdmKeys.BEST} disabled={controller === aiKeys.HUMAN}>"Best"</option>
                     <option value={sdmKeys.FULL_DEF}>Full Def</option>
                     <option value={sdmKeys.FULL_STR}>Full Str</option>
                 </select>
-            </div>
+            </div>)}
 
-            <div className="ai-selector">
+            {!(game.progressMode && entityKey === entityKeys.PLAYER_ONE) && (<div className="ai-selector">
                 <label htmlFor={`player-ai-${entityKey}`}>{playerLabel} Controller:</label>
                 <select
                     id={`player-ai-${entityKey}`}
@@ -38,12 +39,12 @@ function ControlPanel({
                     onChange={(e) => handleAiChange(e.target.value, entityKey)}
                 >
                     {Object.entries(presetAi).map(([aiKey, aiData]) => (
-                        <option key={aiKey} value={aiKey}>
+                        <option key={aiKey} value={aiKey} disabled={game.progressMode && game.progressStatus[aiKey] === progKeys.LOCKED}>
                             {aiData.name}
                         </option>
                     ))}
                 </select>
-            </div>
+            </div>)}
         </div>
     );
 }

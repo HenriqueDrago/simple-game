@@ -3,9 +3,8 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
     padding-top: 20px;
-    margin-bottom: 20px; 
     width: 100%;
 }
 
@@ -26,14 +25,16 @@
     margin: 0;
     color: #ffffff;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
 }
 
 .sub-announcer-text {
     margin: 0;
     font-weight: bold;
     letter-spacing: 1px;
-    color: #ffffff;
+    background: #ffffff;
+    color: #000000;
+    padding: 2px 8px;
 }
 
 .header-button-container {
@@ -41,20 +42,31 @@
     justify-content: center;
     align-items: center;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 15px;
+}
+
+.header-settings-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .sharp-btn {
     background-color: #000000;
     color: #ffffff;
     border: 2px solid #ffffff;
-    border-radius: 0; 
+    border-radius: 0;
     padding: 10px 25px;
     font-size: 1rem;
     font-weight: bold;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .sharp-btn:hover {
@@ -62,35 +74,64 @@
     color: #000000;
 }
 
-.who-starts-select-container {
+.sharp-setting-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 15px;
     font-family: inherit;
     background-color: #000000;
-    padding: 5px 15px;
+    padding: 10px 15px;
     border: 2px solid #ffffff;
-    border-radius: 0; 
+    border-radius: 0;
 }
 
-.who-starts-select-container label {
+.sharp-setting-box label {
     font-weight: bold;
     color: #ffffff;
+    text-transform: uppercase;
+    font-size: 0.9rem;
 }
 
 .sharp-select {
-    padding: 8px 10px;
+    padding: 6px 10px;
     background-color: #000000;
     color: #ffffff;
     border: 1px solid #ffffff;
-    border-radius: 0; 
+    border-radius: 0;
     font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
+    font-family: inherit;
+    outline: none;
+    
 }
 
 .sharp-select option {
     background-color: #000000;
     color: #ffffff;
+}
+
+.sharp-setting-box.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(80%);
+}
+
+.hover-help {
+    color: white;
+    opacity: 0.4;
+    font-size: 0.75rem;
+    margin-left: auto;
+    align-self: flex-start;
+    cursor: help;
+}
+
+.switch-help-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    gap: 3px;
 }

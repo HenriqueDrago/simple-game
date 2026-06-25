@@ -397,7 +397,7 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.MECHANIC,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes a RESOURCE of this type to decrease damage taken.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes a RESOURCES of this type to decrease damage taken.",
     },
 
     [effectKeys.MANA_BLEED]: {
@@ -842,7 +842,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "BENEDICTION",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL or PIERCING DAMAGE, lose BENEDICTION instead of ENLIGHTENMENT and grants SACRED FLAMES to the attacker based on the amount lost. At turn start, lose all BENEDICTION and restore RESOURCES based on the amount lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose BENEDICTION instead of ENLIGHTENMENT and grants SACRED FLAMES to the attacker based on the amount lost. At turn start, lose all BENEDICTION and restore RESOURCES based on the amount lost.",
     },
 
     [effectKeys.INSIGHT]: {
@@ -862,7 +862,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "HALO",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When taking PHYSICAL or PIERCING DAMAGE, consumes HALO to reduce the damage taken and gains RADIANCE based on the amount lost. At turn start, converts all HALO into ENLIGHTENMENT.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HALO to reduce the damage taken and gains RADIANCE based on the amount lost. At turn start, converts all HALO into ENLIGHTENMENT.",
     },
 
     [effectKeys.RADIANCE]: {

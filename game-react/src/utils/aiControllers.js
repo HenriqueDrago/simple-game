@@ -49,7 +49,7 @@ export function bloodknightAI(context) {
 
     // Use Sacrifice if not enough accumulated dmg
     if (
-        agent.currHp >= agent.maxHp * 0.5 &&
+        agent.currHp >= agent.maxHp * 0.6 &&
         agent.resources.bloodSacrifice +
             agent.attributes.str.value +
             agent.scoria <

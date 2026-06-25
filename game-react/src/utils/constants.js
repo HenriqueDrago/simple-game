@@ -173,8 +173,8 @@ export const presetAi = {
     [aiKeys.SIMPLE]: {
         name: "Mundane",
         best: {
-            str: 6,
-            def: 4,
+            str: 10,
+            def: 0,
         },
         caller: simpleAI,
         desc: [
@@ -200,8 +200,8 @@ export const presetAi = {
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
         best: {
-            str: 7,
-            def: 3,
+            str: 0,
+            def: 10,
         },
         caller: bloodknightAI,
         desc: [
@@ -214,8 +214,8 @@ export const presetAi = {
     [aiKeys.HEXER]: {
         name: "Hexer",
         best: {
-            str: 4,
-            def: 6,
+            str: 10,
+            def: 0,
         },
         caller: hexerAI,
         desc: [
@@ -246,11 +246,27 @@ export const presetAi = {
             effectKeys.MAX_OVERHEAT,
         ],
     },
+    [aiKeys.MAESTRO]: {
+        name: "Maestro",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: maestroAI,
+        desc: [
+            actionKeys.ATTUNE,
+            actionKeys.DA_CAPO,
+            actionKeys.SOUND_OF_SILENCE,
+            actionKeys.BABEL,
+            effectKeys.RESONANT,
+            effectKeys.SONORITY,
+        ],
+    },
     [aiKeys.ELEMENTALIST]: {
         name: "Elementalist",
         best: {
-            str: 5,
-            def: 5,
+            str: 0,
+            def: 10,
         },
         caller: elementalistAI,
         desc: [
@@ -267,6 +283,7 @@ export const presetAi = {
             effectKeys.CRYOGENESIS,
         ],
     },
+
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
@@ -290,24 +307,19 @@ export const presetAi = {
             effectKeys.CINDERS,
         ],
     },
-    [aiKeys.MAESTRO]: {
-        name: "Maestro",
+
+    [aiKeys.STARFARER]: {
+        name: "Starfarer (Unimplemented)",
         best: {
             str: 0,
             def: 10,
         },
-        caller: maestroAI,
-        desc: [
-            actionKeys.ATTUNE,
-            actionKeys.DA_CAPO,
-            actionKeys.SOUND_OF_SILENCE,
-            actionKeys.BABEL,
-            effectKeys.RESONANT,
-            effectKeys.SONORITY,
-        ],
+        caller: simpleAI,
+        desc: [],
     },
+
     [aiKeys.PALADIN]: {
-        name: "Paladin",
+        name: "Paladin (Incomplete)",
         best: {
             str: 0,
             def: 10,

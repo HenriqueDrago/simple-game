@@ -31,6 +31,7 @@ export const aiKeys = Object.freeze({
     CYBORG: "cyborg",
     MAESTRO: "maestro",
     ELEMENTALIST: "elementalist",
+    STARFARER: "starfarer"
 });
 
 export const sdmKeys = Object.freeze({
@@ -243,3 +244,10 @@ export const starfallPhases = Object.freeze({
     INDIGO_TRAIL: effectKeys.INDIGO_TRAIL,
     VIOLET_TRAIL: effectKeys.VIOLET_TRAIL,
 });
+
+export const progKeys = Object.freeze({
+    ALWAYS_OPEN: 0,
+    DEFEATED: 1,
+    OPEN_UNDEFEATED: 2,
+    LOCKED: 3,
+})

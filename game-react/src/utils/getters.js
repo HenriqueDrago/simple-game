@@ -1,4 +1,4 @@
-import { actionKeys, effectKeys } from "./enums";
+import { actionKeys, aiKeys, effectKeys, progKeys } from "./enums";
 
 export const getUmbralActions = () => [
     {
@@ -83,6 +83,8 @@ export const getNormalActions = (
     currEntity,
     canUseSpAtk,
     canUseDeploy,
+    progMode,
+    progStatus
 ) => {
     if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
         return [
@@ -108,83 +110,97 @@ export const getNormalActions = (
         {
             key: actionKeys.ATTACK,
             label: "Attack",
+            disabled: false,
         },
         {
             key: actionKeys.GUARD,
             label: "Guard",
+            disabled: false,
         },
         {
             key: actionKeys.HEAL,
             label: "Heal",
+            disabled: false,
         },
         {
             key: actionKeys.SPECIAL_ATTACK,
             label: "Special Attack",
-
             disabled: !canUseSpAtk,
         },
         {
             key: actionKeys.SACRIFICE,
             label: "Self Sacrifice",
+            disabled: progMode && !(progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED || progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN)
         },
         arrayActive
             ? {
                   key: actionKeys.CURSE,
                   label: "Curse",
+                  disabled: progMode && !(progStatus[aiKeys.HEXER] === progKeys.DEFEATED || progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN)
               }
             : {
                   key: actionKeys.ARRAY,
                   label: "Array",
+                  disabled: progMode && !(progStatus[aiKeys.HEXER] === progKeys.DEFEATED || progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN)
               },
         currEntity.states.weaponsDeployed
             ? {
                   key: actionKeys.LASER,
                   label: "Laser",
+                  disabled: progMode && !(progStatus[aiKeys.CYBORG] === progKeys.DEFEATED || progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN)
               }
             : {
                   key: actionKeys.DEPLOY,
                   label: "Deploy",
-                  disabled: !canUseDeploy,
+                  disabled: !canUseDeploy || progMode && !(progStatus[aiKeys.CYBORG] === progKeys.DEFEATED || progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN),
               },
 
         !currEntity.states.resonant
             ? {
                   key: actionKeys.ATTUNE,
                   label: "Attune",
+                  disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
               }
             : currEntity.sonority > 0
               ? {
                     key: actionKeys.BABEL,
                     label: "Babel",
+                    disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
                 }
               : currEntity.sonority < 0
                 ? {
                       key: actionKeys.SOUND_OF_SILENCE,
                       label: "The Sound of Silence",
+                      disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
                   }
                 : {
                       key: actionKeys.DA_CAPO,
                       label: "Da Capo",
+                      disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
                   },
 
         {
             key: actionKeys.ALIGN,
             label: "Align",
+            disabled: progMode && !(progStatus[aiKeys.ELEMENTALIST] === progKeys.DEFEATED || progStatus[aiKeys.ELEMENTALIST] === progKeys.ALWAYS_OPEN)
         },
 
         {
             key: actionKeys.CHART,
             label: "Chart",
+            disabled: progMode && !(progStatus[aiKeys.STARFARER] === progKeys.DEFEATED || progStatus[aiKeys.STARFARER] === progKeys.ALWAYS_OPEN)
         },
 
         {
             key: actionKeys.SHADOW_PACT,
             label: "Shadow Pact",
+            disabled: progMode && !(progStatus[aiKeys.SHADOW_SORCERER] === progKeys.DEFEATED || progStatus[aiKeys.SHADOW_SORCERER] === progKeys.ALWAYS_OPEN)
         },
 
         {
             key: actionKeys.AEGIS,
             label: "Aegis",
+            disabled: progMode && !(progStatus[aiKeys.PALADIN] === progKeys.DEFEATED || progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN)
         },
     ];
 };

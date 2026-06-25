@@ -1,10 +1,10 @@
 import { presetAi } from "../utils/constants";
 import { DESCRIPTIONS } from "../utils/descriptions";
-import { aiKeys } from "../utils/enums";
+import { aiKeys, progKeys } from "../utils/enums";
 import "./Glossary.css";
 
-function Glossary({ handleGlossary }) {
-    const aiObjects = [...Object.values(presetAi)];
+function Glossary({ handleGlossary, game }) {
+    const aiObjects = [...Object.entries(presetAi)];
     return (
         <div className="glossary-container">
             <button
@@ -17,11 +17,11 @@ function Glossary({ handleGlossary }) {
                 &times;
             </button>
 
-            {aiObjects.map((aiObj, i) => {
+            {aiObjects.map(([aiKey, aiObj], i) => {
                 const name =
-                    aiObj === presetAi[aiKeys.HUMAN] ? "General" : aiObj.name;
+                     aiKey === aiKeys.HUMAN ? "General" : aiObj.name;
 
-                if (!aiObj.desc) {
+                if (!aiObj.desc || (game.progressMode && game.progressStatus[aiKey] === progKeys.LOCKED)) {
                     return null;
                 }
 

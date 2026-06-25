@@ -1,0 +1,33 @@
+.toggle-switch {
+    width: 48px;
+    height: 28px;
+    padding: 2px;
+    border: 2px solid #ffffff;
+    background: #000000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+}
+
+.toggle-switch:hover {
+    background: #000000 !important;
+    color: inherit;
+}
+
+.toggle-switch:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.toggle-thumb {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    transition: transform 0.15s ease-out;
+}
+
+.toggle-switch.checked .toggle-thumb {
+    transform: translateX(20px);
+}

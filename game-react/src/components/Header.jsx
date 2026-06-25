@@ -1,5 +1,6 @@
 import "./Header.css";
 import { turnStatus, whoStartsKeys } from "../utils/enums";
+import Switch from "./Switch";
 
 function Header({
     game,
@@ -7,11 +8,11 @@ function Header({
     handleReset,
     handleWhoStartsChange,
     handleGlossary,
+    handleProgressToggle,
 }) {
     const battleState = game.status;
     const whoStarts = game.whoStarts;
 
-    // Determine the single active announcement
     let announcement = null;
     if (battleState === turnStatus.VICTORY) announcement = "Player One Wins!";
     else if (battleState === turnStatus.DEFEAT)
@@ -24,7 +25,6 @@ function Header({
         <div className="header-container">
             <div className="header-announcement-container">
                 <h1 className="main-header-text">Simple RPG</h1>
-
                 {announcement && (
                     <h2 className="sub-announcer-text">{announcement}</h2>
                 )}
@@ -39,7 +39,6 @@ function Header({
                 <button className="sharp-btn" onClick={handleReset}>
                     Reset
                 </button>
-
                 <button
                     className="sharp-btn"
                     onClick={() => {
@@ -48,9 +47,15 @@ function Header({
                 >
                     Glossary
                 </button>
+            </div>
 
+            <div className="header-settings-container">
                 {battleState === turnStatus.SETUP && (
-                    <div className="who-starts-select-container">
+                    <div
+                        className={`sharp-setting-box ${
+                            game.progressMode ? "disabled" : ""
+                        }`}
+                    >
                         <label htmlFor="who-starts-select">
                             Who goes first:
                         </label>
@@ -70,6 +75,25 @@ function Header({
                             </option>
                             <option value={whoStartsKeys.RANDOM}>Random</option>
                         </select>
+                    </div>
+                )}
+
+                {battleState === turnStatus.SETUP && (
+                    <div className="sharp-setting-box">
+                        <label>Progression Mode:</label>
+                        <div className="switch-help-container">
+                            <Switch
+                                checked={game.progressMode}
+                                handleToggle={handleProgressToggle}
+                                disabled={game.status !== turnStatus.SETUP}
+                            />
+                            <span
+                                className="hover-help"
+                                title={`Progression Mode: Disables most customisation features, enemies and actions. In this mode, the enemy always starts the battle and always has the "best" stats. Furthermore, to access new enemies you must first defeat the preceding one. Some actions are locked until you defeat the corresponding enemy.`}
+                            >
+                                [?]
+                            </span>
+                        </div>
                     </div>
                 )}
             </div>

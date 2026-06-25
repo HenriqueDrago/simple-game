@@ -27,6 +27,7 @@ import {
     actionKeys,
     starfallPhases,
     effectKeys,
+    progKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -45,6 +46,20 @@ function App() {
         turnCount: 0,
         eyeOfHeavens: eyeKeys.DORMANT,
         starQueue: null,
+        progressMode: false,
+        progressStatus: {
+            [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
+            [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,
+            [aiKeys.WARLOCK]: progKeys.LOCKED,
+            [aiKeys.BLOODKNIGHT]: progKeys.LOCKED,
+            [aiKeys.HEXER]: progKeys.LOCKED,
+            [aiKeys.CYBORG]: progKeys.LOCKED,
+            [aiKeys.MAESTRO]: progKeys.LOCKED,
+            [aiKeys.ELEMENTALIST]: progKeys.LOCKED,
+            [aiKeys.STARFARER]: progKeys.LOCKED,
+            [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
+            [aiKeys.PALADIN]: progKeys.LOCKED,
+        },
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -127,14 +142,26 @@ function App() {
             };
 
             if (currentMode === sdmKeys.BEST) {
-                updatedEntity = {
-                    ...updatedEntity,
-                    ...distributePoints(
-                        updatedEntity,
-                        currentMode,
-                        presetAi[controllerKey].best,
-                    ),
-                };
+                if (controllerKey === aiKeys.HUMAN) {
+                    updatedEntity = {
+                        ...updatedEntity,
+                        ...distributePoints(
+                            updatedEntity,
+                            sdmKeys.CUSTOM,
+                            presetAi[controllerKey].best,
+                        ),
+                        statDistributionMode: sdmKeys.CUSTOM,
+                    };
+                } else {
+                    updatedEntity = {
+                        ...updatedEntity,
+                        ...distributePoints(
+                            updatedEntity,
+                            currentMode,
+                            presetAi[controllerKey].best,
+                        ),
+                    };
+                }
             }
 
             return {
@@ -342,6 +369,44 @@ function App() {
         });
     }
 
+    function handleProgressToggle() {
+        setGame((prev) => {
+            console.log(prev);
+            if (prev.status !== turnStatus.SETUP) {
+                return prev;
+            }
+
+            if (prev.progressMode) {
+                return {
+                    ...prev,
+                    progressMode: false,
+                };
+            } else {
+                return {
+                    ...prev,
+                    progressMode: true,
+                    whoStarts: whoStartsKeys.PLAYER_TWO,
+                    entities: {
+                        ...prev.entities,
+                        [entityKeys.PLAYER_ONE]: {
+                            ...prev.entities[entityKeys.PLAYER_ONE],
+                            controller: aiKeys.HUMAN,
+                        },
+                        [entityKeys.PLAYER_TWO]: {
+                            ...distributePoints(
+                                createBaseEntity(),
+                                sdmKeys.BEST,
+                                presetAi[aiKeys.SIMPLE].best,
+                            ),
+                            controller: aiKeys.SIMPLE,
+                            statDistributionMode: sdmKeys.BEST,
+                        },
+                    },
+                };
+            }
+        });
+    }
+
     // Auxiliary Functions
     function updateStatsPoints(targetKey, statusKey, value) {
         setGame((prev) => {
@@ -520,6 +585,43 @@ function App() {
         }
     }, [game.status]);
 
+    // Progression Tracker
+    useEffect(() => {
+        if (game.status !== turnStatus.VICTORY || !game.progressMode) return;
+
+        setGame((prev) => {
+            const currController =
+                prev.entities[entityKeys.PLAYER_TWO].controller;
+
+            const keys = Object.keys(presetAi);
+            const currIndex = keys.indexOf(currController);
+
+            // If index is not found or human
+            if (currIndex === -1 || currIndex === 0) {
+                return prev;
+            }
+
+            const nextKey = keys[currIndex + 1];
+
+            // If next enemy is already defeated or is always open
+            if (
+                prev.progressStatus[nextKey] === progKeys.DEFEATED ||
+                prev.progressStatus[nextKey] === progKeys.ALWAYS_OPEN
+            ) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                progressStatus: {
+                    ...prev.progressStatus,
+                    [currController]: progKeys.DEFEATED,
+                    [nextKey]: progKeys.OPEN_UNDEFEATED,
+                },
+            };
+        });
+    }, [game.status, game.progressMode]);
+
     return (
         <div className="app-container">
             {tooltipStack.length > 0 && (
@@ -544,7 +646,9 @@ function App() {
                     }}
                 />
             )}
-            {glossaryActive && <Glossary handleGlossary={handleGlossary} />}
+            {glossaryActive && (
+                <Glossary handleGlossary={handleGlossary} game={game} />
+            )}
             <TooltipDisplay
                 tooltipStack={tooltipStack}
                 handleSetTooltip={handleSetTooltip}
@@ -556,6 +660,7 @@ function App() {
                 handleReset={handleReset}
                 handleWhoStartsChange={handleWhoStartsChange}
                 handleGlossary={handleGlossary}
+                handleProgressToggle={handleProgressToggle}
             />
 
             <GamePanel

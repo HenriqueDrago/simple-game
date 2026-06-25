@@ -6,7 +6,7 @@ import { constants, presetAi } from "../utils/constants";
 import {
     getUmbralActions,
     getNormalActions,
-    getAngelActions
+    getAngelActions,
 } from "../utils/getters";
 import { DESCRIPTIONS } from "../utils/descriptions";
 
@@ -106,7 +106,7 @@ function ActionPanel({
     if (currEntity.states.burdenOfStigma) {
         currentActions = [];
     } else if (showAngelButtons) {
-            currentActions = getAngelActions(game.eyeOfHeavens === eyeKeys.OPEN);
+        currentActions = getAngelActions(game.eyeOfHeavens === eyeKeys.OPEN);
     } else if (showUmbralButtons) {
         currentActions = getUmbralActions();
     } else if (showButtons) {
@@ -115,6 +115,8 @@ function ActionPanel({
             currEntity,
             canUseSpAtk,
             canUseDeploy,
+            game.progressMode,
+            game.progressStatus,
         );
     }
 
@@ -169,9 +171,7 @@ function ActionPanel({
                                     }
                                 }}
                                 disabled={action.disabled}
-                                className={
-                                    action.specialClass || ""
-                                }
+                                className={action.specialClass || ""}
                             >
                                 {action.label}
                             </button>
