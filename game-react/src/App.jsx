@@ -12,6 +12,7 @@ import {
     processWheelTurn,
     processArrayTurn,
     processEminenceTurn,
+    processStarfallTurn,
 } from "./utils/turnManagement.js";
 import { distributePoints, createBaseEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
@@ -24,6 +25,8 @@ import {
     whoStartsKeys,
     eyeKeys,
     actionKeys,
+    starfallPhases,
+    effectKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -41,6 +44,7 @@ function App() {
         whoStarts: whoStartsKeys.PLAYER_ONE,
         turnCount: 0,
         eyeOfHeavens: eyeKeys.DORMANT,
+        starQueue: null,
         entities: {
             [entityKeys.PLAYER_ONE]: {
                 ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
@@ -224,6 +228,7 @@ function App() {
                 elementalWheel: elementalKeys.INACTIVE,
                 turnCount: 0,
                 eyeOfHeavens: eyeKeys.DORMANT,
+                starQueue: null,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -237,8 +242,8 @@ function App() {
             const initialStatus =
                 prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
                 (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
-                    ? turnStatus.PLAYER_ONE_TURN
-                    : turnStatus.PLAYER_TWO_TURN;
+                    ? turnStatus.UPKEEP_PLAYER_ONE
+                    : turnStatus.UPKEEP_PLAYER_TWO;
 
             return {
                 ...prev,
@@ -301,13 +306,40 @@ function App() {
         });
     };
 
-    // Clears the entire stack instantly
     const handleClearTooltip = () => {
         setTooltipStack([]);
     };
 
     function handleGlossary(value) {
         setGlossaryActive(value);
+    }
+
+    function handleStarChange(targetKey, starKey, value) {
+        setGame((prev) => {
+            const currWhite =
+                prev.entities[targetKey].stars[effectKeys.WHITE_STAR];
+            const currColor = prev.entities[targetKey].stars[starKey];
+
+            const spent = Math.min(currWhite, Math.max(-currColor, value));
+
+            const newWhite = currWhite - spent;
+            const newColor = currColor + spent;
+
+            return {
+                ...prev,
+                entities: {
+                    ...prev.entities,
+                    [targetKey]: {
+                        ...prev.entities[targetKey],
+                        stars: {
+                            ...prev.entities[targetKey].stars,
+                            [effectKeys.WHITE_STAR]: newWhite,
+                            [starKey]: newColor,
+                        },
+                    },
+                },
+            };
+        });
     }
 
     // Auxiliary Functions
@@ -458,6 +490,26 @@ function App() {
         }
     }, [game.status]);
 
+    useEffect(() => {
+        if (game.status === turnStatus.STARS_TURN) {
+            if (!game.starQueue) {
+                const newQueue = Object.values(starfallPhases);
+
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        starQueue: newQueue,
+                    };
+                });
+            } else {
+                const timer = setTimeout(() => {
+                    setGame(processStarfallTurn);
+                }, 800);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [game.status, game.starQueue]);
+
     // Turn Start effects
     useEffect(() => {
         if (
@@ -480,7 +532,6 @@ function App() {
                     }}
                 />
             )}
-
             {glossaryActive && (
                 <div
                     className="backdrop"
@@ -493,9 +544,7 @@ function App() {
                     }}
                 />
             )}
-
             {glossaryActive && <Glossary handleGlossary={handleGlossary} />}
-
             <TooltipDisplay
                 tooltipStack={tooltipStack}
                 handleSetTooltip={handleSetTooltip}
@@ -508,11 +557,13 @@ function App() {
                 handleWhoStartsChange={handleWhoStartsChange}
                 handleGlossary={handleGlossary}
             />
+
             <GamePanel
                 game={game}
                 updateStatsPoints={updateStatsPoints}
                 handleDistributionModeChange={handleDistributionModeChange}
                 handleAiChange={handleAiChange}
+                handleStarChange={handleStarChange}
             />
             <ActionPanel
                 handleAction={handleAction}

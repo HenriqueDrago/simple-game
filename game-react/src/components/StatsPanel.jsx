@@ -127,15 +127,20 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
             )}
 
             <div className="stacks-wrapper">
-                {stackCounters.map(([label, field, color, backgroundColor]) => (
-                    <StackCounter
-                        key={field}
-                        label={label}
-                        value={resources[field]}
-                        color={color}
-                        backgroundColor={backgroundColor}
-                    />
-                ))}
+                {[...constants.freeResources].reverse().map((key) => {
+                    const counter = stackCounters[key];
+
+                    if (!counter) return null;
+
+                    return (
+                        <StackCounter
+                            key={key}
+                            label={counter.label}
+                            value={resources[key]}
+                            style={counter.style}
+                        />
+                    );
+                })}
             </div>
 
             {!isAngelView && (

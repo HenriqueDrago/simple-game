@@ -482,10 +482,254 @@ export const MECHANIC_DESCRIPTIONS = {
     },
 };
 
-/// Work in progress
 export const STAR_DESCRIPTIONS = {
+    [actionKeys.CHART]: {
+        name: "CHART",
+        type: entryTypes.ACTION,
+        description:
+            "Gains 3 WHITE STAR. If not in the STARGAZER state, enters the STARGAZER state.",
+    },
 
-}
+    [effectKeys.STARGAZER]: {
+        name: "STARGAZER",
+        type: entryTypes.STATE,
+        description:
+            "While active, enables STARFALL at turn end. During the action phase, enables a side-menu for star assignment.",
+    },
+
+    [effectKeys.STARFALL]: {
+        name: "STARFALL",
+        type: entryTypes.MECHANIC,
+        description:
+            "A special phase where colored stars act. Divided into twelve ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, and BLUE TRAILFALL. Skips the subphase if there are no corresponding stars or trails available.",
+    },
+
+    [effectKeys.RED_STARFALL]: {
+        name: "RED STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The first subphase of STARFALL, when RED STAR acts.",
+    },
+
+    [effectKeys.ORANGE_STARFALL]: {
+        name: "ORANGE STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The second subphase of STARFALL, when ORANGE STAR acts.",
+    },
+
+    [effectKeys.YELLOW_STARFALL]: {
+        name: "YELLOW STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The third subphase of STARFALL, when YELLOW STAR acts.",
+    },
+
+    [effectKeys.GREEN_STARFALL]: {
+        name: "GREEN STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The fourth subphase of STARFALL, when GREEN STAR acts.",
+    },
+
+    [effectKeys.BLUE_STARFALL]: {
+        name: "BLUE STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The fifth subphase of STARFALL, when BLUE STAR acts.",
+    },
+
+    [effectKeys.INDIGO_STARFALL]: {
+        name: "INDIGO STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The sixth subphase of STARFALL, when INDIGO STAR acts.",
+    },
+
+    [effectKeys.VIOLET_STARFALL]: {
+        name: "VIOLET STARFALL",
+        type: entryTypes.MECHANIC,
+        description: "The seventh subphase of STARFALL, when VIOLET STAR acts.",
+    },
+
+    [effectKeys.RED_TRAILFALL]: {
+        name: "RED TRAILFALL",
+        type: entryTypes.MECHANIC,
+        description: "The eighth subphase of STARFALL, when RED TRAIL acts.",
+    },
+
+    [effectKeys.ORANGE_TRAILFALL]: {
+        name: "ORANGE TRAILFALL",
+        type: entryTypes.MECHANIC,
+        description: "The ninth subphase of STARFALL, when ORANGE TRAIL acts.",
+    },
+
+    [effectKeys.YELLOW_TRAILFALL]: {
+        name: "YELLOW TRAILFALL",
+        type: entryTypes.MECHANIC,
+        description: "The tenth subphase of STARFALL, when YELLOW TRAIL acts.",
+    },
+
+    [effectKeys.GREEN_TRAILFALL]: {
+        name: "GREEN TRAILFALL",
+        type: entryTypes.MECHANIC,
+        description: "The eleventh subphase of STARFALL, when GREEN TRAIL acts.",
+    },
+
+    [effectKeys.BLUE_TRAILFALL]: {
+        name: "BLUE TRAILFALL",
+        type: entryTypes.MECHANIC,
+        description: "The twelfth subphase of STARFALL, when BLUE TRAIL acts.",
+    },
+
+    [effectKeys.WHITE_STAR]: {
+        name: "WHITE STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "No effect. Can be assigned colors to become RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, or VIOLET STAR.",
+    },
+
+    [effectKeys.RED_STAR]: {
+        name: "RED STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At RED STARFALL, deals PHYSICAL DAMAGE equal to RED STAR. When augmented, deals TRUE DAMAGE instead. When fractured, gains RED TRAIL equal to twice the amount fractured instead.",
+    },
+
+    [effectKeys.ORANGE_STAR]: {
+        name: "ORANGE STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At ORANGE STARFALL, consumes RESOURCES from the opponent equal to ORANGE STAR. When augmented, transfers them to self instead. When fractured, gains ORANGE TRAIL equal to twice the amount fractured instead.",
+    },
+
+    [effectKeys.YELLOW_STAR]: {
+        name: "YELLOW STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At YELLOW STARFALL, gains STARDUST equal to YELLOW STAR. When augmented, gains WHITE STAR instead. When fractured, gains YELLOW TRAIL equal to twice the amount fractured instead.",
+    },
+
+    [effectKeys.GREEN_STAR]: {
+        name: "GREEN STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At GREEN STARFALL, restores RESOURCES on self equal to GREEN STAR. When augmented, restores RESOURCES to the opponent instead. When fractured, gains GREEN TRAIL equal to twice the amount fractured instead.",
+    },
+
+    [effectKeys.BLUE_STAR]: {
+        name: "BLUE STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At BLUE STARFALL, loses all BLUE STAR, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
+    },
+
+    [effectKeys.INDIGO_STAR]: {
+        name: "INDIGO STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When a colored star takes an action, consumes INDIGO STAR to use the fractured version of that action instead. Fractured actions take priority over augmented ones. At INDIGO STARFALL, loses all INDIGO STAR and gains DIMMED INDIGO STAR equal to the amount lost.",
+    },
+
+    [effectKeys.VIOLET_STAR]: {
+        name: "VIOLET STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When a colored star takes an action, consumes VIOLET STAR to use the augmented version of that action instead. Then, gains DIMMED VIOLET STAR equal to the amount consumed. At VIOLET STARFALL, loses all VIOLET STAR and gains DIMMED VIOLET STAR equal to the amount lost.",
+    },
+
+    [effectKeys.DOME]: {
+        name: "DOME",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken.",
+    },
+
+    [effectKeys.GRAY_STAR]: {
+        name: "GRAY STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "Cannot be assigned a color. At turn end, converts into WHITE STAR.",
+    },
+
+    [effectKeys.STARDUST]: {
+        name: "STARDUST",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, for every 3 STARDUST on self, lose STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
+    },
+
+    [effectKeys.DIMMED_RED_STAR]: {
+        name: "DIMMED RED STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into RED STAR.",
+    },
+
+    [effectKeys.DIMMED_ORANGE_STAR]: {
+        name: "DIMMED ORANGE STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into ORANGE STAR.",
+    },
+
+    [effectKeys.DIMMED_YELLOW_STAR]: {
+        name: "DIMMED YELLOW STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into YELLOW STAR.",
+    },
+
+    [effectKeys.DIMMED_GREEN_STAR]: {
+        name: "DIMMED GREEN STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into GREEN STAR.",
+    },
+
+    [effectKeys.DIMMED_BLUE_STAR]: {
+        name: "DIMMED BLUE STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into BLUE STAR.",
+    },
+
+    [effectKeys.DIMMED_INDIGO_STAR]: {
+        name: "DIMMED INDIGO STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into INDIGO STAR.",
+    },
+
+    [effectKeys.DIMMED_VIOLET_STAR]: {
+        name: "DIMMED VIOLET STAR",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At turn start, converts into VIOLET STAR.",
+    },
+
+    [effectKeys.RED_TRAIL]: {
+        name: "RED TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At RED TRAILFALL, deals PHYSICAL DAMAGE equal to RED TRAIL. Then, loses all RED TRAIL on self.",
+    },
+
+    [effectKeys.ORANGE_TRAIL]: {
+        name: "ORANGE TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At ORANGE TRAILFALL, consumes RESOURCES from the opponent equal to ORANGE TRAIL. Then, loses all ORANGE TRAIL on self.",
+    },
+
+    [effectKeys.YELLOW_TRAIL]: {
+        name: "YELLOW TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At YELLOW TRAILFALL, gains STARDUST equal to YELLOW TRAIL. Then, loses all YELLOW TRAIL on self.",
+    },
+
+    [effectKeys.GREEN_TRAIL]: {
+        name: "GREEN TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At GREEN TRAILFALL, restores RESOURCES on self equal to GREEN TRAIL. Then, loses all GREEN TRAIL on self.",
+    },
+
+    [effectKeys.BLUE_TRAIL]: {
+        name: "BLUE TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At BLUE TRAILFALL, loses DIMMED BLUE STAR equal to BLUE TRAIL and gains DOME and GRAY STAR equal to the amount lost. If there are not enough DIMMED BLUE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
+    },
+};
 
 // Work in progress
 export const PALADIN_DESCRIPTIONS = {

@@ -44,12 +44,41 @@
 }
 
 .game-panel-upper-elements-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    width: 100%;
+    padding: 0px 5px 0px 5px;
 }
 
-.game-panel-upper-elements-container.only-eye {
+.upper-slot {
+    display: flex;
+}
+
+.upper-slot.left-slot {
+    justify-content: flex-start;
+}
+
+.upper-slot.center-slot {
     justify-content: center;
+}
+
+.stars-and-game-panel-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; 
+    align-items: center;
+    gap: 10px;
+    width: 100%; 
+}
+
+.stars-wrapper {
+    display: flex;
+}
+
+.left-stars {
+    justify-content: flex-end; /* Pushes P1 stars right against the center gap */
+}
+
+.right-stars {
+    justify-content: flex-start; /* Pushes P2 stars left against the center gap */
 }

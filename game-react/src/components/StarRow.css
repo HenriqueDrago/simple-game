@@ -1,0 +1,58 @@
+.colored-star-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; 
+    padding: 2px;
+    height: 24px;
+}
+
+.star-row-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.colored-star-row span {
+    min-width: 24px;
+    text-align: center;
+    font-size: 1rem;
+    color: white;
+}
+
+.colored-star-row button {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: bold;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+/* Hover style only applies when the button is fully active */
+.colored-star-row button:not(:disabled):hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Disabled State Styling */
+.colored-star-row button:disabled {
+    opacity: 0.25;
+    border-color: white;
+    color: white;
+    cursor: not-allowed;
+}

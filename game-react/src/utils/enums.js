@@ -160,7 +160,52 @@ export const effectKeys = Object.freeze({
     DAMAGE_REDUCTION: "dr",
     DEF_EFFECTIVENESS: "defEffect",
     MITIGATION_RESOURCES: "mitigationResources",
-    ZENITH_OF_MORTALITY: "zenithOfMortality"
+    ZENITH_OF_MORTALITY: "zenithOfMortality",
+
+    WHITE_STAR: "white",
+    GRAY_STAR: "gray",
+    RED_STAR: "red",
+    ORANGE_STAR: "orange",
+    YELLOW_STAR: "yellow",
+    GREEN_STAR: "green",
+    BLUE_STAR: "blue",
+    INDIGO_STAR: "indigo",
+    VIOLET_STAR: "violet",
+
+    DIMMED_RED_STAR: "dimRed",
+    DIMMED_ORANGE_STAR: "dimOrange",
+    DIMMED_YELLOW_STAR: "dimYellow",
+    DIMMED_GREEN_STAR: "dimGreen",
+    DIMMED_BLUE_STAR: "dimBlue",
+    DIMMED_INDIGO_STAR: "dimIndigo",
+    DIMMED_VIOLET_STAR: "dimViolet",
+
+    RED_TRAIL: "trailRed",
+    ORANGE_TRAIL: "trailOrange",
+    YELLOW_TRAIL: "trailYellow",
+    GREEN_TRAIL: "trailGreen",
+    BLUE_TRAIL: "trailBlue",
+    INDIGO_TRAIL: "trailIndigo",
+    VIOLET_TRAIL: "trailViolet",
+
+    STARDUST: "stardust",
+
+    STARGAZER: "stargazer",
+    STARFALL: "starfall",
+    DOME: "dome",
+
+    RED_STARFALL: "redStarfall",
+    ORANGE_STARFALL: "orangeStarfall",
+    YELLOW_STARFALL: "yellowStarfall",
+    GREEN_STARFALL: "greenStarfall",
+    BLUE_STARFALL: "blueStarfall",
+    INDIGO_STARFALL: "indigoStarfall",
+    VIOLET_STARFALL: "violetStarfall",
+    RED_TRAILFALL: "redTrailfall",
+    ORANGE_TRAILFALL: "orangeTrailfall",
+    YELLOW_TRAILFALL: "yellowTrailfall",
+    GREEN_TRAILFALL: "greenTrailfall",
+    BLUE_TRAILFALL: "blueTrailfall",
 });
 
 export const eyeKeys = Object.freeze({
@@ -179,4 +224,22 @@ export const entryTypes = Object.freeze({
     MITIGATION_RESOURCE: "MITIGATION RESOURCE",
     FREE_RESOURCE: "FREE RESOURCE",
     LIMITED_RESOURCE: "LIMITED RESOURCE",
+});
+
+export const starfallPhases = Object.freeze({
+    STARFALL_INIT: 0,
+    RED_STAR: effectKeys.RED_STAR,
+    ORANGE_STAR: effectKeys.ORANGE_STAR,
+    YELLOW_STAR: effectKeys.YELLOW_STAR,
+    GREEN_STAR: effectKeys.GREEN_STAR,
+    BLUE_STAR: effectKeys.BLUE_STAR,
+    INDIGO_STAR: effectKeys.INDIGO_STAR,
+    VIOLET_STAR: effectKeys.VIOLET_STAR,
+    RED_TRAIL: effectKeys.RED_TRAIL,
+    ORANGE_TRAIL: effectKeys.ORANGE_TRAIL,
+    YELLOW_TRAIL: effectKeys.YELLOW_TRAIL,
+    GREEN_TRAIL: effectKeys.GREEN_TRAIL,
+    BLUE_TRAIL: effectKeys.BLUE_TRAIL,
+    INDIGO_TRAIL: effectKeys.INDIGO_TRAIL,
+    VIOLET_TRAIL: effectKeys.VIOLET_TRAIL,
 });

@@ -17,6 +17,7 @@ const STATE_MAPPINGS = [
     { key: "aligned", label: "Aligned" },
     { key: "burdenOfStigma", label: "Burden of Stigma" },
     { key: "ascendenceOfSpirit", label: "Ascendence of Spirit" },
+    { key: "stargazer", label: "Stargazer"},
 ];
 
 function StateBadges({ states }) {

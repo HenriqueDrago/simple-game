@@ -10,7 +10,7 @@ import {
     elementalistAI,
 } from "./aiControllers.js";
 
-import { aiKeys, actionKeys, effectKeys } from "./enums.js";
+import { aiKeys, actionKeys, effectKeys, starfallPhases } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
 
@@ -69,6 +69,9 @@ const SCORCH_PASSIVE_MULT = 1.5;
 const FLAMES_ABSORPTION_MULTIPLIER = 1;
 const BENEDICTION_GEN = 2;
 
+const CHART_STAR_GAIN = 3;
+const STARDUST_RATE_CONVERSION = 3;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -90,6 +93,8 @@ const freeResources = [
     effectKeys.RADIANCE,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.SACRED_FLAMES,
+    effectKeys.DOME,
+    effectKeys.STARDUST,
 ];
 
 const limitedResources = [
@@ -137,6 +142,8 @@ export const constants = {
     FLAMES_ABSORPTION_MULTIPLIER,
     MAX_INSIGHT,
     MAX_TARNISHED_SIN,
+    CHART_STAR_GAIN,
+    STARDUST_RATE_CONVERSION,
 };
 
 export const presetAi = {
@@ -336,6 +343,7 @@ const transformativeActions = [
     actionKeys.BLACK_MAYHEM,
     actionKeys.ALIGN,
     actionKeys.HALT,
+    actionKeys.CHART,
 ];
 
 export const actionsClass = {
@@ -344,61 +352,187 @@ export const actionsClass = {
     transformativeActions,
 };
 
-export const stackCounters = [
-    [
-        "Blood Sacrifice",
-        effectKeys.BLOOD_SACRIFICE,
-        "#ff3333",
-        "rgba(255, 51, 51, 0.15)",
-    ],
-    ["Poison", effectKeys.POISON, "#00e676", "rgba(0, 230, 118, 0.15)"],
-    [
-        "Cryogenesis",
-        effectKeys.CRYOGENESIS,
-        "#00e5ff",
-        "rgba(0, 229, 255, 0.15)",
-    ],
-    [
-        "Shackled Mana",
-        effectKeys.SHACKLED_MANA,
-        "#2979ff",
-        "rgba(41, 121, 255, 0.15)",
-    ],
+export const stackCounters = {
+    [effectKeys.BLOOD_SACRIFICE]: {
+        label: "Blood Sacrifice",
+        style: {
+            color: "#ff3333",
+            borderColor: "#ff3333",
+            backgroundColor: "rgba(255, 51, 51, 0.2)",
+        },
+    },
 
-    // Shadowflame
-    [
-        "Shadowflame",
-        effectKeys.SHADOWFLAME,
-        "#d500f9",
-        "rgba(213, 0, 249, 0.15)",
-    ],
-    [
-        "Unrelenting Shadows",
-        effectKeys.UNRELENTING_SHADOWS,
-        "#651fff",
-        "rgba(101, 31, 255, 0.15)",
-    ],
-    [
-        "Lingering Ember",
-        effectKeys.LINGERING_EMBER,
-        "#f50057",
-        "rgba(245, 0, 87, 0.15)",
-    ],
-    ["Cinders", effectKeys.CINDERS, "#9e9e9e", "rgba(158, 158, 158, 0.15)"],
+    [effectKeys.POISON]: {
+        label: "Poison",
+        style: {
+            color: "#00e676",
+            borderColor: "#00e676",
+            backgroundColor: "rgba(0, 230, 118, 0.2)",
+        },
+    },
 
-    // Holy Effects
-    ["Radiance", effectKeys.RADIANCE, "#ffea00", "rgba(255, 234, 0, 0.15)"],
-    ["Halo", effectKeys.HALO, "#fff59d", "rgba(255, 245, 157, 0.15)"],
-    [
-        "Sacred Flames",
-        effectKeys.SACRED_FLAMES,
-        "#ffb300",
-        "rgba(255, 179, 0, 0.15)",
-    ],
-    [
-        "Benediction",
-        effectKeys.BENEDICTION,
-        "#80d8ff",
-        "rgba(128, 216, 255, 0.15)",
-    ],
+    [effectKeys.CRYOGENESIS]: {
+        label: "Cryogenesis",
+        style: {
+            color: "#00e5ff",
+            borderColor: "#00e5ff",
+            backgroundColor: "rgba(0, 229, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.SHACKLED_MANA]: {
+        label: "Shackled Mana",
+        style: {
+            color: "#2979ff",
+            borderColor: "#2979ff",
+            backgroundColor: "rgba(41, 121, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.SHADOWFLAME]: {
+        label: "Shadowflame",
+        style: {
+            color: "#d500f9",
+            borderColor: "#d500f9",
+            backgroundColor: "rgba(213, 0, 249, 0.2)",
+        },
+    },
+
+    [effectKeys.UNRELENTING_SHADOWS]: {
+        label: "Unrelenting Shadows",
+        style: {
+            color: "#651fff",
+            borderColor: "#651fff",
+            backgroundColor: "rgba(101, 31, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.LINGERING_EMBER]: {
+        label: "Lingering Ember",
+        style: {
+            color: "#f50057",
+            borderColor: "#f50057",
+            backgroundColor: "rgba(245, 0, 87, 0.2)",
+        },
+    },
+
+    [effectKeys.CINDERS]: {
+        label: "Cinders",
+        style: {
+            color: "#e0e0e0",
+            borderColor: "#9e9e9e",
+            backgroundColor: "rgba(158, 158, 158, 0.2)",
+        },
+    },
+
+    [effectKeys.RADIANCE]: {
+        label: "Radiance",
+        style: {
+            color: "#ffea00",
+            borderColor: "#ffea00",
+            backgroundColor: "rgba(255, 234, 0, 0.2)",
+        },
+    },
+
+    [effectKeys.HALO]: {
+        label: "Halo",
+        style: {
+            color: "#fff59d",
+            borderColor: "#fff59d",
+            backgroundColor: "rgba(255, 245, 157, 0.2)",
+        },
+    },
+
+    [effectKeys.SACRED_FLAMES]: {
+        label: "Sacred Flames",
+        style: {
+            color: "#ffb300",
+            borderColor: "#ffb300",
+            backgroundColor: "rgba(255, 179, 0, 0.2)",
+        },
+    },
+
+    [effectKeys.DOME]: {
+        label: "Dome",
+        style: {
+            color: "#80d8ff",
+            borderColor: "#80d8ff",
+            backgroundColor: "rgba(128, 216, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.STARDUST]: {
+        label: "Stardust",
+        style: {
+            color: "#ff8a65",
+            borderColor: "#ff8a65",
+            backgroundColor: "rgba(255, 138, 101, 0.2)",
+        },
+    },
+};
+
+export const coloredStars = [
+    {
+        name: "red",
+        color: "#ff5a5f",
+        star: effectKeys.RED_STAR,
+        dimmed: effectKeys.DIMMED_RED_STAR,
+        trail: effectKeys.RED_TRAIL,
+        starPhase: starfallPhases.RED_STAR,
+        trailPhase: starfallPhases.RED_TRAIL,
+    },
+    {
+        name: "orange",
+        color: "#ffb347",
+        star: effectKeys.ORANGE_STAR,
+        dimmed: effectKeys.DIMMED_ORANGE_STAR,
+        trail: effectKeys.ORANGE_TRAIL,
+        starPhase: starfallPhases.ORANGE_STAR,
+        trailPhase: starfallPhases.ORANGE_TRAIL,
+    },
+    {
+        name: "yellow",
+        color: "#fff275",
+        star: effectKeys.YELLOW_STAR,
+        dimmed: effectKeys.DIMMED_YELLOW_STAR,
+        trail: effectKeys.YELLOW_TRAIL,
+        starPhase: starfallPhases.YELLOW_STAR,
+        trailPhase: starfallPhases.YELLOW_TRAIL,
+    },
+    {
+        name: "green",
+        color: "#7dff8a",
+        star: effectKeys.GREEN_STAR,
+        dimmed: effectKeys.DIMMED_GREEN_STAR,
+        trail: effectKeys.GREEN_TRAIL,
+        starPhase: starfallPhases.GREEN_STAR,
+        trailPhase: starfallPhases.GREEN_TRAIL,
+    },
+    {
+        name: "blue",
+        color: "#6ec6ff",
+        star: effectKeys.BLUE_STAR,
+        dimmed: effectKeys.DIMMED_BLUE_STAR,
+        trail: effectKeys.BLUE_TRAIL,
+        starPhase: starfallPhases.BLUE_STAR,
+        trailPhase: starfallPhases.BLUE_TRAIL,
+    },
+    {
+        name: "indigo",
+        color: "#8b7dff",
+        star: effectKeys.INDIGO_STAR,
+        dimmed: effectKeys.DIMMED_INDIGO_STAR,
+        trail: effectKeys.INDIGO_TRAIL,
+        starPhase: starfallPhases.INDIGO_STAR,
+        trailPhase: starfallPhases.INDIGO_TRAIL,
+    },
+    {
+        name: "violet",
+        color: "#d291ff",
+        star: effectKeys.VIOLET_STAR,
+        dimmed: effectKeys.DIMMED_VIOLET_STAR,
+        trail: effectKeys.VIOLET_TRAIL,
+        starPhase: starfallPhases.VIOLET_STAR,
+        trailPhase: starfallPhases.VIOLET_TRAIL,
+    },
 ];

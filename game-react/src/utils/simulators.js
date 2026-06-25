@@ -39,6 +39,7 @@ export const simulators = {
     [actionKeys.GRACE_OF_HEAVENS]: simulateGraceOfHeavens,
     [actionKeys.GIFT_OF_APOTHEOSIS]: simulateGiftOfApotheosis,
     [actionKeys.SACRAMENT]: simulateSacrament,
+    [actionKeys.CHART]: simulateChart,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -936,6 +937,28 @@ function simulateSacrament({ prev, agent, agentKey }) {
                         agent.resources.benediction +
                         agent.revelation * constants.BENEDICTION_GEN,
                 },
+            },
+        },
+    };
+}
+
+function simulateChart({ prev, agent, agentKey }) {
+    const newWhite = agent.stars.white + constants.CHART_STAR_GAIN;
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                stars: {
+                    ...agent.stars,
+                    white: newWhite,
+                },
+                states: {
+                    ...agent.states,
+                    stargazer: true,
+                }
             },
         },
     };

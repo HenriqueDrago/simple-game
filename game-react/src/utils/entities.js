@@ -316,6 +316,8 @@ export function createBaseEntity() {
             cryogenesis: 0,
             sacredFlames: 0,
             benediction: 0,
+            stardust: 0,
+            [effectKeys.DOME]: 0,
         },
         states: {
             guarding: false,
@@ -334,6 +336,32 @@ export function createBaseEntity() {
             cutoffWings: false,
             ascendenceOfSpirit: false,
             burdenOfStigma: false,
+            stargazer: false,
+        },
+        stars: {
+            white: 0,
+            gray: 0,
+            red: 0,
+            orange: 0,
+            yellow: 0,
+            green: 0,
+            blue: 0,
+            indigo: 0,
+            violet: 0,
+            dimRed: 0,
+            dimOrange: 0,
+            dimYellow: 0,
+            dimGreen: 0,
+            dimBlue: 0,
+            dimIndigo: 0,
+            dimViolet: 0,
+            trailRed: 0,
+            trailOrange: 0,
+            trailYellow: 0,
+            trailGreen: 0,
+            trailBlue: 0,
+            trailIndigo: 0,
+            trailViolet: 0,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -392,8 +420,6 @@ export function dealDamage(
             : dmgType === dmgTypes.PIERCING
               ? draftAttacker.sonority
               : 0;
-
-    console.log(additionalDmg);
 
     const scorchAtkMult =
         wheel === elementalKeys.SCORCH && attacker.states.aligned
@@ -475,8 +501,6 @@ export function dealDamage(
                 ? -draftDefender.sonority
                 : 0;
 
-        console.log([effectiveDef, drMult, flatDr]);
-
         const finalDmg = Math.max(
             1,
             Math.floor(
@@ -489,30 +513,36 @@ export function dealDamage(
             ),
         );
 
-        console.log(finalDmg);
-
         // Mitigation
+        const domeConsumed =
+            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                ? Math.min(finalDmg, defender.resources[effectKeys.DOME])
+                : 0;
+
         const haloConsumed =
             dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? Math.min(finalDmg, draftDefender.resources.halo)
+                ? Math.min(
+                      finalDmg - domeConsumed,
+                      draftDefender.resources.halo,
+                  )
                 : 0;
         const cryoConsumed =
             dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
                 ? Math.min(
-                      finalDmg - haloConsumed,
+                      finalDmg - haloConsumed - domeConsumed,
                       draftDefender.resources.cryogenesis,
                   )
                 : 0;
         const emberConsumed =
             dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
                 ? Math.min(
-                      finalDmg - haloConsumed - cryoConsumed,
+                      finalDmg - haloConsumed - cryoConsumed - domeConsumed,
                       draftDefender.resources.lingeringEmber,
                   )
                 : 0;
 
         const damagePostMitigation =
-            finalDmg - emberConsumed - haloConsumed - cryoConsumed;
+            finalDmg - emberConsumed - haloConsumed - cryoConsumed - domeConsumed;
 
         const defenderNewHp = Math.max(
             0,
@@ -525,6 +555,8 @@ export function dealDamage(
             defender.resources.lingeringEmber - emberConsumed;
         const defenderNewRadiance = defender.resources.radiance + haloConsumed;
         const newCinders = defender.resources.cinders + emberConsumed;
+
+        const newDome = defender.resources[effectKeys.DOME] - domeConsumed;
 
         const thornsDmg =
             isArrayActive && dmgType === dmgTypes.PHYSICAL
@@ -550,6 +582,7 @@ export function dealDamage(
                 radiance: defenderNewRadiance,
                 cryogenesis: defenderNewCryo,
                 cinders: newCinders,
+                [effectKeys.DOME]: newDome,
             },
         };
     }
@@ -619,24 +652,31 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     );
 
     // Mitigation
+    const domeConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg, entity.resources.dome)
+            : 0;
     const haloConsumed =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(finalDmg, entity.resources.halo)
+            ? Math.min(finalDmg, entity.resources.halo - domeConsumed)
             : 0;
     const cryoConsumed =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(finalDmg - haloConsumed, entity.resources.cryogenesis)
+            ? Math.min(
+                  finalDmg - haloConsumed - domeConsumed,
+                  entity.resources.cryogenesis,
+              )
             : 0;
     const emberConsumed =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
             ? Math.min(
-                  finalDmg - haloConsumed - cryoConsumed,
+                  finalDmg - haloConsumed - cryoConsumed - domeConsumed,
                   entity.resources.lingeringEmber,
               )
             : 0;
 
     const damagePostMitigation =
-        finalDmg - emberConsumed - haloConsumed - cryoConsumed;
+        finalDmg - emberConsumed - haloConsumed - cryoConsumed - domeConsumed;
 
     let newHp = Math.max(0, entity.currHp - damagePostMitigation);
 
@@ -645,6 +685,7 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     const newEmbers = entity.resources.lingeringEmber - emberConsumed;
     const newRadiance = entity.resources.radiance + haloConsumed;
     const newCinders = entity.resources.cinders + emberConsumed;
+    const newDome = entity.resources[effectKeys.DOME] - domeConsumed;
 
     return {
         ...entity,
@@ -656,6 +697,7 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
             radiance: newRadiance,
             cryogenesis: newCryo,
             cinders: newCinders,
+            dome: newDome,
         },
     };
 }

@@ -39,16 +39,15 @@ function Header({
                 <button className="sharp-btn" onClick={handleReset}>
                     Reset
                 </button>
-                {battleState === turnStatus.SETUP && (
-                    <button
-                        className="sharp-btn"
-                        onClick={() => {
-                            handleGlossary(true);
-                        }}
-                    >
-                        Glossary
-                    </button>
-                )}
+
+                <button
+                    className="sharp-btn"
+                    onClick={() => {
+                        handleGlossary(true);
+                    }}
+                >
+                    Glossary
+                </button>
 
                 {battleState === turnStatus.SETUP && (
                     <div className="who-starts-select-container">

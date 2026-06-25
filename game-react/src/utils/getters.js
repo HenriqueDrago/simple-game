@@ -84,7 +84,7 @@ export const getNormalActions = (
     canUseSpAtk,
     canUseDeploy,
 ) => {
-    if (currEntity.states.thermalOverload) {
+    if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
         return [
             {
                 key: actionKeys.ASCEND,
@@ -94,7 +94,7 @@ export const getNormalActions = (
         ];
     }
 
-    if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
+    if (currEntity.states.thermalOverload) {
         return [
             {
                 key: actionKeys.MELTDOWN,
@@ -175,7 +175,6 @@ export const getNormalActions = (
         {
             key: actionKeys.CHART,
             label: "Chart",
-            disabled: true,
         },
 
         {

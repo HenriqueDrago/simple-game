@@ -1,17 +1,13 @@
 import './StackCounter.css';
 
-function StackCounter({ label, value, color, backgroundColor }) {
+function StackCounter({ label, value, style }) {
     // If the stack is 0 or less, render nothing
     if (value <= 0) return null;
 
     return (
         <div 
             className="stack-counter-container"
-            style={{
-                color: color,
-                borderColor: color,
-                backgroundColor: backgroundColor
-            }}
+            style={style}
         >
             <span>{label}</span>
             <span className="stack-value">{value}</span>

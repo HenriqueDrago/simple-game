@@ -1,7 +1,7 @@
-import { constants, actionsClass } from "./constants.js";
+import { constants, actionsClass, coloredStars } from "./constants.js";
 import {
     consumeResources,
-    createBaseEntity,
+    // createBaseEntity,
     gainMana,
     loseMana,
     restoreResources,
@@ -15,7 +15,9 @@ import {
     effectKeys,
     eyeKeys,
     dmgTypes,
+    starfallPhases,
 } from "./enums.js";
+import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
 
 function processEntityDeathStates(entity) {
     let draft = { ...entity };
@@ -81,40 +83,84 @@ export function processUpkeep(prev) {
     }
 
     // Enlightenment (Ascendence Trigger)
-    if (
-        draftTarget.currEnlit >= 100 &&
-        !draftTarget.states.ascendenceOfSpirit
-    ) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            Infinity,
-            effectKeys.ENLIGHTENMENT,
-        );
+    // if (
+    //     draftTarget.currEnlit >= 100 &&
+    //     !draftTarget.states.ascendenceOfSpirit
+    // ) {
+    //     const { draftEntity, resourcesConsumed } = consumeResources(
+    //         draftTarget,
+    //         Infinity,
+    //         effectKeys.ENLIGHTENMENT,
+    //     );
 
-        draftTarget = {
-            ...draftEntity,
-            states: {
-                ...createBaseEntity().states,
-                ascendenceOfSpirit: true,
-            },
-        };
+    //     draftTarget = {
+    //         ...draftEntity,
+    //         states: {
+    //             ...createBaseEntity().states,
+    //             ascendenceOfSpirit: true,
+    //         },
+    //     };
 
-        draftTarget = restoreResources(
-            draftTarget,
-            resourcesConsumed.totalConsumption,
-            prev.elementalWheel,
-        );
+    //     draftTarget = restoreResources(
+    //         draftTarget,
+    //         resourcesConsumed.totalConsumption,
+    //         prev.elementalWheel,
+    //     );
 
-        const newRev =
-            draftTarget.revelation +
+    //     const newRev =
+    //         draftTarget.revelation +
+    //         Math.floor(
+    //             draftTarget.currInsight / constants.INSIGHT_TO_REV_FACTOR,
+    //         );
+
+    //     draftTarget = {
+    //         ...draftTarget,
+    //         revelation: newRev,
+    //     };
+    // }
+
+    // Stardust
+    if (draftTarget.resources[effectKeys.STARDUST] > 0) {
+        const newStardust =
+            draftTarget.resources[effectKeys.STARDUST] %
+            constants.STARDUST_RATE_CONVERSION;
+        const newWhites =
+            draftTarget.stars[effectKeys.WHITE_STAR] +
             Math.floor(
-                draftTarget.currInsight / constants.INSIGHT_TO_REV_FACTOR,
+                draftTarget.resources[effectKeys.STARDUST] /
+                    constants.STARDUST_RATE_CONVERSION,
             );
 
         draftTarget = {
             ...draftTarget,
-            revelation: newRev,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.STARDUST]: newStardust,
+            },
+            stars: {
+                ...draftTarget.stars,
+                [effectKeys.WHITE_STAR]: newWhites,
+            },
         };
+    }
+
+    // Dimmed Stars
+    const hasDim = coloredStars.some(
+        (curr) => draftTarget.stars[curr.dimmed] > 0,
+    );
+    if (hasDim) {
+        for (let value of Object.values(coloredStars)) {
+            draftTarget = {
+                ...draftTarget,
+                stars: {
+                    ...draftTarget.stars,
+                    [value.star]:
+                        draftTarget.stars[value.star] +
+                        draftTarget.stars[value.dimmed],
+                    [value.dimmed]: 0,
+                },
+            };
+        }
     }
 
     // Sacred Flames
@@ -404,6 +450,21 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             };
         }
 
+        // Gray Stars
+        if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
+            const newWhite =
+                draftCurrActor.stars[effectKeys.GRAY_STAR] +
+                draftCurrActor.stars[effectKeys.WHITE_STAR];
+            draftCurrActor = {
+                ...draftCurrActor,
+                stars: {
+                    ...draftCurrActor.stars,
+                    [effectKeys.WHITE_STAR]: newWhite,
+                    [effectKeys.GRAY_STAR]: 0,
+                },
+            };
+        }
+
         // Cutoff Wings
         if (draftCurrActor.states.cutoffWings) {
             draftCurrActor = {
@@ -473,11 +534,9 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
 
-    console.log("turn count");
-    console.log(newGame.turnCount);
-    console.log(newGame.turnCount % 2 === 0);
-
-    if (
+    if (draftCurrActor.states[effectKeys.STARGAZER]) {
+        nextStatus = turnStatus.STARS_TURN;
+    } else if (
         newGame.turnCount % 2 === 0 &&
         newGame.elementalWheel !== elementalKeys.INACTIVE
     ) {
@@ -596,8 +655,6 @@ export function processArrayTurn(prev) {
     if (prev.eyeOfHeavens !== eyeKeys.DORMANT) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
-
-    console.log(`array: ${prev.remainingArray}`);
 
     if (prev.remainingArray <= 0) {
         return {
@@ -812,6 +869,276 @@ export function processEminenceTurn(prev) {
             ...prev.entities,
             [entityKeys.PLAYER_ONE]: { ...playerOne },
             [entityKeys.PLAYER_TWO]: { ...playerTwo },
+        },
+    };
+}
+
+export function processStarfallTurn(prev) {
+    // Calculate what the turn after starfall should be
+    let nextTurnStatus =
+        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
+            ? turnStatus.UPKEEP_PLAYER_TWO
+            : turnStatus.UPKEEP_PLAYER_ONE;
+
+    if (
+        prev.turnCount % 2 === 0 &&
+        prev.elementalWheel !== elementalKeys.INACTIVE
+    ) {
+        nextTurnStatus = turnStatus.WHEEL_TURN;
+    } else if (prev.remainingArray > 0) {
+        nextTurnStatus = turnStatus.ARRAY_TURN;
+    } else if (
+        prev.turnCount % 2 === 0 &&
+        prev.eyeOfHeavens !== eyeKeys.DORMANT
+    ) {
+        nextTurnStatus = turnStatus.EMINENCE_TURN;
+    }
+
+    // Then, calculate master/nonMaster
+    const masterKey =
+        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
+            ? entityKeys.PLAYER_ONE
+            : entityKeys.PLAYER_TWO;
+
+    const nonMasterKey =
+        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
+            ? entityKeys.PLAYER_TWO
+            : entityKeys.PLAYER_ONE;
+
+    let master = { ...prev.entities[masterKey] };
+    let nonMaster = { ...prev.entities[nonMasterKey] };
+
+    const currentPhase = prev.starQueue[0];
+
+    // If the queue is empty or there's no stars remaining, exits starfall phase
+    const hasStars = coloredStars.some((curr) => master.stars[curr.star] > 0);
+    const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
+    
+    if (!prev.starQueue || prev.starQueue.length === 0 || (!hasStars && !hasTrails && currentPhase === starfallPhases.STARFALL_INIT)) {
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: nextTurnStatus,
+            starQueue: null,
+        };
+    }
+
+    // else, process current queue item
+    const newQueue = prev.starQueue.slice(1);
+
+    const context = {
+        prev,
+        masterKey,
+        nonMasterKey,
+        master,
+        nonMaster,
+        wheel: prev.elementalWheel,
+    };
+
+    switch (currentPhase) {
+        // ROYGB
+        case starfallPhases.RED_STAR: {
+            if (master.stars[effectKeys.RED_STAR] > 0) {
+                const newEntities = processROYGBStar(
+                    context,
+                    effectKeys.RED_STAR,
+                    effectKeys.RED_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.ORANGE_STAR: {
+            if (master.stars[effectKeys.ORANGE_STAR] > 0) {
+                const newEntities = processROYGBStar(
+                    context,
+                    effectKeys.ORANGE_STAR,
+                    effectKeys.ORANGE_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.YELLOW_STAR: {
+            if (master.stars[effectKeys.YELLOW_STAR] > 0) {
+                const newEntities = processROYGBStar(
+                    context,
+                    effectKeys.YELLOW_STAR,
+                    effectKeys.YELLOW_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.GREEN_STAR: {
+            if (master.stars[effectKeys.GREEN_STAR] > 0) {
+                const newEntities = processROYGBStar(
+                    context,
+                    effectKeys.GREEN_STAR,
+                    effectKeys.GREEN_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.BLUE_STAR: {
+            if (master.stars[effectKeys.BLUE_STAR] > 0) {
+                const newEntities = processROYGBStar(
+                    context,
+                    effectKeys.BLUE_STAR,
+                    effectKeys.BLUE_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        // IV
+        case starfallPhases.INDIGO_STAR: {
+            if (master.stars[effectKeys.INDIGO_STAR] > 0) {
+                const newEntities = processIVStar(
+                    context,
+                    effectKeys.INDIGO_STAR,
+                    effectKeys.DIMMED_INDIGO_STAR,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.nonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.VIOLET_STAR: {
+            if (master.stars[effectKeys.VIOLET_STAR] > 0) {
+                const newEntities = processIVStar(
+                    context,
+                    effectKeys.VIOLET_STAR,
+                    effectKeys.DIMMED_VIOLET_STAR,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.nonMaster;
+            }
+            break;
+        }
+
+        // trails
+        case starfallPhases.RED_TRAIL: {
+            if (master.stars[effectKeys.RED_TRAIL] > 0) {
+                const newEntities = processTrail(context, effectKeys.RED_TRAIL);
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.ORANGE_TRAIL: {
+            if (master.stars[effectKeys.ORANGE_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.ORANGE_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.YELLOW_TRAIL: {
+            if (master.stars[effectKeys.YELLOW_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.YELLOW_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.GREEN_TRAIL: {
+            if (master.stars[effectKeys.GREEN_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.GREEN_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.BLUE_TRAIL: {
+            if (master.stars[effectKeys.BLUE_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.BLUE_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+
+    master = processEntityDeathStates(master);
+    nonMaster = processEntityDeathStates(nonMaster);
+
+    const playerOneEntity = masterKey === entityKeys.PLAYER_ONE ? master : nonMaster;
+    const playerTwoEntity = masterKey === entityKeys.PLAYER_TWO ? master : nonMaster;
+
+    // Pass null as the default next status. If someone died, it returns the game over state.
+    const deathStatus = evaluateMatchStatus(playerOneEntity, playerTwoEntity, null);
+
+    if (deathStatus) {
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: deathStatus,
+            starQueue: null,
+            entities: {
+                ...prev.entities,
+                [entityKeys.PLAYER_ONE]: playerOneEntity,
+                [entityKeys.PLAYER_TWO]: playerTwoEntity,
+            },
+        };
+    }
+
+    // If there's no trails, skip trails
+    if (!hasTrails && currentPhase === starfallPhases.VIOLET_STAR) {
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: nextTurnStatus,
+            starQueue: null,
+            entities: {
+                ...prev.entities,
+                [masterKey]: master,
+                [nonMasterKey]: nonMaster,
+            },
+        };
+    }
+
+    // Else, apply the action changes and trigger the delay for the next starfall phase
+    return {
+        ...prev,
+        status: turnStatus.STARS_TURN,
+        starQueue: newQueue,
+        entities: {
+            ...prev.entities,
+            [masterKey]: master,
+            [nonMasterKey]: nonMaster,
         },
     };
 }
