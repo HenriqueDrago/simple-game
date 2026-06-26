@@ -5,7 +5,12 @@ import Header from "./components/Header.jsx";
 import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
 import { simpleAI } from "./utils/aiControllers.js";
-import { constants, presetAi } from "./utils/constants.js";
+import {
+    CHECKPOINT_STATES,
+    constants,
+    INITIAL_GAME_STATE,
+    presetAi,
+} from "./utils/constants.js";
 import {
     processUpkeep,
     commitTurn,
@@ -33,50 +38,27 @@ import {
 import "./App.css";
 import TooltipDisplay from "./components/TooltipDisplay.jsx";
 import Glossary from "./components/Glossary.jsx";
+import Modal from "./components/Modal.jsx";
 
 function App() {
     // Declare states
-    const [game, setGame] = useState({
-        status: turnStatus.SETUP,
-        nextStatus: null,
-        lastPlayerTurn: null,
-        remainingArray: 0,
-        elementalWheel: elementalKeys.INACTIVE,
-        whoStarts: whoStartsKeys.PLAYER_ONE,
-        turnCount: 0,
-        eyeOfHeavens: eyeKeys.DORMANT,
-        starQueue: null,
-        progressMode: false,
-        progressStatus: {
-            [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
-            [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,
-            [aiKeys.WARLOCK]: progKeys.LOCKED,
-            [aiKeys.BLOODKNIGHT]: progKeys.LOCKED,
-            [aiKeys.HEXER]: progKeys.LOCKED,
-            [aiKeys.CYBORG]: progKeys.LOCKED,
-            [aiKeys.MAESTRO]: progKeys.LOCKED,
-            [aiKeys.ELEMENTALIST]: progKeys.LOCKED,
-            [aiKeys.STARFARER]: progKeys.LOCKED,
-            [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
-            [aiKeys.PALADIN]: progKeys.LOCKED,
-        },
-        entities: {
-            [entityKeys.PLAYER_ONE]: {
-                ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
-                controller: aiKeys.HUMAN,
-                statDistributionMode: sdmKeys.RANDOM,
-            },
-            [entityKeys.PLAYER_TWO]: {
-                ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
-                controller: aiKeys.SIMPLE,
-                statDistributionMode: sdmKeys.RANDOM,
-            },
-        },
+    const [game, setGame] = useState(() => {
+        try {
+            const savedData = localStorage.getItem("gameCheckpoint");
+            if (savedData) {
+                return JSON.parse(savedData);
+            }
+        } catch (error) {
+            console.error("Failed to load saved game data:", error);
+        }
+
+        // Fallback if load fails
+        return INITIAL_GAME_STATE;
     });
 
     const [tooltipStack, setTooltipStack] = useState([]);
-
     const [glossaryActive, setGlossaryActive] = useState(false);
+    const [resetModal, setResetModal] = useState(false);
 
     // Handles
     function handleAction(action, agentKey, nonAgentKey) {
@@ -407,6 +389,19 @@ function App() {
         });
     }
 
+    function handleProgressReset() {
+        setGame((prev)=> {
+            return {
+                ...prev,
+                progressStatus: {
+                    ...INITIAL_GAME_STATE.progressStatus,
+                }
+            }
+        })
+
+        setResetModal(false);
+    }
+
     // Auxiliary Functions
     function updateStatsPoints(targetKey, statusKey, value) {
         setGame((prev) => {
@@ -622,6 +617,18 @@ function App() {
         });
     }, [game.status, game.progressMode]);
 
+    // Save game
+    useEffect(() => {
+        // Saves only if it's a "checkpoint" state
+        if (CHECKPOINT_STATES.includes(game.status)) {
+            try {
+                localStorage.setItem("gameCheckpoint", JSON.stringify(game));
+            } catch (error) {
+                console.error("Failed to save game checkpoint:", error);
+            }
+        }
+    }, [game]);
+
     return (
         <div className="app-container">
             {tooltipStack.length > 0 && (
@@ -646,6 +653,17 @@ function App() {
                     }}
                 />
             )}
+            {resetModal && (
+                <Modal
+                    mainText={"Do you wish to reset your progress?"}
+                    subText={"*This action is irreversible."}
+                    isConfirmOnly={false}
+                    rejectAction={() => {setResetModal(false)}}
+                    confirmAction={() => {handleProgressReset()}}
+                    confirmText="Continue"
+                    rejectText={"Cancel"}
+                />
+            )}
             {glossaryActive && (
                 <Glossary handleGlossary={handleGlossary} game={game} />
             )}
@@ -661,6 +679,7 @@ function App() {
                 handleWhoStartsChange={handleWhoStartsChange}
                 handleGlossary={handleGlossary}
                 handleProgressToggle={handleProgressToggle}
+                handleResetModal={setResetModal}
             />
 
             <GamePanel

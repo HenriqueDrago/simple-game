@@ -1,0 +1,110 @@
+/* Full-screen overlay to grey out the rest of the site */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* Using semi-transparent black to create a stark dimming effect */
+    background-color: rgba(0, 0, 0, 0.75); 
+    
+    /* Center the modal box inside this overlay wrapper */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    z-index: 9999; /* Higher than everything else */
+}
+
+/* Updated Modal Box Container */
+.modal-container {
+    /* Position fixed/top/left/transform removed because .modal-overlay handles alignment now */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+    
+    padding: 20px 40px;
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    min-width: 400px;
+}
+
+/* Typography Layout */
+.modal-text-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Main Heading Text */
+.modal-text-container span:first-child {
+    margin: 0;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Subtext / Description Block */
+.modal-text-container span:last-child {
+    margin: 0;
+    font-weight: bold;
+    letter-spacing: 1px;
+    background: #ffffff;
+    color: #000000;
+    padding: 2px 8px;
+    font-size: 0.9rem;
+}
+
+/* Button Layout Wrapper */
+.modal-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Shared Button Logic */
+.modal-button-container button {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    padding: 10px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+/* Primary Action Accentuation on Hover */
+.modal-confirm:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Secondary Action Variation on Hover */
+.modal-reject {
+    opacity: 0.7;
+}
+
+.modal-reject:hover {
+    background-color: #ffffff;
+    color: #000000;
+    opacity: 1;
+}

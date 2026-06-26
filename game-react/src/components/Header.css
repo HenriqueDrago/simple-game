@@ -120,7 +120,7 @@
 
 .hover-help {
     color: white;
-    opacity: 0.4;
+    opacity: 0.6;
     font-size: 0.75rem;
     margin-left: auto;
     align-self: flex-start;
@@ -134,4 +134,26 @@
     align-items: center;
 
     gap: 3px;
+}
+
+.sharp-btn-icon {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    padding: 8px; /* Square padding to frame the icon tightly */
+    
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.sharp-btn-icon:hover {
+    background-color: #ffffff;
+    color: #000000;
 }

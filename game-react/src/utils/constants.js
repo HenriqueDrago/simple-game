@@ -9,8 +9,21 @@ import {
     maestroAI,
     elementalistAI,
 } from "./aiControllers.js";
+import { createBaseEntity, distributePoints } from "./entities.js";
 
-import { aiKeys, actionKeys, effectKeys, starfallPhases } from "./enums.js";
+import {
+    aiKeys,
+    actionKeys,
+    effectKeys,
+    starfallPhases,
+    turnStatus,
+    elementalKeys,
+    whoStartsKeys,
+    eyeKeys,
+    progKeys,
+    sdmKeys,
+    entityKeys,
+} from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
 
@@ -547,4 +560,51 @@ export const coloredStars = [
         starPhase: starfallPhases.VIOLET_STAR,
         trailPhase: starfallPhases.VIOLET_TRAIL,
     },
+];
+
+export const INITIAL_GAME_STATE = {
+    status: turnStatus.SETUP,
+    nextStatus: null,
+    lastPlayerTurn: null,
+    remainingArray: 0,
+    elementalWheel: elementalKeys.INACTIVE,
+    whoStarts: whoStartsKeys.PLAYER_ONE,
+    turnCount: 0,
+    eyeOfHeavens: eyeKeys.DORMANT,
+    starQueue: null,
+    progressMode: false,
+    progressStatus: {
+        [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
+        [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,
+        [aiKeys.WARLOCK]: progKeys.LOCKED,
+        [aiKeys.BLOODKNIGHT]: progKeys.LOCKED,
+        [aiKeys.HEXER]: progKeys.LOCKED,
+        [aiKeys.CYBORG]: progKeys.LOCKED,
+        [aiKeys.MAESTRO]: progKeys.LOCKED,
+        [aiKeys.ELEMENTALIST]: progKeys.LOCKED,
+        [aiKeys.STARFARER]: progKeys.LOCKED,
+        [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
+        [aiKeys.PALADIN]: progKeys.LOCKED,
+    },
+    entities: {
+        [entityKeys.PLAYER_ONE]: {
+            ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
+            controller: aiKeys.HUMAN,
+            statDistributionMode: sdmKeys.RANDOM,
+        },
+        [entityKeys.PLAYER_TWO]: {
+            ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
+            controller: aiKeys.SIMPLE,
+            statDistributionMode: sdmKeys.RANDOM,
+        },
+    },
+};
+
+export const CHECKPOINT_STATES = [
+    turnStatus.SETUP,
+    turnStatus.TRANSITION,
+    turnStatus.SHORT_TRANSITION,
+    turnStatus.VICTORY,
+    turnStatus.DEFEAT,
+    turnStatus.DRAW,
 ];

@@ -2,6 +2,8 @@ import "./Header.css";
 import { turnStatus, whoStartsKeys } from "../utils/enums";
 import Switch from "./Switch";
 
+import { RotateCcw } from "lucide-react";
+
 function Header({
     game,
     handleStart,
@@ -9,6 +11,7 @@ function Header({
     handleWhoStartsChange,
     handleGlossary,
     handleProgressToggle,
+    handleResetModal,
 }) {
     const battleState = game.status;
     const whoStarts = game.whoStarts;
@@ -89,11 +92,20 @@ function Header({
                             />
                             <span
                                 className="hover-help"
-                                title={`Progression Mode: Disables most customisation features, enemies and actions. In this mode, the enemy always starts the battle and always has the "best" stats. Furthermore, to access new enemies you must first defeat the preceding one. Some actions are locked until you defeat the corresponding enemy.`}
+                                title={`Progression Mode: Disables most customisation features, enemies and actions. In this mode, the enemy always starts the battle and always has the "best" stats. Furthermore, to access new enemies and see their glossary entries you must first defeat the preceding one. Some actions are locked until you defeat the corresponding enemy.`}
                             >
                                 [?]
                             </span>
                         </div>
+                        <button
+                            className="sharp-btn-icon"
+                            onClick={() => {
+                                handleResetModal(true);
+                            }}
+                            aria-label="Reset Progression Data"
+                        >
+                            <RotateCcw size={18} strokeWidth={2.5} />
+                        </button>
                     </div>
                 )}
             </div>
