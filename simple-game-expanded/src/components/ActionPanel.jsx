@@ -1,6 +1,12 @@
 import "./ActionPanel.css";
 
-import { entityKeys, turnStatus, aiKeys, eyeKeys } from "../utils/enums";
+import {
+    entityKeys,
+    turnStatus,
+    aiKeys,
+    eyeKeys,
+    effectKeys,
+} from "../utils/enums";
 import { constants, presetAi } from "../utils/constants";
 
 import {
@@ -121,9 +127,12 @@ function ActionPanel({
     }
 
     // Determine Container Class for CSS styling
+    let showHelperText = false;
     let containerClass = "button-grid";
     if (currEntity.states.thermalOverload) {
         containerClass = "meltdown-container";
+    } else if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
+        containerClass = "ascend-container";
     } else if (showAngelButtons) {
         containerClass =
             game.eyeOfHeavens === eyeKeys.OPEN
@@ -131,7 +140,11 @@ function ActionPanel({
                 : "bad-angel-button-grid";
     } else if (showUmbralButtons) {
         containerClass = "shadow-button-grid";
+    } else {
+        showHelperText = showButtons;
     }
+
+    
 
     return (
         <div className="action-panel-container">
@@ -143,9 +156,9 @@ function ActionPanel({
 
             {showButtons && (
                 <div className="actions-buttons-text-container">
-                    <span className="actions-mouse-wheel-explainer">
+                    {showHelperText && <span className="actions-mouse-wheel-explainer">
                         Mouse wheel click to see action details...
-                    </span>
+                    </span>}
                     <div className={containerClass}>
                         {currentActions.map((action) => (
                             <button

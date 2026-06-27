@@ -262,3 +262,44 @@ button:disabled:hover {
 
     padding: 5px;
 }
+
+.ascend-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.ascend-button {
+    background-color: #0a0f1d; /* Deep cosmic dark blue/black */
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0; /* Enforcing sharp edges matching the layout */
+    padding: 20px 50px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.3);
+    animation: pulse-zenith 1.5s infinite alternate;
+    transition: all 0.2s ease-in-out;
+}
+
+.ascend-button:not(:disabled):hover {
+    background-color: #ffffff;
+    color: #0a0f1d;
+    border-color: #ffd700; /* Gold accent on hover */
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+@keyframes pulse-zenith {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+}

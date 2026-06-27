@@ -393,7 +393,42 @@ export const presetAi = {
             def: 10,
         },
         caller: paladinAI,
-        desc: [],
+        desc: [
+            actionKeys.AEGIS,
+
+            effectKeys.RADIANT,
+            effectKeys.HALO,
+            effectKeys.RADIANCE,
+            effectKeys.ENLIGHTENMENT,
+            effectKeys.ZENITH_OF_MORTALITY,
+
+            actionKeys.ASCEND,
+
+            effectKeys.ASCENDENCE_OF_SPIRIT,
+
+            mechanicKeys.ACTS_OF_BENEDICTION,
+            mechanicKeys.ACTS_OF_MALEDICTION,
+
+            effectKeys.TARNISHED_SIN,
+            effectKeys.EYE_OF_HEAVENS,
+            effectKeys.INSIGHT,
+            effectKeys.CUTOFF_WINGS,
+            effectKeys.REVELATION,
+            effectKeys.BURDEN_OF_STIGMA,
+            effectKeys.SEVERED_TIME,
+            effectKeys.INSPIRATION,
+            effectKeys.SACRED_FLAMES,
+
+            actionKeys.BAPTISM_OF_THE_FLAMES,
+            actionKeys.CELESTIAL_SCALE,
+            actionKeys.HYMNS_OF_SANCTIFICATION,
+            actionKeys.GIFT_OF_APOTHEOSIS,
+
+            actionKeys.SERAPH_OF_CONDEMNATION,
+            actionKeys.GLIMPSE_OF_PANDEMONIUM,
+            actionKeys.EDICT_OF_SEVERANCE,
+            actionKeys.THE_WORD_MADE_FLESH,
+        ],
     },
 };
 

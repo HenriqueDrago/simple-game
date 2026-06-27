@@ -247,7 +247,7 @@ function processRedStar(
         draftNonMaster = takeDamage(
             draftNonMaster,
             augmentedStars,
-            dmgTypes.TRUE,
+            dmgTypes.PIERCING,
             wheel,
         );
     }

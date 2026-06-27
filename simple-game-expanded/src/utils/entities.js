@@ -386,6 +386,9 @@ export function processEntityDR(entity) {
     if (entity.states.deployment) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
+    if (entity.states[effectKeys.VENTING]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
 
     return drMult;
 }

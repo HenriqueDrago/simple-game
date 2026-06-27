@@ -8,7 +8,13 @@ import {
     gainMana,
     loseMana,
 } from "./entities.js";
-import { elementalKeys, actionKeys, dmgTypes } from "./enums.js";
+import {
+    elementalKeys,
+    actionKeys,
+    dmgTypes,
+    effectKeys,
+    eyeKeys,
+} from "./enums.js";
 
 export const simulators = {
     [actionKeys.AEGIS]: simulateAegis,
@@ -32,14 +38,8 @@ export const simulators = {
     [actionKeys.LASER]: simulateLaser,
     [actionKeys.MELTDOWN]: simulateMeltdown,
     [actionKeys.ALIGN]: simulateAlign,
-    [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
-    [actionKeys.SERAPH_OF_CONDEMNATION]: simulateSeraphOfCondemnation,
-    [actionKeys.CELESTIAL_SCALE]: simulateScale,
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: simulateBaptismOfTheFlames,
-    [actionKeys.GRACE_OF_HEAVENS]: simulateGraceOfHeavens,
-    [actionKeys.GIFT_OF_APOTHEOSIS]: simulateGiftOfApotheosis,
-    [actionKeys.SACRAMENT]: simulateSacrament,
     [actionKeys.CHART]: simulateChart,
+    [actionKeys.ASCEND]: simulateAscend,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -744,204 +744,6 @@ function simulateAlign({ prev, agent, agentKey }) {
     };
 }
 
-function simulateSeraphOfCondemnation({ prev, agent, nonAgent, nonAgentKey }) {
-    const newDamn = Math.min(
-        nonAgent.maxTarnishedSin,
-        nonAgent.currTarnishedSin + agent.revelation,
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: {
-                ...nonAgent,
-                currTarnishedSin: newDamn,
-            },
-        },
-    };
-}
-
-function simulateScale({ prev, agent, agentKey }) {
-    const totalKnowledge = agent.currEnlit + agent.currInsight;
-
-    const halfKnow = Math.floor(totalKnowledge / 2);
-
-    const newEnlit = Math.min(agent.maxEnlit, halfKnow);
-    const newInsight = Math.min(agent.maxInsight, halfKnow);
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                currEnlit: newEnlit,
-                currInsight: newInsight,
-            },
-        },
-    };
-}
-
-function simulateGraceOfHeavens({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    const draftNonAgent = restoreResources(
-        nonAgent,
-        agent.revelation,
-        prev.elementalWheel,
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                },
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-            },
-        },
-    };
-}
-
-function simulateBaptismOfTheFlames({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    const totalFlames =
-        agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
-
-    const draftAgent = restoreResources(
-        agent,
-        totalFlames * constants.FLAMES_ABSORPTION_MULTIPLIER,
-        prev.elementalWheel,
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                resources: {
-                    ...draftAgent.resources,
-                    sacredFlames: 0,
-                },
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    sacredFlames: 0,
-                },
-            },
-        },
-    };
-}
-
-function simulateGiftOfApotheosis({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    if (nonAgent.states.ascendenceOfSpirit) {
-        return prev;
-    }
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...nonAgent,
-                controller: agent.controller,
-                statDistributionMode: agent.statDistributionMode,
-                unspentPoints: agent.unspentPoints,
-            },
-            [nonAgentKey]: {
-                ...agent,
-                controller: nonAgent.controller,
-                statDistributionMode: nonAgent.statDistributionMode,
-                unspentPoints: nonAgent.unspentPoints,
-            },
-        },
-    };
-}
-
-function simulateWordMadeFlesh({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    const { draftEntity } = consumeResources(
-        agent,
-        Infinity,
-        actionKeys.THE_WORD_MADE_FLESH,
-    );
-
-    const draftAgent = {
-        ...draftEntity,
-        currHp: 1,
-        maxHp: 1,
-        states: {
-            ...draftEntity.states,
-            ascendenceOfSpirit: false,
-            cutoffWings: true,
-        },
-    };
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                states: {
-                    ...nonAgent.states,
-                    burdenOfStigma: true,
-                },
-            },
-        },
-    };
-}
-
-function simulateSacrament({ prev, agent, agentKey }) {
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    benediction:
-                        agent.resources.benediction +
-                        agent.revelation * constants.BENEDICTION_GEN,
-                },
-            },
-        },
-    };
-}
-
 function simulateChart({ prev, agent, agentKey }) {
     const newWhite = agent.stars.white + constants.CHART_STAR_GAIN;
 
@@ -958,8 +760,235 @@ function simulateChart({ prev, agent, agentKey }) {
                 states: {
                     ...agent.states,
                     stargazer: true,
-                }
+                },
             },
         },
     };
 }
+
+function simulateAscend({ prev, agent, agentKey }) {
+    let draftAgent = {
+        ...agent,
+    };
+
+    const newRev = agent.attributes.str.value + agent.attributes.def.value;
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.REVELATION]: newRev,
+    };
+
+    return {
+        ...prev,
+        eyeOfHeavens: eyeKeys.OPEN,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+                states: {
+                    ...draftAgent.states,
+                    [effectKeys.ZENITH_OF_MORTALITY]: false,
+                    [effectKeys.ASCENDENCE_OF_SPIRIT]: true,
+                },
+            },
+        },
+    };
+}
+
+// function simulateSeraphOfCondemnation({ prev, agent, nonAgent, nonAgentKey }) {
+//     const newDamn = Math.min(
+//         nonAgent.maxTarnishedSin,
+//         nonAgent.currTarnishedSin + agent.revelation,
+//     );
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [nonAgentKey]: {
+//                 ...nonAgent,
+//                 currTarnishedSin: newDamn,
+//             },
+//         },
+//     };
+// }
+
+// function simulateScale({ prev, agent, agentKey }) {
+//     const totalKnowledge = agent.currEnlit + agent.currInsight;
+
+//     const halfKnow = Math.floor(totalKnowledge / 2);
+
+//     const newEnlit = Math.min(agent.maxEnlit, halfKnow);
+//     const newInsight = Math.min(agent.maxInsight, halfKnow);
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...agent,
+//                 currEnlit: newEnlit,
+//                 currInsight: newInsight,
+//             },
+//         },
+//     };
+// }
+
+// function simulateGraceOfHeavens({
+//     prev,
+//     agent,
+//     agentKey,
+//     nonAgent,
+//     nonAgentKey,
+// }) {
+//     const draftNonAgent = restoreResources(
+//         nonAgent,
+//         agent.revelation,
+//         prev.elementalWheel,
+//     );
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...agent,
+//                 resources: {
+//                     ...agent.resources,
+//                 },
+//             },
+//             [nonAgentKey]: {
+//                 ...draftNonAgent,
+//             },
+//         },
+//     };
+// }
+
+// function simulateBaptismOfTheFlames({
+//     prev,
+//     agent,
+//     agentKey,
+//     nonAgent,
+//     nonAgentKey,
+// }) {
+//     const totalFlames =
+//         agent.resources.sacredFlames + nonAgent.resources.sacredFlames;
+
+//     const draftAgent = restoreResources(
+//         agent,
+//         totalFlames * constants.FLAMES_ABSORPTION_MULTIPLIER,
+//         prev.elementalWheel,
+//     );
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...draftAgent,
+//                 resources: {
+//                     ...draftAgent.resources,
+//                     sacredFlames: 0,
+//                 },
+//             },
+//             [nonAgentKey]: {
+//                 ...nonAgent,
+//                 resources: {
+//                     ...nonAgent.resources,
+//                     sacredFlames: 0,
+//                 },
+//             },
+//         },
+//     };
+// }
+
+// function simulateGiftOfApotheosis({
+//     prev,
+//     agent,
+//     agentKey,
+//     nonAgent,
+//     nonAgentKey,
+// }) {
+//     if (nonAgent.states.ascendenceOfSpirit) {
+//         return prev;
+//     }
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...nonAgent,
+//                 controller: agent.controller,
+//                 statDistributionMode: agent.statDistributionMode,
+//                 unspentPoints: agent.unspentPoints,
+//             },
+//             [nonAgentKey]: {
+//                 ...agent,
+//                 controller: nonAgent.controller,
+//                 statDistributionMode: nonAgent.statDistributionMode,
+//                 unspentPoints: nonAgent.unspentPoints,
+//             },
+//         },
+//     };
+// }
+
+// function simulateWordMadeFlesh({
+//     prev,
+//     agent,
+//     agentKey,
+//     nonAgent,
+//     nonAgentKey,
+// }) {
+//     const { draftEntity } = consumeResources(
+//         agent,
+//         Infinity,
+//         actionKeys.THE_WORD_MADE_FLESH,
+//     );
+
+//     const draftAgent = {
+//         ...draftEntity,
+//         currHp: 1,
+//         maxHp: 1,
+//         states: {
+//             ...draftEntity.states,
+//             ascendenceOfSpirit: false,
+//             cutoffWings: true,
+//         },
+//     };
+
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...draftAgent,
+//             },
+//             [nonAgentKey]: {
+//                 ...nonAgent,
+//                 states: {
+//                     ...nonAgent.states,
+//                     burdenOfStigma: true,
+//                 },
+//             },
+//         },
+//     };
+// }
+
+// function simulateSacrament({ prev, agent, agentKey }) {
+//     return {
+//         ...prev,
+//         entities: {
+//             ...prev.entities,
+//             [agentKey]: {
+//                 ...agent,
+//                 resources: {
+//                     ...agent.resources,
+//                     benediction:
+//                         agent.resources.benediction +
+//                         agent.revelation * constants.BENEDICTION_GEN,
+//                 },
+//             },
+//         },
+//     };
+// }

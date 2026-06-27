@@ -82,16 +82,19 @@ export const actionKeys = Object.freeze({
     MELTDOWN: "meltdown",
     BABEL: "babel",
     ALIGN: "align",
-    // GRACE_OF_HEAVENS: "graceOfHeavens",
-    // CELESTIAL_SCALE: "celestialScale",
-    // SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
-    // GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
-    // EDICT_OF_SEVERANCE: "edictOfSeverance",
-    // BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
-    // SACRAMENT: "sacrament",
-    // THE_WORD_MADE_FLESH: "theWordMadeFlesh",
     CHART: "chart",
-    // ASCEND: "ascend",
+
+    ASCEND: "ascend",
+
+    BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
+    CELESTIAL_SCALE: "celestialScale",
+    HYMNS_OF_SANCTIFICATION: "hymnsOfSanctification",
+    GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
+
+    SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
+    GLIMPSE_OF_PANDEMONIUM: "glimpseOfPandemonium",
+    EDICT_OF_SEVERANCE: "edictOfSeverance",
+    THE_WORD_MADE_FLESH: "theWordMadeFlesh",
 });
 
 export const effectKeys = Object.freeze({
@@ -208,6 +211,12 @@ export const effectKeys = Object.freeze({
     BLUE_TRAILFALL: "blueTrailfall",
     INDIGO_TRAILFALL: "indigoTrailfall",
     VIOLET_TRAILFALL: "violetTrailfall",
+
+    INSPIRATION: "inspiration",
+    MORTALITY: "mortality",
+    SPIRITUALITY: "spirituality",
+
+    SEVERED_TIME: "severedTime",
 });
 
 export const eyeKeys = Object.freeze({
@@ -271,4 +280,6 @@ export const mechanicKeys = Object.freeze({
     OFFENSIVE_ACTIONS: "offensiveActions",
     DEFENSIVE_ACTIONS: "defensiveActions",
     TRANSFORMATIVE_ACTIONS: "transformativeActions",
+    ACTS_OF_BENEDICTION: "actsOfBenediction",
+ACTS_OF_MALEDICTION: "actsOfMalediction",
 });

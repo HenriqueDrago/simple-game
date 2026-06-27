@@ -74,12 +74,11 @@ export function paladinAI(context) {
     const { agent, agentKey, nonAgentKey, hasManaForSpecial, handleAction } =
         context;
 
-    if (agent.resources.radiance >= 5) {
-        if (hasManaForSpecial) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-        } else {
-            handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
-        }
+    const simulate = createSimulator(context);
+    const simAtk = simulate(actionKeys.ATTACK);
+
+    if(simAtk.entities[nonAgentKey].currHp <= 0) {
+        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }
 

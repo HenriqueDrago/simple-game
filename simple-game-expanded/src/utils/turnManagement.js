@@ -1,6 +1,7 @@
 import { constants, actionsClass, coloredStars } from "./constants.js";
 import {
     consumeResources,
+    createBaseEntity,
     // createBaseEntity,
     gainMana,
     loseMana,
@@ -59,66 +60,6 @@ export function processUpkeep(prev) {
         ...prev.entities[nonTargetKey],
     };
 
-    // Cutoff Wings
-    if (draftTarget.states.cutoffWings) {
-        draftTarget = {
-            ...draftTarget,
-            currHp: Math.max(0, Math.min(draftTarget.currHp, 1)),
-            maxHp: 1,
-        };
-    }
-
-    // Halo
-    if (draftTarget.resources.halo > 0) {
-        const newEnlit = draftTarget.resources.halo + draftTarget.currEnlit;
-
-        draftTarget = {
-            ...draftTarget,
-            currEnlit: newEnlit,
-            resources: {
-                ...draftTarget.resources,
-                halo: 0,
-            },
-        };
-    }
-
-    // Enlightenment (Ascendence Trigger)
-    // if (
-    //     draftTarget.currEnlit >= 100 &&
-    //     !draftTarget.states.ascendenceOfSpirit
-    // ) {
-    //     const { draftEntity, resourcesConsumed } = consumeResources(
-    //         draftTarget,
-    //         Infinity,
-    //         effectKeys.ENLIGHTENMENT,
-    //     );
-
-    //     draftTarget = {
-    //         ...draftEntity,
-    //         states: {
-    //             ...createBaseEntity().states,
-    //             ascendenceOfSpirit: true,
-    //         },
-    //     };
-
-    //     draftTarget = restoreResources(
-    //         draftTarget,
-    //         resourcesConsumed.totalConsumption,
-    //         prev.elementalWheel,
-    //     );
-
-    //     const newRev =
-    //         draftTarget.revelation +
-    //         Math.floor(
-    //             draftTarget.currInsight / constants.INSIGHT_TO_REV_FACTOR,
-    //         );
-
-    //     draftTarget = {
-    //         ...draftTarget,
-    //         revelation: newRev,
-    //     };
-    // }
-
     // Stardust
     if (draftTarget.resources[effectKeys.STARDUST] > 0) {
         const newStardust =
@@ -161,59 +102,6 @@ export function processUpkeep(prev) {
                 },
             };
         }
-    }
-
-    // Sacred Flames
-    if (draftTarget.resources.sacredFlames > 0) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            draftTarget.resources.sacredFlames,
-            effectKeys.SACRED_FLAMES,
-        );
-
-        draftTarget = restoreResources(
-            draftEntity,
-            resourcesConsumed.totalConsumption,
-            prev.elementalWheel,
-        );
-    }
-
-    // Benediction
-    if (draftTarget.resources.benediction > 0) {
-        draftTarget = restoreResources(
-            draftTarget,
-            draftTarget.resources.benediction,
-            prev.elementalWheel,
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                benediction: 0,
-            },
-        };
-    }
-
-    // Ascendence Consumption
-    if (draftTarget.states.ascendenceOfSpirit) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            Infinity,
-            effectKeys.ASCENDENCE_OF_SPIRIT,
-        );
-
-        const newFlames =
-            draftEntity.resources.sacredFlames +
-            resourcesConsumed.totalConsumption;
-
-        draftTarget = {
-            ...draftEntity,
-            resources: {
-                ...draftEntity.resources,
-                sacredFlames: newFlames,
-            },
-        };
     }
 
     // Unrelenting Shadows
@@ -363,6 +251,44 @@ export function processUpkeep(prev) {
         };
     }
 
+    // Halo
+    if (draftTarget.resources.halo > 0) {
+        const newEnlit = draftTarget.resources.halo + draftTarget.currEnlit;
+
+        draftTarget = {
+            ...draftTarget,
+            currEnlit: newEnlit,
+            resources: {
+                ...draftTarget.resources,
+                halo: 0,
+            },
+        };
+    }
+
+    // Enlightenment
+    let newEye = prev.eyeOfHeavens;
+    if (draftTarget.currEnlit >= 100) {
+        const blankEntity = createBaseEntity();
+
+        draftTarget = {
+            ...blankEntity,
+            states: {
+                ...blankEntity.states,
+                [effectKeys.ZENITH_OF_MORTALITY]: true,
+            },
+            attributes: {
+                ...draftTarget.attributes,
+            },
+            controller: draftTarget.controller,
+            statDistributionMode: draftTarget.statDistributionMode,
+            unspentPoints: draftTarget.unspentPoints,
+        };
+
+        if (newEye === eyeKeys.DORMANT) {
+            newEye = eyeKeys.CLOSED;
+        }
+    }
+
     // Death logic
     draftTarget = processEntityDeathStates(draftTarget);
     draftNonTarget = processEntityDeathStates(draftNonTarget);
@@ -391,16 +317,6 @@ export function processUpkeep(prev) {
         darkEmbrace: false,
         dimmingDarkness: false,
     };
-
-    let newEye = prev.eyeOfHeavens;
-
-    if (
-        prev.eyeOfHeavens === eyeKeys.DORMANT &&
-        (draftTarget.states.ascendenceOfSpirit ||
-            draftNonTarget.states.ascendenceOfSpirit)
-    ) {
-        newEye = eyeKeys.OPEN;
-    }
 
     return {
         ...prev,
@@ -913,8 +829,14 @@ export function processStarfallTurn(prev) {
     // If the queue is empty or there's no stars remaining, exits starfall phase
     const hasStars = coloredStars.some((curr) => master.stars[curr.star] > 0);
     const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
-    
-    if (!prev.starQueue || prev.starQueue.length === 0 || (!hasStars && !hasTrails && currentPhase === starfallPhases.STARFALL_INIT)) {
+
+    if (
+        !prev.starQueue ||
+        prev.starQueue.length === 0 ||
+        (!hasStars &&
+            !hasTrails &&
+            currentPhase === starfallPhases.STARFALL_INIT)
+    ) {
         return {
             ...prev,
             status: turnStatus.TRANSITION,
@@ -1119,11 +1041,17 @@ export function processStarfallTurn(prev) {
     master = processEntityDeathStates(master);
     nonMaster = processEntityDeathStates(nonMaster);
 
-    const playerOneEntity = masterKey === entityKeys.PLAYER_ONE ? master : nonMaster;
-    const playerTwoEntity = masterKey === entityKeys.PLAYER_TWO ? master : nonMaster;
+    const playerOneEntity =
+        masterKey === entityKeys.PLAYER_ONE ? master : nonMaster;
+    const playerTwoEntity =
+        masterKey === entityKeys.PLAYER_TWO ? master : nonMaster;
 
     // Pass null as the default next status. If someone died, it returns the game over state.
-    const deathStatus = evaluateMatchStatus(playerOneEntity, playerTwoEntity, null);
+    const deathStatus = evaluateMatchStatus(
+        playerOneEntity,
+        playerTwoEntity,
+        null,
+    );
 
     if (deathStatus) {
         return {

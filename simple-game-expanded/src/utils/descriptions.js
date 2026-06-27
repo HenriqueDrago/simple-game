@@ -217,7 +217,7 @@ export const STATE_DESCRIPTIONS = {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Enables OVERHEAT. Cannot use DEPLOY, LASER or MELTDOWN. At turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
+            "Enables OVERHEAT. Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -505,7 +505,7 @@ export const STAR_DESCRIPTIONS = {
         name: "RED STAR",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At RED STARFALL, deals PHYSICAL DAMAGE equal to RED STAR. When augmented, deals TRUE DAMAGE instead. When fractured, gains RED TRAIL equal to twice the amount fractured instead.",
+            "At RED STARFALL, deals PHYSICAL DAMAGE equal to RED STAR. When augmented, deals PIERCING DAMAGE instead. When fractured, gains RED TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.ORANGE_STAR]: {
@@ -663,69 +663,11 @@ export const STAR_DESCRIPTIONS = {
 
 // Work in progress
 export const PALADIN_DESCRIPTIONS = {
-    [effectKeys.REVELATION]: {
-        name: "REVELATION",
-        type: entryTypes.STAT,
-        description: "Alternative stat. Used for certain actions.",
-    },
     [actionKeys.AEGIS]: {
         name: "AEGIS",
         type: entryTypes.ACTION,
         description:
-            "Gains HALO equal to twice your DEF. Enters RADIANT state until next turn.",
-    },
-
-    [actionKeys.GRACE_OF_HEAVENS]: {
-        name: "GRACE OF HEAVENS",
-        type: entryTypes.ACTION,
-        description:
-            "Restores RESOURCES for the opponent equal to the REVELATION on self.",
-    },
-
-    [actionKeys.SERAPH_OF_CONDEMNATION]: {
-        name: "SERAPH OF CONDEMNATION",
-        type: entryTypes.ACTION,
-        description:
-            "Inflicts TARNISHED SIN on the opponent equal to the REVELATION on self.",
-    },
-
-    [actionKeys.GIFT_OF_APOTHEOSIS]: {
-        name: "GIFT OF APOTHEOSIS",
-        type: entryTypes.ACTION,
-        description:
-            "Swaps your current condition with the opponent's and vice-versa. Cannot be used if the opponent is in the ASCENDENCE OF SPIRIT state.",
-    },
-
-    [actionKeys.THE_WORD_MADE_FLESH]: {
-        name: "THE WORD MADE FLESH",
-        type: entryTypes.ACTION,
-        description:
-            "Exits ASCENDENCE OF SPIRIT and enters CUTOFF WINGS state. Then, inflicts BURDEN OF STIGMA on the opponent.",
-    },
-
-    [actionKeys.CELESTIAL_SCALE]: {
-        name: "CELESTIAL SCALE",
-        type: entryTypes.ACTION,
-        description: "Redistributes ENLIGHTENMENT and INSIGHT evenly on self.",
-    },
-
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: {
-        name: "BAPTISM OF THE FLAMES",
-        type: entryTypes.ACTION,
-        description:
-            "Converts all RESOURCES on self into SACRED FLAMES, and absorbs all SACRED FLAMES on the battlefield into self. Then, consumes all SACRED FLAMES on self and restores RESOURCES based on the amount consumed.",
-    },
-
-    [actionKeys.SACRAMENT]: {
-        name: "SACRAMENT",
-        type: entryTypes.ACTION,
-        description: "Gains BENEDICTION based on twice the REVELATION on self.",
-    },
-
-    [actionKeys.EDICT_OF_SEVERANCE]: {
-        name: "EDICT OF SEVERANCE",
-        type: entryTypes.ACTION,
-        description: "TODO: Add Edict of Severance description here.",
+            "Gains HALO equal to twice the user's DEF. Enters RADIANT until next turn start.",
     },
 
     [effectKeys.RADIANT]: {
@@ -734,79 +676,173 @@ export const PALADIN_DESCRIPTIONS = {
         description: "Nullifies all DEF EFFECTIVENESS.",
     },
 
-    [effectKeys.BURDEN_OF_STIGMA]: {
-        name: "BURDEN OF STIGMA",
-        type: entryTypes.STATE,
-        description: "Cannot act. Removed at turn end.",
-    },
-
-    [effectKeys.ASCENDENCE_OF_SPIRIT]: {
-        name: "ASCENDENCE OF SPIRIT",
-        type: entryTypes.STATE,
-        description:
-            "Upon entering this state, exits all other states and loses all resources on self. Then, gains INSIGHT based on the resources consumed. While in this state, cannot die by normal means. Furthermore, when taking damage, loses ENLIGHTENMENT instead of HEALTH. If at least one player is in this state, awakens the EYE OF HEAVENS. While the eye is open, replaces all actions with: GRACE OF HEAVENS, CELESTIAL SCALE, SACRAMENT and GIFT OF APOTHEOSIS. While the eye is closed, replaces all actions with: SERAPH OF CONDEMNATION, BAPTISM OF THE FLAMES, EDICT OF SEVERANCE and THE WORD MADE FLESH. When exiting this state, loses all RESOURCES on self.",
-    },
-
-    [effectKeys.CUTOFF_WINGS]: {
-        name: "CUTOFF WINGS",
-        type: entryTypes.STATE,
-        description:
-            "Cannot use AEGIS. Upon entering this state, recovers 1 HEALTH. Upon entering this state, at turn start and turn end, sets MAX HEALTH to 1 and reduces current HEALTH accordingly.",
-    },
-
-    [effectKeys.ENLIGHTENMENT]: {
-        name: "ENLIGHTENMENT",
-        type: entryTypes.LIMITED_RESOURCE,
-        description:
-            "At turn start, if at 100 or more ENLIGHTENMENT, enters ASCENDENCE OF SPIRIT state.",
-    },
-
-    [effectKeys.SACRED_FLAMES]: {
-        name: "SACRED FLAMES",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, consumes RESOURCES on self by the stack. Then, restores RESOURCES on self by the stack and lose all SACRED FLAMES on self.",
-    },
-
-    [effectKeys.BENEDICTION]: {
-        name: "BENEDICTION",
-        type: entryTypes.MITIGATION_RESOURCE,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose BENEDICTION instead of ENLIGHTENMENT and grants SACRED FLAMES to the attacker based on the amount lost. At turn start, lose all BENEDICTION and restore RESOURCES based on the amount lost.",
-    },
-
-    [effectKeys.INSIGHT]: {
-        name: "INSIGHT",
-        type: entryTypes.LIMITED_RESOURCE,
-        description:
-            "When gaining INSIGHT above 100, gains SACRED FLAMES instead.",
-    },
-
-    [effectKeys.TARNISHED_SIN]: {
-        name: "TARNISHED SIN",
-        type: entryTypes.LIMITED_RESOURCE,
-        description: "TODO: Add Tarnished Sin description here.",
-    },
-
     [effectKeys.HALO]: {
         name: "HALO",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HALO to reduce the damage taken and gains RADIANCE based on the amount lost. At turn start, converts all HALO into ENLIGHTENMENT.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, loses HALO instead of HEALTH, then gains RADIANCE equal to the amount lost. At turn start, converts all HALO into ENLIGHTENMENT.",
     },
 
     [effectKeys.RADIANCE]: {
         name: "RADIANCE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using ATTACK, consumes all RADIANCE on self to increase the damage dealt.",
+            "When using ATTACK, consumes all RADIANCE on self to increase the DAMAGE dealt.",
+    },
+
+    [effectKeys.ENLIGHTENMENT]: {
+        name: "ENLIGHTENMENT",
+        type: entryTypes.LIMITED_RESOURCE,
+        description:
+            "At turn start, if at MAX ENLIGHTENMENT or above, enters ZENITH OF MORTALITY. If EYE OF HEAVENS is DORMANT, awakens it in the CLOSED state. While in ASCENDENCE OF SPIRIT, cannot exceed MAX ENLIGHTENMENT, and the previous ENLIGHTENMENT effects do not activate.",
+    },
+
+    [effectKeys.ZENITH_OF_MORTALITY]: {
+        name: "ZENITH OF MORTALITY",
+        type: entryTypes.STATE,
+        description: "Replaces all actions with ASCEND.",
+    },
+
+    [actionKeys.ASCEND]: {
+        name: "ASCEND",
+        type: entryTypes.ACTION,
+        description:
+            "Opens the EYE OF HEAVENS, resets the user's condition, gains REVELATION based on STR and DEF on self, and enters ASCENDENCE OF SPIRIT. This action does not end the turn.",
+    },
+
+    [effectKeys.ASCENDENCE_OF_SPIRIT]: {
+        name: "ASCENDENCE OF SPIRIT",
+        type: entryTypes.STATE,
+        description:
+            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state and enters CUTOFF WINGS. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose ENLIGHTENMENT instead of HEALTH. When taking TRUE DAMAGE, gain TARNISHED SIN instead of losing HEALTH. When restoring HEALTH or MANA, gain MORTALITY or SPIRITUALITY instead, respectively. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
+    },
+
+    [mechanicKeys.ACTS_OF_BENEDICTION]: {
+        name: "ACTS OF BENEDICTION",
+        type: entryTypes.MECHANIC,
+        description:
+            "Includes BAPTISM OF THE FLAMES, CELESTIAL SCALE, HYMNS OF SANCTIFICATION and GIFT OF APOTHEOSIS. When using an ACT OF BENEDICTION while EYE OF HEAVENS is CLOSED, gains INSPIRATION equal to REVELATION on self.",
+    },
+
+    [mechanicKeys.ACTS_OF_MALEDICTION]: {
+        name: "ACTS OF MALEDICTION",
+        type: entryTypes.MECHANIC,
+        description:
+            "Includes SERAPH OF CONDEMNATION, GLIMPSE OF PANDEMONIUM, EDICT OF SEVERANCE and THE WORD MADE FLESH. When using an ACT OF MALEDICTION while EYE OF HEAVENS is OPEN, gain TARNISHED SIN equal to REVELATION on self.",
+    },
+
+    [effectKeys.TARNISHED_SIN]: {
+        name: "TARNISHED SIN",
+        type: entryTypes.LIMITED_RESOURCE,
+        description: "At 100 TARNISHED SIN, loses the game.",
     },
 
     [effectKeys.EYE_OF_HEAVENS]: {
         name: "EYE OF HEAVENS",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While awoken, enables EMANATION at round end. On EMANATION, if the eye is open, closes the eye and consumes all INSIGHT on all entities. Then, grants REVELATION to each entity for every 10 INSIGHT they lost on self. If the eye is closed, opens the eye and, if an entity in the ASCENDENCE OF SPIRIT state has 0 or less ENLIGHTENMENT, removes them from the ASCENDENCE OF SPIRIT state and grants them the CUTOFF WINGS state. If there's no entity in the ASCENDENCE OF SPIRIT state in the battlefield, returns to dormant state.",
+            "While awoken, triggers EMANATION at round end. During EMANATION, if CLOSED, opens; otherwise, closes. Then, all entities gain REVELATION equal to one tenth of INSIGHT on self. When opening, removes SEVERED TIME from the battlefield.",
+    },
+
+    [effectKeys.INSIGHT]: {
+        name: "INSIGHT",
+        type: entryTypes.LIMITED_RESOURCE,
+        description:
+            "Cannot exceed MAX INSIGHT. When restoring INSIGHT above the limit, gain INSPIRATION instead.",
+    },
+
+    [effectKeys.CUTOFF_WINGS]: {
+        name: "CUTOFF WINGS",
+        type: entryTypes.STATE,
+        description:
+            "Cannot use AEGIS. Upon entering this state, restores 1 HEALTH. At turn start and turn end, sets MAX HEALTH to 1 and reduces current HEALTH accordingly.",
+    },
+
+    [effectKeys.REVELATION]: {
+        name: "REVELATION",
+        type: entryTypes.STAT,
+        description: "An alternative stat used by certain effects.",
+    },
+
+    [effectKeys.BURDEN_OF_STIGMA]: {
+        name: "BURDEN OF STIGMA",
+        type: entryTypes.STATE,
+        description: "Cannot act. Removed at turn end.",
+    },
+
+    [effectKeys.SEVERED_TIME]: {
+        name: "SEVERED TIME",
+        type: entryTypes.FIELD_EFFECT,
+        description:
+            "The ELEMENTAL CYCLE does not trigger. OFFENSIVE ACTIONS and DEFENSIVE ACTIONS do not modify SONORITY. RUNIC ARRAY duration does not decrease. MANA BLEED does not trigger. SHADOWFLAME does not burn RESOURCES at turn start. OVERHEAT is not lost naturally. DIMMED STARS and GRAY STARS do not convert at turn start.",
+    },
+
+    [effectKeys.INSPIRATION]: {
+        name: "INSPIRATION",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, loses INSPIRATION equal to missing ENLIGHTENMENT, then gains ENLIGHTENMENT equal to the amount lost this way.",
+    },
+
+    [effectKeys.SACRED_FLAMES]: {
+        name: "SACRED FLAMES",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, loses SACRED FLAMES equal to missing HEALTH, then restores HEALTH equal to the amount lost this way.",
+    },
+
+    [actionKeys.BAPTISM_OF_THE_FLAMES]: {
+        name: "BAPTISM OF THE FLAMES",
+        type: entryTypes.ACTION,
+        description:
+            "Grants SACRED FLAMES to the target based on REVELATION on self.",
+    },
+
+    [actionKeys.CELESTIAL_SCALE]: {
+        name: "CELESTIAL SCALE",
+        type: entryTypes.ACTION,
+        description: "Redistributes ENLIGHTENMENT and INSIGHT evenly on self.",
+    },
+
+    [actionKeys.HYMNS_OF_SANCTIFICATION]: {
+        name: "HYMNS OF SANCTIFICATION",
+        type: entryTypes.ACTION,
+        description:
+            "Consumes all FREE RESOURCES on self, then gains INSPIRATION based on the amount consumed.",
+    },
+
+    [actionKeys.GIFT_OF_APOTHEOSIS]: {
+        name: "GIFT OF APOTHEOSIS",
+        type: entryTypes.ACTION,
+        description:
+            "Swaps the user's current condition with the target's. Cannot be used if the target is in ASCENDENCE OF SPIRIT.",
+    },
+
+    [actionKeys.SERAPH_OF_CONDEMNATION]: {
+        name: "SERAPH OF CONDEMNATION",
+        type: entryTypes.ACTION,
+        description:
+            "Inflicts TARNISHED SIN on the target based on REVELATION on self.",
+    },
+
+    [actionKeys.GLIMPSE_OF_PANDEMONIUM]: {
+        name: "GLIMPSE OF PANDEMONIUM",
+        type: entryTypes.ACTION,
+        description:
+            "All entities lose RESOURCES equal to SACRED FLAMES on self, then lose all SACRED FLAMES on self.",
+    },
+
+    [actionKeys.EDICT_OF_SEVERANCE]: {
+        name: "EDICT OF SEVERANCE",
+        type: entryTypes.ACTION,
+        description: "Applies SEVERED TIME to the battlefield.",
+    },
+
+    [actionKeys.THE_WORD_MADE_FLESH]: {
+        name: "THE WORD MADE FLESH",
+        type: entryTypes.ACTION,
+        description:
+            "Exits ASCENDENCE OF SPIRIT and enters CUTOFF WINGS, then inflicts BURDEN OF STIGMA on the target.",
     },
 };
 
