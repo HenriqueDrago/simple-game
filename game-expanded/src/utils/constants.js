@@ -188,9 +188,9 @@ export const presetAi = {
             effectKeys.DAMAGE_REDUCTION,
             effectKeys.RESOURCES,
             effectKeys.MITIGATION_RESOURCES,
-            effectKeys.OFFENSIVE_ACTIONS,
-            effectKeys.DEFENSIVE_ACTIONS,
-            effectKeys.TRANSFORMATIVE_ACTIONS,
+            mechanicKeys.OFFENSIVE_ACTIONS,
+            mechanicKeys.DEFENSIVE_ACTIONS,
+            mechanicKeys.TRANSFORMATIVE_ACTIONS,
         ],
     },
     [aiKeys.SIMPLE]: {
@@ -245,6 +245,7 @@ export const presetAi = {
             actionKeys.ARRAY,
             actionKeys.CURSE,
             effectKeys.RUNIC_ARRAY,
+            mechanicKeys.RUNIC_INSCRIPTION,
             effectKeys.THORNED_SHACKLES,
             effectKeys.SHACKLED_MANA,
             effectKeys.POISON,
@@ -296,6 +297,7 @@ export const presetAi = {
             actionKeys.ALIGN,
             effectKeys.ALIGNED,
             effectKeys.ELEMENTAL_WHEEL,
+            mechanicKeys.ELEMENTAL_CYCLE,
             effectKeys.NATURE,
             effectKeys.FROST,
             effectKeys.SCORCH,
@@ -639,14 +641,24 @@ export const INITIAL_GAME_STATE = {
     },
     entities: {
         [entityKeys.PLAYER_ONE]: {
-            ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
+            ...distributePoints(
+                createBaseEntity(),
+                sdmKeys.CUSTOM,
+                presetAi[aiKeys.HUMAN].best,
+                true,
+            ),
             controller: aiKeys.HUMAN,
-            statDistributionMode: sdmKeys.RANDOM,
+            statDistributionMode: sdmKeys.CUSTOM,
         },
         [entityKeys.PLAYER_TWO]: {
-            ...distributePoints(createBaseEntity(), sdmKeys.RANDOM),
+            ...distributePoints(
+                createBaseEntity(),
+                sdmKeys.CUSTOM,
+                presetAi[aiKeys.SIMPLE].best,
+                true,
+            ),
             controller: aiKeys.SIMPLE,
-            statDistributionMode: sdmKeys.RANDOM,
+            statDistributionMode: sdmKeys.CUSTOM,
         },
     },
 };

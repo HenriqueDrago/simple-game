@@ -150,7 +150,12 @@ export function restoreResources(entity, amount, wheel) {
     return draftEntity;
 }
 
-export function distributePoints(entity, mode, bestStats = null) {
+export function distributePoints(
+    entity,
+    mode,
+    bestStats = null,
+    randomize = false,
+) {
     let newEntity = {
         ...entity,
         attributes: {},
@@ -162,34 +167,33 @@ export function distributePoints(entity, mode, bestStats = null) {
 
     switch (mode) {
         case sdmKeys.CUSTOM:
-            // Do nothing
-            break;
+            if (randomize) {
+                // Reset points before rolling
+                newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+                for (let attr of constants.ATTRIBUTE_NAMES) {
+                    newEntity.attributes[attr].points = 0;
+                }
 
-        case sdmKeys.RANDOM:
-            // Reset points before rolling
-            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-            for (let attr of constants.ATTRIBUTE_NAMES) {
-                newEntity.attributes[attr].points = 0;
-            }
+                // Roll random stats
+                for (let i = 0; i < constants.INITIAL_POINTS_AVAILABLE; i++) {
+                    let random_stat =
+                        constants.ATTRIBUTE_NAMES[
+                            Math.floor(
+                                Math.random() *
+                                    constants.ATTRIBUTE_NAMES.length,
+                            )
+                        ];
+                    newEntity.attributes[random_stat].points += 1;
+                    newEntity.unspentPoints -= 1;
+                }
 
-            // Roll random stats
-            for (let i = 0; i < constants.INITIAL_POINTS_AVAILABLE; i++) {
-                let random_stat =
-                    constants.ATTRIBUTE_NAMES[
-                        Math.floor(
-                            Math.random() * constants.ATTRIBUTE_NAMES.length,
-                        )
-                    ];
-                newEntity.attributes[random_stat].points += 1;
-                newEntity.unspentPoints -= 1;
-            }
-
-            // Apply values
-            for (let attr of constants.ATTRIBUTE_NAMES) {
-                newEntity.attributes[attr].value =
-                    constants.BASE_STATS[attr] +
-                    newEntity.attributes[attr].points *
-                        constants.STAT_MULTIPLIERS[attr];
+                // Apply values
+                for (let attr of constants.ATTRIBUTE_NAMES) {
+                    newEntity.attributes[attr].value =
+                        constants.BASE_STATS[attr] +
+                        newEntity.attributes[attr].points *
+                            constants.STAT_MULTIPLIERS[attr];
+                }
             }
             break;
 
@@ -542,7 +546,11 @@ export function dealDamage(
                 : 0;
 
         const damagePostMitigation =
-            finalDmg - emberConsumed - haloConsumed - cryoConsumed - domeConsumed;
+            finalDmg -
+            emberConsumed -
+            haloConsumed -
+            cryoConsumed -
+            domeConsumed;
 
         const defenderNewHp = Math.max(
             0,

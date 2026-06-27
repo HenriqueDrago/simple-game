@@ -35,7 +35,6 @@ export const aiKeys = Object.freeze({
 });
 
 export const sdmKeys = Object.freeze({
-    RANDOM: "random",
     CUSTOM: "custom",
     BEST: "best",
     FULL_DEF: "fullDef",

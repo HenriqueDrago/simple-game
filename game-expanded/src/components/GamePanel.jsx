@@ -17,6 +17,7 @@ function GamePanel({
     handleDistributionModeChange,
     handleAiChange,
     handleStarChange,
+    handleRandomizeStats
 }) {
     const isSetupPhase = game.status === turnStatus.SETUP;
 
@@ -33,6 +34,7 @@ function GamePanel({
                     }
                     controller={game.entities[entityKeys.PLAYER_ONE].controller}
                     game={game}
+                    handleRandomizeStats={handleRandomizeStats}
                 />
             )}
 
@@ -106,6 +108,7 @@ function GamePanel({
                     }
                     controller={game.entities[entityKeys.PLAYER_TWO].controller}
                     game={game}
+                    handleRandomizeStats={handleRandomizeStats}
                 />
             )}
         </div>

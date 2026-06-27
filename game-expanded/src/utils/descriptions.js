@@ -939,7 +939,7 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         name: "RUNIC INSCRIPTION",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase triggered at ROUND end while RUNIC ARRAY is active.",
+            "A special phase triggered at between each player's TURN while RUNIC ARRAY is active.",
     },
 
     [mechanicKeys.ELEMENTAL_CYCLE]: {
@@ -962,7 +962,7 @@ export const ACTION_CATEGORY_DESCRIPTIONS = {
         name: "OFFENSIVE ACTIONS",
         type: entryTypes.MECHANIC,
         description:
-            "Includes ATTACK, SPECIAL_ATTACK, LASER, MELTDOWN, and SELF-SACRIFICE.",
+            "Includes ATTACK, SPECIAL ATTACK, LASER, MELTDOWN, and SELF-SACRIFICE.",
     },
 
     [mechanicKeys.DEFENSIVE_ACTIONS]: {
@@ -975,7 +975,7 @@ export const ACTION_CATEGORY_DESCRIPTIONS = {
         name: "TRANSFORMATIVE ACTIONS",
         type: entryTypes.MECHANIC,
         description:
-            "Includes ARRAY, SHADOW_PACT, DARK_PROMISE, ATTUNE, DA_CAPO, DEPLOY, CURSE, RITUAL_OF_ASH, SOUND_OF_SILENCE, BABEL, SHADOW_MANTLE, BLACK_MAYHEM, ALIGN, and CHART.",
+            "Includes ARRAY, SHADOW PACT, DARK PROMISE, ATTUNE, DA CAPO, DEPLOY, CURSE, RITUAL OF ASH, SOUND OF SILENCE, BABEL, SHADOW MANTLE, BLACK MAYHEM, ALIGN, and CHART.",
     },
 };
 

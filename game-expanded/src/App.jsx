@@ -390,16 +390,39 @@ function App() {
     }
 
     function handleProgressReset() {
-        setGame((prev)=> {
+        setGame((prev) => {
             return {
                 ...prev,
                 progressStatus: {
                     ...INITIAL_GAME_STATE.progressStatus,
-                }
-            }
-        })
+                },
+            };
+        });
 
         setResetModal(false);
+    }
+
+    function handleRandomizeStats(entityKey) {
+        setGame((prev) => {
+            let draftEntity = prev.entities[entityKey];
+
+            draftEntity = distributePoints(
+                draftEntity,
+                draftEntity.statDistributionMode,
+                presetAi[draftEntity.controller].best,
+                true,
+            );
+
+            return {
+                ...prev,
+                entities: {
+                    ...prev.entities,
+                    [entityKey]: {
+                        ...draftEntity,
+                    },
+                },
+            };
+        });
     }
 
     // Auxiliary Functions
@@ -658,8 +681,12 @@ function App() {
                     mainText={"Do you wish to reset your progress?"}
                     subText={"*This action is irreversible."}
                     isConfirmOnly={false}
-                    rejectAction={() => {setResetModal(false)}}
-                    confirmAction={() => {handleProgressReset()}}
+                    rejectAction={() => {
+                        setResetModal(false);
+                    }}
+                    confirmAction={() => {
+                        handleProgressReset();
+                    }}
                     confirmText="Continue"
                     rejectText={"Cancel"}
                 />
@@ -688,6 +715,7 @@ function App() {
                 handleDistributionModeChange={handleDistributionModeChange}
                 handleAiChange={handleAiChange}
                 handleStarChange={handleStarChange}
+                handleRandomizeStats={handleRandomizeStats}
             />
             <ActionPanel
                 handleAction={handleAction}

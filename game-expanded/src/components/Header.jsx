@@ -102,9 +102,10 @@ function Header({
                             onClick={() => {
                                 handleResetModal(true);
                             }}
-                            aria-label="Reset Progression Data"
+                            title={"Reset Progression Data"}
                         >
                             <RotateCcw size={18} strokeWidth={2.5} />
+                            
                         </button>
                     </div>
                 )}
