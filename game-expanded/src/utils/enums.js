@@ -31,7 +31,7 @@ export const aiKeys = Object.freeze({
     CYBORG: "cyborg",
     MAESTRO: "maestro",
     ELEMENTALIST: "elementalist",
-    STARFARER: "starfarer"
+    STARFARER: "starfarer",
 });
 
 export const sdmKeys = Object.freeze({
@@ -83,24 +83,24 @@ export const actionKeys = Object.freeze({
     MELTDOWN: "meltdown",
     BABEL: "babel",
     ALIGN: "align",
-    GRACE_OF_HEAVENS: "graceOfHeavens",
-    CELESTIAL_SCALE: "celestialScale",
-    SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
-    GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
-    EDICT_OF_SEVERANCE: "edictOfSeverance",
-    BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
-    SACRAMENT: "sacrament",
-    THE_WORD_MADE_FLESH: "theWordMadeFlesh",
+    // GRACE_OF_HEAVENS: "graceOfHeavens",
+    // CELESTIAL_SCALE: "celestialScale",
+    // SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
+    // GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
+    // EDICT_OF_SEVERANCE: "edictOfSeverance",
+    // BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
+    // SACRAMENT: "sacrament",
+    // THE_WORD_MADE_FLESH: "theWordMadeFlesh",
     CHART: "chart",
-    ASCEND: "ascend",
+    // ASCEND: "ascend",
 });
 
 export const effectKeys = Object.freeze({
     GUARDING_STATE: "guardingState",
-    MANA_IMBALANCE: "manaImbalance",
+
     MANA_OVERFLOW: "manaOverflow",
     SACRIFICIAL_STATE: "sacrificialState",
-    MANA_BLEED: "manaBleed",
+
     THORNED_SHACKLES: "thornedShackles",
     SHACKLED_MANA: "shackledMana",
     POISON: "poison",
@@ -207,6 +207,8 @@ export const effectKeys = Object.freeze({
     YELLOW_TRAILFALL: "yellowTrailfall",
     GREEN_TRAILFALL: "greenTrailfall",
     BLUE_TRAILFALL: "blueTrailfall",
+    INDIGO_TRAILFALL: "indigoTrailfall",
+    VIOLET_TRAILFALL: "violetTrailfall",
 });
 
 export const eyeKeys = Object.freeze({
@@ -225,6 +227,9 @@ export const entryTypes = Object.freeze({
     MITIGATION_RESOURCE: "MITIGATION RESOURCE",
     FREE_RESOURCE: "FREE RESOURCE",
     LIMITED_RESOURCE: "LIMITED RESOURCE",
+    CATEGORY: "CATEGORY",
+    ELEMENTAL_ESSENCE: "ELEMENTAL ESSENCE",
+    BATTLE_PHASE: "BATTLE PHASE",
 });
 
 export const starfallPhases = Object.freeze({
@@ -250,4 +255,21 @@ export const progKeys = Object.freeze({
     DEFEATED: 1,
     OPEN_UNDEFEATED: 2,
     LOCKED: 3,
-})
+});
+
+export const mechanicKeys = Object.freeze({
+    TURN: "turn",
+    ROUND: "round",
+    ACTIONS: "actions",
+    UPKEEP: "upkeep",
+    PLAN: "plan",
+    COMMIT: "commit",
+    MANA_IMBALANCE: "manaImbalance",
+    MANA_BLEED: "manaBleed",
+    RUNIC_INSCRIPTION: "runicInscription",
+    ELEMENTAL_CYCLE: "elementalCycle",
+    EMANATION: "emanation",
+    OFFENSIVE_ACTIONS: "offensiveActions",
+    DEFENSIVE_ACTIONS: "defensiveActions",
+    TRANSFORMATIVE_ACTIONS: "transformativeActions",
+});

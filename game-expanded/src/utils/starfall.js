@@ -185,6 +185,26 @@ export function processTrail({ master, nonMaster }, trailKey) {
             draftNonMaster = newEntities.draftNonMaster;
             break;
         }
+        case effectKeys.INDIGO_TRAIL: {
+            draftMaster = {
+                ...draftMaster,
+                stars: {
+                    ...draftMaster.stars,
+                    [effectKeys.INDIGO_TRAIL]: 0,
+                },
+            }
+            break;
+        }
+        case effectKeys.VIOLET_TRAIL: {
+            draftMaster = {
+                ...draftMaster,
+                stars: {
+                    ...draftMaster.stars,
+                    [effectKeys.VIOLET_TRAIL]: 0,
+                },
+            }
+            break;
+        }
     }
 
     draftMaster = {

@@ -7,8 +7,8 @@ function Modal({
     subText = null,
     confirmText = "Ok",
     rejectText,
-    confirmAction = null,
-    rejectAction,
+    confirmAction = () => {},
+    rejectAction = () => {},
 }) {
     // Executes on mount
     useEffect(() => {

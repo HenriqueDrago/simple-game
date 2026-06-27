@@ -37,11 +37,18 @@ export function bloodknightAI(context) {
         context;
 
     const missingHp = agent.maxHp - agent.currHp;
+    const missingMana = agent.maxMana - agent.currMana;
+    const nextTurnHeal = Math.min(
+        agent.currMana,
+        Math.floor(agent.resources.bloodSacrifice / 2),
+    );
 
-    // Avoid throns
+    // Guard to recover mana
     if (
-        isArrayActive &&
-        agent.attributes.str.value + agent.scoria > agent.currHp
+        !isArrayActive &&
+        nextTurnHeal < missingHp &&
+        agent.resources.bloodSacrifice > 0 &&
+        missingMana >= agent.maxMana * constants.GUARD_MANA_REGEN
     ) {
         handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
         return;
@@ -57,20 +64,6 @@ export function bloodknightAI(context) {
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
         return;
-    }
-
-    // Guard if dying to recover mana (and thus, hp)
-    if (missingHp >= agent.maxHp * 0.7) {
-        if (agent.resources.bloodSacrifice <= 0) {
-            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
-            return;
-        } else if (agent.currMana < missingHp) {
-            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-            return;
-        } else {
-            handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
-            return;
-        }
     }
 
     // Standard Attack
@@ -298,22 +291,22 @@ export function shadowSorcererAI(context) {
 
     // If low hp, use SM if beneficial
     if (agent.currHp <= agent.maxHp * 0.5) {
-    const simMantle = simulate(actionKeys.SHADOW_MANTLE);
-    const postMantle = simMantle.entities[agentKey];
+        const simMantle = simulate(actionKeys.SHADOW_MANTLE);
+        const postMantle = simMantle.entities[agentKey];
 
-    const toBeRestored = postMantle.resources.unrelentingShadows;
-    const agentAfterRestore = restoreResources(postMantle, toBeRestored);
+        const toBeRestored = postMantle.resources.unrelentingShadows;
+        const agentAfterRestore = restoreResources(postMantle, toBeRestored);
 
-    const netHpGain =
-        agentAfterRestore.currHp -
-        agentAfterRestore.resources.manaOverflow -
-        agent.currHp;
+        const netHpGain =
+            agentAfterRestore.currHp -
+            agentAfterRestore.resources.manaOverflow -
+            agent.currHp;
 
-    if (netHpGain > 0) {
-        handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
-        return;
+        if (netHpGain > 0) {
+            handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
+            return;
+        }
     }
-}
 
     // Avoid lethal burn
     if (draftTarget.currHp <= 0) {

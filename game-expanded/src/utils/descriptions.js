@@ -1,4 +1,4 @@
-import { actionKeys, effectKeys, entryTypes } from "./enums";
+import { actionKeys, effectKeys, entryTypes, mechanicKeys } from "./enums";
 
 export const ACTION_DESCRIPTIONS = {
     [actionKeys.ATTACK]: {
@@ -100,14 +100,14 @@ export const ACTION_DESCRIPTIONS = {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.ACTION,
         description:
-            "Usable at negative SONORITY. Inverses current SONORITY and restores RESOURCES on self by the difference.",
+            "Usable at negative SONORITY. Inverts current SONORITY and restores RESOURCES on self by the difference.",
     },
 
     [actionKeys.BABEL]: {
         name: "BABEL",
         type: entryTypes.ACTION,
         description:
-            "Usable at positive SONORITY. Inverses current SONORITY and deals TRUE DAMAGE to the opponent by the difference.",
+            "Usable at positive SONORITY. Inverts current SONORITY and deals TRUE DAMAGE to the opponent by the difference.",
     },
 
     [actionKeys.DEPLOY]: {
@@ -120,7 +120,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "LASER",
         type: entryTypes.ACTION,
         description:
-            "Deals 1 PIERCING DAMAGE and gains OVERHEAT based on the amount of times LASER was used this turn. Does not end turn.",
+            "Deals 1 PIERCING DAMAGE and gains OVERHEAT based on the number of times LASER was used this turn. Does not end turn.",
     },
 
     [actionKeys.MELTDOWN]: {
@@ -134,7 +134,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "ALIGN",
         type: entryTypes.ACTION,
         description:
-            "If not on ALIGNED state, enters ALIGNED state. If ELEMENTAL WHEEL is inactive, activates ELEMENTAL WHEEL on NATURE and gain 3 of each ELEMENTAL ESSENCE. Otherwise, gains 5 ELEMENTAL ESSENCE of the current element and activates the current element's active effect.",
+            "If not on ALIGNED state, enters ALIGNED state. If ELEMENTAL WHEEL is inactive, activates ELEMENTAL WHEEL on NATURE and gains 3 of each ELEMENTAL ESSENCE. Otherwise, gains 5 ELEMENTAL ESSENCE of the current element and activates the current element's active effect.",
     },
 };
 
@@ -153,7 +153,7 @@ export const STATE_DESCRIPTIONS = {
 
     [effectKeys.THORNED_SHACKLES]: {
         name: "THORNED SHACKLES",
-        type: entryTypes.STATES,
+        type: entryTypes.STATE,
         description:
             "When suffering PHYSICAL DAMAGE, the attacker takes TRUE DAMAGE equal to their own STR.",
     },
@@ -183,7 +183,7 @@ export const STATE_DESCRIPTIONS = {
         name: "ALIGNED",
         type: entryTypes.STATE,
         description:
-            "While the ELEMENTAL WHEEL is active, suffers the effects of the current element's passive effect. If at least one ALIGNED player is in the battlefield, enables WHEEL TURN at round end.",
+            "While the ELEMENTAL WHEEL is active, suffers the effects of the current element's passive effect. If at least one ALIGNED player is in the battlefield, enables ELEMENTAL CYCLE at round end.",
     },
 
     [effectKeys.RESONANT]: {
@@ -272,7 +272,7 @@ export const RESOURCE_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "Increases PHYSICAL DAMAGE dealt by the stack when using ATTACK. Causes MANA BLEED at turn start.",
+            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self when using ATTACK. Causes MANA BLEED at turn start.",
     },
 
     [effectKeys.UNRELENTING_SHADOWS]: {
@@ -313,19 +313,19 @@ export const RESOURCE_DESCRIPTIONS = {
 export const ESSENCE_DESCRIPTIONS = {
     [effectKeys.OVERGROWTH]: {
         name: "OVERGROWTH",
-        type: entryTypes.ESSENCE,
+        type: entryTypes.ELEMENTAL_ESSENCE,
         description: "Allows self to hold more HEALTH.",
     },
 
     [effectKeys.PERMAFROST]: {
         name: "PERMAFROST",
-        type: entryTypes.ESSENCE,
+        type: entryTypes.ELEMENTAL_ESSENCE,
         description: "Added to DEF in calculations.",
     },
 
     [effectKeys.SCORIA]: {
         name: "SCORIA",
-        type: entryTypes.ESSENCE,
+        type: entryTypes.ELEMENTAL_ESSENCE,
         description: "Added to STR in calculations.",
     },
 };
@@ -335,14 +335,14 @@ export const FIELD_EFFECT_DESCRIPTIONS = {
         name: "RUNIC ARRAY",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While active, enables ARRAY TURN at round end. On ARRAY TURN, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on ARRAY TURN, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consume all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES.",
+            "While active, enables RUNIC INSCRIPTION at round end. On RUNIC INSCRIPTION, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on RUNIC INSCRIPTION, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consumes all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES.",
     },
 
     [effectKeys.ELEMENTAL_WHEEL]: {
         name: "ELEMENTAL WHEEL",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "During WHEEL TURN, cycles to the next element and enables its passive effect. Follows the order: NATURE → FROST → SCORCH, then repeats.",
+            "During ELEMENTAL CYCLE, cycles to the next element and enables its passive effect. Follows the order: NATURE → FROST → SCORCH, then repeats.",
     },
 };
 
@@ -385,103 +385,6 @@ export const STAT_DESCRIPTIONS = {
     },
 };
 
-export const MECHANIC_DESCRIPTIONS = {
-    [effectKeys.MANA_IMBALANCE]: {
-        name: "MANA IMBALANCE",
-        type: entryTypes.MECHANIC,
-        description:
-            "The difference between the user's and target's current MANA. If the target has equal or greater MANA, this value is 0.",
-    },
-
-    [effectKeys.MITIGATION_RESOURCES]: {
-        name: "MITIGATION RESOURCES",
-        type: entryTypes.MECHANIC,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes a RESOURCES of this type to decrease damage taken.",
-    },
-
-    [effectKeys.MANA_BLEED]: {
-        name: "MANA BLEED",
-        type: entryTypes.MECHANIC,
-        description:
-            "At turn start, loses MANA equal to half of current BLOOD SACRIFICE and restores an equal amount of HEALTH.",
-    },
-
-    [effectKeys.RESOURCES]: {
-        name: "RESOURCES",
-        type: entryTypes.MECHANIC,
-        description:
-            "Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE, SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED SIN, INSIGHT and ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in this order. When RESOURCES are restored, they are restored in reverse order. Can only restore TARNISHED SIN, INSIGHT and ENLIGHTENMENT under special conditions.",
-    },
-
-    [effectKeys.NATURE]: {
-        name: "NATURE",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities restore +50% RESOURCES. Active Effect - Restore RESOURCES by OVERGROWTH on self.",
-    },
-
-    [effectKeys.FROST]: {
-        name: "FROST",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities deal and take -50% damage. Active Effect - Gain CRYOGENESIS by PERMAFROST on self.",
-    },
-
-    [effectKeys.SCORCH]: {
-        name: "SCORCH",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities deal and take +50% damage. Active Effect - Take TRUE DAMAGE by SCORIA on self.",
-    },
-
-    [effectKeys.ELEMENTAL_ESSENCE]: {
-        name: "ELEMENTAL ESSENCE",
-        type: entryTypes.MECHANIC,
-        description:
-            "Includes OVERGROWTH, PERMAFROST and SCORIA, corresponding to NATURE, FROST and SCORCH respectively.",
-    },
-
-    [effectKeys.SONORITY]: {
-        name: "SONORITY",
-        type: entryTypes.MECHANIC,
-        description:
-            "Starts at 0 and ranges from -5 to 5. Increases when using DEFENSIVE ACTIONS. Decreases when using OFFENSIVE ACTIONS.",
-    },
-
-    [effectKeys.MAX_MANA]: {
-        name: "MAX MANA",
-        type: entryTypes.MECHANIC,
-        description: "Starts at 10. Limits how much MANA you can hold.",
-    },
-
-    [effectKeys.MAX_HEALTH]: {
-        name: "MAX HEALTH",
-        type: entryTypes.MECHANIC,
-        description: "Starts at 20. Limits how much HEALTH you can hold.",
-    },
-
-    [effectKeys.DAMAGE_REDUCTION]: {
-        name: "DAMAGE REDUCTION",
-        type: entryTypes.MECHANIC,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, reduces damage taken by the percentage.",
-    },
-
-    [effectKeys.DEF_EFFECTIVENESS]: {
-        name: "DEF EFFECTIVENESS",
-        type: entryTypes.MECHANIC,
-        description:
-            "When taking PHYSICAL DAMAGE, increases how much damage can be blocked by DEF by the percentage.",
-    },
-
-    [effectKeys.MAX_OVERHEAT]: {
-        name: "MAX OVERHEAT",
-        type: entryTypes.MECHANIC,
-        description: "Starts at 10. Limits how much OVERHEAT you can hold.",
-    },
-};
-
 export const STAR_DESCRIPTIONS = {
     [actionKeys.CHART]: {
         name: "CHART",
@@ -499,81 +402,96 @@ export const STAR_DESCRIPTIONS = {
 
     [effectKeys.STARFALL]: {
         name: "STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase where colored stars act. Divided into twelve ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, and BLUE TRAILFALL. Skips the subphase if there are no corresponding stars or trails available.",
+            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. Trailfall phases are skipped if the user has no trails on self.",
     },
 
     [effectKeys.RED_STARFALL]: {
         name: "RED STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The first subphase of STARFALL, when RED STAR acts.",
     },
 
     [effectKeys.ORANGE_STARFALL]: {
         name: "ORANGE STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The second subphase of STARFALL, when ORANGE STAR acts.",
     },
 
     [effectKeys.YELLOW_STARFALL]: {
         name: "YELLOW STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The third subphase of STARFALL, when YELLOW STAR acts.",
     },
 
     [effectKeys.GREEN_STARFALL]: {
         name: "GREEN STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The fourth subphase of STARFALL, when GREEN STAR acts.",
     },
 
     [effectKeys.BLUE_STARFALL]: {
         name: "BLUE STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The fifth subphase of STARFALL, when BLUE STAR acts.",
     },
 
     [effectKeys.INDIGO_STARFALL]: {
         name: "INDIGO STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The sixth subphase of STARFALL, when INDIGO STAR acts.",
     },
 
     [effectKeys.VIOLET_STARFALL]: {
         name: "VIOLET STARFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The seventh subphase of STARFALL, when VIOLET STAR acts.",
     },
 
     [effectKeys.RED_TRAILFALL]: {
         name: "RED TRAILFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The eighth subphase of STARFALL, when RED TRAIL acts.",
     },
 
     [effectKeys.ORANGE_TRAILFALL]: {
         name: "ORANGE TRAILFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The ninth subphase of STARFALL, when ORANGE TRAIL acts.",
     },
 
     [effectKeys.YELLOW_TRAILFALL]: {
         name: "YELLOW TRAILFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The tenth subphase of STARFALL, when YELLOW TRAIL acts.",
     },
 
     [effectKeys.GREEN_TRAILFALL]: {
         name: "GREEN TRAILFALL",
-        type: entryTypes.MECHANIC,
-        description: "The eleventh subphase of STARFALL, when GREEN TRAIL acts.",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "The eleventh subphase of STARFALL, when GREEN TRAIL acts.",
     },
 
     [effectKeys.BLUE_TRAILFALL]: {
         name: "BLUE TRAILFALL",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.BATTLE_PHASE,
         description: "The twelfth subphase of STARFALL, when BLUE TRAIL acts.",
+    },
+
+    [effectKeys.INDIGO_TRAILFALL]: {
+        name: "INDIGO TRAILFALL",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "The thirteenth subphase of STARFALL, when INDIGO TRAIL acts.",
+    },
+
+    [effectKeys.VIOLET_TRAILFALL]: {
+        name: "VIOLET TRAILFALL",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "The fourteenth subphase of STARFALL, when VIOLET TRAIL acts.",
     },
 
     [effectKeys.WHITE_STAR]: {
@@ -729,6 +647,18 @@ export const STAR_DESCRIPTIONS = {
         description:
             "At BLUE TRAILFALL, loses DIMMED BLUE STAR equal to BLUE TRAIL and gains DOME and GRAY STAR equal to the amount lost. If there are not enough DIMMED BLUE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
     },
+
+    [effectKeys.INDIGO_TRAIL]: {
+        name: "INDIGO TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At INDIGO TRAILFALL, lose all INDIGO TRAIL.",
+    },
+
+    [effectKeys.VIOLET_TRAIL]: {
+        name: "VIOLET TRAIL",
+        type: entryTypes.FREE_RESOURCE,
+        description: "At VIOLET TRAILFALL, lose all VIOLET TRAIL.",
+    },
 };
 
 // Work in progress
@@ -806,7 +736,7 @@ export const PALADIN_DESCRIPTIONS = {
 
     [effectKeys.BURDEN_OF_STIGMA]: {
         name: "BURDEN OF STIGMA",
-        type: entryTypes.STATES,
+        type: entryTypes.STATE,
         description: "Cannot act. Removed at turn end.",
     },
 
@@ -876,7 +806,231 @@ export const PALADIN_DESCRIPTIONS = {
         name: "EYE OF HEAVENS",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While awoken, enables EMINENCE TURN at round end. On EMINENCE TURN, if the eye is open, closes the eye and consumes all INSIGHT on all entities. Then, grants REVELATION to each entity for every 10 INSIGHT they lost on self. If the eye is closed, opens the eye and, if an entity in the ASCENDENCE OF SPIRIT state has 0 or less ENLIGHTENMENT, removes them from the ASCENDENCE OF SPIRIT state and grants them the CUTOFF WINGS state. If there's no entity in the ASCENDENCE OF SPIRIT state in the battlefield, returns to dormant state.",
+            "While awoken, enables EMANATION at round end. On EMANATION, if the eye is open, closes the eye and consumes all INSIGHT on all entities. Then, grants REVELATION to each entity for every 10 INSIGHT they lost on self. If the eye is closed, opens the eye and, if an entity in the ASCENDENCE OF SPIRIT state has 0 or less ENLIGHTENMENT, removes them from the ASCENDENCE OF SPIRIT state and grants them the CUTOFF WINGS state. If there's no entity in the ASCENDENCE OF SPIRIT state in the battlefield, returns to dormant state.",
+    },
+};
+
+export const MECHANIC_DESCRIPTIONS = {
+    [mechanicKeys.MANA_IMBALANCE]: {
+        name: "MANA IMBALANCE",
+        type: entryTypes.MECHANIC,
+        description:
+            "The difference between the user's and target's current MANA. If the target has equal or greater MANA, this value is 0.",
+    },
+
+    [mechanicKeys.MANA_BLEED]: {
+        name: "MANA BLEED",
+        type: entryTypes.MECHANIC,
+        description:
+            "At turn start, loses MANA equal to half of current BLOOD SACRIFICE and restores an equal amount of HEALTH.",
+    },
+
+    [effectKeys.RESOURCES]: {
+        name: "RESOURCES",
+        type: entryTypes.MECHANIC,
+        description:
+            "Can be divided into FREE RESOURCES, MITIGATION RESOURCES and LIMITED RESOURCES. Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE, SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED SIN, INSIGHT and ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in this order. When RESOURCES are restored, they are restored in reverse order. Can only restore TARNISHED SIN, INSIGHT and ENLIGHTENMENT under special conditions.",
+    },
+
+    [effectKeys.NATURE]: {
+        name: "NATURE",
+        type: entryTypes.MECHANIC,
+        description:
+            "Passive Effect - All ALIGNED entities restore +50% RESOURCES. Active Effect - Restore RESOURCES by OVERGROWTH on self.",
+    },
+
+    [effectKeys.FROST]: {
+        name: "FROST",
+        type: entryTypes.MECHANIC,
+        description:
+            "Passive Effect - All ALIGNED entities deal and take -50% damage. Active Effect - Gain CRYOGENESIS by PERMAFROST on self.",
+    },
+
+    [effectKeys.SCORCH]: {
+        name: "SCORCH",
+        type: entryTypes.MECHANIC,
+        description:
+            "Passive Effect - All ALIGNED entities deal and take +50% damage. Active Effect - Take TRUE DAMAGE by SCORIA on self.",
+    },
+
+    [effectKeys.SONORITY]: {
+        name: "SONORITY",
+        type: entryTypes.MECHANIC,
+        description:
+            "Starts at 0 and ranges from -5 to 5. Increases when using DEFENSIVE ACTIONS. Decreases when using OFFENSIVE ACTIONS.",
+    },
+
+    [effectKeys.MAX_MANA]: {
+        name: "MAX MANA",
+        type: entryTypes.MECHANIC,
+        description: "Starts at 10. Limits how much MANA you can hold.",
+    },
+
+    [effectKeys.MAX_HEALTH]: {
+        name: "MAX HEALTH",
+        type: entryTypes.MECHANIC,
+        description: "Starts at 20. Limits how much HEALTH you can hold.",
+    },
+
+    [effectKeys.DAMAGE_REDUCTION]: {
+        name: "DAMAGE REDUCTION",
+        type: entryTypes.MECHANIC,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, reduces damage taken by the percentage.",
+    },
+
+    [effectKeys.DEF_EFFECTIVENESS]: {
+        name: "DEF EFFECTIVENESS",
+        type: entryTypes.MECHANIC,
+        description:
+            "When taking PHYSICAL DAMAGE, increases how much damage can be blocked by DEF by the percentage.",
+    },
+
+    [effectKeys.MAX_OVERHEAT]: {
+        name: "MAX OVERHEAT",
+        type: entryTypes.MECHANIC,
+        description: "Starts at 10. Limits how much OVERHEAT you can hold.",
+    },
+
+    [mechanicKeys.ACTIONS]: {
+        name: "ACTIONS",
+        type: entryTypes.MECHANIC,
+        description:
+            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT.",
+    },
+};
+
+export const BATTLE_PHASE_DESCRIPTIONS = {
+    [mechanicKeys.ROUND]: {
+        name: "ROUND",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A full game cycle. A basic ROUND consists only a TURN from each player, but can be extended via additional phases. A full ROUND can be subdivided as follows: FIRST PLAYER TURN, FIRST PLAYER STARFALL, RUNIC INSCRIPTION, SECOND PLAYER TURN, SECOND PLAYER STARFALL, RUNIC INSCRIPTION, ELEMENTAL CYCLE and EMANATION.",
+    },
+
+    [mechanicKeys.TURN]: {
+        name: "TURN",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A player's active cycle. It can be subdivided into three phases: UPKEEP, PLAN and COMMIT. Every player has a single TURN per ROUND.",
+    },
+
+    [mechanicKeys.UPKEEP]: {
+        name: "UPKEEP",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A TURN subphase where the 'Turn Start' effects are applied.",
+    },
+
+    [mechanicKeys.COMMIT]: {
+        name: "COMMIT",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A TURN subphase where the 'Turn End' effects are applied.",
+    },
+
+    [mechanicKeys.PLAN]: {
+        name: "PLAN",
+        type: entryTypes.BATTLE_PHASE,
+        description: "A TURN subphase where ACTIONS can be used.",
+    },
+
+    [mechanicKeys.RUNIC_INSCRIPTION]: {
+        name: "RUNIC INSCRIPTION",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered at ROUND end while RUNIC ARRAY is active.",
+    },
+
+    [mechanicKeys.ELEMENTAL_CYCLE]: {
+        name: "ELEMENTAL CYCLE",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered at ROUND end if at least one ALIGNED player is on the battlefield.",
+    },
+
+    [mechanicKeys.EMANATION]: {
+        name: "EMANATION",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken.",
+    },
+};
+
+export const ACTION_CATEGORY_DESCRIPTIONS = {
+    [mechanicKeys.OFFENSIVE_ACTIONS]: {
+        name: "OFFENSIVE ACTIONS",
+        type: entryTypes.MECHANIC,
+        description:
+            "Includes ATTACK, SPECIAL_ATTACK, LASER, MELTDOWN, and SELF-SACRIFICE.",
+    },
+
+    [mechanicKeys.DEFENSIVE_ACTIONS]: {
+        name: "DEFENSIVE ACTIONS",
+        type: entryTypes.MECHANIC,
+        description: "Includes HEAL, GUARD, and AEGIS.",
+    },
+
+    [mechanicKeys.TRANSFORMATIVE_ACTIONS]: {
+        name: "TRANSFORMATIVE ACTIONS",
+        type: entryTypes.MECHANIC,
+        description:
+            "Includes ARRAY, SHADOW_PACT, DARK_PROMISE, ATTUNE, DA_CAPO, DEPLOY, CURSE, RITUAL_OF_ASH, SOUND_OF_SILENCE, BABEL, SHADOW_MANTLE, BLACK_MAYHEM, ALIGN, and CHART.",
+    },
+};
+
+export const CATEGORY_DESCRIPTIONS = {
+    [entryTypes.FIELD_EFFECT]: {
+        name: "FIELD EFFECT",
+        type: entryTypes.CATEGORY,
+        description:
+            "A persistent effect that applies to the entire battlefield, affecting all entities equally.",
+    },
+
+    [entryTypes.STATE]: {
+        name: "STATE",
+        type: entryTypes.CATEGORY,
+        description:
+            "A persistent effect that applies only to the entity in question.",
+    },
+
+    [entryTypes.DAMAGE_TYPE]: {
+        name: "DAMAGE TYPE",
+        type: entryTypes.CATEGORY,
+        description:
+            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE and TRUE DAMAGE.",
+    },
+
+    [entryTypes.FREE_RESOURCE]: {
+        name: "FREE RESOURCE",
+        type: entryTypes.CATEGORY,
+        description: "A subset of RESOURCES that have no upper cap.",
+    },
+
+    [entryTypes.LIMITED_RESOURCE]: {
+        name: "LIMITED RESOURCE",
+        type: entryTypes.CATEGORY,
+        description: "A subset of RESOURCES that has upper cap.",
+    },
+
+    [entryTypes.MITIGATION_RESOURCE]: {
+        name: "MITIGATION RESOURCE",
+        type: entryTypes.CATEGORY,
+        description:
+            "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken.",
+    },
+
+    [entryTypes.BATTLE_PHASE]: {
+        name: "BATTLE PHASE",
+        type: entryTypes.CATEGORY,
+        description: "A subsection of a battle.",
+    },
+
+    [effectKeys.ELEMENTAL_ESSENCE]: {
+        name: "ELEMENTAL ESSENCE",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes OVERGROWTH, PERMAFROST and SCORIA, corresponding to NATURE, FROST and SCORCH respectively.",
     },
 };
 
@@ -891,4 +1045,7 @@ export const DESCRIPTIONS = {
     ...STAT_DESCRIPTIONS,
     ...PALADIN_DESCRIPTIONS,
     ...STAR_DESCRIPTIONS,
+    ...ACTION_CATEGORY_DESCRIPTIONS,
+    ...CATEGORY_DESCRIPTIONS,
+    ...BATTLE_PHASE_DESCRIPTIONS,
 };

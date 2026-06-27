@@ -1087,6 +1087,30 @@ export function processStarfallTurn(prev) {
             break;
         }
 
+        case starfallPhases.INDIGO_TRAIL: {
+            if (master.stars[effectKeys.INDIGO_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.INDIGO_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
+        case starfallPhases.VIOLET_TRAIL: {
+            if (master.stars[effectKeys.VIOLET_TRAIL] > 0) {
+                const newEntities = processTrail(
+                    context,
+                    effectKeys.VIOLET_TRAIL,
+                );
+                master = newEntities.draftMaster;
+                nonMaster = newEntities.draftNonMaster;
+            }
+            break;
+        }
+
         default: {
             break;
         }

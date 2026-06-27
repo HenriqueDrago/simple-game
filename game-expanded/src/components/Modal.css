@@ -82,7 +82,8 @@
     color: #ffffff;
     border: 2px solid #ffffff;
     border-radius: 0;
-    padding: 10px 25px;
+    padding: 10px 0;
+    min-width: 200px;
     font-size: 1rem;
     font-weight: bold;
     text-transform: uppercase;
@@ -92,19 +93,7 @@
         color 0.2s ease;
 }
 
-/* Primary Action Accentuation on Hover */
-.modal-confirm:hover {
+.modal-button-container button:hover {
     background-color: #ffffff;
     color: #000000;
-}
-
-/* Secondary Action Variation on Hover */
-.modal-reject {
-    opacity: 0.7;
-}
-
-.modal-reject:hover {
-    background-color: #ffffff;
-    color: #000000;
-    opacity: 1;
 }
