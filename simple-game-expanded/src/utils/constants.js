@@ -52,8 +52,9 @@ const BLOOD_SACRIFICE_MULT = 1.0;
 const ARRAY_DURATION = 3;
 const MANA_SHACKLE_TURN_GAIN = 4;
 
-const MAX_OVERHEAT = 10;
-const VENTING_OVERHEAT_LOSS = 5;
+const MAX_OVERHEAT = 100;
+const VENTING_OVERHEAT_LOSS = 50;
+const NATURAL_OVERHEAT_LOSS = 30;
 
 const HALO_GEN_MULT = 20;
 
@@ -118,7 +119,6 @@ const freeResources = [
 ];
 
 const limitedResources = [
-    effectKeys.OVERHEAT,
     effectKeys.MANA,
     effectKeys.HEALTH,
     effectKeys.INSIGHT,
@@ -163,7 +163,8 @@ export const constants = {
     MAX_TARNISHED_SIN,
     CHART_STAR_GAIN,
     STARDUST_RATE_CONVERSION,
-    MAX_DIVINE_SPARK
+    MAX_DIVINE_SPARK,
+    NATURAL_OVERHEAT_LOSS
 };
 
 export const presetAi = {

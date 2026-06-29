@@ -202,6 +202,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                                 backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
                             }}
                             showAnimation={false}
+                            showPercent={true}
                         />
                     )}
                 </>

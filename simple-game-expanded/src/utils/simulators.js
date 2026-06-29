@@ -615,7 +615,7 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         prev.elementalWheel,
     );
 
-    const newOverheat = attacker.currOverheat + 1 + attacker.lasersUsedThisTurn;
+    const newOverheat = attacker.currOverheat + 10 * (1 + attacker.lasersUsedThisTurn);
     const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
 
     const thermalOverload = newOverheat >= constants.MAX_OVERHEAT;
@@ -642,7 +642,7 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const baseDmg = agent.currOverheat;
+    const baseDmg = Math.floor(10 * agent.currOverheat/100);
 
     const draftAgent = takeDamage(
         agent,

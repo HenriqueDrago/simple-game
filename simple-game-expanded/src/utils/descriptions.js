@@ -120,7 +120,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "LASER",
         type: entryTypes.ACTION,
         description:
-            "Deals 1 PIERCING DAMAGE and gains OVERHEAT based on the number of times LASER was used this turn. Does not end turn.",
+            "Deals 1 PIERCING DAMAGE and raises OVERHEAT by 10%. Raises OVERHEAT by an additional 10% for every LASER used this turn. Does not end turn.",
     },
 
     [actionKeys.MELTDOWN]: {
@@ -204,7 +204,7 @@ export const STATE_DESCRIPTIONS = {
         name: "WEAPONS DEPLOYED",
         type: entryTypes.STATE,
         description:
-            "Enables OVERHEAT. Replaces DEPLOY with LASER. At 10 or more OVERHEAT, becomes THERMAL OVERLOAD.",
+            "Enables OVERHEAT. Replaces DEPLOY with LASER. At 100% or more OVERHEAT, becomes THERMAL OVERLOAD.",
     },
 
     [effectKeys.THERMAL_OVERLOAD]: {
@@ -217,7 +217,7 @@ export const STATE_DESCRIPTIONS = {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Enables OVERHEAT. Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, loses 5 OVERHEAT. At turn start, if at 0 OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
+            "Enables OVERHEAT. Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, loses 50% OVERHEAT. At turn start, if at 0% OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -291,7 +291,7 @@ export const RESOURCE_DESCRIPTIONS = {
 
     [effectKeys.OVERHEAT]: {
         name: "OVERHEAT",
-        type: entryTypes.LIMITED_RESOURCE,
+        type: entryTypes.FIXED_RESOURCE,
         description: "Capped at MAX OVERHEAT.",
     },
 
@@ -496,56 +496,56 @@ export const STAR_DESCRIPTIONS = {
 
     [effectKeys.WHITE_STAR]: {
         name: "WHITE STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "No effect. Can be assigned colors to become RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, or VIOLET STAR.",
     },
 
     [effectKeys.RED_STAR]: {
         name: "RED STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At RED STARFALL, deals PHYSICAL DAMAGE equal to RED STAR. When augmented, deals PIERCING DAMAGE instead. When fractured, gains RED TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.ORANGE_STAR]: {
         name: "ORANGE STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, consumes RESOURCES from the opponent equal to ORANGE STAR. When augmented, transfers them to self instead. When fractured, gains ORANGE TRAIL equal to twice the amount fractured instead.",
+            "At ORANGE STARFALL, consumes all ORANGE STAR on self, then burns FREE RESOURCES on the opponent equal to the amount lost. When augmented, burn RESOURCES instead. When fractured, gain DIMMED ORANGE STAR equal to the amount fractured and ORANGE TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At YELLOW STARFALL, gains STARDUST equal to YELLOW STAR. When augmented, gains WHITE STAR instead. When fractured, gains YELLOW TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At GREEN STARFALL, restores RESOURCES on self equal to GREEN STAR. When augmented, restores RESOURCES to the opponent instead. When fractured, gains GREEN TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At BLUE STARFALL, loses all BLUE STAR, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.INDIGO_STAR]: {
         name: "INDIGO STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "When a colored star takes an action, consumes INDIGO STAR to use the fractured version of that action instead. Fractured actions take priority over augmented ones. At INDIGO STARFALL, loses all INDIGO STAR and gains DIMMED INDIGO STAR equal to the amount lost.",
     },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "When a colored star takes an action, consumes VIOLET STAR to use the augmented version of that action instead. Then, gains DIMMED VIOLET STAR equal to the amount consumed. At VIOLET STARFALL, loses all VIOLET STAR and gains DIMMED VIOLET STAR equal to the amount lost.",
     },
@@ -559,7 +559,7 @@ export const STAR_DESCRIPTIONS = {
 
     [effectKeys.GRAY_STAR]: {
         name: "GRAY STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "Cannot be assigned a color. At turn end, converts into WHITE STAR.",
     },
@@ -573,90 +573,90 @@ export const STAR_DESCRIPTIONS = {
 
     [effectKeys.DIMMED_RED_STAR]: {
         name: "DIMMED RED STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into RED STAR.",
     },
 
     [effectKeys.DIMMED_ORANGE_STAR]: {
         name: "DIMMED ORANGE STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into ORANGE STAR.",
     },
 
     [effectKeys.DIMMED_YELLOW_STAR]: {
         name: "DIMMED YELLOW STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into YELLOW STAR.",
     },
 
     [effectKeys.DIMMED_GREEN_STAR]: {
         name: "DIMMED GREEN STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into GREEN STAR.",
     },
 
     [effectKeys.DIMMED_BLUE_STAR]: {
         name: "DIMMED BLUE STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into BLUE STAR.",
     },
 
     [effectKeys.DIMMED_INDIGO_STAR]: {
         name: "DIMMED INDIGO STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into INDIGO STAR.",
     },
 
     [effectKeys.DIMMED_VIOLET_STAR]: {
         name: "DIMMED VIOLET STAR",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At turn start, converts into VIOLET STAR.",
     },
 
     [effectKeys.RED_TRAIL]: {
         name: "RED TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At RED TRAILFALL, deals PHYSICAL DAMAGE equal to RED TRAIL. Then, loses all RED TRAIL on self.",
     },
 
     [effectKeys.ORANGE_TRAIL]: {
         name: "ORANGE TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
-            "At ORANGE TRAILFALL, consumes RESOURCES from the opponent equal to ORANGE TRAIL. Then, loses all ORANGE TRAIL on self.",
+            "At ORANGE TRAILFALL, consumes DIMMED ORANGE STAR equal to ORANGE TRAIL and burns FREE RESOURCES on the opponent equal to the amount lost. If there are not enough DIMMED ORANGE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
     },
 
     [effectKeys.YELLOW_TRAIL]: {
         name: "YELLOW TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At YELLOW TRAILFALL, gains STARDUST equal to YELLOW TRAIL. Then, loses all YELLOW TRAIL on self.",
     },
 
     [effectKeys.GREEN_TRAIL]: {
         name: "GREEN TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At GREEN TRAILFALL, restores RESOURCES on self equal to GREEN TRAIL. Then, loses all GREEN TRAIL on self.",
     },
 
     [effectKeys.BLUE_TRAIL]: {
         name: "BLUE TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description:
             "At BLUE TRAILFALL, loses DIMMED BLUE STAR equal to BLUE TRAIL and gains DOME and GRAY STAR equal to the amount lost. If there are not enough DIMMED BLUE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
     },
 
     [effectKeys.INDIGO_TRAIL]: {
         name: "INDIGO TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At INDIGO TRAILFALL, lose all INDIGO TRAIL.",
     },
 
     [effectKeys.VIOLET_TRAIL]: {
         name: "VIOLET TRAIL",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.STAR,
         description: "At VIOLET TRAILFALL, lose all VIOLET TRAIL.",
     },
 };
@@ -1104,11 +1104,18 @@ export const CATEGORY_DESCRIPTIONS = {
         description: "A subsection of a battle.",
     },
 
-    [effectKeys.ELEMENTAL_ESSENCE]: {
+    [entryTypes.ELEMENTAL_ESSENCE]: {
         name: "ELEMENTAL ESSENCE",
         type: entryTypes.CATEGORY,
         description:
             "Includes OVERGROWTH, PERMAFROST and SCORIA, corresponding to NATURE, FROST and SCORCH respectively.",
+    },
+
+    [entryTypes.STAR]: {
+        name: "STAR",
+        type: entryTypes.CATEGORY,
+        description:
+            "Special resource type that interacts with the STARFALL phase.",
     },
 };
 

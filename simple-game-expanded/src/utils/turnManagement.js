@@ -958,6 +958,7 @@ export function processStarfallTurn(prev) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.RED_STAR,
+                    effectKeys.DIMMED_RED_STAR,
                     effectKeys.RED_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -971,6 +972,7 @@ export function processStarfallTurn(prev) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.ORANGE_STAR,
+                    effectKeys.DIMMED_ORANGE_STAR,
                     effectKeys.ORANGE_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -984,6 +986,7 @@ export function processStarfallTurn(prev) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.YELLOW_STAR,
+                    effectKeys.DIMMED_YELLOW_STAR,
                     effectKeys.YELLOW_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -997,6 +1000,7 @@ export function processStarfallTurn(prev) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.GREEN_STAR,
+                    effectKeys.DIMMED_GREEN_STAR,
                     effectKeys.GREEN_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -1010,6 +1014,7 @@ export function processStarfallTurn(prev) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.BLUE_STAR,
+                    effectKeys.DIMMED_BLUE_STAR,
                     effectKeys.BLUE_TRAIL,
                 );
                 master = newEntities.draftMaster;

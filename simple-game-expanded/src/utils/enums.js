@@ -215,8 +215,6 @@ export const effectKeys = Object.freeze({
     VIOLET_TRAILFALL: "violetTrailfall",
 
     INSPIRATION: "inspiration",
-    MORTALITY: "mortality",
-    SPIRITUALITY: "spirituality",
 
     SEVERED_TIME: "severedTime",
     REMNANTS_OF_DIVINITY: "remnantsOfDivinity",
@@ -225,6 +223,8 @@ export const effectKeys = Object.freeze({
 
     ABANDONED_BY_GRACE: "abandonedByGrace",
     ANOINTED_PROXY: "anointedProxy",
+
+    AUGMENTED_ORANGE_STAR: "augOrange",
 });
 
 export const eyeKeys = Object.freeze({
@@ -247,6 +247,7 @@ export const entryTypes = Object.freeze({
     ELEMENTAL_ESSENCE: "ELEMENTAL ESSENCE",
     BATTLE_PHASE: "BATTLE PHASE",
     FIXED_RESOURCE: "FIXED RESOURCE",
+    STAR: "STAR",
 });
 
 export const starfallPhases = Object.freeze({

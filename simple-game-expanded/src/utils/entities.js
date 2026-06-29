@@ -64,8 +64,12 @@ export function consumeResources(entity, amount, cause) {
 
     resourceIndex = 0;
 
-    // Limited resource consumption, skips if cause is Hymmns
-    if (cause !== actionKeys.HYMNS_OF_SANCTIFICATION) {
+    // Limited resource consumption, skips if cause is Hymmns or Orange Star/Trail
+    if (
+        cause !== actionKeys.HYMNS_OF_SANCTIFICATION &&
+        cause !== effectKeys.ORANGE_STAR &&
+        cause !== effectKeys.ORANGE_TRAIL
+    ) {
         while (
             amount > 0 &&
             resourceIndex < constants.limitedResources.length &&
@@ -679,22 +683,23 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    console.log("death processing")
+    console.log("death processing");
     console.log(draftEntity);
 
-    if(draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
+    if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
         draftEntity = {
             ...draftEntity,
             states: {
                 ...draftEntity.states,
                 [effectKeys.ABANDONED_BY_GRACE]: true,
-            }
-        }
+            },
+        };
     }
 
     if (
         draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        (draftEntity[effectKeys.ENLIGHTENMENT] <= 0 || draftEntity.states[effectKeys.ABANDONED_BY_GRACE])
+        (draftEntity[effectKeys.ENLIGHTENMENT] <= 0 ||
+            draftEntity.states[effectKeys.ABANDONED_BY_GRACE])
     ) {
         draftEntity = {
             ...draftEntity,
@@ -838,7 +843,8 @@ export function gainInsight(entity, amount) {
 export function gainHp(entity, amount) {
     // If on ascendence, restore inspiration and returns early
     if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        const newInspiration = entity.resources[effectKeys.INSPIRATION] + amount;
+        const newInspiration =
+            entity.resources[effectKeys.INSPIRATION] + amount;
         return {
             ...entity,
             resources: {
@@ -871,7 +877,8 @@ export function loseHp(entity, amount) {
 export function gainMana(entity, amount) {
     // If on ascendence, restore inspiration and returns early
     if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        const newInspiration = entity.resources[effectKeys.INSPIRATION] + amount;
+        const newInspiration =
+            entity.resources[effectKeys.INSPIRATION] + amount;
         return {
             ...entity,
             resources: {
@@ -926,7 +933,7 @@ export function processExitAligned(entity) {
         [effectKeys.OVERGROWTH]: 0,
         [effectKeys.PERMAFROST]: 0,
         [effectKeys.SCORIA]: 0,
-    }
+    };
 }
 
 export function processExitStargazer(entity) {
@@ -939,7 +946,7 @@ export function processExitStargazer(entity) {
         stars: {
             ...createBaseEntity().stars,
         },
-    }
+    };
 }
 
 export function processExitsResonant(entity) {
@@ -950,13 +957,13 @@ export function processExitsResonant(entity) {
             ...entity.states,
             [effectKeys.RESONANT]: false,
         },
-    }
+    };
 }
 
 export function exitAllStates(entity) {
     let draftEntity = {
         ...entity,
-    }
+    };
 
     draftEntity = processExitAligned(draftEntity);
     draftEntity = processExitStargazer(draftEntity);
@@ -966,8 +973,8 @@ export function exitAllStates(entity) {
         ...draftEntity,
         states: {
             ...createBaseEntity().states,
-        }
-    }
+        },
+    };
 
     return draftEntity;
 }
