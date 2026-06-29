@@ -4,17 +4,14 @@ import AttrLine from "./AttrLine.jsx";
 import StackCounter from "./StackCounter.jsx";
 import ElementalCounter from "./ElementalCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
-import InsightBar from "./InsightBar.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
-import OverheatBar from "./OverheatBar.jsx";
-import EnlightenmentBar from "./EnlightenmentBar.jsx";
 
 import { constants, stackCounters } from "../utils/constants.js";
-import { sdmKeys, elementalKeys, eyeKeys } from "../utils/enums.js";
+import { sdmKeys, elementalKeys, eyeKeys, effectKeys } from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
-import TarnishedBar from "./TarnishedBar.jsx";
+import GradientBar from "./GradientBar.jsx";
 
 function StatsPanel({ game, updateStatsPoints, entityKey }) {
     const entity = game.entities[entityKey];
@@ -100,12 +97,84 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
         >
             <StateBadges states={states} />
 
-            <TarnishedBar entity={entity} />
-            <EnlightenmentBar entity={entity} />
+            {entity[effectKeys.TARNISHED_SIN] > 0 && (
+                <GradientBar
+                    label={"Tarnished Sin"}
+                    currResource={entity[effectKeys.TARNISHED_SIN]}
+                    maxResource={entity[effectKeys.MAX_TARNISHED_SIN]}
+                    trackStyle={{
+                        backgroundImage: `linear-gradient(
+                                        90deg,
+                                        #2a0000 0%,
+                                        #500000 15%,
+                                        #8b0000 35%,
+                                        #cc0000 50%,
+                                        #8b0000 65%,
+                                        #500000 85%,
+                                        #2a0000 100%
+                                    )`,
+                    }}
+                    showPercent={true}
+                />
+            )}
+
+            {entity[effectKeys.DIVINE_SPARK] > 0 && (
+                <GradientBar
+                    label={"Divine Spark"}
+                    currResource={entity[effectKeys.DIVINE_SPARK]}
+                    maxResource={entity[effectKeys.MAX_DIVINE_SPARK]}
+                    trackStyle={{
+                        backgroundImage: `linear-gradient(
+                                        90deg,
+                                        #fff9d4 0%,
+                                        #ffd93b 25%,
+                                        #ffe87c 50%,
+                                        #ffd93b 75%,
+                                        #fff9d4 100%
+                                    )`,
+                    }}
+                    showPercent={true}
+                />
+            )}
+
+            {entity[effectKeys.MAX_ENLIGHTENMENT] > 0 && (
+                <GradientBar
+                    label={"Enlightenment"}
+                    currResource={entity[effectKeys.ENLIGHTENMENT]}
+                    maxResource={entity[effectKeys.MAX_ENLIGHTENMENT]}
+                    trackStyle={{
+                        backgroundImage: `linear-gradient(
+                                        90deg,
+                                        #fff9d4 0%,
+                                        #ffd93b 25%,
+                                        #ffe87c 50%,
+                                        #ffd93b 75%,
+                                        #fff9d4 100%
+                                        )`,
+                    }}
+                />
+            )}
+
+            {entity[effectKeys.MAX_INSIGHT] > 0 && (
+                <GradientBar
+                    label={"Insight"}
+                    currResource={entity[effectKeys.INSIGHT]}
+                    maxResource={entity[effectKeys.MAX_INSIGHT]}
+                    trackStyle={{
+                        backgroundImage: `linear-gradient(
+                                        90deg, 
+                                        #d4eafd 0%, 
+                                        #3bc7ff 25%, 
+                                        #87ceeb 50%, 
+                                        #3bc7ff 75%, 
+                                        #d4eafd 100%
+                                        )`,
+                    }}
+                />
+            )}
 
             {isAngelView ? (
                 <>
-                    <InsightBar entity={entity} />
                     <div
                         className="revelation-container"
                         style={{
@@ -122,7 +191,19 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 <>
                     <HpBar entity={entity} />
                     <ManaBar entity={entity} />
-                    <OverheatBar entity={entity} />
+                    {(entity.states.weaponsDeployed ||
+                        entity.states.thermalOverload ||
+                        entity.states.venting) && (
+                        <GradientBar
+                            label={"Overheat"}
+                            currResource={entity[effectKeys.OVERHEAT]}
+                            maxResource={entity[effectKeys.MAX_OVERHEAT]}
+                            trackStyle={{
+                                backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
+                            }}
+                            showAnimation={false}
+                        />
+                    )}
                 </>
             )}
 

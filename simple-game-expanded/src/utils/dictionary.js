@@ -15,7 +15,7 @@ export const keywordDictionary = allEntries.reduce((acc, entry) => {
     return acc;
 }, {});
 
-// Sort by length to help with the parsing
+// Sort by length for the correct parsing
 export const sortedKeywordList = Object.keys(keywordDictionary).sort(
     (a, b) => b.length - a.length
 );

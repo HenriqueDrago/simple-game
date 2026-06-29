@@ -55,7 +55,7 @@ const MANA_SHACKLE_TURN_GAIN = 4;
 const MAX_OVERHEAT = 10;
 const VENTING_OVERHEAT_LOSS = 5;
 
-const HALO_GEN_MULT = 2;
+const HALO_GEN_MULT = 20;
 
 const ELEMENTAL_RESOURCE_GAIN = 5;
 const INITIAL_ELEMENTAL_ESSENCE_GAINED = 3;
@@ -73,6 +73,7 @@ const SONORITY_HIGHER_LIMIT = 5;
 const MAX_ENLIT = 100;
 const MAX_INSIGHT = 100;
 const MAX_TARNISHED_SIN = 100;
+const MAX_DIVINE_SPARK = 100;
 
 const INSIGHT_TO_REV_FACTOR = 10;
 
@@ -98,26 +99,30 @@ const freeResources = [
     effectKeys.UNRELENTING_SHADOWS,
     effectKeys.LINGERING_EMBER,
     effectKeys.CINDERS,
+
     effectKeys.POISON,
     effectKeys.MANA_OVERFLOW,
     effectKeys.SHACKLED_MANA,
+
     effectKeys.CRYOGENESIS,
-    effectKeys.HALO,
-    effectKeys.BENEDICTION,
-    effectKeys.RADIANCE,
+
     effectKeys.BLOOD_SACRIFICE,
-    effectKeys.SACRED_FLAMES,
+
     effectKeys.DOME,
     effectKeys.STARDUST,
+    
+    effectKeys.RADIANCE,
+    effectKeys.HALO,
+    effectKeys.INSPIRATION,
+    effectKeys.SACRED_FLAMES,
 ];
 
 const limitedResources = [
-    "currOverheat",
-    "currMana",
-    "currHp",
-    "currTarnishedSin",
-    "currInsight",
-    "currEnlit",
+    effectKeys.OVERHEAT,
+    effectKeys.MANA,
+    effectKeys.HEALTH,
+    effectKeys.INSIGHT,
+    effectKeys.ENLIGHTENMENT,
 ];
 
 export const constants = {
@@ -158,6 +163,7 @@ export const constants = {
     MAX_TARNISHED_SIN,
     CHART_STAR_GAIN,
     STARDUST_RATE_CONVERSION,
+    MAX_DIVINE_SPARK
 };
 
 export const presetAi = {
@@ -582,6 +588,15 @@ export const stackCounters = {
             backgroundColor: "rgba(255, 138, 101, 0.2)",
         },
     },
+
+    [effectKeys.INSPIRATION]: {
+        label: "Inspiration",
+        style: {
+            color: "white",
+            borderColor: "white",
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+        },
+    },
 };
 
 export const coloredStars = [
@@ -661,6 +676,7 @@ export const INITIAL_GAME_STATE = {
     eyeOfHeavens: eyeKeys.DORMANT,
     starQueue: null,
     progressMode: false,
+    [effectKeys.SEVERED_TIME]: false,
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
         [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,

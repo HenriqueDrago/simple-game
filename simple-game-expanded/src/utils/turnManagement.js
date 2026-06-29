@@ -1,10 +1,14 @@
 import { constants, actionsClass, coloredStars } from "./constants.js";
 import {
     consumeResources,
-    createBaseEntity,
-    // createBaseEntity,
+    exitAllStates,
+    gainEnlit,
+    gainHp,
     gainMana,
+    isEntityDead,
     loseMana,
+    processEntityCutoffWings,
+    processEntityDeathStates,
     restoreResources,
     takeDamage,
 } from "./entities.js";
@@ -19,16 +23,6 @@ import {
     starfallPhases,
 } from "./enums.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
-
-function processEntityDeathStates(entity) {
-    let draft = { ...entity };
-
-    return draft;
-}
-
-function isEntityDead(entity) {
-    return entity.currHp <= 0 && !entity.states.ascendenceOfSpirit;
-}
 
 function evaluateMatchStatus(playerOne, playerTwo, defaultNextStatus) {
     const p1Dead = isEntityDead(playerOne);
@@ -59,6 +53,22 @@ export function processUpkeep(prev) {
     let draftNonTarget = {
         ...prev.entities[nonTargetKey],
     };
+
+    // Cutoff Wings
+    draftTarget = processEntityCutoffWings(draftTarget);
+    draftNonTarget = processEntityCutoffWings(draftNonTarget);
+
+    // Remnants
+    if (draftTarget.states[effectKeys.REMNANTS_OF_DIVINITY]) {
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                [effectKeys.REMNANTS_OF_DIVINITY]: false,
+                [effectKeys.BURDEN_OF_STIGMA]: true,
+            },
+        };
+    }
 
     // Stardust
     if (draftTarget.resources[effectKeys.STARDUST] > 0) {
@@ -211,14 +221,8 @@ export function processUpkeep(prev) {
             ...loseMana(draftTarget, manaBleed),
         };
 
-        const newHp = Math.min(
-            draftTarget.maxHp + draftTarget.overgrowth,
-            draftTarget.currHp + manaBleed,
-        ); // Recupera Hp
-
         draftTarget = {
-            ...draftTarget,
-            currHp: newHp,
+            ...gainHp(draftTarget, manaBleed),
         };
     }
 
@@ -251,13 +255,63 @@ export function processUpkeep(prev) {
         };
     }
 
-    // Halo
-    if (draftTarget.resources.halo > 0) {
-        const newEnlit = draftTarget.resources.halo + draftTarget.currEnlit;
+    // Sacred Flames
+    if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
+        const missingHp =
+            draftTarget[effectKeys.MAX_HEALTH] - draftTarget[effectKeys.HEALTH];
+
+        const hpRestored = Math.min(
+            missingHp,
+            draftTarget.resources[effectKeys.SACRED_FLAMES],
+        );
+        const newFlames =
+            draftTarget.resources[effectKeys.SACRED_FLAMES] - hpRestored;
+
+        draftTarget = gainHp(draftTarget, hpRestored);
 
         draftTarget = {
             ...draftTarget,
-            currEnlit: newEnlit,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.SACRED_FLAMES]: newFlames,
+            },
+        };
+    }
+
+    // Inspiration
+    if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
+        const missingEnlit =
+            draftTarget[effectKeys.MAX_ENLIGHTENMENT] -
+            draftTarget[effectKeys.ENLIGHTENMENT];
+
+        const enlitRestored = Math.min(
+            missingEnlit,
+            draftTarget.resources[effectKeys.INSPIRATION],
+        );
+        const newInspiration =
+            draftTarget.resources[effectKeys.INSPIRATION] - enlitRestored;
+
+        draftTarget = gainEnlit(draftTarget, enlitRestored);
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.INSPIRATION]: newInspiration,
+            },
+        };
+    }
+
+    // Halo
+    if (draftTarget.resources.halo > 0) {
+        const newSpark = Math.min(
+            draftTarget.resources.halo + draftTarget[effectKeys.DIVINE_SPARK],
+            draftTarget[effectKeys.MAX_DIVINE_SPARK],
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.DIVINE_SPARK]: newSpark,
             resources: {
                 ...draftTarget.resources,
                 halo: 0,
@@ -265,23 +319,18 @@ export function processUpkeep(prev) {
         };
     }
 
-    // Enlightenment
+    // Divine Spark
     let newEye = prev.eyeOfHeavens;
-    if (draftTarget.currEnlit >= 100) {
-        const blankEntity = createBaseEntity();
-
+    if (
+        draftTarget[effectKeys.DIVINE_SPARK] >=
+        draftTarget[effectKeys.MAX_DIVINE_SPARK]
+    ) {
         draftTarget = {
-            ...blankEntity,
+            ...draftTarget,
             states: {
-                ...blankEntity.states,
+                ...draftTarget.states,
                 [effectKeys.ZENITH_OF_MORTALITY]: true,
             },
-            attributes: {
-                ...draftTarget.attributes,
-            },
-            controller: draftTarget.controller,
-            statDistributionMode: draftTarget.statDistributionMode,
-            unspentPoints: draftTarget.unspentPoints,
         };
 
         if (newEye === eyeKeys.DORMANT) {
@@ -344,7 +393,7 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     let draftCurrActor = newGame.entities[currActorKey];
     let draftNextActor = newGame.entities[nextActorKey];
 
-    if (action !== actionKeys.LASER) {
+    if (action !== actionKeys.LASER && action !== actionKeys.ASCEND) {
         // Mana Overflow
         if (
             draftCurrActor.resources.manaOverflow > 0 &&
@@ -450,27 +499,41 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             ? turnStatus.UPKEEP_PLAYER_ONE
             : turnStatus.UPKEEP_PLAYER_TWO;
 
-    if (draftCurrActor.states[effectKeys.STARGAZER]) {
-        nextStatus = turnStatus.STARS_TURN;
-    } else if (
-        newGame.turnCount % 2 === 0 &&
-        newGame.elementalWheel !== elementalKeys.INACTIVE
+    let nextEye = newGame[effectKeys.EYE_OF_HEAVENS];
+    if (
+        (draftCurrActor.states[effectKeys.ABANDONED_BY_GRACE] ||
+            draftNextActor.states[effectKeys.ABANDONED_BY_GRACE]) &&
+        !(
+            draftCurrActor.states[effectKeys.ANOINTED_PROXY] ||
+            draftNextActor.states[effectKeys.ANOINTED_PROXY]
+        )
     ) {
-        nextStatus = turnStatus.WHEEL_TURN;
-    } else if (newGame.remainingArray > 0) {
-        nextStatus = turnStatus.ARRAY_TURN;
-    } else if (
-        newGame.turnCount % 2 === 0 &&
-        newGame.eyeOfHeavens !== eyeKeys.DORMANT
-    ) {
+        // Immediatelly triggers emanation and opens the eye
         nextStatus = turnStatus.EMINENCE_TURN;
-    }
+        nextEye = eyeKeys.OPEN;
+    } else {
+        if (draftCurrActor.states[effectKeys.STARGAZER]) {
+            nextStatus = turnStatus.STARS_TURN;
+        } else if (
+            newGame.turnCount % 2 === 0 &&
+            newGame.elementalWheel !== elementalKeys.INACTIVE
+        ) {
+            nextStatus = turnStatus.WHEEL_TURN;
+        } else if (newGame.remainingArray > 0) {
+            nextStatus = turnStatus.ARRAY_TURN;
+        } else if (
+            newGame.turnCount % 2 === 0 &&
+            newGame.eyeOfHeavens !== eyeKeys.DORMANT
+        ) {
+            nextStatus = turnStatus.EMINENCE_TURN;
+        }
 
-    if (action === actionKeys.LASER) {
-        nextStatus =
-            currActorKey === entityKeys.PLAYER_ONE
-                ? turnStatus.PLAYER_ONE_TURN
-                : turnStatus.PLAYER_TWO_TURN;
+        if (action === actionKeys.LASER || action === actionKeys.ASCEND) {
+            nextStatus =
+                currActorKey === entityKeys.PLAYER_ONE
+                    ? turnStatus.PLAYER_ONE_TURN
+                    : turnStatus.PLAYER_TWO_TURN;
+        }
     }
 
     const playerOneEntity =
@@ -497,6 +560,7 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         ...newGame,
         status: newStatus,
         nextStatus: nextStatus,
+        [effectKeys.EYE_OF_HEAVENS]: nextEye,
         entities: {
             ...newGame.entities,
             [currActorKey]: {
@@ -684,17 +748,80 @@ export function processEminenceTurn(prev) {
             ? turnStatus.UPKEEP_PLAYER_TWO
             : turnStatus.UPKEEP_PLAYER_ONE;
 
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
+
+    // Abandoned by Grace logic
+    const p1Graceless = playerOne.states[effectKeys.ABANDONED_BY_GRACE];
+    const p2Graceless = playerTwo.states[effectKeys.ABANDONED_BY_GRACE];
+    if (p1Graceless || p2Graceless) {
+        if (p1Graceless) {
+            if (p2Graceless) {
+                // Punishes both players
+                playerOne = exitAllStates(playerOne);
+                playerOne = consumeResources(
+                    playerOne,
+                    Infinity,
+                    actionKeys.JUDGEMENT,
+                ).draftEntity;
+
+                playerTwo = exitAllStates(playerTwo);
+                playerTwo = consumeResources(
+                    playerTwo,
+                    Infinity,
+                    actionKeys.JUDGEMENT,
+                ).draftEntity;
+            } else {
+                // Chooses a proxy
+                playerTwo = {
+                    ...playerTwo,
+                    states: {
+                        ...playerTwo.states,
+                        [effectKeys.ANOINTED_PROXY]: true,
+                    },
+                };
+            }
+        } else {
+            // Chooses a proxy
+            playerOne = {
+                ...playerOne,
+                states: {
+                    ...playerOne.states,
+                    [effectKeys.ANOINTED_PROXY]: true,
+                },
+            };
+        }
+
+        playerOne = processEntityDeathStates(playerOne);
+        playerTwo = processEntityDeathStates(playerTwo);
+
+        nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
+
+        return {
+            ...prev,
+            status: turnStatus.TRANSITION,
+            nextStatus: nextStatus,
+            eyeOfHeavens: eyeKeys.OPEN,
+            [effectKeys.SEVERED_TIME]: false,
+            entities: {
+                ...prev.entities,
+                [entityKeys.PLAYER_ONE]: { ...playerOne },
+                [entityKeys.PLAYER_TWO]: { ...playerTwo },
+            },
+        };
+    }
+
+    // Early return if eye is sleeping
     if (prev.eyeOfHeavens === eyeKeys.DORMANT) {
         return {
             ...prev,
             status: turnStatus.TRANSITION,
             nextStatus: nextStatus,
+            [effectKeys.SEVERED_TIME]: false,
         };
     }
 
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
+    // Disables itself if no ascended players
     if (
         !playerOne.states.ascendenceOfSpirit &&
         !playerTwo.states.ascendenceOfSpirit
@@ -704,83 +831,50 @@ export function processEminenceTurn(prev) {
             status: turnStatus.TRANSITION,
             nextStatus: nextStatus,
             eyeOfHeavens: eyeKeys.DORMANT,
+            [effectKeys.SEVERED_TIME]: false,
         };
-    } else {
-        if (prev.eyeOfHeavens === eyeKeys.OPEN) {
-            const p1NewRev =
-                playerOne.revelation +
-                Math.floor(
-                    playerOne.currInsight / constants.INSIGHT_TO_REV_FACTOR,
-                );
-            const p2NewRev =
-                playerTwo.revelation +
-                Math.floor(
-                    playerTwo.currInsight / constants.INSIGHT_TO_REV_FACTOR,
-                );
-
-            playerOne = {
-                ...playerOne,
-                revelation: p1NewRev,
-            };
-            playerTwo = {
-                ...playerTwo,
-                revelation: p2NewRev,
-            };
-        } else {
-            if (
-                playerOne.states.ascendenceOfSpirit &&
-                playerOne.currEnlit <= 0
-            ) {
-                const { draftEntity } = consumeResources(
-                    playerOne,
-                    Infinity,
-                    effectKeys.EYE_OF_HEAVENS,
-                );
-
-                playerOne = {
-                    ...draftEntity,
-                    currHp: 1,
-                    maxHp: 1,
-                    states: {
-                        ...draftEntity.states,
-                        ascendenceOfSpirit: false,
-                        cutoffWings: true,
-                    },
-                };
-            }
-
-            if (
-                playerTwo.states.ascendenceOfSpirit &&
-                playerTwo.currEnlit <= 0
-            ) {
-                const { draftEntity } = consumeResources(
-                    playerTwo,
-                    Infinity,
-                    effectKeys.EYE_OF_HEAVENS,
-                );
-
-                playerTwo = {
-                    ...draftEntity,
-                    currHp: 1,
-                    maxHp: 1,
-                    states: {
-                        ...draftEntity.states,
-                        ascendenceOfSpirit: false,
-                        cutoffWings: true,
-                    },
-                };
-            }
-        }
     }
 
+    // else, runs current state logic
+    let severedTime = prev[effectKeys.SEVERED_TIME];
+    if (prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
+        // Grants revelation when opening
+        const p1NewRev =
+            playerOne.revelation +
+            Math.floor(playerOne.currInsight / constants.INSIGHT_TO_REV_FACTOR);
+        const p2NewRev =
+            playerTwo.revelation +
+            Math.floor(playerTwo.currInsight / constants.INSIGHT_TO_REV_FACTOR);
+
+        playerOne = {
+            ...playerOne,
+            revelation: p1NewRev,
+        };
+        playerTwo = {
+            ...playerTwo,
+            revelation: p2NewRev,
+        };
+    } else {
+        // Disables Severed Time if closing
+        severedTime = true;
+    }
+
+    // Switchs state
     const nextEye =
         prev.eyeOfHeavens === eyeKeys.OPEN ? eyeKeys.CLOSED : eyeKeys.OPEN;
+
+    // Checks deaths
+    playerOne = processEntityDeathStates(playerOne);
+    playerTwo = processEntityDeathStates(playerTwo);
+
+    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
 
     return {
         ...prev,
         eyeOfHeavens: nextEye,
         status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
+        [effectKeys.SEVERED_TIME]: severedTime,
         entities: {
             ...prev.entities,
             [entityKeys.PLAYER_ONE]: { ...playerOne },

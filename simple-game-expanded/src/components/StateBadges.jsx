@@ -1,3 +1,4 @@
+import { effectKeys } from "../utils/enums";
 import "./StateBadges.css";
 
 const STATE_MAPPINGS = [
@@ -19,6 +20,8 @@ const STATE_MAPPINGS = [
     { key: "ascendenceOfSpirit", label: "Ascendence of Spirit" },
     { key: "stargazer", label: "Stargazer" },
     { key: "zenithOfMortality", label: "Zenith of Mortality" },
+    { key: effectKeys.ABANDONED_BY_GRACE, label: "Abandoned by Grace" },
+    { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
 ];
 
 function StateBadges({ states }) {

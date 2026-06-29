@@ -667,7 +667,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "AEGIS",
         type: entryTypes.ACTION,
         description:
-            "Gains HALO equal to twice the user's DEF. Enters RADIANT until next turn start.",
+            "Gains HALO equal to twice the user's DEF. Enters RADIANT state until next turn start.",
     },
 
     [effectKeys.RADIANT]: {
@@ -680,7 +680,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "HALO",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, loses HALO instead of HEALTH, then gains RADIANCE equal to the amount lost. At turn start, converts all HALO into ENLIGHTENMENT.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, loses HALO instead of HEALTH, then gains RADIANCE equal to the amount lost. At turn start, lose all HALO, then raise DIVINE SPARK by 1% for every HALO lost this way.",
     },
 
     [effectKeys.RADIANCE]: {
@@ -690,11 +690,17 @@ export const PALADIN_DESCRIPTIONS = {
             "When using ATTACK, consumes all RADIANCE on self to increase the DAMAGE dealt.",
     },
 
+    [effectKeys.DIVINE_SPARK]: {
+        name: "DIVINE SPARK",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "At turn start, if at 100% DIVINE SPARK, enters ZENITH OF MORTALITY. Additionally, if the EYE OF HEAVENS is DORMANT, awakens it in the CLOSED state.",
+    },
+
     [effectKeys.ENLIGHTENMENT]: {
         name: "ENLIGHTENMENT",
         type: entryTypes.LIMITED_RESOURCE,
-        description:
-            "At turn start, if at MAX ENLIGHTENMENT or above, enters ZENITH OF MORTALITY. If EYE OF HEAVENS is DORMANT, awakens it in the CLOSED state. While in ASCENDENCE OF SPIRIT, cannot exceed MAX ENLIGHTENMENT, and the previous ENLIGHTENMENT effects do not activate.",
+        description: "Cannot exceed MAX ENLIGHTENMENT.",
     },
 
     [effectKeys.ZENITH_OF_MORTALITY]: {
@@ -707,14 +713,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.ACTION,
         description:
-            "Opens the EYE OF HEAVENS, resets the user's condition, gains REVELATION based on STR and DEF on self, and enters ASCENDENCE OF SPIRIT. This action does not end the turn.",
+            "Opens the EYE OF HEAVENS, exits all other states, and consumes all RESOURCES on self. Then gains REVELATION based on STR and DEF on self and enters ASCENDENCE OF SPIRIT. Afterwards, loses all STR and DEF on self, and restores RESOURCES. Aditionaly, sets MAX ENLIGHTENMENT and MAX INSIGHT to 100. This action does not end the turn.",
     },
 
     [effectKeys.ASCENDENCE_OF_SPIRIT]: {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state and enters CUTOFF WINGS. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose ENLIGHTENMENT instead of HEALTH. When taking TRUE DAMAGE, gain TARNISHED SIN instead of losing HEALTH. When restoring HEALTH or MANA, gain MORTALITY or SPIRITUALITY instead, respectively. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
+            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state, then enters CUTOFF WINGS and recovers 1 HEALTH. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose ENLIGHTENMENT instead of HEALTH. Additionally, if it was PHYSICAL DAMAGE taken, gain INSPIRATION equal to the ENLIGHTENMENT lost. When taking TRUE DAMAGE, raise TARNISHED SIN by 1% for every point of damage received instead of losing HEALTH. When restoring HEALTH or MANA, gain INSPIRATION instead. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
     },
 
     [mechanicKeys.ACTS_OF_BENEDICTION]: {
@@ -728,20 +734,40 @@ export const PALADIN_DESCRIPTIONS = {
         name: "ACTS OF MALEDICTION",
         type: entryTypes.MECHANIC,
         description:
-            "Includes SERAPH OF CONDEMNATION, GLIMPSE OF PANDEMONIUM, EDICT OF SEVERANCE and THE WORD MADE FLESH. When using an ACT OF MALEDICTION while EYE OF HEAVENS is OPEN, gain TARNISHED SIN equal to REVELATION on self.",
+            "Includes SERAPH OF CONDEMNATION, GLIMPSE OF PANDEMONIUM, EDICT OF SEVERANCE and THE WORD MADE FLESH. When using an ACT OF MALEDICTION while EYE OF HEAVENS is OPEN, raise TARNISHED SIN by 1% for every REVELATION on self.",
     },
 
     [effectKeys.TARNISHED_SIN]: {
         name: "TARNISHED SIN",
-        type: entryTypes.LIMITED_RESOURCE,
-        description: "At 100 TARNISHED SIN, loses the game.",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "When reaching 100% TARNISHED SIN, receives ABANDONED BY GRACE state.",
+    },
+
+    [effectKeys.ABANDONED_BY_GRACE]: {
+        name: "ABANDONED BY GRACE",
+        type: entryTypes.STATE,
+        description:
+            "If there's any entity on this state, but no entity on ANOINTED PROXY state, immediatelly opens the EYE OF HEAVENS and triggers an EMANATION.",
+    },
+
+    [effectKeys.ANOINTED_PROXY]: {
+        name: "ANOINTED PROXY",
+        type: entryTypes.STATE,
+        description: "Replaces all actions with JUDGEMENT.",
+    },
+
+    [actionKeys.JUDGEMENT]: {
+        name: "JUDGEMENT",
+        type: entryTypes.ACTION,
+        description: "Cleases all STATES and RESOURCES from the opponent.",
     },
 
     [effectKeys.EYE_OF_HEAVENS]: {
         name: "EYE OF HEAVENS",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While awoken, triggers EMANATION at round end. During EMANATION, if CLOSED, opens; otherwise, closes. Then, all entities gain REVELATION equal to one tenth of INSIGHT on self. When opening, removes SEVERED TIME from the battlefield.",
+            "While awoken, triggers EMANATION at round end. During EMANATION, if closed, opens and grants REVELATION to all entites for every 10 INSIGHT on each; otherwise, closes and removes SEVERED TIME from the battlefield. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, cleanses all STATES and RESOURCES from both entities, then ends battle.",
     },
 
     [effectKeys.INSIGHT]: {
@@ -755,7 +781,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "CUTOFF WINGS",
         type: entryTypes.STATE,
         description:
-            "Cannot use AEGIS. Upon entering this state, restores 1 HEALTH. At turn start and turn end, sets MAX HEALTH to 1 and reduces current HEALTH accordingly.",
+            "Cannot use AEGIS. While on this state, MAX HEALTH is set to 1.",
     },
 
     [effectKeys.REVELATION]: {
@@ -768,6 +794,13 @@ export const PALADIN_DESCRIPTIONS = {
         name: "BURDEN OF STIGMA",
         type: entryTypes.STATE,
         description: "Cannot act. Removed at turn end.",
+    },
+
+    [effectKeys.REMNANTS_OF_DIVINITY]: {
+        name: "REMNANTS OF DIVINITY",
+        type: entryTypes.STATE,
+        description:
+            "At turn start, loses this state and gains BURDEN OF STIGMA.",
     },
 
     [effectKeys.SEVERED_TIME]: {
@@ -808,14 +841,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "HYMNS OF SANCTIFICATION",
         type: entryTypes.ACTION,
         description:
-            "Consumes all FREE RESOURCES on self, then gains INSPIRATION based on the amount consumed.",
+            "Consumes all FREE RESOURCES on self, then gains INSIGHT based on the amount consumed.",
     },
 
     [actionKeys.GIFT_OF_APOTHEOSIS]: {
         name: "GIFT OF APOTHEOSIS",
         type: entryTypes.ACTION,
         description:
-            "Swaps the user's current condition with the target's. Cannot be used if the target is in ASCENDENCE OF SPIRIT.",
+            "Swaps the user's current condition with the target's, then gain BURDEN OF STIGMA on self. Cannot be used if the target is in ASCENDENCE OF SPIRIT state.",
     },
 
     [actionKeys.SERAPH_OF_CONDEMNATION]: {
@@ -829,7 +862,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "GLIMPSE OF PANDEMONIUM",
         type: entryTypes.ACTION,
         description:
-            "All entities lose RESOURCES equal to SACRED FLAMES on self, then lose all SACRED FLAMES on self.",
+            "Burns RESOURCES on every entity equal to SACRED FLAMES on each. Then, all entities lose all SACRED FLAMES on them. Cannot burn SACRED FLAMES this way.",
     },
 
     [actionKeys.EDICT_OF_SEVERANCE]: {
@@ -842,7 +875,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "THE WORD MADE FLESH",
         type: entryTypes.ACTION,
         description:
-            "Exits ASCENDENCE OF SPIRIT and enters CUTOFF WINGS, then inflicts BURDEN OF STIGMA on the target.",
+            "Consumes all RESOURCES on self and inflicts BURDEN OF STIGMA on the target. Then, exits ASCENDENCE OF SPIRIT and enters CUTOFF WINGS. Afterwards, restores RESOURCES on self equal to the amount consumed.",
     },
 };
 
@@ -865,7 +898,7 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "RESOURCES",
         type: entryTypes.MECHANIC,
         description:
-            "Can be divided into FREE RESOURCES, MITIGATION RESOURCES and LIMITED RESOURCES. Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, HALO, BENEDICTION, RADIANCE, BLOOD SACRIFICE, SACRED FLAMES, OVERHEAT, MANA, HEALTH, TARNISHED SIN, INSIGHT and ENLIGHTENMENT. When RESOURCES are consumed, they are consumed in this order. When RESOURCES are restored, they are restored in reverse order. Can only restore TARNISHED SIN, INSIGHT and ENLIGHTENMENT under special conditions.",
+            "Can be divided into FREE RESOURCES, LIMITED RESOURCES and FIXED RESOURCES. When RESOURCES are consumed, consume FREE RESOURCES first, then LIMITED RESOURCES. When RESOURCES are restored, follow the opposite order. FIXED RESOURCES cannot be restored or consumed.",
     },
 
     [effectKeys.NATURE]: {
@@ -1038,22 +1071,31 @@ export const CATEGORY_DESCRIPTIONS = {
     },
 
     [entryTypes.FREE_RESOURCE]: {
-        name: "FREE RESOURCE",
+        name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
-        description: "A subset of RESOURCES that have no upper cap.",
+        description:
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, BLOOD SACRIFICE, DOME, STARDUST, RADIANCE, HALO, INSPIRATION and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
         name: "LIMITED RESOURCE",
         type: entryTypes.CATEGORY,
-        description: "A subset of RESOURCES that has upper cap.",
+        description:
+            "A subset of RESOURCES that has upper cap. Includes OVERHEAT, MANA, HEALTH, INSIGHT, ENLIGHTENMENT. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continue to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follow that rule; otherwise continue to the next RESOURCE on the list.",
+    },
+
+    [entryTypes.FIXED_RESOURCE]: {
+        name: "FIXED RESOURCE",
+        type: entryTypes.CATEGORY,
+        description:
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes  TARNISHED SIN and DIVINE SPARK. Cannot restore or consume FIXED RESOURCES.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
         name: "MITIGATION RESOURCE",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken.",
+            "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken. Includes HALO, CRYOGENESIS, DOME and LINGERING EMBER. When consuming this type of resource due to damage taken, consume them in this order.",
     },
 
     [entryTypes.BATTLE_PHASE]: {

@@ -95,13 +95,15 @@ export const actionKeys = Object.freeze({
     GLIMPSE_OF_PANDEMONIUM: "glimpseOfPandemonium",
     EDICT_OF_SEVERANCE: "edictOfSeverance",
     THE_WORD_MADE_FLESH: "theWordMadeFlesh",
+
+    JUDGEMENT: "judgement",
 });
 
 export const effectKeys = Object.freeze({
-    GUARDING_STATE: "guardingState",
+    GUARDING_STATE: "guarding",
 
     MANA_OVERFLOW: "manaOverflow",
-    SACRIFICIAL_STATE: "sacrificialState",
+    SACRIFICIAL_STATE: "sacrificial",
 
     THORNED_SHACKLES: "thornedShackles",
     SHACKLED_MANA: "shackledMana",
@@ -217,6 +219,12 @@ export const effectKeys = Object.freeze({
     SPIRITUALITY: "spirituality",
 
     SEVERED_TIME: "severedTime",
+    REMNANTS_OF_DIVINITY: "remnantsOfDivinity",
+    DIVINE_SPARK: "currDivineSpark",
+    MAX_DIVINE_SPARK: "maxDivineSpark",
+
+    ABANDONED_BY_GRACE: "abandonedByGrace",
+    ANOINTED_PROXY: "anointedProxy",
 });
 
 export const eyeKeys = Object.freeze({
@@ -238,6 +246,7 @@ export const entryTypes = Object.freeze({
     CATEGORY: "CATEGORY",
     ELEMENTAL_ESSENCE: "ELEMENTAL ESSENCE",
     BATTLE_PHASE: "BATTLE PHASE",
+    FIXED_RESOURCE: "FIXED RESOURCE",
 });
 
 export const starfallPhases = Object.freeze({
@@ -281,5 +290,11 @@ export const mechanicKeys = Object.freeze({
     DEFENSIVE_ACTIONS: "defensiveActions",
     TRANSFORMATIVE_ACTIONS: "transformativeActions",
     ACTS_OF_BENEDICTION: "actsOfBenediction",
-ACTS_OF_MALEDICTION: "actsOfMalediction",
+    ACTS_OF_MALEDICTION: "actsOfMalediction",
+});
+
+export const angelActKeys = Object.freeze({
+    BENEDICTION: 2,
+    MALEDICTION: 1,
+    NONE: 0,
 });

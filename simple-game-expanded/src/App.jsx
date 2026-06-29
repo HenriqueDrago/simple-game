@@ -19,7 +19,7 @@ import {
     processEminenceTurn,
     processStarfallTurn,
 } from "./utils/turnManagement.js";
-import { distributePoints, createBaseEntity } from "./utils/entities.js";
+import { distributePoints, createBaseEntity, resetPlayerEntity } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
     entityKeys,
@@ -76,8 +76,8 @@ function App() {
             const nonAgent = prev.entities[nonAgentKey];
 
             // Skipping if sealed
-            if (agent.states.burdenOfStigma || action === actionKeys.WAIT) {
-                return commitTurn(prev, agentKey, nonAgentKey, actionKeys.WAIT);
+            if (agent.states.burdenOfStigma) {
+                return commitTurn(prev, agentKey, nonAgentKey, null);
             }
 
             const context = {
@@ -158,75 +158,8 @@ function App() {
 
     function handleReset() {
         setGame((prev) => {
-            const playerOne =
-                prev.entities[entityKeys.PLAYER_ONE].statDistributionMode ===
-                sdmKeys.CUSTOM
-                    ? {
-                          ...createBaseEntity(),
-                          attributes: {
-                              ...prev.entities[entityKeys.PLAYER_ONE]
-                                  .attributes,
-                          },
-                          controller:
-                              prev.entities[entityKeys.PLAYER_ONE].controller,
-                          statDistributionMode:
-                              prev.entities[entityKeys.PLAYER_ONE]
-                                  .statDistributionMode,
-                          unspentPoints:
-                              prev.entities[entityKeys.PLAYER_ONE]
-                                  .unspentPoints,
-                      }
-                    : {
-                          ...distributePoints(
-                              createBaseEntity(),
-                              prev.entities[entityKeys.PLAYER_ONE]
-                                  .statDistributionMode,
-                              presetAi[
-                                  prev.entities[entityKeys.PLAYER_ONE]
-                                      .controller
-                              ].best,
-                          ),
-                          controller:
-                              prev.entities[entityKeys.PLAYER_ONE].controller,
-                          statDistributionMode:
-                              prev.entities[entityKeys.PLAYER_ONE]
-                                  .statDistributionMode,
-                      };
-
-            const playerTwo =
-                prev.entities[entityKeys.PLAYER_TWO].statDistributionMode ===
-                sdmKeys.CUSTOM
-                    ? {
-                          ...createBaseEntity(),
-                          attributes: {
-                              ...prev.entities[entityKeys.PLAYER_TWO]
-                                  .attributes,
-                          },
-                          controller:
-                              prev.entities[entityKeys.PLAYER_TWO].controller,
-                          statDistributionMode:
-                              prev.entities[entityKeys.PLAYER_TWO]
-                                  .statDistributionMode,
-                          unspentPoints:
-                              prev.entities[entityKeys.PLAYER_TWO]
-                                  .unspentPoints,
-                      }
-                    : {
-                          ...distributePoints(
-                              createBaseEntity(),
-                              prev.entities[entityKeys.PLAYER_TWO]
-                                  .statDistributionMode,
-                              presetAi[
-                                  prev.entities[entityKeys.PLAYER_TWO]
-                                      .controller
-                              ].best,
-                          ),
-                          controller:
-                              prev.entities[entityKeys.PLAYER_TWO].controller,
-                          statDistributionMode:
-                              prev.entities[entityKeys.PLAYER_TWO]
-                                  .statDistributionMode,
-                      };
+            const playerOne = resetPlayerEntity(prev, entityKeys.PLAYER_ONE);
+            const playerTwo = resetPlayerEntity(prev, entityKeys.PLAYER_TWO);
 
             return {
                 ...prev,

@@ -1,18 +1,13 @@
 import "./ActionPanel.css";
 
-import {
-    entityKeys,
-    turnStatus,
-    aiKeys,
-    eyeKeys,
-    effectKeys,
-} from "../utils/enums";
+import { entityKeys, turnStatus, aiKeys, effectKeys } from "../utils/enums";
 import { constants, presetAi } from "../utils/constants";
 
 import {
     getUmbralActions,
     getNormalActions,
     getAngelActions,
+    getJudgement,
 } from "../utils/getters";
 import { DESCRIPTIONS } from "../utils/descriptions";
 
@@ -111,8 +106,10 @@ function ActionPanel({
     let currentActions = [];
     if (currEntity.states.burdenOfStigma) {
         currentActions = [];
+    } else if (currEntity.states[effectKeys.ANOINTED_PROXY]) {
+        currentActions = getJudgement();
     } else if (showAngelButtons) {
-        currentActions = getAngelActions(game.eyeOfHeavens === eyeKeys.OPEN);
+        currentActions = getAngelActions();
     } else if (showUmbralButtons) {
         currentActions = getUmbralActions();
     } else if (showButtons) {
@@ -129,22 +126,20 @@ function ActionPanel({
     // Determine Container Class for CSS styling
     let showHelperText = false;
     let containerClass = "button-grid";
-    if (currEntity.states.thermalOverload) {
-        containerClass = "meltdown-container";
-    } else if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
-        containerClass = "ascend-container";
+
+    if (
+        currEntity.states[effectKeys.ANOINTED_PROXY] ||
+        currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
+        currEntity.states[effectKeys.ZENITH_OF_MORTALITY]
+    ) {
+        containerClass = "single-button-container";
     } else if (showAngelButtons) {
-        containerClass =
-            game.eyeOfHeavens === eyeKeys.OPEN
-                ? "good-angel-button-grid"
-                : "bad-angel-button-grid";
+        containerClass = "angel-button-grid";
     } else if (showUmbralButtons) {
         containerClass = "shadow-button-grid";
     } else {
         showHelperText = showButtons;
     }
-
-    
 
     return (
         <div className="action-panel-container">
@@ -156,9 +151,11 @@ function ActionPanel({
 
             {showButtons && (
                 <div className="actions-buttons-text-container">
-                    {showHelperText && <span className="actions-mouse-wheel-explainer">
-                        Mouse wheel click to see action details...
-                    </span>}
+                    {showHelperText && (
+                        <span className="actions-mouse-wheel-explainer">
+                            Mouse wheel click to see action details...
+                        </span>
+                    )}
                     <div className={containerClass}>
                         {currentActions.map((action) => (
                             <button

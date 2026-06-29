@@ -1,10 +1,12 @@
-import { constants } from "./constants.js";
+import { constants, presetAi } from "./constants.js";
 import {
     sdmKeys,
     actionKeys,
     effectKeys,
     dmgTypes,
     elementalKeys,
+    eyeKeys,
+    angelActKeys,
 } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
@@ -62,23 +64,17 @@ export function consumeResources(entity, amount, cause) {
 
     resourceIndex = 0;
 
-    // Limited resource consumption
-    while (
-        amount > 0 &&
-        resourceIndex < constants.limitedResources.length &&
-        (draftEntity.currHp > 0 ||
-            (draftEntity.states.ascendenceOfSpirit &&
-                draftEntity.currEnlit > 0))
-    ) {
-        const currResourceKey = constants.limitedResources[resourceIndex];
-
-        if (
-            !(
-                cause === effectKeys.ASCENDENCE_OF_SPIRIT &&
-                (currResourceKey === "currEnlit" ||
-                    currResourceKey === "currInsight")
-            )
+    // Limited resource consumption, skips if cause is Hymmns
+    if (cause !== actionKeys.HYMNS_OF_SANCTIFICATION) {
+        while (
+            amount > 0 &&
+            resourceIndex < constants.limitedResources.length &&
+            (draftEntity.currHp > 0 ||
+                (draftEntity.states.ascendenceOfSpirit &&
+                    draftEntity.currEnlit > 0))
         ) {
+            const currResourceKey = constants.limitedResources[resourceIndex];
+
             const currentAmount = draftEntity[currResourceKey];
             const consumption = Math.min(currentAmount, amount);
 
@@ -94,9 +90,9 @@ export function consumeResources(entity, amount, cause) {
 
             totalConsumption += consumption;
             amount -= consumption;
-        }
 
-        resourceIndex++;
+            resourceIndex++;
+        }
     }
 
     resourcesConsumed = {
@@ -113,14 +109,15 @@ export function consumeResources(entity, amount, cause) {
 export function restoreResources(entity, amount, wheel) {
     let draftEntity = {
         ...entity,
-        resources: { ...entity.resources },
     };
 
+    // Increases amount restored if Nature and aligned
     if (wheel === elementalKeys.NATURE && entity.states.aligned) {
         amount = Math.floor(amount * constants.NATURE_PASSIVE_MULT);
     }
 
-    if (entity.states.ascendenceOfSpirit) {
+    // Enlightenment
+    if (entity[effectKeys.MAX_ENLIGHTENMENT] > 0) {
         const missingEnlit = draftEntity.maxEnlit - draftEntity.currEnlit;
         const restoredEnlit = Math.min(missingEnlit, amount);
 
@@ -130,22 +127,40 @@ export function restoreResources(entity, amount, wheel) {
             ...draftEntity,
             currEnlit: draftEntity.currEnlit + restoredEnlit,
         };
+    }
 
+    // Insight
+    if (entity[effectKeys.MAX_INSIGHT] > 0) {
         draftEntity = gainInsight(draftEntity, amount);
-    } else {
+        return draftEntity; // Early return since restoring insight consumes all
+    }
+
+    // Health
+    if (entity[effectKeys.MAX_HEALTH] > 0) {
         const missingHp =
             draftEntity.maxHp + draftEntity.overgrowth - draftEntity.currHp;
         const restoredHp = Math.min(missingHp, amount);
 
         amount -= restoredHp;
 
-        draftEntity = {
-            ...draftEntity,
-            currHp: draftEntity.currHp + restoredHp,
-        };
-
-        draftEntity = gainMana(draftEntity, amount);
+        draftEntity = gainHp(draftEntity, restoredHp);
     }
+
+    // Mana
+    if (entity[effectKeys.MAX_MANA] > 0) {
+        draftEntity = gainMana(draftEntity, amount);
+        return draftEntity; // Early return since restoring mana consumes all
+    }
+
+    // The rest becomes sacred flames (safeguard, currently unreacheable)
+    draftEntity = {
+        ...draftEntity,
+        resources: {
+            ...draftEntity.resources,
+            [effectKeys.SACRED_FLAMES]:
+                draftEntity.resources[effectKeys.SACRED_FLAMES] + amount,
+        },
+    };
 
     return draftEntity;
 }
@@ -186,92 +201,57 @@ export function distributePoints(
                     newEntity.attributes[random_stat].points += 1;
                     newEntity.unspentPoints -= 1;
                 }
-
-                // Apply values
-                for (let attr of constants.ATTRIBUTE_NAMES) {
-                    newEntity.attributes[attr].value =
-                        constants.BASE_STATS[attr] +
-                        newEntity.attributes[attr].points *
-                            constants.STAT_MULTIPLIERS[attr];
-                }
             }
             break;
 
         case sdmKeys.BEST:
-            // Verify if a "Best" distribution has been passed
             if (!bestStats) {
                 break;
             }
-
-            // Reset points
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-
-            // Distribute points
             for (let attr of constants.ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: bestStats[attr],
-                    value:
-                        constants.BASE_STATS[attr] +
-                        bestStats[attr] * constants.STAT_MULTIPLIERS[attr],
                 };
-
                 newEntity.unspentPoints -= bestStats[attr];
             }
             break;
 
         case sdmKeys.FULL_DEF:
-            // Reset points and stats
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-
             for (let attr of constants.ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: 0,
-                    value: constants.BASE_STATS[attr],
                 };
             }
-
-            // Distribute points
-            newEntity.attributes.def = {
-                ...newEntity.attributes.def,
-                points: newEntity.unspentPoints,
-                value:
-                    constants.BASE_STATS.def +
-                    newEntity.unspentPoints * constants.STAT_MULTIPLIERS.def,
-            };
-
+            newEntity.attributes.def.points = newEntity.unspentPoints;
             newEntity.unspentPoints = 0;
-
             break;
 
         case sdmKeys.FULL_STR:
-            // Reset points
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-
             for (let attr of constants.ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: 0,
-                    value: constants.BASE_STATS[attr],
                 };
             }
-
-            // Distribute points
-            newEntity.attributes.str = {
-                ...newEntity.attributes.str,
-                points: newEntity.unspentPoints,
-                value:
-                    constants.BASE_STATS.str +
-                    newEntity.unspentPoints * constants.STAT_MULTIPLIERS.str,
-            };
-
+            newEntity.attributes.str.points = newEntity.unspentPoints;
             newEntity.unspentPoints = 0;
-
             break;
 
         default:
             break;
+    }
+
+    // Builds values from points
+    for (let attr of constants.ATTRIBUTE_NAMES) {
+        newEntity.attributes[attr].value =
+            constants.BASE_STATS[attr] +
+            newEntity.attributes[attr].points *
+                constants.STAT_MULTIPLIERS[attr];
     }
 
     return newEntity;
@@ -288,59 +268,78 @@ export function createBaseEntity() {
     }
 
     return {
+        // Limited Resources
         maxHp: constants.BASE_STATS.hp,
         currHp: constants.BASE_STATS.hp,
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
         maxOverheat: constants.MAX_OVERHEAT,
         currOverheat: 0,
-        maxEnlit: constants.MAX_ENLIT,
+        maxEnlit: 0,
         currEnlit: 0,
-        maxInsight: constants.MAX_INSIGHT,
+        maxInsight: 0,
         currInsight: 0,
-        maxTarnishedSin: constants.MAX_TARNISHED_SIN,
-        currTarnishedSin: 0,
-        sonority: 0,
+
+        // %-based
+        [effectKeys.MAX_TARNISHED_SIN]: constants.MAX_TARNISHED_SIN,
+        [effectKeys.TARNISHED_SIN]: 0,
+        [effectKeys.MAX_DIVINE_SPARK]: constants.MAX_DIVINE_SPARK,
+        [effectKeys.DIVINE_SPARK]: 0,
+
+        // other
+        [effectKeys.SONORITY]: 0,
         lasersUsedThisTurn: 0,
-        permafrost: 0,
-        overgrowth: 0,
-        scoria: 0,
-        revelation: 0,
+        [effectKeys.REVELATION]: 0,
+
+        // Essences
+        [effectKeys.OVERGROWTH]: 0,
+        [effectKeys.PERMAFROST]: 0,
+        [effectKeys.SCORIA]: 0,
+
         resources: {
-            manaOverflow: 0,
-            bloodSacrifice: 0,
-            radiance: 0,
-            shackledMana: 0,
-            poison: 0,
-            shadowflame: 0,
-            cinders: 0,
-            lingeringEmber: 0,
-            unrelentingShadows: 0,
-            halo: 0,
-            cryogenesis: 0,
-            sacredFlames: 0,
-            benediction: 0,
-            stardust: 0,
+            [effectKeys.MANA_OVERFLOW]: 0,
+            [effectKeys.BLOOD_SACRIFICE]: 0,
+            [effectKeys.RADIANCE]: 0,
+            [effectKeys.SHACKLED_MANA]: 0,
+            [effectKeys.POISON]: 0,
+            [effectKeys.SHADOWFLAME]: 0,
+            [effectKeys.CINDERS]: 0,
+            [effectKeys.LINGERING_EMBER]: 0,
+            [effectKeys.UNRELENTING_SHADOWS]: 0,
+            [effectKeys.HALO]: 0,
+            [effectKeys.CRYOGENESIS]: 0,
+            [effectKeys.SACRED_FLAMES]: 0,
+            [effectKeys.INSPIRATION]: 0,
+            [effectKeys.STARDUST]: 0,
             [effectKeys.DOME]: 0,
         },
         states: {
-            guarding: false,
-            sacrificial: false,
-            radiant: false,
-            thornedShackles: false,
-            darkEmbrace: false,
-            dimmingDarkness: false,
-            umbralCore: false,
-            deployment: false,
-            weaponsDeployed: false,
-            thermalOverload: false,
-            resonant: false,
-            venting: false,
-            aligned: false,
-            cutoffWings: false,
-            ascendenceOfSpirit: false,
-            burdenOfStigma: false,
-            stargazer: false,
+            // standalones
+            [effectKeys.GUARDING_STATE]: false,
+            [effectKeys.SACRIFICIAL_STATE]: false,
+            [effectKeys.ALIGNED]: false,
+            [effectKeys.THORNED_SHACKLES]: false,
+            [effectKeys.STARGAZER]: false,
+
+            // Shadowflame
+            [effectKeys.DARK_EMBRACE]: false,
+            [effectKeys.DIMMING_DARKNESS]: false,
+            [effectKeys.UMBRAL_CORE]: false,
+            [effectKeys.BLEAK_DECEPTION]: false,
+
+            // Deploy and sonority
+            [effectKeys.DEPLOYMENT]: false,
+            [effectKeys.WEAPONS_DEPLOYED]: false,
+            [effectKeys.THERMAL_OVERLOAD]: false,
+            [effectKeys.VENTING]: false,
+            [effectKeys.RESONANT]: false,
+
+            // Aegis
+            [effectKeys.RADIANT]: false,
+            [effectKeys.CUTOFF_WINGS]: false,
+            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
+            [effectKeys.BURDEN_OF_STIGMA]: false,
+            [effectKeys.ZENITH_OF_MORTALITY]: false,
         },
         stars: {
             white: 0,
@@ -448,155 +447,117 @@ export function dealDamage(
             ? constants.FROST_PASSIVE_MULT
             : 1.0;
 
-    if (defender.states.ascendenceOfSpirit) {
-        const finalDmg = Math.max(
-            1,
-            Math.floor(
-                (baseDmg + additionalDmg) *
-                    scorchAtkMult *
-                    scorchDefMult *
-                    frostAtkMult *
-                    frostDefMult,
-            ),
+    const effectiveDef =
+        dmgType === dmgTypes.PHYSICAL
+            ? (draftDefender.attributes.def.value + draftDefender.permafrost) *
+              processEntityDefEffect(draftDefender)
+            : 0;
+
+    const drMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityDR(draftDefender)
+            : 1.0;
+
+    const flatDr =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? -draftDefender.sonority
+            : 0;
+
+    const finalDmg = Math.max(
+        1,
+        Math.floor(
+            (baseDmg + additionalDmg - effectiveDef - flatDr) *
+                drMult *
+                scorchAtkMult *
+                scorchDefMult *
+                frostAtkMult *
+                frostDefMult,
+        ),
+    );
+
+    // Mitigation
+    const domeConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg, defender.resources[effectKeys.DOME])
+            : 0;
+
+    const haloConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(finalDmg - domeConsumed, draftDefender.resources.halo)
+            : 0;
+    const cryoConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(
+                  finalDmg - haloConsumed - domeConsumed,
+                  draftDefender.resources.cryogenesis,
+              )
+            : 0;
+    const emberConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(
+                  finalDmg - haloConsumed - cryoConsumed - domeConsumed,
+                  draftDefender.resources.lingeringEmber,
+              )
+            : 0;
+
+    const damagePostMitigation =
+        finalDmg - emberConsumed - haloConsumed - cryoConsumed - domeConsumed;
+
+    const defenderNewHalo = defender.resources.halo - haloConsumed;
+    const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
+    const defenderNewEmbers = defender.resources.lingeringEmber - emberConsumed;
+    const defenderNewRadiance = defender.resources.radiance + haloConsumed;
+    const newCinders = defender.resources.cinders + emberConsumed;
+
+    const newDome = defender.resources[effectKeys.DOME] - domeConsumed;
+
+    const thornsDmg =
+        isArrayActive && dmgType === dmgTypes.PHYSICAL
+            ? attacker.attributes.str.value + attacker.scoria
+            : 0;
+
+    if (thornsDmg > 0) {
+        draftAttacker = takeDamage(
+            draftAttacker,
+            thornsDmg,
+            dmgTypes.PHYSICAL,
+            wheel,
         );
-
-        const beneConsumed =
-            dmgType === dmgTypes.TRUE_DAMAGE
-                ? 0
-                : Math.min(defender.resources.benediction, finalDmg);
-        const finalDmgPostMitigation = finalDmg - beneConsumed;
-
-        const defenderNewEnlit = Math.max(
-            0,
-            defender.currEnlit - finalDmgPostMitigation,
-        );
-
-        const newBene = defender.resources.benediction - beneConsumed;
-
-        draftDefender = {
-            ...draftDefender,
-            currEnlit: defenderNewEnlit,
-            resources: {
-                ...draftDefender.resources,
-                benediction: newBene,
-            },
-        };
-
-        draftAttacker = {
-            ...draftAttacker,
-            resources: {
-                ...draftAttacker.resources,
-                sacredFlames:
-                    draftAttacker.resources.sacredFlames + beneConsumed,
-            },
-        };
-    } else {
-        const effectiveDef =
-            dmgType === dmgTypes.PHYSICAL
-                ? (draftDefender.attributes.def.value +
-                      draftDefender.permafrost) *
-                  processEntityDefEffect(draftDefender)
-                : 0;
-
-        const drMult =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? processEntityDR(draftDefender)
-                : 1.0;
-
-        const flatDr =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? -draftDefender.sonority
-                : 0;
-
-        const finalDmg = Math.max(
-            1,
-            Math.floor(
-                (baseDmg + additionalDmg - effectiveDef - flatDr) *
-                    drMult *
-                    scorchAtkMult *
-                    scorchDefMult *
-                    frostAtkMult *
-                    frostDefMult,
-            ),
-        );
-
-        // Mitigation
-        const domeConsumed =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? Math.min(finalDmg, defender.resources[effectKeys.DOME])
-                : 0;
-
-        const haloConsumed =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? Math.min(
-                      finalDmg - domeConsumed,
-                      draftDefender.resources.halo,
-                  )
-                : 0;
-        const cryoConsumed =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? Math.min(
-                      finalDmg - haloConsumed - domeConsumed,
-                      draftDefender.resources.cryogenesis,
-                  )
-                : 0;
-        const emberConsumed =
-            dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-                ? Math.min(
-                      finalDmg - haloConsumed - cryoConsumed - domeConsumed,
-                      draftDefender.resources.lingeringEmber,
-                  )
-                : 0;
-
-        const damagePostMitigation =
-            finalDmg -
-            emberConsumed -
-            haloConsumed -
-            cryoConsumed -
-            domeConsumed;
-
-        const defenderNewHp = Math.max(
-            0,
-            defender.currHp - damagePostMitigation,
-        );
-
-        const defenderNewHalo = defender.resources.halo - haloConsumed;
-        const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
-        const defenderNewEmbers =
-            defender.resources.lingeringEmber - emberConsumed;
-        const defenderNewRadiance = defender.resources.radiance + haloConsumed;
-        const newCinders = defender.resources.cinders + emberConsumed;
-
-        const newDome = defender.resources[effectKeys.DOME] - domeConsumed;
-
-        const thornsDmg =
-            isArrayActive && dmgType === dmgTypes.PHYSICAL
-                ? attacker.attributes.str.value + attacker.scoria
-                : 0;
-
-        if (thornsDmg > 0) {
-            draftAttacker = takeDamage(
-                draftAttacker,
-                thornsDmg,
-                dmgTypes.PHYSICAL,
-                wheel,
-            );
-        }
-
-        draftDefender = {
-            ...draftDefender,
-            currHp: defenderNewHp,
-            resources: {
-                ...draftDefender.resources,
-                halo: defenderNewHalo,
-                lingeringEmber: defenderNewEmbers,
-                radiance: defenderNewRadiance,
-                cryogenesis: defenderNewCryo,
-                cinders: newCinders,
-                [effectKeys.DOME]: newDome,
-            },
-        };
     }
+
+    if (draftDefender.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        if (dmgType === dmgTypes.TRUE) {
+            draftDefender = gainSin(draftDefender, damagePostMitigation);
+        } else {
+            draftDefender = loseEnlit(draftDefender, damagePostMitigation);
+            if (dmgType === dmgTypes.PHYSICAL) {
+                draftDefender = {
+                    ...draftDefender,
+                    resources: {
+                        ...draftDefender.resources,
+                        [effectKeys.INSPIRATION]:
+                            draftDefender.resources[effectKeys.INSPIRATION] +
+                            damagePostMitigation,
+                    },
+                };
+            }
+        }
+    } else {
+        draftDefender = loseHp(draftDefender, damagePostMitigation);
+    }
+
+    draftDefender = {
+        ...draftDefender,
+        resources: {
+            ...draftDefender.resources,
+            halo: defenderNewHalo,
+            lingeringEmber: defenderNewEmbers,
+            radiance: defenderNewRadiance,
+            cryogenesis: defenderNewCryo,
+            cinders: newCinders,
+            [effectKeys.DOME]: newDome,
+        },
+    };
 
     return {
         attacker: {
@@ -609,6 +570,10 @@ export function dealDamage(
 }
 
 export function takeDamage(entity, baseDmg, dmgType, wheel) {
+    let draftEntity = {
+        ...entity,
+    };
+
     const scorchMult =
         wheel === elementalKeys.SCORCH && entity.states.aligned
             ? constants.SCORCH_PASSIVE_MULT
@@ -618,26 +583,6 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
         wheel === elementalKeys.FROST && entity.states.aligned
             ? constants.FROST_PASSIVE_MULT
             : 1.0;
-
-    if (entity.states.ascendenceOfSpirit) {
-        const finalDmg = Math.max(
-            1,
-            Math.floor(baseDmg * scorchMult * frostMult),
-        );
-
-        const beneConsumed =
-            dmgType === dmgTypes.TRUE_DAMAGE
-                ? 0
-                : Math.min(entity.resources.benediction, finalDmg);
-        const finalDmgPostMitigation = finalDmg - beneConsumed;
-
-        const newEnlit = Math.max(0, entity.currEnlit - finalDmgPostMitigation);
-
-        return {
-            ...entity,
-            currEnlit: newEnlit,
-        };
-    }
 
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
@@ -689,7 +634,26 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     const damagePostMitigation =
         finalDmg - emberConsumed - haloConsumed - cryoConsumed - domeConsumed;
 
-    let newHp = Math.max(0, entity.currHp - damagePostMitigation);
+    if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        if (dmgType === dmgTypes.TRUE) {
+            draftEntity = gainSin(draftEntity, damagePostMitigation);
+        } else {
+            draftEntity = loseEnlit(draftEntity, damagePostMitigation);
+            if (dmgType === dmgTypes.PHYSICAL) {
+                draftEntity = {
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.INSPIRATION]:
+                            draftEntity.resources[effectKeys.INSPIRATION] +
+                            damagePostMitigation,
+                    },
+                };
+            }
+        }
+    } else {
+        draftEntity = loseHp(draftEntity, damagePostMitigation);
+    }
 
     const newHalo = entity.resources.halo - haloConsumed;
     const newCryo = entity.resources.cryogenesis - cryoConsumed;
@@ -699,10 +663,9 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     const newDome = entity.resources[effectKeys.DOME] - domeConsumed;
 
     return {
-        ...entity,
-        currHp: newHp,
+        ...draftEntity,
         resources: {
-            ...entity.resources,
+            ...draftEntity.resources,
             halo: newHalo,
             lingeringEmber: newEmbers,
             radiance: newRadiance,
@@ -713,7 +676,211 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     };
 }
 
+export function processEntityDeathStates(entity) {
+    let draftEntity = { ...entity };
+
+    console.log("death processing")
+    console.log(draftEntity);
+
+    if(draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
+        draftEntity = {
+            ...draftEntity,
+            states: {
+                ...draftEntity.states,
+                [effectKeys.ABANDONED_BY_GRACE]: true,
+            }
+        }
+    }
+
+    if (
+        draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        (draftEntity[effectKeys.ENLIGHTENMENT] <= 0 || draftEntity.states[effectKeys.ABANDONED_BY_GRACE])
+    ) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.ENLIGHTENMENT]: 0,
+            [effectKeys.MAX_ENLIGHTENMENT]: 0,
+            [effectKeys.INSIGHT]: 0,
+            [effectKeys.MAX_INSIGHT]: 0,
+            states: {
+                ...draftEntity.states,
+                [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
+                [effectKeys.CUTOFF_WINGS]: true,
+            },
+        };
+    }
+
+    draftEntity = processEntityCutoffWings(draftEntity);
+
+    return draftEntity;
+}
+
+export function processEntityCutoffWings(entity) {
+    let draft = { ...entity };
+
+    if (draft.states[effectKeys.CUTOFF_WINGS]) {
+        draft = {
+            ...draft,
+            [effectKeys.HEALTH]: Math.max(
+                0,
+                Math.min(1, draft[effectKeys.HEALTH]),
+            ),
+            [effectKeys.MAX_HEALTH]: 1,
+        };
+    }
+
+    return draft;
+}
+
+export function isEntityDead(entity) {
+    return entity.currHp <= 0 && !entity.states.ascendenceOfSpirit;
+}
+
+export function resetPlayerEntity(prev, entityKey) {
+    const currentEntity = prev.entities[entityKey];
+    const baseEntity = createBaseEntity();
+
+    baseEntity.controller = currentEntity.controller;
+    baseEntity.statDistributionMode = currentEntity.statDistributionMode;
+    baseEntity.unspentPoints = currentEntity.unspentPoints;
+
+    for (let attr of constants.ATTRIBUTE_NAMES) {
+        baseEntity.attributes[attr].points =
+            currentEntity.attributes[attr].points;
+    }
+
+    return distributePoints(
+        baseEntity,
+        currentEntity.statDistributionMode,
+        presetAi[currentEntity.controller].best,
+    );
+}
+
+export function applyBenedictionMalediction(entity, eye, actionType) {
+    const eyeIsOpen = eye === eyeKeys.OPEN;
+
+    const gainSin = eyeIsOpen && actionType === angelActKeys.MALEDICTION;
+    const gainIns = !eyeIsOpen && actionType === angelActKeys.BENEDICTION;
+
+    const newSin = gainSin
+        ? Math.min(
+              entity[effectKeys.MAX_TARNISHED_SIN],
+              entity[effectKeys.TARNISHED_SIN] + entity[effectKeys.REVELATION],
+          )
+        : entity[effectKeys.TARNISHED_SIN];
+
+    const newIns = gainIns
+        ? entity.resources[effectKeys.INSPIRATION] +
+          entity[effectKeys.REVELATION]
+        : entity.resources[effectKeys.INSPIRATION];
+
+    return {
+        ...entity,
+        [effectKeys.TARNISHED_SIN]: newSin,
+        resources: {
+            ...entity.resources,
+            [effectKeys.INSPIRATION]: newIns,
+        },
+    };
+}
+
+export function gainEnlit(entity, amount) {
+    const newEnlit = Math.min(
+        entity[effectKeys.MAX_ENLIGHTENMENT],
+        entity[effectKeys.ENLIGHTENMENT] + amount,
+    );
+
+    return {
+        ...entity,
+        [effectKeys.ENLIGHTENMENT]: newEnlit,
+    };
+}
+
+export function loseEnlit(entity, amount) {
+    const newEnlit = Math.max(0, entity[effectKeys.ENLIGHTENMENT] - amount);
+
+    return {
+        ...entity,
+        [effectKeys.ENLIGHTENMENT]: newEnlit,
+    };
+}
+
+export function gainSin(entity, amount) {
+    const newSin = Math.min(
+        entity[effectKeys.TARNISHED_SIN] + amount,
+        entity[effectKeys.MAX_TARNISHED_SIN],
+    );
+
+    return {
+        ...entity,
+        [effectKeys.TARNISHED_SIN]: newSin,
+    };
+}
+
+export function gainInsight(entity, amount) {
+    const missingInsight = entity.maxInsight - entity.currInsight;
+
+    const newInsight = Math.min(entity.maxInsight, entity.currInsight + amount);
+    const newInspiration =
+        entity.resources[effectKeys.INSPIRATION] +
+        Math.max(0, amount - missingInsight);
+
+    return {
+        ...entity,
+        currInsight: newInsight,
+        resources: {
+            ...entity.resources,
+            [effectKeys.INSPIRATION]: newInspiration,
+        },
+    };
+}
+
+export function gainHp(entity, amount) {
+    // If on ascendence, restore inspiration and returns early
+    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        const newInspiration = entity.resources[effectKeys.INSPIRATION] + amount;
+        return {
+            ...entity,
+            resources: {
+                ...entity.resources,
+                [effectKeys.INSPIRATION]: newInspiration,
+            },
+        };
+    }
+
+    const newHp = Math.min(
+        entity[effectKeys.HEALTH] + amount,
+        entity[effectKeys.MAX_HEALTH] + entity[effectKeys.OVERGROWTH],
+    );
+
+    return {
+        ...entity,
+        [effectKeys.HEALTH]: newHp,
+    };
+}
+
+export function loseHp(entity, amount) {
+    const newHp = Math.max(0, entity[effectKeys.HEALTH] - amount);
+
+    return {
+        ...entity,
+        [effectKeys.HEALTH]: newHp,
+    };
+}
+
 export function gainMana(entity, amount) {
+    // If on ascendence, restore inspiration and returns early
+    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        const newInspiration = entity.resources[effectKeys.INSPIRATION] + amount;
+        return {
+            ...entity,
+            resources: {
+                ...entity.resources,
+                [effectKeys.INSPIRATION]: newInspiration,
+            },
+        };
+    }
+
     const missingMana = entity.maxMana - entity.currMana;
 
     const newMana = Math.min(entity.maxMana, entity.currMana + amount);
@@ -749,19 +916,58 @@ export function loseMana(entity, amount) {
     };
 }
 
-export function gainInsight(entity, amount) {
-    const missingInsight = entity.maxInsight - entity.currInsight;
-
-    const newInsight = Math.min(entity.maxInsight, entity.currInsight + amount);
-    const newSacredFlames =
-        entity.resources.sacredFlames + Math.max(0, amount - missingInsight);
-
+export function processExitAligned(entity) {
     return {
         ...entity,
-        currInsight: newInsight,
-        resources: {
-            ...entity.resources,
-            sacredFlames: newSacredFlames,
+        states: {
+            ...entity.states,
+            [effectKeys.ALIGNED]: false,
         },
-    };
+        [effectKeys.OVERGROWTH]: 0,
+        [effectKeys.PERMAFROST]: 0,
+        [effectKeys.SCORIA]: 0,
+    }
+}
+
+export function processExitStargazer(entity) {
+    return {
+        ...entity,
+        states: {
+            ...entity.states,
+            [effectKeys.STARGAZER]: false,
+        },
+        stars: {
+            ...createBaseEntity().stars,
+        },
+    }
+}
+
+export function processExitsResonant(entity) {
+    return {
+        ...entity,
+        [effectKeys.SONORITY]: 0,
+        states: {
+            ...entity.states,
+            [effectKeys.RESONANT]: false,
+        },
+    }
+}
+
+export function exitAllStates(entity) {
+    let draftEntity = {
+        ...entity,
+    }
+
+    draftEntity = processExitAligned(draftEntity);
+    draftEntity = processExitStargazer(draftEntity);
+    draftEntity = processExitsResonant(draftEntity);
+
+    draftEntity = {
+        ...draftEntity,
+        states: {
+            ...createBaseEntity().states,
+        }
+    }
+
+    return draftEntity;
 }

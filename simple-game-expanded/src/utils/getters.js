@@ -19,45 +19,49 @@ export const getUmbralActions = () => [
     },
 ];
 
-export const getAngelActions = (isEyeOpen) => [
+export const getAngelActions = () => [
     // Good actions
     {
-        key: actionKeys.GRACE_OF_HEAVENS,
-        label: "Grace of heavens",
-        disabled: !isEyeOpen,
+        key: actionKeys.BAPTISM_OF_THE_FLAMES,
+        label: "Baptism of the Flames",
+        specialClass: "good-angel-button"
     },
     {
         key: actionKeys.CELESTIAL_SCALE,
         label: "Celestial Scale",
-        disabled: !isEyeOpen,
+        specialClass: "good-angel-button"
     },
     {
-        key: actionKeys.SACRAMENT,
-        label: "Sacrament",
-        disabled: !isEyeOpen,
+        key: actionKeys.HYMNS_OF_SANCTIFICATION,
+        label: "Hymns of Sanctification",
+        specialClass: "good-angel-button"
     },
     {
         key: actionKeys.GIFT_OF_APOTHEOSIS,
         label: "Gift of Apotheosis",
-        disabled: !isEyeOpen,
+        specialClass: "good-angel-button"
     },
 
     // Bad Actions
     {
         key: actionKeys.SERAPH_OF_CONDEMNATION,
         label: "Seraph of Condemnation",
-        disabled: isEyeOpen,
+        specialClass: "bad-angel-button"
     },
     {
-        key: actionKeys.BAPTISM_OF_THE_FLAMES,
-        label: "Baptism of the Flames",
-        disabled: isEyeOpen,
+        key: actionKeys.GLIMPSE_OF_PANDEMONIUM,
+        label: "Glimpse of Pandemonium",
+        specialClass: "bad-angel-button"
     },
-
+    {
+        key: actionKeys.EDICT_OF_SEVERANCE,
+        label: "Edict of Severance",
+        specialClass: "bad-angel-button"
+    },
     {
         key: actionKeys.THE_WORD_MADE_FLESH,
         label: "The Word Made Flesh",
-        disabled: isEyeOpen,
+        specialClass: "bad-angel-button"
     },
 ];
 
@@ -77,6 +81,16 @@ export const getSonorityColor = (sonority) => {
     };
     return colors[sonority] || "#ffffff";
 };
+
+export const getJudgement = () => {
+    return [
+        {
+            key: actionKeys.JUDGEMENT,
+            label: "Judgement",
+            specialClass: "ascend-button"
+        }
+    ]
+}
 
 export const getNormalActions = (
     arrayActive,
