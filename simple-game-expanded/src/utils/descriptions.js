@@ -292,7 +292,7 @@ export const RESOURCE_DESCRIPTIONS = {
     [effectKeys.OVERHEAT]: {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
-        description: "Capped at MAX OVERHEAT.",
+        description: "Capped at MAX OVERHEAT. When using DEFENSIVE ACTIONS, lower OVERHEAT by 30%.",
     },
 
     [effectKeys.MANA]: {
@@ -807,7 +807,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "SEVERED TIME",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "The ELEMENTAL CYCLE does not trigger. OFFENSIVE ACTIONS and DEFENSIVE ACTIONS do not modify SONORITY. RUNIC ARRAY duration does not decrease. MANA BLEED does not trigger. SHADOWFLAME does not burn RESOURCES at turn start. OVERHEAT is not lost naturally. DIMMED STARS and GRAY STARS do not convert at turn start.",
+            "Turn Start and Turn End effects do not trigger. The ELEMENTAL WHEEL does not turn. RUNIC ARRAY duration does not decrease.",
     },
 
     [effectKeys.INSPIRATION]: {
@@ -905,7 +905,7 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "NATURE",
         type: entryTypes.MECHANIC,
         description:
-            "Passive Effect - All ALIGNED entities restore +50% RESOURCES. Active Effect - Restore RESOURCES by OVERGROWTH on self.",
+            "Passive Effect - All ALIGNED entities restore double RESOURCES. Active Effect - Restore RESOURCES by OVERGROWTH on self.",
     },
 
     [effectKeys.FROST]: {
@@ -926,7 +926,7 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "SONORITY",
         type: entryTypes.MECHANIC,
         description:
-            "Starts at 0 and ranges from -5 to 5. Increases when using DEFENSIVE ACTIONS. Decreases when using OFFENSIVE ACTIONS.",
+            "Starts at 0 and ranges from -10 to 10. Increases when using DEFENSIVE ACTIONS. Decreases when using OFFENSIVE ACTIONS.",
     },
 
     [effectKeys.MAX_MANA]: {

@@ -71,13 +71,13 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const { agent, agentKey, nonAgentKey, hasManaForSpecial, handleAction } =
+    const { agentKey, nonAgentKey, handleAction } =
         context;
 
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
 
-    if(simAtk.entities[nonAgentKey].currHp <= 0) {
+    if (simAtk.entities[nonAgentKey].currHp <= 0) {
         handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }
@@ -351,7 +351,7 @@ export function maestroAI(context) {
         action = actionKeys.SOUND_OF_SILENCE;
     } else if (agent.sonority === constants.SONORITY_HIGHER_LIMIT) {
         action = actionKeys.BABEL;
-    } else if (agent.states.weaponsDeployed) {
+    } else if (agent.states.weaponsDeployed && agent[effectKeys.SONORITY] <= 0) {
         action = actionKeys.LASER;
     } else if (
         !agent.states.weaponsDeployed &&
@@ -360,6 +360,10 @@ export function maestroAI(context) {
         !agent.states.venting
     ) {
         action = actionKeys.DEPLOY;
+    } else if (agent[effectKeys.SONORITY] < 0) {
+        action = actionKeys.SOUND_OF_SILENCE;
+    } else if (agent[effectKeys.SONORITY] > 0) {
+        action = actionKeys.BABEL;
     } else {
         action = actionKeys.GUARD;
     }

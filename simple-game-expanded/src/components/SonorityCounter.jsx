@@ -1,11 +1,12 @@
+import { constants } from "../utils/constants";
 import "./SonorityCounter.css";
 
 function SonorityCounter({ sonority }) {
-    const disNonFill = Math.max(0, (Math.min(sonority, 0) + 5) * 10);
-    const disFill = 50 - disNonFill;
+    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT) * 10);
+    const disFill = 100 - disNonFill;
 
-    const harFill = Math.max(0, Math.min(sonority, 5) * 10);
-    const harNonFill = 50 - harFill;
+    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT) * 10);
+    const harNonFill = 100 - harFill;
 
     console.log(disNonFill, disFill, harNonFill, harFill);
 
@@ -41,9 +42,9 @@ function SonorityCounter({ sonority }) {
                 ></div>
             </div>
             <div className="sonority-counter-lower-labels">
-                <span>-5</span>
+                <span>{constants.SONORITY_LOWER_LIMIT}</span>
                 <span>0</span>
-                <span>5</span>
+                <span>{constants.SONORITY_HIGHER_LIMIT}</span>
             </div>
         </div>
     );

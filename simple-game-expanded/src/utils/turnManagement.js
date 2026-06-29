@@ -58,283 +58,289 @@ export function processUpkeep(prev) {
     draftTarget = processEntityCutoffWings(draftTarget);
     draftNonTarget = processEntityCutoffWings(draftNonTarget);
 
-    // Remnants
-    if (draftTarget.states[effectKeys.REMNANTS_OF_DIVINITY]) {
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                [effectKeys.REMNANTS_OF_DIVINITY]: false,
-                [effectKeys.BURDEN_OF_STIGMA]: true,
-            },
-        };
-    }
-
-    // Stardust
-    if (draftTarget.resources[effectKeys.STARDUST] > 0) {
-        const newStardust =
-            draftTarget.resources[effectKeys.STARDUST] %
-            constants.STARDUST_RATE_CONVERSION;
-        const newWhites =
-            draftTarget.stars[effectKeys.WHITE_STAR] +
-            Math.floor(
-                draftTarget.resources[effectKeys.STARDUST] /
-                    constants.STARDUST_RATE_CONVERSION,
-            );
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.STARDUST]: newStardust,
-            },
-            stars: {
-                ...draftTarget.stars,
-                [effectKeys.WHITE_STAR]: newWhites,
-            },
-        };
-    }
-
-    // Dimmed Stars
-    const hasDim = coloredStars.some(
-        (curr) => draftTarget.stars[curr.dimmed] > 0,
-    );
-    if (hasDim) {
-        for (let value of Object.values(coloredStars)) {
+    let newEye = prev.eyeOfHeavens;
+    if (!prev[effectKeys.SEVERED_TIME]) {
+        // Remnants
+        if (draftTarget.states[effectKeys.REMNANTS_OF_DIVINITY]) {
             draftTarget = {
                 ...draftTarget,
-                stars: {
-                    ...draftTarget.stars,
-                    [value.star]:
-                        draftTarget.stars[value.star] +
-                        draftTarget.stars[value.dimmed],
-                    [value.dimmed]: 0,
+                states: {
+                    ...draftTarget.states,
+                    [effectKeys.REMNANTS_OF_DIVINITY]: false,
+                    [effectKeys.BURDEN_OF_STIGMA]: true,
                 },
             };
         }
-    }
 
-    // Unrelenting Shadows
-    if (draftTarget.resources.unrelentingShadows > 0) {
-        draftTarget = restoreResources(
-            draftTarget,
-            draftTarget.resources.unrelentingShadows,
-            prev.elementalWheel,
+        // Stardust
+        if (draftTarget.resources[effectKeys.STARDUST] > 0) {
+            const newStardust =
+                draftTarget.resources[effectKeys.STARDUST] %
+                constants.STARDUST_RATE_CONVERSION;
+            const newWhites =
+                draftTarget.stars[effectKeys.WHITE_STAR] +
+                Math.floor(
+                    draftTarget.resources[effectKeys.STARDUST] /
+                        constants.STARDUST_RATE_CONVERSION,
+                );
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.STARDUST]: newStardust,
+                },
+                stars: {
+                    ...draftTarget.stars,
+                    [effectKeys.WHITE_STAR]: newWhites,
+                },
+            };
+        }
+
+        // Dimmed Stars
+        const hasDim = coloredStars.some(
+            (curr) => draftTarget.stars[curr.dimmed] > 0,
         );
+        if (hasDim) {
+            for (let value of Object.values(coloredStars)) {
+                draftTarget = {
+                    ...draftTarget,
+                    stars: {
+                        ...draftTarget.stars,
+                        [value.star]:
+                            draftTarget.stars[value.star] +
+                            draftTarget.stars[value.dimmed],
+                        [value.dimmed]: 0,
+                    },
+                };
+            }
+        }
 
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                unrelentingShadows: 0,
-            },
-        };
-    }
+        // Unrelenting Shadows
+        if (draftTarget.resources.unrelentingShadows > 0) {
+            draftTarget = restoreResources(
+                draftTarget,
+                draftTarget.resources.unrelentingShadows,
+                prev.elementalWheel,
+            );
 
-    // Shadowflame
-    if (
-        draftTarget.resources.shadowflame > 0 &&
-        !draftTarget.states.darkEmbrace
-    ) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftTarget,
-            draftTarget.resources.shadowflame,
-            effectKeys.SHADOWFLAME,
-        );
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    unrelentingShadows: 0,
+                },
+            };
+        }
 
-        draftTarget = {
-            ...draftEntity,
-        };
+        // Shadowflame
+        if (
+            draftTarget.resources.shadowflame > 0 &&
+            !draftTarget.states.darkEmbrace
+        ) {
+            const { draftEntity, resourcesConsumed } = consumeResources(
+                draftTarget,
+                draftTarget.resources.shadowflame,
+                effectKeys.SHADOWFLAME,
+            );
 
-        const newShadowflame =
-            draftTarget.resources.shadowflame +
-            resourcesConsumed.totalConsumption;
+            draftTarget = {
+                ...draftEntity,
+            };
 
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                shadowflame: newShadowflame,
-            },
-        };
-    }
+            const newShadowflame =
+                draftTarget.resources.shadowflame +
+                resourcesConsumed.totalConsumption;
 
-    // Lingering Embers
-    if (draftTarget.resources.lingeringEmber > 0) {
-        const halvedLE = Math.ceil(draftTarget.resources.lingeringEmber / 2);
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    shadowflame: newShadowflame,
+                },
+            };
+        }
 
-        const newLE = draftTarget.resources.lingeringEmber - halvedLE;
-        const newCinders = draftTarget.resources.cinders + halvedLE;
-        const newSF = draftTarget.resources.shadowflame + halvedLE;
+        // Lingering Embers
+        if (draftTarget.resources.lingeringEmber > 0) {
+            const halvedLE = Math.ceil(
+                draftTarget.resources.lingeringEmber / 2,
+            );
 
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                lingeringEmber: newLE,
-                cinders: newCinders,
-                shadowflame: newSF,
-            },
-        };
-    }
+            const newLE = draftTarget.resources.lingeringEmber - halvedLE;
+            const newCinders = draftTarget.resources.cinders + halvedLE;
+            const newSF = draftTarget.resources.shadowflame + halvedLE;
 
-    // Umbral Core
-    if (
-        draftTarget.states.umbralCore &&
-        draftTarget.resources.lingeringEmber <= 0 &&
-        draftTarget.resources.shadowflame <= 0
-    ) {
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                umbralCore: false,
-                bleakDeception: true,
-            },
-        };
-    }
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    lingeringEmber: newLE,
+                    cinders: newCinders,
+                    shadowflame: newSF,
+                },
+            };
+        }
 
-    // Poison
-    if (
-        draftTarget.resources.poison > 0 &&
-        !draftTarget.states.dimmingDarkness
-    ) {
-        draftTarget = takeDamage(
-            draftTarget,
-            draftTarget.resources.poison,
-            dmgTypes.TRUE,
-            prev.elementalWheel,
-        );
-    }
+        // Umbral Core
+        if (
+            draftTarget.states.umbralCore &&
+            draftTarget.resources.lingeringEmber <= 0 &&
+            draftTarget.resources.shadowflame <= 0
+        ) {
+            draftTarget = {
+                ...draftTarget,
+                states: {
+                    ...draftTarget.states,
+                    umbralCore: false,
+                    bleakDeception: true,
+                },
+            };
+        }
 
-    // Blood Sacrifice
-    if (draftTarget.resources.bloodSacrifice > 0) {
-        const manaBleed = Math.min(
-            draftTarget.currMana + draftTarget.resources.manaOverflow,
-            Math.ceil(
-                draftTarget.resources.bloodSacrifice *
-                    constants.MANA_BLEED_MULT,
-            ),
-        );
+        // Poison
+        if (
+            draftTarget.resources.poison > 0 &&
+            !draftTarget.states.dimmingDarkness
+        ) {
+            draftTarget = takeDamage(
+                draftTarget,
+                draftTarget.resources.poison,
+                dmgTypes.TRUE,
+                prev.elementalWheel,
+            );
+        }
 
-        draftTarget = {
-            ...loseMana(draftTarget, manaBleed),
-        };
+        // Blood Sacrifice
+        if (draftTarget.resources.bloodSacrifice > 0) {
+            const manaBleed = Math.min(
+                draftTarget.currMana + draftTarget.resources.manaOverflow,
+                Math.ceil(
+                    draftTarget.resources.bloodSacrifice *
+                        constants.MANA_BLEED_MULT,
+                ),
+            );
 
-        draftTarget = {
-            ...gainHp(draftTarget, manaBleed),
-        };
-    }
+            draftTarget = {
+                ...loseMana(draftTarget, manaBleed),
+            };
 
-    // Deployment
-    if (draftTarget.states.deployment) {
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                deployment: false,
-                weaponsDeployed: true,
-            },
-        };
-    }
+            draftTarget = {
+                ...gainHp(draftTarget, manaBleed),
+            };
+        }
 
-    // Venting
-    if (draftTarget.states.venting) {
-        const newOverheat = Math.max(
-            0,
-            draftTarget.currOverheat - constants.VENTING_OVERHEAT_LOSS,
-        );
-        draftTarget = {
-            ...draftTarget,
-            currOverheat: newOverheat,
-            states: {
-                ...draftTarget.states,
-                venting: newOverheat > 0,
-                weaponsDeployed: newOverheat <= 0,
-            },
-        };
-    }
+        // Deployment
+        if (draftTarget.states.deployment) {
+            draftTarget = {
+                ...draftTarget,
+                states: {
+                    ...draftTarget.states,
+                    deployment: false,
+                    weaponsDeployed: true,
+                },
+            };
+        }
 
-    // Sacred Flames
-    if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
-        const missingHp =
-            draftTarget[effectKeys.MAX_HEALTH] - draftTarget[effectKeys.HEALTH];
+        // Venting
+        if (draftTarget.states.venting) {
+            const newOverheat = Math.max(
+                0,
+                draftTarget.currOverheat - constants.VENTING_OVERHEAT_LOSS,
+            );
+            draftTarget = {
+                ...draftTarget,
+                currOverheat: newOverheat,
+                states: {
+                    ...draftTarget.states,
+                    venting: newOverheat > 0,
+                    weaponsDeployed: newOverheat <= 0,
+                },
+            };
+        }
 
-        const hpRestored = Math.min(
-            missingHp,
-            draftTarget.resources[effectKeys.SACRED_FLAMES],
-        );
-        const newFlames =
-            draftTarget.resources[effectKeys.SACRED_FLAMES] - hpRestored;
+        // Sacred Flames
+        if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
+            const missingHp =
+                draftTarget[effectKeys.MAX_HEALTH] -
+                draftTarget[effectKeys.HEALTH];
 
-        draftTarget = gainHp(draftTarget, hpRestored);
+            const hpRestored = Math.min(
+                missingHp,
+                draftTarget.resources[effectKeys.SACRED_FLAMES],
+            );
+            const newFlames =
+                draftTarget.resources[effectKeys.SACRED_FLAMES] - hpRestored;
 
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.SACRED_FLAMES]: newFlames,
-            },
-        };
-    }
+            draftTarget = gainHp(draftTarget, hpRestored);
 
-    // Inspiration
-    if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
-        const missingEnlit =
-            draftTarget[effectKeys.MAX_ENLIGHTENMENT] -
-            draftTarget[effectKeys.ENLIGHTENMENT];
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.SACRED_FLAMES]: newFlames,
+                },
+            };
+        }
 
-        const enlitRestored = Math.min(
-            missingEnlit,
-            draftTarget.resources[effectKeys.INSPIRATION],
-        );
-        const newInspiration =
-            draftTarget.resources[effectKeys.INSPIRATION] - enlitRestored;
+        // Inspiration
+        if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
+            const missingEnlit =
+                draftTarget[effectKeys.MAX_ENLIGHTENMENT] -
+                draftTarget[effectKeys.ENLIGHTENMENT];
 
-        draftTarget = gainEnlit(draftTarget, enlitRestored);
+            const enlitRestored = Math.min(
+                missingEnlit,
+                draftTarget.resources[effectKeys.INSPIRATION],
+            );
+            const newInspiration =
+                draftTarget.resources[effectKeys.INSPIRATION] - enlitRestored;
 
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.INSPIRATION]: newInspiration,
-            },
-        };
-    }
+            draftTarget = gainEnlit(draftTarget, enlitRestored);
 
-    // Halo
-    if (draftTarget.resources.halo > 0) {
-        const newSpark = Math.min(
-            draftTarget.resources.halo + draftTarget[effectKeys.DIVINE_SPARK],
-            draftTarget[effectKeys.MAX_DIVINE_SPARK],
-        );
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.INSPIRATION]: newInspiration,
+                },
+            };
+        }
 
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.DIVINE_SPARK]: newSpark,
-            resources: {
-                ...draftTarget.resources,
-                halo: 0,
-            },
-        };
-    }
+        // Halo
+        if (draftTarget.resources.halo > 0) {
+            const newSpark = Math.min(
+                draftTarget.resources.halo +
+                    draftTarget[effectKeys.DIVINE_SPARK],
+                draftTarget[effectKeys.MAX_DIVINE_SPARK],
+            );
 
-    // Divine Spark
-    let newEye = prev.eyeOfHeavens;
-    if (
-        draftTarget[effectKeys.DIVINE_SPARK] >=
-        draftTarget[effectKeys.MAX_DIVINE_SPARK]
-    ) {
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                [effectKeys.ZENITH_OF_MORTALITY]: true,
-            },
-        };
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.DIVINE_SPARK]: newSpark,
+                resources: {
+                    ...draftTarget.resources,
+                    halo: 0,
+                },
+            };
+        }
 
-        if (newEye === eyeKeys.DORMANT) {
-            newEye = eyeKeys.CLOSED;
+        // Divine Spark
+        if (
+            draftTarget[effectKeys.DIVINE_SPARK] >=
+            draftTarget[effectKeys.MAX_DIVINE_SPARK]
+        ) {
+            draftTarget = {
+                ...draftTarget,
+                states: {
+                    ...draftTarget.states,
+                    [effectKeys.ZENITH_OF_MORTALITY]: true,
+                },
+            };
+
+            if (newEye === eyeKeys.DORMANT) {
+                newEye = eyeKeys.CLOSED;
+            }
         }
     }
 
@@ -394,49 +400,53 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     let draftNextActor = newGame.entities[nextActorKey];
 
     if (action !== actionKeys.LASER && action !== actionKeys.ASCEND) {
-        // Mana Overflow
-        if (
-            draftCurrActor.resources.manaOverflow > 0 &&
-            !draftCurrActor.states.dimmingDarkness
-        ) {
-            draftCurrActor = takeDamage(
-                draftCurrActor,
-                draftCurrActor.resources.manaOverflow,
-                dmgTypes.TRUE,
-                newGame.elementalWheel,
-            );
+        if (!newGame[effectKeys.SEVERED_TIME]) {
+            // Mana Overflow
+            if (
+                draftCurrActor.resources.manaOverflow > 0 &&
+                !draftCurrActor.states.dimmingDarkness
+            ) {
+                draftCurrActor = takeDamage(
+                    draftCurrActor,
+                    draftCurrActor.resources.manaOverflow,
+                    dmgTypes.TRUE,
+                    newGame.elementalWheel,
+                );
 
-            draftCurrActor = {
-                ...draftCurrActor,
-                resources: {
-                    ...draftCurrActor.resources,
-                    manaOverflow: 0,
-                },
-            };
-        }
+                draftCurrActor = {
+                    ...draftCurrActor,
+                    resources: {
+                        ...draftCurrActor.resources,
+                        manaOverflow: 0,
+                    },
+                };
+            }
 
-        // Gray Stars
-        if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
-            const newWhite =
-                draftCurrActor.stars[effectKeys.GRAY_STAR] +
-                draftCurrActor.stars[effectKeys.WHITE_STAR];
-            draftCurrActor = {
-                ...draftCurrActor,
-                stars: {
-                    ...draftCurrActor.stars,
-                    [effectKeys.WHITE_STAR]: newWhite,
-                    [effectKeys.GRAY_STAR]: 0,
-                },
-            };
-        }
+            // Gray Stars
+            if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
+                const newWhite =
+                    draftCurrActor.stars[effectKeys.GRAY_STAR] +
+                    draftCurrActor.stars[effectKeys.WHITE_STAR];
+                draftCurrActor = {
+                    ...draftCurrActor,
+                    stars: {
+                        ...draftCurrActor.stars,
+                        [effectKeys.WHITE_STAR]: newWhite,
+                        [effectKeys.GRAY_STAR]: 0,
+                    },
+                };
+            }
 
-        // Cutoff Wings
-        if (draftCurrActor.states.cutoffWings) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                currHp: Math.max(0, Math.min(draftCurrActor.currHp, 1)),
-                maxHp: 1,
-            };
+            // Burden
+            if (draftCurrActor.states.burdenOfStigma) {
+                draftCurrActor = {
+                    ...draftCurrActor,
+                    states: {
+                        ...draftCurrActor.states,
+                        burdenOfStigma: false,
+                    },
+                };
+            }
         }
 
         // Laser used
@@ -466,6 +476,18 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         };
     }
 
+    // Overheat
+    if (actionsClass.defensiveActions.includes(action)) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.OVERHEAT]: Math.max(
+                0,
+                draftCurrActor[effectKeys.OVERHEAT] -
+                    constants.NATURAL_OVERHEAT_LOSS,
+            ),
+        };
+    }
+
     // Cryogenesis
     const newCryogenesis = actionsClass.offensiveActions.includes(action)
         ? 0
@@ -478,17 +500,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             cryogenesis: newCryogenesis,
         },
     };
-
-    // Burden
-    if (draftCurrActor.states.burdenOfStigma) {
-        draftCurrActor = {
-            ...draftCurrActor,
-            states: {
-                ...draftCurrActor.states,
-                burdenOfStigma: false,
-            },
-        };
-    }
 
     // Death Logic
     draftCurrActor = processEntityDeathStates(draftCurrActor);
@@ -607,6 +618,10 @@ export function processWheelTurn(prev) {
         newElement = elementalKeys.INACTIVE;
     }
 
+    if(prev[effectKeys.SEVERED_TIME]) {
+        newElement = prev.elementalWheel;
+    }
+
     // Death Logic
     playerOne = processEntityDeathStates(playerOne);
     playerTwo = processEntityDeathStates(playerTwo);
@@ -647,7 +662,7 @@ export function processArrayTurn(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    const newArray = prev.remainingArray - 1;
+    const newArray = prev[effectKeys.SEVERED_TIME] ? prev.remainingArray - 1 : prev.remainingArray;
 
     // If Array dying, redistribute mana
     if (newArray <= 0) {
