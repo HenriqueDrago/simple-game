@@ -88,6 +88,9 @@ const BENEDICTION_GEN = 2;
 const CHART_STAR_GAIN = 3;
 const STARDUST_RATE_CONVERSION = 3;
 
+const MAX_DYNAMO = 100;
+const STARTING_ENERGY = 1;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -111,7 +114,7 @@ const freeResources = [
 
     effectKeys.DOME,
     effectKeys.STARDUST,
-    
+
     effectKeys.RADIANCE,
     effectKeys.HALO,
     effectKeys.INSPIRATION,
@@ -164,7 +167,9 @@ export const constants = {
     CHART_STAR_GAIN,
     STARDUST_RATE_CONVERSION,
     MAX_DIVINE_SPARK,
-    NATURAL_OVERHEAT_LOSS
+    NATURAL_OVERHEAT_LOSS,
+    MAX_DYNAMO,
+    STARTING_ENERGY,
 };
 
 export const presetAi = {

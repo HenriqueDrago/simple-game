@@ -225,6 +225,9 @@ export const effectKeys = Object.freeze({
     ANOINTED_PROXY: "anointedProxy",
 
     AUGMENTED_ORANGE_STAR: "augOrange",
+
+    DYNAMO: "dynamo",
+    ENERGY_LEVEL: "energyLevel",
 });
 
 export const eyeKeys = Object.freeze({

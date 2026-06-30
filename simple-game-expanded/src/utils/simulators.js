@@ -609,16 +609,19 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        1,
+        agent[effectKeys.ENERGY_LEVEL],
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
         prev.elementalWheel,
     );
 
-    const newOverheat = attacker.currOverheat + 10 * (1 + attacker.lasersUsedThisTurn);
+    const newOverheat =
+        attacker[effectKeys.OVERHEAT] + 10 * (1 + attacker.lasersUsedThisTurn);
+    const newDynamo = Math.min(
+        constants.MAX_DYNAMO,
+        attacker[effectKeys.DYNAMO] + 10,
+    );
     const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
-
-    const thermalOverload = newOverheat >= constants.MAX_OVERHEAT;
 
     return {
         ...prev,
@@ -626,13 +629,9 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...attacker,
-                currOverheat: newOverheat,
+                [effectKeys.OVERHEAT]: newOverheat,
+                [effectKeys.DYNAMO]: newDynamo,
                 lasersUsedThisTurn: newlasersUsedThisTurn,
-                states: {
-                    ...attacker.states,
-                    weaponsDeployed: !thermalOverload,
-                    thermalOverload: thermalOverload,
-                },
             },
             [nonAgentKey]: {
                 ...defender,
@@ -642,7 +641,10 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const baseDmg = Math.floor(10 * agent.currOverheat/100);
+    const baseDmg = Math.floor(
+        (agent[effectKeys.ENERGY_LEVEL] + Math.floor(agent[effectKeys.DYNAMO] / 10)) *
+            (agent[effectKeys.OVERHEAT] / 100),
+    );
 
     const draftAgent = takeDamage(
         agent,
@@ -664,10 +666,11 @@ function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
+                [effectKeys.DYNAMO]: 0,
                 states: {
                     ...draftAgent.states,
-                    thermalOverload: false,
-                    venting: true,
+                    [effectKeys.THERMAL_OVERLOAD]: false,
+                    [effectKeys.VENTING]: true,
                 },
             },
             [nonAgentKey]: {
@@ -791,12 +794,16 @@ function simulateAscend({ prev, agent, agentKey }) {
         };
     }
 
-    const {draftEntity, resourcesConsumed} = consumeResources({...agent}, Infinity, actionKeys.ASCEND);
+    const { draftEntity, resourcesConsumed } = consumeResources(
+        { ...agent },
+        Infinity,
+        actionKeys.ASCEND,
+    );
 
     let draftAgent = {
         ...draftEntity,
         attributes: { ...attributes },
-    }
+    };
 
     draftAgent = exitAllStates(draftAgent);
 
@@ -819,8 +826,9 @@ function simulateAscend({ prev, agent, agentKey }) {
                 },
                 resources: {
                     ...draftAgent.resources,
-                    [effectKeys.INSPIRATION]: resourcesConsumed.totalConsumption,
-                }
+                    [effectKeys.INSPIRATION]:
+                        resourcesConsumed.totalConsumption,
+                },
             },
         },
     };
@@ -844,7 +852,7 @@ function simulateSeraphOfCondemnation({
     );
 
     const newSin = Math.min(
-        nonAgent[effectKeys.MAX_TARNISHED_SIN],
+        constants.MAX_TARNISHED_SIN,
         nonAgent[effectKeys.TARNISHED_SIN] + agent[effectKeys.REVELATION],
     );
 
@@ -1149,14 +1157,18 @@ function simulateWordMadeFlesh({
     };
 }
 
-function simulateJudgement({prev, agent, agentKey, nonAgent, nonAgentKey}) {
+function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     let draftNonAgent = {
         ...nonAgent,
-    }
+    };
 
     draftNonAgent = exitAllStates(draftNonAgent);
-    draftNonAgent = consumeResources(draftNonAgent, Infinity, actionKeys.JUDGEMENT).draftEntity;
-    
+    draftNonAgent = consumeResources(
+        draftNonAgent,
+        Infinity,
+        actionKeys.JUDGEMENT,
+    ).draftEntity;
+
     return {
         ...prev,
         entities: {
@@ -1166,11 +1178,11 @@ function simulateJudgement({prev, agent, agentKey, nonAgent, nonAgentKey}) {
                 states: {
                     ...agent.states,
                     [effectKeys.ANOINTED_PROXY]: false,
-                }
+                },
             },
             [nonAgentKey]: {
                 ...draftNonAgent,
-            }
-        }
-    }
+            },
+        },
+    };
 }

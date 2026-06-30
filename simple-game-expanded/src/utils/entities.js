@@ -285,15 +285,15 @@ export function createBaseEntity() {
         currInsight: 0,
 
         // %-based
-        [effectKeys.MAX_TARNISHED_SIN]: constants.MAX_TARNISHED_SIN,
         [effectKeys.TARNISHED_SIN]: 0,
-        [effectKeys.MAX_DIVINE_SPARK]: constants.MAX_DIVINE_SPARK,
         [effectKeys.DIVINE_SPARK]: 0,
+        [effectKeys.DYNAMO]: 0,
 
         // other
         [effectKeys.SONORITY]: 0,
-        lasersUsedThisTurn: 0,
         [effectKeys.REVELATION]: 0,
+        [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
+        lasersUsedThisTurn: 0,
 
         // Essences
         [effectKeys.OVERGROWTH]: 0,
@@ -683,9 +683,6 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    console.log("death processing");
-    console.log(draftEntity);
-
     if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
         draftEntity = {
             ...draftEntity,
@@ -769,7 +766,7 @@ export function applyBenedictionMalediction(entity, eye, actionType) {
 
     const newSin = gainSin
         ? Math.min(
-              entity[effectKeys.MAX_TARNISHED_SIN],
+              constants.MAX_TARNISHED_SIN,
               entity[effectKeys.TARNISHED_SIN] + entity[effectKeys.REVELATION],
           )
         : entity[effectKeys.TARNISHED_SIN];
@@ -813,7 +810,7 @@ export function loseEnlit(entity, amount) {
 export function gainSin(entity, amount) {
     const newSin = Math.min(
         entity[effectKeys.TARNISHED_SIN] + amount,
-        entity[effectKeys.MAX_TARNISHED_SIN],
+        constants.MAX_TARNISHED_SIN,
     );
 
     return {

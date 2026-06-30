@@ -259,6 +259,15 @@ export function processUpkeep(prev) {
             };
         }
 
+        // Dynamo
+        if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.DYNAMO]: 0,
+                [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
+            }
+        }
+
         // Sacred Flames
         if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
             const missingHp =
@@ -312,7 +321,7 @@ export function processUpkeep(prev) {
             const newSpark = Math.min(
                 draftTarget.resources.halo +
                     draftTarget[effectKeys.DIVINE_SPARK],
-                draftTarget[effectKeys.MAX_DIVINE_SPARK],
+                constants.MAX_DIVINE_SPARK,
             );
 
             draftTarget = {
@@ -328,7 +337,7 @@ export function processUpkeep(prev) {
         // Divine Spark
         if (
             draftTarget[effectKeys.DIVINE_SPARK] >=
-            draftTarget[effectKeys.MAX_DIVINE_SPARK]
+            constants.MAX_DIVINE_SPARK
         ) {
             draftTarget = {
                 ...draftTarget,
@@ -478,14 +487,30 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
 
     // Overheat
     if (actionsClass.defensiveActions.includes(action)) {
+        const overheatLost = Math.min(
+                constants.NATURAL_OVERHEAT_LOSS,
+                draftCurrActor[effectKeys.OVERHEAT],
+            );
+
+        const newOverheat = draftCurrActor[effectKeys.OVERHEAT] - overheatLost;
+        const newDynamo = Math.min(draftCurrActor[effectKeys.DYNAMO] + overheatLost, constants.MAX_DYNAMO);
         draftCurrActor = {
             ...draftCurrActor,
-            [effectKeys.OVERHEAT]: Math.max(
-                0,
-                draftCurrActor[effectKeys.OVERHEAT] -
-                    constants.NATURAL_OVERHEAT_LOSS,
-            ),
+            [effectKeys.OVERHEAT]: newOverheat,
+            [effectKeys.DYNAMO]: newDynamo,
         };
+    }
+
+    // Thermal Overload
+    if (draftCurrActor[effectKeys.OVERHEAT] >= constants.MAX_OVERHEAT && !draftCurrActor.states[effectKeys.VENTING]) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            states: {
+                ...draftCurrActor.states,
+                [effectKeys.WEAPONS_DEPLOYED]: false,
+                [effectKeys.THERMAL_OVERLOAD]: true,
+            }
+        }
     }
 
     // Cryogenesis

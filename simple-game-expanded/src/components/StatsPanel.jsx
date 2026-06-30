@@ -101,7 +101,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 <GradientBar
                     label={"Tarnished Sin"}
                     currResource={entity[effectKeys.TARNISHED_SIN]}
-                    maxResource={entity[effectKeys.MAX_TARNISHED_SIN]}
+                    maxResource={constants.MAX_TARNISHED_SIN}
                     trackStyle={{
                         backgroundImage: `linear-gradient(
                                         90deg,
@@ -122,7 +122,7 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 <GradientBar
                     label={"Divine Spark"}
                     currResource={entity[effectKeys.DIVINE_SPARK]}
-                    maxResource={entity[effectKeys.MAX_DIVINE_SPARK]}
+                    maxResource={constants.MAX_DIVINE_SPARK}
                     trackStyle={{
                         backgroundImage: `linear-gradient(
                                         90deg,
@@ -191,19 +191,40 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
                 <>
                     <HpBar entity={entity} />
                     <ManaBar entity={entity} />
-                    {(entity.states.weaponsDeployed ||
+                    {(entity.states[effectKeys.DEPLOYMENT] ||
+                        entity.states.weaponsDeployed ||
                         entity.states.thermalOverload ||
                         entity.states.venting) && (
-                        <GradientBar
-                            label={"Overheat"}
-                            currResource={entity[effectKeys.OVERHEAT]}
-                            maxResource={entity[effectKeys.MAX_OVERHEAT]}
-                            trackStyle={{
-                                backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
-                            }}
-                            showAnimation={false}
-                            showPercent={true}
-                        />
+                        <>
+                            <div className="energy-line-row">
+                                <span className="energy-line-label">
+                                    ENERGY LEVEL
+                                </span>
+                                <span className="energy-line-value">
+                                    {entity.energyLevel}
+                                </span>
+                            </div>
+                            <GradientBar
+                                label={"Overheat"}
+                                currResource={entity[effectKeys.OVERHEAT]}
+                                maxResource={constants.MAX_OVERHEAT}
+                                trackStyle={{
+                                    backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
+                                }}
+                                showAnimation={false}
+                                showPercent={true}
+                            />
+                            <GradientBar
+                                label={"Dynamo"}
+                                currResource={entity[effectKeys.DYNAMO]}
+                                maxResource={constants.MAX_DYNAMO}
+                                trackStyle={{
+                                    backgroundImage: `linear-gradient(to right, lime, yellow)`,
+                                }}
+                                showAnimation={false}
+                                showPercent={true}
+                            />
+                        </>
                     )}
                 </>
             )}

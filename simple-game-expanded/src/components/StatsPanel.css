@@ -149,3 +149,26 @@
     gap: 4px;
     margin: 8px 0;
 }
+
+.energy-line-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(to right, lime, yellow) 1;
+    margin-bottom: 8px;
+}
+
+.energy-line-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 1.5px;
+}
+
+.energy-line-value {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #ffff00;
+}

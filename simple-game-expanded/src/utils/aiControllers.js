@@ -71,8 +71,7 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const { agentKey, nonAgentKey, handleAction } =
-        context;
+    const { agentKey, nonAgentKey, handleAction } = context;
 
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
@@ -316,27 +315,93 @@ export function shadowSorcererAI(context) {
     // Default: drain the opponent
     handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
 }
+
 export function cyborgAI(context) {
     const { agent, agentKey, nonAgentKey, handleAction } = context;
+    const simulate = createSimulator(context);
 
-    let action;
-    if (agent.states.thermalOverload) {
-        action = actionKeys.MELTDOWN;
-    } else if (agent.currHp <= agent.maxHp * 0.5) {
-        if (agent.currMana >= 5) {
-            action = actionKeys.HEAL;
-        } else {
-            action = actionKeys.GUARD;
-        }
-    } else if (agent.states.weaponsDeployed) {
-        action = actionKeys.LASER;
-    } else if (agent.states.venting) {
-        action = actionKeys.GUARD;
-    } else {
-        action = actionKeys.DEPLOY;
+    // Extract stats and states using strict enum key references
+    const dynamo = agent[effectKeys.DYNAMO] || 0;
+    const overheat = agent[effectKeys.OVERHEAT] || 0;
+
+    // Pre-calculated HEAL evaluation
+    const healWorth =
+        agent[effectKeys.MANA] >= 5 &&
+        agent[effectKeys.HEALTH] <= agent[effectKeys.MAX_HEALTH] * 0.5;
+
+    // 1. Thermal Overload -> Meltdown
+    if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
+        handleAction(actionKeys.MELTDOWN, agentKey, nonAgentKey);
+        return;
     }
 
-    handleAction(action, agentKey, nonAgentKey);
+    // 2. !venting/weaponsdeployed/thermaloverload/deployment -> Deploy
+    const inAnyStance =
+        agent.states[effectKeys.VENTING] ||
+        agent.states[effectKeys.WEAPONS_DEPLOYED] ||
+        agent.states[effectKeys.THERMAL_OVERLOAD] ||
+        agent.states[effectKeys.DEPLOYMENT];
+
+    if (!inAnyStance) {
+        handleAction(actionKeys.DEPLOY, agentKey, nonAgentKey);
+        return;
+    }
+
+    // 3. if venting then healWorth -> heal else guard
+    if (agent.states[effectKeys.VENTING]) {
+        if (healWorth) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+        }
+        return;
+    }
+
+    // Generate baseline simulation for steps 4 & 5
+    const simLaser = simulate(actionKeys.LASER);
+
+    // 4. check if laser kills -> laser
+    if (simLaser.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
+        handleAction(actionKeys.LASER, agentKey, nonAgentKey);
+        return;
+    }
+
+    // 5. check if laser sets us to >= 100 overheat (100% or above threshold)
+    if (simLaser.entities[agentKey][effectKeys.OVERHEAT] >= 100) {
+        // 5.1 check if meltdown kills the opponent -> laser
+        // Passes post-laser simulation states into the meltdown simulator
+        const simMeltdown = simulate(actionKeys.MELTDOWN, {
+            agent: simLaser.entities[agentKey],
+            nonAgent: simLaser.entities[nonAgentKey],
+        });
+
+        if (simMeltdown.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
+            handleAction(actionKeys.LASER, agentKey, nonAgentKey);
+            return;
+        } else {
+            // 5.2 else: healWorth -> heal else guard
+            if (healWorth) {
+                handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+            } else {
+                handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+            }
+            return;
+        }
+    }
+
+    // 6. overheat > 30 and dynamo >= 70 and dynamo < 100 then
+    if (overheat > 30 && dynamo >= 70 && dynamo < 100) {
+        // 6.1 healWorth -> heal / 6.2 else guard
+        if (healWorth) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+        }
+        return;
+    }
+
+    // 7. laser fallback
+    handleAction(actionKeys.LASER, agentKey, nonAgentKey);
 }
 
 export function maestroAI(context) {
@@ -351,7 +416,10 @@ export function maestroAI(context) {
         action = actionKeys.SOUND_OF_SILENCE;
     } else if (agent.sonority === constants.SONORITY_HIGHER_LIMIT) {
         action = actionKeys.BABEL;
-    } else if (agent.states.weaponsDeployed && agent[effectKeys.SONORITY] <= 0) {
+    } else if (
+        agent.states.weaponsDeployed &&
+        agent[effectKeys.SONORITY] <= 0
+    ) {
         action = actionKeys.LASER;
     } else if (
         !agent.states.weaponsDeployed &&
@@ -376,7 +444,6 @@ export function elementalistAI(context) {
         agent,
         agentKey,
         nonAgentKey,
-        totalMana,
         hasManaForSpecial,
         handleAction,
         wheelElement,
@@ -384,47 +451,69 @@ export function elementalistAI(context) {
 
     const simulate = createSimulator(context);
 
-    // Finish the fight if either attack option kills the opponent outright.
+    // Step 1: Direct Kill Check
     const simAttack = simulate(actionKeys.ATTACK);
-    if (simAttack.entities[nonAgentKey].currHp <= 0) {
+    if (simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
         handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }
 
     if (hasManaForSpecial) {
         const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (simSpecial.entities[nonAgentKey].currHp <= 0) {
+        if (simSpecial.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
             handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
             return;
         }
     }
 
-    // Survival: heal if affordable and in Scorch, otherwise guard.
-    if (
-        agent.currHp <= agent.maxHp * 0.5 &&
-        wheelElement === elementalKeys.SCORCH
-    ) {
-        if (totalMana >= 4) {
-            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+    // Step 2: FROST Phase
+    // Always align to stack cryogenesis damage mitigation and advance the wheel[cite: 1]
+    if (wheelElement === elementalKeys.FROST) {
+        handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
+        return;
+    }
+
+    // Step 3: NATURE Phase
+    // Prevent alignment if turn-end overflow damage drops us below half total capacity[cite: 1]
+    if (wheelElement === elementalKeys.NATURE) {
+        const simAlign = simulate(actionKeys.ALIGN);
+        const postAlignAgent = simAlign.entities[agentKey];
+
+        const netHpAfterOverflow = 
+            postAlignAgent[effectKeys.HEALTH] - (postAlignAgent.resources[effectKeys.MANA_OVERFLOW] || 0);
+        const postAlignTotalHp = 
+            postAlignAgent[effectKeys.MAX_HEALTH] + postAlignAgent[effectKeys.OVERGROWTH];
+        const halfTotalHpPostAlign = 0.5 * postAlignTotalHp;
+
+        if (netHpAfterOverflow < halfTotalHpPostAlign) {
+            // Defensive action fallback (Heal if affordable, otherwise Guard)[cite: 1]
+            const defAction = agent[effectKeys.MANA] >= 4 ? actionKeys.HEAL : actionKeys.GUARD;
+            handleAction(defAction, agentKey, nonAgentKey);
         } else {
-            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+            handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
         }
         return;
     }
 
-    // Simulate what Align would actually resolve into - essence gain plus
-    // the current element's active effect - and bail out if it's lethal.
-    const postAlign = simulate(actionKeys.ALIGN).entities[agentKey];
+    // Step 4: SCORCH Phase
+    // Prioritize align progression unless the scoria backfire damage is completely lethal[cite: 1]
+    if (wheelElement === elementalKeys.SCORCH) {
+        const simAlign = simulate(actionKeys.ALIGN);
+        const postAlignAgent = simAlign.entities[agentKey];
 
-    const burnsToDeath = postAlign.currHp <= 0;
-    const overflowsToDeath =
-        postAlign.resources.manaOverflow >= postAlign.currHp;
-
-    if (burnsToDeath || overflowsToDeath) {
-        // Unsafe to align right now - attack instead.
-        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+        if (postAlignAgent[effectKeys.HEALTH] > 0) {
+            handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
+        } else {
+            // If alignment kills us, guard if we have enough shields to survive; otherwise attack[cite: 1]
+            if (agent[effectKeys.CRYOGENESIS] >= 10) {
+                handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+            } else {
+                handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+            }
+        }
         return;
     }
 
+    // Baseline safety fallback
     handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
 }

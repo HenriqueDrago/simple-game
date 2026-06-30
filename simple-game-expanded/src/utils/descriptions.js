@@ -120,14 +120,13 @@ export const ACTION_DESCRIPTIONS = {
         name: "LASER",
         type: entryTypes.ACTION,
         description:
-            "Deals 1 PIERCING DAMAGE and raises OVERHEAT by 10%. Raises OVERHEAT by an additional 10% for every LASER used this turn. Does not end turn.",
+            "Deals PIERCING DAMAGE equal to your current ENERGY LEVEL. Raises DYNAMO and OVERHEAT by 10%. Raises OVERHEAT by an additional 10% for every LASER used this turn. Does not end turn.",
     },
 
     [actionKeys.MELTDOWN]: {
         name: "MELTDOWN",
         type: entryTypes.ACTION,
-        description:
-            "All entities take PHYSICAL DAMAGE based on current OVERHEAT. Then enters VENTING state.",
+        description: "All entities take PHYSICAL DAMAGE equal to your current ENERGY LEVEL. Increases damage dealt by 1 for every 10% DYNAMO on self, then multiples the resulting damage by current OVERHEAT. Afterwards, loses all DYNAMO on self, exits THERMAL OVERLOAD and enters VENTING state."
     },
 
     [actionKeys.ALIGN]: {
@@ -204,20 +203,20 @@ export const STATE_DESCRIPTIONS = {
         name: "WEAPONS DEPLOYED",
         type: entryTypes.STATE,
         description:
-            "Enables OVERHEAT. Replaces DEPLOY with LASER. At 100% or more OVERHEAT, becomes THERMAL OVERLOAD.",
+            "Replaces DEPLOY with LASER. At 100% or more OVERHEAT, becomes THERMAL OVERLOAD.",
     },
 
     [effectKeys.THERMAL_OVERLOAD]: {
         name: "THERMAL OVERLOAD",
         type: entryTypes.STATE,
-        description: "Enables OVERHEAT. Replaces all actions with MELTDOWN.",
+        description: "Replaces all actions with MELTDOWN.",
     },
 
     [effectKeys.VENTING]: {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Enables OVERHEAT. Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, loses 50% OVERHEAT. At turn start, if at 0% OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
+            "Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, lowers OVERHEAT by 50%. At turn start, if at 0% OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -292,7 +291,7 @@ export const RESOURCE_DESCRIPTIONS = {
     [effectKeys.OVERHEAT]: {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
-        description: "Capped at MAX OVERHEAT. When using DEFENSIVE ACTIONS, lower OVERHEAT by 30%.",
+        description: "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD and VENTING states. Can go over 100%. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30% and raises DYNAMO by the amount lowered this way.",
     },
 
     [effectKeys.MANA]: {
@@ -955,17 +954,25 @@ export const MECHANIC_DESCRIPTIONS = {
             "When taking PHYSICAL DAMAGE, increases how much damage can be blocked by DEF by the percentage.",
     },
 
-    [effectKeys.MAX_OVERHEAT]: {
-        name: "MAX OVERHEAT",
-        type: entryTypes.MECHANIC,
-        description: "Starts at 10. Limits how much OVERHEAT you can hold.",
-    },
-
     [mechanicKeys.ACTIONS]: {
         name: "ACTIONS",
         type: entryTypes.MECHANIC,
         description:
             "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT.",
+    },
+
+    [effectKeys.DYNAMO]: {
+        name: "DYNAMO",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD and VENTING states. Capped at 100%. At turn start, if at 100%, resets to 0% and increases ENERGY LEVEL by 1.",
+    },
+
+    [effectKeys.ENERGY_LEVEL]: {
+        name: "ENERGY LEVEL",
+        type: entryTypes.STAT,
+        description:
+            "Alternative STAT. Increases LASER and MELTDOWN damage.",
     },
 };
 
@@ -1081,14 +1088,14 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "LIMITED RESOURCE",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that has upper cap. Includes OVERHEAT, MANA, HEALTH, INSIGHT, ENLIGHTENMENT. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continue to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follow that rule; otherwise continue to the next RESOURCE on the list.",
+            "A subset of RESOURCES that has upper cap. Includes MANA, HEALTH, INSIGHT, ENLIGHTENMENT. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continue to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follow that rule; otherwise continue to the next RESOURCE on the list.",
     },
 
     [entryTypes.FIXED_RESOURCE]: {
         name: "FIXED RESOURCE",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are percentage-based and have strict limits. Includes  TARNISHED SIN and DIVINE SPARK. Cannot restore or consume FIXED RESOURCES.",
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, TARNISHED SIN and DIVINE SPARK. Cannot restore or consume FIXED RESOURCES.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
