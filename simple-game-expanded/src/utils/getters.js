@@ -196,7 +196,8 @@ export const getNormalActions = (
         {
             key: actionKeys.ALIGN,
             label: "Align",
-            disabled: progMode && !(progStatus[aiKeys.ELEMENTALIST] === progKeys.DEFEATED || progStatus[aiKeys.ELEMENTALIST] === progKeys.ALWAYS_OPEN)
+            // disabled: progMode && !(progStatus[aiKeys.ELEMENTALIST] === progKeys.DEFEATED || progStatus[aiKeys.ELEMENTALIST] === progKeys.ALWAYS_OPEN)
+            disabled: true,
         },
 
         {

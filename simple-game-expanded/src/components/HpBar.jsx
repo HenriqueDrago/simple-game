@@ -1,7 +1,7 @@
 import "./HpBar.css";
 
 function HpBar({ entity }) {
-    const totalCapacity = entity.maxHp + entity.overgrowth;
+    const totalCapacity = entity.maxHp;
 
     const currentBaseHp = Math.min(entity.currHp, entity.maxHp);
     const currentOvergrowthHp = Math.max(0, entity.currHp - entity.maxHp);
@@ -16,9 +16,9 @@ function HpBar({ entity }) {
                 <span>
                     {entity.currHp} /{" "}
                     <span
-                        className={
-                            entity.overgrowth > 0 ? "extra-overgrowth-hp" : ""
-                        }
+                        // className={
+                        //     entity.overgrowth > 0 ? "extra-overgrowth-hp" : ""
+                        // }
                     >
                         {totalCapacity}
                     </span>

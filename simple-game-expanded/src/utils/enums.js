@@ -9,10 +9,10 @@ export const turnStatus = Object.freeze({
     DRAW: 7,
     TRANSITION: 8,
     SHORT_TRANSITION: 9,
-    WHEEL_TURN: 10,
     ARRAY_TURN: 11,
     EMINENCE_TURN: 12,
     STARS_TURN: 13,
+    MOON_TURN: 14,
 });
 
 export const entityKeys = Object.freeze({
@@ -42,7 +42,7 @@ export const sdmKeys = Object.freeze({
 });
 
 export const elementalKeys = Object.freeze({
-    INACTIVE: 0,
+    DULLED: 0,
     NATURE: 1,
     FROST: 2,
     SCORCH: 3,
@@ -119,14 +119,11 @@ export const effectKeys = Object.freeze({
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
-    ALIGNED: "aligned",
-    ELEMENTAL_WHEEL: "elementalWheel",
+
     FROST: "frost",
     NATURE: "nature",
     SCORCH: "scorch",
-    PERMAFROST: "permafrost",
-    OVERGROWTH: "overgrowth",
-    SCORIA: "scoria",
+
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
@@ -143,7 +140,6 @@ export const effectKeys = Object.freeze({
     MAX_OVERHEAT: "maxOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
-    ELEMENTAL_ESSENCE: "elementalEssence",
     CRYOGENESIS: "cryogenesis",
     CUTOFF_WINGS: "cutoffWings",
     INSIGHT: "currInsight",
@@ -228,12 +224,21 @@ export const effectKeys = Object.freeze({
 
     DYNAMO: "dynamo",
     ENERGY_LEVEL: "energyLevel",
+
+    MIRRORED_MOON: "mirrorMoon",
+    MOONLIGHT: "moonlight",
 });
 
 export const eyeKeys = Object.freeze({
     DORMANT: 0,
     OPEN: 1,
     CLOSED: 2,
+});
+
+export const moonKeys = Object.freeze({
+    CLOUDED: 0,
+    WAXING: 1,
+    WANING: 2,
 });
 
 export const entryTypes = Object.freeze({
@@ -247,7 +252,6 @@ export const entryTypes = Object.freeze({
     FREE_RESOURCE: "FREE RESOURCE",
     LIMITED_RESOURCE: "LIMITED RESOURCE",
     CATEGORY: "CATEGORY",
-    ELEMENTAL_ESSENCE: "ELEMENTAL ESSENCE",
     BATTLE_PHASE: "BATTLE PHASE",
     FIXED_RESOURCE: "FIXED RESOURCE",
     STAR: "STAR",
@@ -288,13 +292,15 @@ export const mechanicKeys = Object.freeze({
     MANA_IMBALANCE: "manaImbalance",
     MANA_BLEED: "manaBleed",
     RUNIC_INSCRIPTION: "runicInscription",
-    ELEMENTAL_CYCLE: "elementalCycle",
+
     EMANATION: "emanation",
     OFFENSIVE_ACTIONS: "offensiveActions",
     DEFENSIVE_ACTIONS: "defensiveActions",
     TRANSFORMATIVE_ACTIONS: "transformativeActions",
     ACTS_OF_BENEDICTION: "actsOfBenediction",
     ACTS_OF_MALEDICTION: "actsOfMalediction",
+
+    MOON_PHASE: "moonPhase",
 });
 
 export const angelActKeys = Object.freeze({

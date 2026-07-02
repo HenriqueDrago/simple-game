@@ -2,18 +2,22 @@ import HpBar from "./HpBar.jsx";
 import ManaBar from "./ManaBar.jsx";
 import AttrLine from "./AttrLine.jsx";
 import StackCounter from "./StackCounter.jsx";
-import ElementalCounter from "./ElementalCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
 import { constants, stackCounters } from "../utils/constants.js";
-import { sdmKeys, elementalKeys, eyeKeys, effectKeys } from "../utils/enums.js";
+import { sdmKeys, eyeKeys, effectKeys } from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 
-function StatsPanel({ game, updateStatsPoints, entityKey }) {
+function StatsPanel({
+    game,
+    updateStatsPoints,
+    entityKey,
+    handleElementChange,
+}) {
     const entity = game.entities[entityKey];
     const battleState = game.status;
     const distributionMode = entity.statDistributionMode;
@@ -30,7 +34,6 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
         weaponsDeployed: "state-weapons-deployed",
         thermalOverload: "state-thermal-overload",
         venting: "state-venting",
-        aligned: "state-aligned",
         guarding: "state-guarding",
         sacrificial: "state-sacrificial",
         radiant: "state-radiant",
@@ -54,21 +57,6 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
 
     if (states.resonant) {
         dynamicStyles["--resonant-color"] = getSonorityColor(entity.sonority);
-    }
-
-    if (states.aligned) {
-        let alignColor = "#98fb98"; // Default
-        if (game.elementalWheel === elementalKeys.NATURE)
-            alignColor = "#32cd32";
-        else if (game.elementalWheel === elementalKeys.FROST)
-            alignColor = "#00ffff"; // Cyan
-        else if (game.elementalWheel === elementalKeys.SCORCH)
-            alignColor = "#ff4500"; // OrangeRed
-
-        dynamicStyles["--aligned-color"] = alignColor;
-        // Hex to rgba equivalent trick for CSS var usage in shadows
-        dynamicStyles["--aligned-shadow"] = `${alignColor}66`; // 40% opacity
-        dynamicStyles["--aligned-inset"] = `${alignColor}33`; // 20% opacity
     }
 
     if (states.ascendenceOfSpirit) {
@@ -263,10 +251,6 @@ function StatsPanel({ game, updateStatsPoints, entityKey }) {
             )}
 
             {states.resonant && <SonorityCounter sonority={entity.sonority} />}
-
-            {!isAngelView && game.elementalWheel !== elementalKeys.INACTIVE && (
-                <ElementalCounter entity={entity} />
-            )}
         </div>
     );
 }

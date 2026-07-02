@@ -7,7 +7,6 @@ import {
     shadowSorcererAI,
     cyborgAI,
     maestroAI,
-    elementalistAI,
 } from "./aiControllers.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
@@ -17,13 +16,13 @@ import {
     effectKeys,
     starfallPhases,
     turnStatus,
-    elementalKeys,
     whoStartsKeys,
     eyeKeys,
     progKeys,
     sdmKeys,
     entityKeys,
     mechanicKeys,
+    moonKeys,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -57,9 +56,6 @@ const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
 const HALO_GEN_MULT = 2;
-
-const ELEMENTAL_RESOURCE_GAIN = 5;
-const INITIAL_ELEMENTAL_ESSENCE_GAINED = 3;
 
 const SAC_HP_CONSUMPTION = 0.5;
 
@@ -145,8 +141,6 @@ export const constants = {
     GUARD_MANA_REGEN,
     freeResources,
     HALO_GEN_MULT,
-    ELEMENTAL_RESOURCE_GAIN,
-    INITIAL_ELEMENTAL_ESSENCE_GAINED,
     SAC_HP_CONSUMPTION,
     limitedResources,
     SHADOW_PACT_BURN,
@@ -296,28 +290,6 @@ export const presetAi = {
             actionKeys.BABEL,
             effectKeys.RESONANT,
             effectKeys.SONORITY,
-        ],
-    },
-    [aiKeys.ELEMENTALIST]: {
-        name: "Elementalist",
-        best: {
-            str: 0,
-            def: 10,
-        },
-        caller: elementalistAI,
-        desc: [
-            actionKeys.ALIGN,
-            effectKeys.ALIGNED,
-            effectKeys.ELEMENTAL_WHEEL,
-            mechanicKeys.ELEMENTAL_CYCLE,
-            effectKeys.NATURE,
-            effectKeys.FROST,
-            effectKeys.SCORCH,
-            effectKeys.ELEMENTAL_ESSENCE,
-            effectKeys.OVERGROWTH,
-            effectKeys.PERMAFROST,
-            effectKeys.SCORIA,
-            effectKeys.CRYOGENESIS,
         ],
     },
 
@@ -676,13 +648,13 @@ export const INITIAL_GAME_STATE = {
     nextStatus: null,
     lastPlayerTurn: null,
     remainingArray: 0,
-    elementalWheel: elementalKeys.INACTIVE,
     whoStarts: whoStartsKeys.PLAYER_ONE,
     turnCount: 0,
     eyeOfHeavens: eyeKeys.DORMANT,
     starQueue: null,
     progressMode: false,
     [effectKeys.SEVERED_TIME]: false,
+    [effectKeys.MIRRORED_MOON]: moonKeys.CLOUDED,
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
         [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,

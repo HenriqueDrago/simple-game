@@ -129,12 +129,6 @@ export const ACTION_DESCRIPTIONS = {
         description: "All entities take PHYSICAL DAMAGE equal to your current ENERGY LEVEL. Increases damage dealt by 1 for every 10% DYNAMO on self, then multiples the resulting damage by current OVERHEAT. Afterwards, loses all DYNAMO on self, exits THERMAL OVERLOAD and enters VENTING state."
     },
 
-    [actionKeys.ALIGN]: {
-        name: "ALIGN",
-        type: entryTypes.ACTION,
-        description:
-            "If not on ALIGNED state, enters ALIGNED state. If ELEMENTAL WHEEL is inactive, activates ELEMENTAL WHEEL on NATURE and gains 3 of each ELEMENTAL ESSENCE. Otherwise, gains 5 ELEMENTAL ESSENCE of the current element and activates the current element's active effect.",
-    },
 };
 
 export const STATE_DESCRIPTIONS = {
@@ -176,13 +170,6 @@ export const STATE_DESCRIPTIONS = {
         type: entryTypes.STATE,
         description:
             "Does not activate POISON and MANA OVERFLOW effects on self.",
-    },
-
-    [effectKeys.ALIGNED]: {
-        name: "ALIGNED",
-        type: entryTypes.STATE,
-        description:
-            "While the ELEMENTAL WHEEL is active, suffers the effects of the current element's passive effect. If at least one ALIGNED player is in the battlefield, enables ELEMENTAL CYCLE at round end.",
     },
 
     [effectKeys.RESONANT]: {
@@ -309,26 +296,6 @@ export const RESOURCE_DESCRIPTIONS = {
     },
 };
 
-export const ESSENCE_DESCRIPTIONS = {
-    [effectKeys.OVERGROWTH]: {
-        name: "OVERGROWTH",
-        type: entryTypes.ELEMENTAL_ESSENCE,
-        description: "Allows self to hold more HEALTH.",
-    },
-
-    [effectKeys.PERMAFROST]: {
-        name: "PERMAFROST",
-        type: entryTypes.ELEMENTAL_ESSENCE,
-        description: "Added to DEF in calculations.",
-    },
-
-    [effectKeys.SCORIA]: {
-        name: "SCORIA",
-        type: entryTypes.ELEMENTAL_ESSENCE,
-        description: "Added to STR in calculations.",
-    },
-};
-
 export const FIELD_EFFECT_DESCRIPTIONS = {
     [effectKeys.RUNIC_ARRAY]: {
         name: "RUNIC ARRAY",
@@ -337,12 +304,6 @@ export const FIELD_EFFECT_DESCRIPTIONS = {
             "While active, enables RUNIC INSCRIPTION at round end. On RUNIC INSCRIPTION, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on RUNIC INSCRIPTION, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consumes all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES.",
     },
 
-    [effectKeys.ELEMENTAL_WHEEL]: {
-        name: "ELEMENTAL WHEEL",
-        type: entryTypes.FIELD_EFFECT,
-        description:
-            "During ELEMENTAL CYCLE, cycles to the next element and enables its passive effect. Follows the order: NATURE → FROST → SCORCH, then repeats.",
-    },
 };
 
 export const DAMAGE_TYPE_DESCRIPTIONS = {
@@ -900,27 +861,6 @@ export const MECHANIC_DESCRIPTIONS = {
             "Can be divided into FREE RESOURCES, LIMITED RESOURCES and FIXED RESOURCES. When RESOURCES are consumed, consume FREE RESOURCES first, then LIMITED RESOURCES. When RESOURCES are restored, follow the opposite order. FIXED RESOURCES cannot be restored or consumed.",
     },
 
-    [effectKeys.NATURE]: {
-        name: "NATURE",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities restore double RESOURCES. Active Effect - Restore RESOURCES by OVERGROWTH on self.",
-    },
-
-    [effectKeys.FROST]: {
-        name: "FROST",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities deal and take -50% damage. Active Effect - Gain CRYOGENESIS by PERMAFROST on self.",
-    },
-
-    [effectKeys.SCORCH]: {
-        name: "SCORCH",
-        type: entryTypes.MECHANIC,
-        description:
-            "Passive Effect - All ALIGNED entities deal and take +50% damage. Active Effect - Take TRUE DAMAGE by SCORIA on self.",
-    },
-
     [effectKeys.SONORITY]: {
         name: "SONORITY",
         type: entryTypes.MECHANIC,
@@ -1018,13 +958,6 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
             "A special phase triggered at between each player's TURN while RUNIC ARRAY is active.",
     },
 
-    [mechanicKeys.ELEMENTAL_CYCLE]: {
-        name: "ELEMENTAL CYCLE",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered at ROUND end if at least one ALIGNED player is on the battlefield.",
-    },
-
     [mechanicKeys.EMANATION]: {
         name: "EMANATION",
         type: entryTypes.BATTLE_PHASE,
@@ -1111,13 +1044,6 @@ export const CATEGORY_DESCRIPTIONS = {
         description: "A subsection of a battle.",
     },
 
-    [entryTypes.ELEMENTAL_ESSENCE]: {
-        name: "ELEMENTAL ESSENCE",
-        type: entryTypes.CATEGORY,
-        description:
-            "Includes OVERGROWTH, PERMAFROST and SCORIA, corresponding to NATURE, FROST and SCORCH respectively.",
-    },
-
     [entryTypes.STAR]: {
         name: "STAR",
         type: entryTypes.CATEGORY,
@@ -1129,7 +1055,6 @@ export const CATEGORY_DESCRIPTIONS = {
 export const DESCRIPTIONS = {
     ...ACTION_DESCRIPTIONS,
     ...DAMAGE_TYPE_DESCRIPTIONS,
-    ...ESSENCE_DESCRIPTIONS,
     ...FIELD_EFFECT_DESCRIPTIONS,
     ...MECHANIC_DESCRIPTIONS,
     ...RESOURCE_DESCRIPTIONS,

@@ -110,15 +110,10 @@ export function consumeResources(entity, amount, cause) {
     };
 }
 
-export function restoreResources(entity, amount, wheel) {
+export function restoreResources(entity, amount) {
     let draftEntity = {
         ...entity,
     };
-
-    // Increases amount restored if Nature and aligned
-    if (wheel === elementalKeys.NATURE && entity.states.aligned) {
-        amount = Math.floor(amount * constants.NATURE_PASSIVE_MULT);
-    }
 
     // Enlightenment
     if (entity[effectKeys.MAX_ENLIGHTENMENT] > 0) {
@@ -142,7 +137,7 @@ export function restoreResources(entity, amount, wheel) {
     // Health
     if (entity[effectKeys.MAX_HEALTH] > 0) {
         const missingHp =
-            draftEntity.maxHp + draftEntity.overgrowth - draftEntity.currHp;
+            draftEntity.maxHp - draftEntity.currHp;
         const restoredHp = Math.min(missingHp, amount);
 
         amount -= restoredHp;
@@ -295,11 +290,6 @@ export function createBaseEntity() {
         [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
         lasersUsedThisTurn: 0,
 
-        // Essences
-        [effectKeys.OVERGROWTH]: 0,
-        [effectKeys.PERMAFROST]: 0,
-        [effectKeys.SCORIA]: 0,
-
         resources: {
             [effectKeys.MANA_OVERFLOW]: 0,
             [effectKeys.BLOOD_SACRIFICE]: 0,
@@ -321,7 +311,7 @@ export function createBaseEntity() {
             // standalones
             [effectKeys.GUARDING_STATE]: false,
             [effectKeys.SACRIFICIAL_STATE]: false,
-            [effectKeys.ALIGNED]: false,
+
             [effectKeys.THORNED_SHACKLES]: false,
             [effectKeys.STARGAZER]: false,
 
@@ -414,7 +404,6 @@ export function dealDamage(
     baseDmg,
     dmgType,
     isArrayActive,
-    wheel,
 ) {
     let draftAttacker = {
         ...attacker,
@@ -431,29 +420,29 @@ export function dealDamage(
               ? draftAttacker.sonority
               : 0;
 
-    const scorchAtkMult =
-        wheel === elementalKeys.SCORCH && attacker.states.aligned
-            ? constants.SCORCH_PASSIVE_MULT
-            : 1.0;
+    // const scorchAtkMult =
+    //     attacker[effectKeys.ELEMENT] === elementalKeys.SCORCH
+    //         ? constants.SCORCH_PASSIVE_MULT
+    //         : 1.0;
 
-    const scorchDefMult =
-        wheel === elementalKeys.SCORCH && defender.states.aligned
-            ? constants.SCORCH_PASSIVE_MULT
-            : 1.0;
+    // const scorchDefMult =
+    //     defender[effectKeys.ELEMENT] === elementalKeys.SCORCH
+    //         ? constants.SCORCH_PASSIVE_MULT
+    //         : 1.0;
 
-    const frostAtkMult =
-        wheel === elementalKeys.FROST && attacker.states.aligned
-            ? constants.FROST_PASSIVE_MULT
-            : 1.0;
+    // const frostAtkMult =
+    //     attacker[effectKeys.ELEMENT] === elementalKeys.FROST
+    //         ? constants.FROST_PASSIVE_MULT
+    //         : 1.0;
 
-    const frostDefMult =
-        wheel === elementalKeys.FROST && defender.states.aligned
-            ? constants.FROST_PASSIVE_MULT
-            : 1.0;
+    // const frostDefMult =
+    //     defender[effectKeys.ELEMENT] === elementalKeys.FROST
+    //         ? constants.FROST_PASSIVE_MULT
+    //         : 1.0;
 
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
-            ? (draftDefender.attributes.def.value + draftDefender.permafrost) *
+            ? (draftDefender.attributes.def.value) *
               processEntityDefEffect(draftDefender)
             : 0;
 
@@ -471,13 +460,15 @@ export function dealDamage(
         1,
         Math.floor(
             (baseDmg + additionalDmg - effectiveDef - flatDr) *
-                drMult *
-                scorchAtkMult *
-                scorchDefMult *
-                frostAtkMult *
-                frostDefMult,
+                drMult,
         ),
     );
+
+    //     drMult *
+    // scorchAtkMult *
+    // scorchDefMult *
+    // frostAtkMult *
+    // frostDefMult,
 
     // Mitigation
     const domeConsumed =
@@ -517,16 +508,11 @@ export function dealDamage(
 
     const thornsDmg =
         isArrayActive && dmgType === dmgTypes.PHYSICAL
-            ? attacker.attributes.str.value + attacker.scoria
+            ? attacker.attributes.str.value
             : 0;
 
     if (thornsDmg > 0) {
-        draftAttacker = takeDamage(
-            draftAttacker,
-            thornsDmg,
-            dmgTypes.PHYSICAL,
-            wheel,
-        );
+        draftAttacker = takeDamage(draftAttacker, thornsDmg, dmgTypes.PHYSICAL);
     }
 
     if (draftDefender.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
@@ -573,24 +559,24 @@ export function dealDamage(
     };
 }
 
-export function takeDamage(entity, baseDmg, dmgType, wheel) {
+export function takeDamage(entity, baseDmg, dmgType) {
     let draftEntity = {
         ...entity,
     };
 
-    const scorchMult =
-        wheel === elementalKeys.SCORCH && entity.states.aligned
-            ? constants.SCORCH_PASSIVE_MULT
-            : 1.0;
+    // const scorchMult =
+    //     entity[effectKeys.ELEMENT] === elementalKeys.SCORCH
+    //         ? constants.SCORCH_PASSIVE_MULT
+    //         : 1.0;
 
-    const frostMult =
-        wheel === elementalKeys.FROST && entity.states.aligned
-            ? constants.FROST_PASSIVE_MULT
-            : 1.0;
+    // const frostMult =
+    //     entity[effectKeys.ELEMENT] === elementalKeys.FROST
+    //         ? constants.FROST_PASSIVE_MULT
+    //         : 1.0;
 
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
-            ? (entity.attributes.def.value + entity.permafrost) *
+            ? (entity.attributes.def.value) *
               processEntityDefEffect(entity)
             : 0;
 
@@ -607,9 +593,11 @@ export function takeDamage(entity, baseDmg, dmgType, wheel) {
     const finalDmg = Math.max(
         1,
         Math.floor(
-            (baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult,
+            (baseDmg - effectiveDef - flatDr) * drMult,
         ),
     );
+
+    // (baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult,
 
     // Mitigation
     const domeConsumed =
@@ -853,7 +841,7 @@ export function gainHp(entity, amount) {
 
     const newHp = Math.min(
         entity[effectKeys.HEALTH] + amount,
-        entity[effectKeys.MAX_HEALTH] + entity[effectKeys.OVERGROWTH],
+        entity[effectKeys.MAX_HEALTH],
     );
 
     return {
@@ -920,19 +908,6 @@ export function loseMana(entity, amount) {
     };
 }
 
-export function processExitAligned(entity) {
-    return {
-        ...entity,
-        states: {
-            ...entity.states,
-            [effectKeys.ALIGNED]: false,
-        },
-        [effectKeys.OVERGROWTH]: 0,
-        [effectKeys.PERMAFROST]: 0,
-        [effectKeys.SCORIA]: 0,
-    };
-}
-
 export function processExitStargazer(entity) {
     return {
         ...entity,
@@ -962,7 +937,6 @@ export function exitAllStates(entity) {
         ...entity,
     };
 
-    draftEntity = processExitAligned(draftEntity);
     draftEntity = processExitStargazer(draftEntity);
     draftEntity = processExitsResonant(draftEntity);
 

@@ -81,14 +81,14 @@ function ActionPanel({
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
-    } else if (battleState === turnStatus.WHEEL_TURN) {
-        waitLabel = "Elemental Cycle";
     } else if (battleState === turnStatus.ARRAY_TURN) {
         waitLabel = "Runic Inscription";
     } else if (battleState === turnStatus.EMINENCE_TURN) {
         waitLabel = "Emanation";
     } else if (battleState === turnStatus.STARS_TURN) {
         waitLabel = "Starfall";
+    } else if (battleState === turnStatus.MOON_TURN) {
+        waitLabel = "Moon Phase";
     }
 
     const showWait = waitLabel !== null;

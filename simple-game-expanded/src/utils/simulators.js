@@ -13,7 +13,6 @@ import {
     exitAllStates,
 } from "./entities.js";
 import {
-    elementalKeys,
     actionKeys,
     dmgTypes,
     effectKeys,
@@ -47,7 +46,6 @@ export const simulators = {
     [actionKeys.LASER]: simulateLaser,
     [actionKeys.MELTDOWN]: simulateMeltdown,
 
-    [actionKeys.ALIGN]: simulateAlign,
     [actionKeys.CHART]: simulateChart,
 
     [actionKeys.AEGIS]: simulateAegis,
@@ -93,7 +91,7 @@ function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newHalo =
         agent.resources.halo +
         Math.ceil(
-            (agent.attributes.def.value + agent.permafrost) *
+            (agent.attributes.def.value) *
                 constants.HALO_GEN_MULT,
         );
 
@@ -155,10 +153,9 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent.attributes.str.value + agent.scoria + agent.resources.radiance,
+        agent.attributes.str.value + agent.resources.radiance,
         dmgTypes.PHYSICAL,
         prev.remainingArray > 0,
-        prev.elementalWheel,
     );
 
     const draftAttacker = {
@@ -202,10 +199,9 @@ function simulateSpecialAttack({
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        manaDiff + agent.attributes.str.value + agent.scoria,
+        manaDiff + agent.attributes.str.value,
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
-        prev.elementalWheel,
     );
 
     const draftDefender = gainMana(defender, manaDiff);
@@ -231,7 +227,7 @@ function simulateHeal({ prev, agent, agentKey }) {
     };
 
     const base_heal = Math.min(
-        agent.maxHp + agent.overgrowth - agent.currHp,
+        agent.maxHp - agent.currHp,
         agent.currMana + agent.resources.manaOverflow,
     );
 
@@ -538,11 +534,7 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
 
     const musicalShift = Math.abs(newSonority * 2);
 
-    const draftAgent = restoreResources(
-        agent,
-        musicalShift,
-        prev.elementalWheel,
-    );
+    const draftAgent = restoreResources(agent, musicalShift);
 
     return {
         ...prev,
@@ -567,7 +559,6 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         musicalShift,
         dmgTypes.TRUE,
         prev.remainingArray > 0,
-        prev.elementalWheel,
     );
 
     return {
@@ -612,7 +603,6 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         agent[effectKeys.ENERGY_LEVEL],
         dmgTypes.PIERCING,
         prev.remainingArray > 0,
-        prev.elementalWheel,
     );
 
     const newOverheat =
@@ -642,23 +632,14 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
 function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const baseDmg = Math.floor(
-        (agent[effectKeys.ENERGY_LEVEL] + Math.floor(agent[effectKeys.DYNAMO] / 10)) *
+        (agent[effectKeys.ENERGY_LEVEL] +
+            Math.floor(agent[effectKeys.DYNAMO] / 10)) *
             (agent[effectKeys.OVERHEAT] / 100),
     );
 
-    const draftAgent = takeDamage(
-        agent,
-        baseDmg,
-        dmgTypes.PHYSICAL,
-        prev.elementalWheel,
-    );
+    const draftAgent = takeDamage(agent, baseDmg, dmgTypes.PHYSICAL);
 
-    const draftNonAgent = takeDamage(
-        nonAgent,
-        baseDmg,
-        dmgTypes.PHYSICAL,
-        prev.elementalWheel,
-    );
+    const draftNonAgent = takeDamage(nonAgent, baseDmg, dmgTypes.PHYSICAL);
 
     return {
         ...prev,
@@ -675,84 +656,6 @@ function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             },
             [nonAgentKey]: {
                 ...draftNonAgent,
-            },
-        },
-    };
-}
-
-function simulateAlign({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const newElement =
-        prev.elementalWheel === elementalKeys.INACTIVE
-            ? elementalKeys.NATURE
-            : prev.elementalWheel;
-
-    let newScoria = draftAgent.scoria;
-    let newOvergrowth = draftAgent.overgrowth;
-    let newPermafrost = draftAgent.permafrost;
-
-    switch (prev.elementalWheel) {
-        case elementalKeys.NATURE: {
-            newOvergrowth += constants.ELEMENTAL_RESOURCE_GAIN;
-            draftAgent = restoreResources(
-                draftAgent,
-                newOvergrowth,
-                prev.elementalWheel,
-            );
-            break;
-        }
-        case elementalKeys.SCORCH: {
-            newScoria += constants.ELEMENTAL_RESOURCE_GAIN;
-            draftAgent = takeDamage(
-                draftAgent,
-                newScoria,
-                dmgTypes.TRUE,
-                prev.elementalWheel,
-            );
-            break;
-        }
-        case elementalKeys.FROST: {
-            newPermafrost += constants.ELEMENTAL_RESOURCE_GAIN;
-            const newCryo = draftAgent.resources.cryogenesis + newPermafrost;
-            draftAgent = {
-                ...draftAgent,
-                resources: {
-                    ...draftAgent.resources,
-                    cryogenesis: newCryo,
-                },
-            };
-            break;
-        }
-
-        case elementalKeys.INACTIVE: {
-            newOvergrowth += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
-            newScoria += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
-            newPermafrost += constants.INITIAL_ELEMENTAL_ESSENCE_GAINED;
-            break;
-        }
-
-        default: {
-            break;
-        }
-    }
-
-    return {
-        ...prev,
-        elementalWheel: newElement,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                scoria: newScoria,
-                permafrost: newPermafrost,
-                overgrowth: newOvergrowth,
-                states: {
-                    ...draftAgent.states,
-                    aligned: true,
-                },
             },
         },
     };
@@ -1136,7 +1039,6 @@ function simulateWordMadeFlesh({
     draftAgent = restoreResources(
         draftAgent,
         resourcesConsumed.totalConsumption,
-        prev.elementalWheel,
     );
 
     return {
@@ -1186,3 +1088,4 @@ function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         },
     };
 }
+

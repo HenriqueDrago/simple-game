@@ -1,14 +1,9 @@
 import "./GamePanel.css";
 import ControlPanel from "./ControlPanel";
 import StatsPanel from "./StatsPanel";
-import ElementalWheel from "./ElementalWheel";
 import StarsPanel from "./StarsPanel";
 
-import {
-    effectKeys,
-    entityKeys,
-    turnStatus,
-} from "../utils/enums";
+import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
 import EyeOfHeavens from "./EyeOfHeavens";
 
 function GamePanel({
@@ -17,7 +12,8 @@ function GamePanel({
     handleDistributionModeChange,
     handleAiChange,
     handleStarChange,
-    handleRandomizeStats
+    handleRandomizeStats,
+    handleElementChange,
 }) {
     const isSetupPhase = game.status === turnStatus.SETUP;
 
@@ -41,7 +37,7 @@ function GamePanel({
             <div className="central-game-panel">
                 <div className="game-panel-upper-elements-container">
                     <div className="upper-slot left-slot">
-                        <ElementalWheel element={game.elementalWheel} />
+                        {/* Empty Slot to balance out the grid */}
                     </div>
 
                     <div className="upper-slot center-slot">
@@ -74,11 +70,13 @@ function GamePanel({
                             game={game}
                             updateStatsPoints={updateStatsPoints}
                             entityKey={entityKeys.PLAYER_ONE}
+                            handleElementChange={handleElementChange}
                         />
                         <StatsPanel
                             game={game}
                             updateStatsPoints={updateStatsPoints}
                             entityKey={entityKeys.PLAYER_TWO}
+                            handleElementChange={handleElementChange}
                         />
                     </div>
 

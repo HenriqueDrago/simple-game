@@ -16,16 +16,6 @@ function AttrLine({
 
     const showControls = modifiable && battleState === turnStatus.SETUP;
 
-    const specialClass =
-        attr === "str" && entity.scoria > 0
-            ? "str-scoria"
-            : attr === "def" && entity.permafrost > 0
-              ? "def-permafrost"
-              : null;
-
-    const extraValue =
-        attr === "str" ? entity.scoria : attr === "def" ? entity.permafrost : 0;
-
     return (
         <div className="status-line-container">
             {showControls ? (
@@ -35,8 +25,8 @@ function AttrLine({
             ) : (
                 <p className="non-changeable-status">
                     {attr.toUpperCase() + ": "}
-                    <span className={specialClass}>
-                        {entity.attributes[attr].value + extraValue}
+                    <span>
+                        {entity.attributes[attr].value}
                     </span>
                 </p>
             )}

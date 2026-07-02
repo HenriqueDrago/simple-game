@@ -228,7 +228,7 @@ export function processTrail({ master, nonMaster }, trailKey) {
 }
 
 function processRedStar(
-    { master, nonMaster, wheel },
+    { master, nonMaster },
     normalStars,
     augmentedStars,
 ) {
@@ -245,7 +245,6 @@ function processRedStar(
             draftNonMaster,
             normalStars,
             dmgTypes.PHYSICAL,
-            wheel,
         );
     }
 
@@ -254,7 +253,6 @@ function processRedStar(
             draftNonMaster,
             augmentedStars,
             dmgTypes.PIERCING,
-            wheel,
         );
     }
 
@@ -332,7 +330,7 @@ function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
 }
 
 function processGreenStar(
-    { master, nonMaster, wheel },
+    { master, nonMaster },
     normalStars,
     augmentedStars,
 ) {
@@ -344,8 +342,8 @@ function processGreenStar(
         ...nonMaster,
     };
 
-    draftMaster = restoreResources(draftMaster, normalStars, wheel);
-    draftNonMaster = restoreResources(draftNonMaster, augmentedStars, wheel);
+    draftMaster = restoreResources(draftMaster, normalStars);
+    draftNonMaster = restoreResources(draftNonMaster, augmentedStars);
 
     return {
         draftMaster,

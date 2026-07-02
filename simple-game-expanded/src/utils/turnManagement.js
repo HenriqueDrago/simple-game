@@ -15,12 +15,12 @@ import {
 import {
     turnStatus,
     entityKeys,
-    elementalKeys,
     actionKeys,
     effectKeys,
     eyeKeys,
     dmgTypes,
     starfallPhases,
+    moonKeys,
 } from "./enums.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
 
@@ -120,8 +120,7 @@ export function processUpkeep(prev) {
         if (draftTarget.resources.unrelentingShadows > 0) {
             draftTarget = restoreResources(
                 draftTarget,
-                draftTarget.resources.unrelentingShadows,
-                prev.elementalWheel,
+                draftTarget.resources.unrelentingShadows
             );
 
             draftTarget = {
@@ -207,7 +206,6 @@ export function processUpkeep(prev) {
                 draftTarget,
                 draftTarget.resources.poison,
                 dmgTypes.TRUE,
-                prev.elementalWheel,
             );
         }
 
@@ -264,8 +262,9 @@ export function processUpkeep(prev) {
             draftTarget = {
                 ...draftTarget,
                 [effectKeys.DYNAMO]: 0,
-                [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
-            }
+                [effectKeys.ENERGY_LEVEL]:
+                    draftTarget[effectKeys.ENERGY_LEVEL] + 1,
+            };
         }
 
         // Sacred Flames
@@ -336,8 +335,7 @@ export function processUpkeep(prev) {
 
         // Divine Spark
         if (
-            draftTarget[effectKeys.DIVINE_SPARK] >=
-            constants.MAX_DIVINE_SPARK
+            draftTarget[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK
         ) {
             draftTarget = {
                 ...draftTarget,
@@ -419,7 +417,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                     draftCurrActor,
                     draftCurrActor.resources.manaOverflow,
                     dmgTypes.TRUE,
-                    newGame.elementalWheel,
                 );
 
                 draftCurrActor = {
@@ -488,12 +485,15 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     // Overheat
     if (actionsClass.defensiveActions.includes(action)) {
         const overheatLost = Math.min(
-                constants.NATURAL_OVERHEAT_LOSS,
-                draftCurrActor[effectKeys.OVERHEAT],
-            );
+            constants.NATURAL_OVERHEAT_LOSS,
+            draftCurrActor[effectKeys.OVERHEAT],
+        );
 
         const newOverheat = draftCurrActor[effectKeys.OVERHEAT] - overheatLost;
-        const newDynamo = Math.min(draftCurrActor[effectKeys.DYNAMO] + overheatLost, constants.MAX_DYNAMO);
+        const newDynamo = Math.min(
+            draftCurrActor[effectKeys.DYNAMO] + overheatLost,
+            constants.MAX_DYNAMO,
+        );
         draftCurrActor = {
             ...draftCurrActor,
             [effectKeys.OVERHEAT]: newOverheat,
@@ -502,15 +502,18 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     }
 
     // Thermal Overload
-    if (draftCurrActor[effectKeys.OVERHEAT] >= constants.MAX_OVERHEAT && !draftCurrActor.states[effectKeys.VENTING]) {
+    if (
+        draftCurrActor[effectKeys.OVERHEAT] >= constants.MAX_OVERHEAT &&
+        !draftCurrActor.states[effectKeys.VENTING]
+    ) {
         draftCurrActor = {
             ...draftCurrActor,
             states: {
                 ...draftCurrActor.states,
                 [effectKeys.WEAPONS_DEPLOYED]: false,
                 [effectKeys.THERMAL_OVERLOAD]: true,
-            }
-        }
+            },
+        };
     }
 
     // Cryogenesis
@@ -552,9 +555,9 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             nextStatus = turnStatus.STARS_TURN;
         } else if (
             newGame.turnCount % 2 === 0 &&
-            newGame.elementalWheel !== elementalKeys.INACTIVE
+            newGame[effectKeys.MIRRORED_MOON] !== moonKeys.CLOUDED
         ) {
-            nextStatus = turnStatus.WHEEL_TURN;
+            nextStatus = turnStatus.MOON_TURN;
         } else if (newGame.remainingArray > 0) {
             nextStatus = turnStatus.ARRAY_TURN;
         } else if (
@@ -609,7 +612,7 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
     };
 }
 
-export function processWheelTurn(prev) {
+export function processMoonPhase(prev) {
     let nextStatus =
         prev.lastPlayerTurn === entityKeys.PLAYER_ONE
             ? turnStatus.UPKEEP_PLAYER_TWO
@@ -621,48 +624,10 @@ export function processWheelTurn(prev) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
 
-    if (prev.elementalWheel === elementalKeys.INACTIVE) {
-        return {
-            ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextStatus,
-        };
-    }
-
-    let newElement =
-        prev.elementalWheel === elementalKeys.NATURE
-            ? elementalKeys.FROST
-            : prev.elementalWheel === elementalKeys.FROST
-              ? elementalKeys.SCORCH
-              : elementalKeys.NATURE;
-
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    if (!playerOne.states.aligned && !playerTwo.states.aligned) {
-        newElement = elementalKeys.INACTIVE;
-    }
-
-    if(prev[effectKeys.SEVERED_TIME]) {
-        newElement = prev.elementalWheel;
-    }
-
-    // Death Logic
-    playerOne = processEntityDeathStates(playerOne);
-    playerTwo = processEntityDeathStates(playerTwo);
-
-    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
-
     return {
         ...prev,
         status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
-        elementalWheel: newElement,
-        entities: {
-            ...prev.entities,
-            [entityKeys.PLAYER_ONE]: { ...playerOne },
-            [entityKeys.PLAYER_TWO]: { ...playerTwo },
-        },
     };
 }
 
@@ -687,7 +652,9 @@ export function processArrayTurn(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    const newArray = prev[effectKeys.SEVERED_TIME] ? prev.remainingArray - 1 : prev.remainingArray;
+    const newArray = prev[effectKeys.SEVERED_TIME]
+        ? prev.remainingArray - 1
+        : prev.remainingArray;
 
     // If Array dying, redistribute mana
     if (newArray <= 0) {
@@ -932,9 +899,9 @@ export function processStarfallTurn(prev) {
 
     if (
         prev.turnCount % 2 === 0 &&
-        prev.elementalWheel !== elementalKeys.INACTIVE
+        prev[effectKeys.MIRRORED_MOON] !== moonKeys.CLOUDED
     ) {
-        nextTurnStatus = turnStatus.WHEEL_TURN;
+        nextTurnStatus = turnStatus.MOON_TURN;
     } else if (prev.remainingArray > 0) {
         nextTurnStatus = turnStatus.ARRAY_TURN;
     } else if (
@@ -988,7 +955,6 @@ export function processStarfallTurn(prev) {
         nonMasterKey,
         master,
         nonMaster,
-        wheel: prev.elementalWheel,
     };
 
     switch (currentPhase) {

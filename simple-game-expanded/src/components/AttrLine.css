@@ -60,11 +60,3 @@
 
     text-align: center;
 }
-
-.str-scoria {
-    color: var(--scorch-color);
-}
-
-.def-permafrost {
-    color: var(--frost-color);
-}

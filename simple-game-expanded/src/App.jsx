@@ -14,19 +14,22 @@ import {
 import {
     processUpkeep,
     commitTurn,
-    processWheelTurn,
     processArrayTurn,
     processEminenceTurn,
     processStarfallTurn,
+    processMoonPhase,
 } from "./utils/turnManagement.js";
-import { distributePoints, createBaseEntity, resetPlayerEntity } from "./utils/entities.js";
+import {
+    distributePoints,
+    createBaseEntity,
+    resetPlayerEntity,
+} from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
     entityKeys,
     turnStatus,
     aiKeys,
     sdmKeys,
-    elementalKeys,
     whoStartsKeys,
     eyeKeys,
     actionKeys,
@@ -167,7 +170,6 @@ function App() {
                 nextStatus: null,
                 lastPlayerTurn: null,
                 remainingArray: 0,
-                elementalWheel: elementalKeys.INACTIVE,
                 turnCount: 0,
                 eyeOfHeavens: eyeKeys.DORMANT,
                 starQueue: null,
@@ -358,6 +360,21 @@ function App() {
         });
     }
 
+    function handleElementChange(entityKey, element) {
+        setGame((prev) => {
+            return {
+                ...prev,
+                entities: {
+                    ...prev.entities,
+                    [entityKey]: {
+                        ...prev.entities[entityKey],
+                        [effectKeys.ELEMENT]: element,
+                    },
+                },
+            };
+        });
+    }
+
     // Auxiliary Functions
     function updateStatsPoints(targetKey, statusKey, value) {
         setGame((prev) => {
@@ -442,7 +459,6 @@ function App() {
                     totalMana,
                     hasManaForSpecial,
                     handleAction,
-                    wheelElement: game.elementalWheel,
                     prev: game,
                 };
 
@@ -477,9 +493,9 @@ function App() {
     }, [game.status]);
 
     useEffect(() => {
-        if (game.status === turnStatus.WHEEL_TURN) {
+        if (game.status === turnStatus.MOON_TURN) {
             const timer = setTimeout(() => {
-                setGame(processWheelTurn);
+                setGame(processMoonPhase);
             }, 1000);
 
             return () => clearTimeout(timer);
@@ -632,6 +648,7 @@ function App() {
                 handleSetTooltip={handleSetTooltip}
                 handleClearTooltip={handleClearTooltip}
             />
+
             <Header
                 game={game}
                 handleStart={handleStart}
@@ -649,6 +666,7 @@ function App() {
                 handleAiChange={handleAiChange}
                 handleStarChange={handleStarChange}
                 handleRandomizeStats={handleRandomizeStats}
+                handleElementChange={handleElementChange}
             />
             <ActionPanel
                 handleAction={handleAction}

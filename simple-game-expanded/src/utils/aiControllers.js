@@ -1,7 +1,7 @@
 import { constants } from "./constants.js";
 import { simulators } from "./simulators.js";
 import { consumeResources, restoreResources } from "./entities.js";
-import { actionKeys, effectKeys, elementalKeys } from "./enums.js";
+import { actionKeys, effectKeys } from "./enums.js";
 
 function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
     return (actionKey, overrides = {}) =>
@@ -57,9 +57,7 @@ export function bloodknightAI(context) {
     // Use Sacrifice if not enough accumulated dmg
     if (
         agent.currHp >= agent.maxHp * 0.6 &&
-        agent.resources.bloodSacrifice +
-            agent.attributes.str.value +
-            agent.scoria <
+        agent.resources.bloodSacrifice + agent.attributes.str.value <
             agent.maxHp
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
@@ -437,83 +435,4 @@ export function maestroAI(context) {
     }
 
     handleAction(action, agentKey, nonAgentKey);
-}
-
-export function elementalistAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgentKey,
-        hasManaForSpecial,
-        handleAction,
-        wheelElement,
-    } = context;
-
-    const simulate = createSimulator(context);
-
-    // Step 1: Direct Kill Check
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
-        handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
-        return;
-    }
-
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (simSpecial.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        }
-    }
-
-    // Step 2: FROST Phase
-    // Always align to stack cryogenesis damage mitigation and advance the wheel[cite: 1]
-    if (wheelElement === elementalKeys.FROST) {
-        handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
-        return;
-    }
-
-    // Step 3: NATURE Phase
-    // Prevent alignment if turn-end overflow damage drops us below half total capacity[cite: 1]
-    if (wheelElement === elementalKeys.NATURE) {
-        const simAlign = simulate(actionKeys.ALIGN);
-        const postAlignAgent = simAlign.entities[agentKey];
-
-        const netHpAfterOverflow = 
-            postAlignAgent[effectKeys.HEALTH] - (postAlignAgent.resources[effectKeys.MANA_OVERFLOW] || 0);
-        const postAlignTotalHp = 
-            postAlignAgent[effectKeys.MAX_HEALTH] + postAlignAgent[effectKeys.OVERGROWTH];
-        const halfTotalHpPostAlign = 0.5 * postAlignTotalHp;
-
-        if (netHpAfterOverflow < halfTotalHpPostAlign) {
-            // Defensive action fallback (Heal if affordable, otherwise Guard)[cite: 1]
-            const defAction = agent[effectKeys.MANA] >= 4 ? actionKeys.HEAL : actionKeys.GUARD;
-            handleAction(defAction, agentKey, nonAgentKey);
-        } else {
-            handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
-        }
-        return;
-    }
-
-    // Step 4: SCORCH Phase
-    // Prioritize align progression unless the scoria backfire damage is completely lethal[cite: 1]
-    if (wheelElement === elementalKeys.SCORCH) {
-        const simAlign = simulate(actionKeys.ALIGN);
-        const postAlignAgent = simAlign.entities[agentKey];
-
-        if (postAlignAgent[effectKeys.HEALTH] > 0) {
-            handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
-        } else {
-            // If alignment kills us, guard if we have enough shields to survive; otherwise attack[cite: 1]
-            if (agent[effectKeys.CRYOGENESIS] >= 10) {
-                handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-            } else {
-                handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
-            }
-        }
-        return;
-    }
-
-    // Baseline safety fallback
-    handleAction(actionKeys.ALIGN, agentKey, nonAgentKey);
 }
