@@ -44,17 +44,57 @@ import "./App.css";
 import TooltipDisplay from "./components/TooltipDisplay.jsx";
 import Glossary from "./components/Glossary.jsx";
 import Modal from "./components/Modal.jsx";
+import ContinueModal from "./components/ContinueModal.jsx";
 
+// Auxiliary Functions
+function resetGameState(prev) {
+    const playerOne = resetPlayerEntity(prev, entityKeys.PLAYER_ONE);
+    const playerTwo = resetPlayerEntity(prev, entityKeys.PLAYER_TWO);
+
+    return {
+        ...prev,
+        status: turnStatus.SETUP,
+        nextStatus: null,
+        lastPlayerTurn: null,
+        remainingArray: 0,
+        turnCount: 0,
+        eyeOfHeavens: eyeKeys.DORMANT,
+        starQueue: null,
+        [effectKeys.SEVERED_TIME]: false,
+        entities: {
+            [entityKeys.PLAYER_ONE]: playerOne,
+            [entityKeys.PLAYER_TWO]: playerTwo,
+        },
+    };
+}
+
+// App Component
 function App() {
     // Declare states
+    const [continueModal, setContinueModal] = useState(false);
+
     const [game, setGame] = useState(() => {
         try {
             const savedData = localStorage.getItem("gameCheckpoint");
             if (savedData) {
-                return {
+                let savedGame = {
                     ...INITIAL_GAME_STATE,
                     ...JSON.parse(savedData),
                 };
+
+                const toBeRestStatus = [
+                    turnStatus.VICTORY,
+                    turnStatus.DRAW,
+                    turnStatus.DEFEAT,
+                ];
+
+                if (toBeRestStatus.includes(savedGame.status)) {
+                    savedGame = resetGameState(savedGame);
+                } else if (savedGame.status !== turnStatus.SETUP) {
+                    setContinueModal(true);
+                }
+
+                return savedGame;
             }
         } catch (error) {
             console.error("Failed to load saved game data:", error);
@@ -173,25 +213,14 @@ function App() {
 
     function handleReset() {
         setGame((prev) => {
-            const playerOne = resetPlayerEntity(prev, entityKeys.PLAYER_ONE);
-            const playerTwo = resetPlayerEntity(prev, entityKeys.PLAYER_TWO);
-
-            return {
-                ...prev,
-                status: turnStatus.SETUP,
-                nextStatus: null,
-                lastPlayerTurn: null,
-                remainingArray: 0,
-                turnCount: 0,
-                eyeOfHeavens: eyeKeys.DORMANT,
-                starQueue: null,
-                [effectKeys.SEVERED_TIME]: false,
-                entities: {
-                    [entityKeys.PLAYER_ONE]: playerOne,
-                    [entityKeys.PLAYER_TWO]: playerTwo,
-                },
-            };
+            setContinueModal(false);
+            return resetGameState(prev);
         });
+    }
+
+    function handleHardReset() {
+        setContinueModal(false);
+        setGame({ ...INITIAL_GAME_STATE });
     }
 
     function handleStart() {
@@ -622,6 +651,16 @@ function App() {
             }
         }
     }, [game]);
+
+    if (continueModal) {
+        return (
+            <ContinueModal
+                handleReset={handleReset}
+                setContinueModal={setContinueModal}
+                handleHardReset={handleHardReset}
+            />
+        );
+    }
 
     return (
         <div className="app-container">

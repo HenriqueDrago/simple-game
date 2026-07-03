@@ -37,6 +37,7 @@ function AttrLine({
                         onClick={() => {
                             handleStatusChange(entityKey, attr, -1);
                         }}
+                        disabled={entity.attributes[attr].value <= 0}
                     >
                         -
                     </button>
@@ -47,6 +48,7 @@ function AttrLine({
                         onClick={() => {
                             handleStatusChange(entityKey, attr, 1);
                         }}
+                        disabled={entity.unspentPoints <= 0}
                     >
                         +
                     </button>
