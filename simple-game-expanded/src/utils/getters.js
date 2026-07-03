@@ -24,44 +24,44 @@ export const getAngelActions = () => [
     {
         key: actionKeys.BAPTISM_OF_THE_FLAMES,
         label: "Baptism of the Flames",
-        specialClass: "good-angel-button"
+        specialClass: "good-angel-button",
     },
     {
         key: actionKeys.CELESTIAL_SCALE,
         label: "Celestial Scale",
-        specialClass: "good-angel-button"
+        specialClass: "good-angel-button",
     },
     {
         key: actionKeys.HYMNS_OF_SANCTIFICATION,
         label: "Hymns of Sanctification",
-        specialClass: "good-angel-button"
+        specialClass: "good-angel-button",
     },
     {
         key: actionKeys.GIFT_OF_APOTHEOSIS,
         label: "Gift of Apotheosis",
-        specialClass: "good-angel-button"
+        specialClass: "good-angel-button",
     },
 
     // Bad Actions
     {
         key: actionKeys.SERAPH_OF_CONDEMNATION,
         label: "Seraph of Condemnation",
-        specialClass: "bad-angel-button"
+        specialClass: "bad-angel-button",
     },
     {
         key: actionKeys.GLIMPSE_OF_PANDEMONIUM,
         label: "Glimpse of Pandemonium",
-        specialClass: "bad-angel-button"
+        specialClass: "bad-angel-button",
     },
     {
         key: actionKeys.EDICT_OF_SEVERANCE,
         label: "Edict of Severance",
-        specialClass: "bad-angel-button"
+        specialClass: "bad-angel-button",
     },
     {
         key: actionKeys.THE_WORD_MADE_FLESH,
         label: "The Word Made Flesh",
-        specialClass: "bad-angel-button"
+        specialClass: "bad-angel-button",
     },
 ];
 
@@ -87,10 +87,10 @@ export const getJudgement = () => {
         {
             key: actionKeys.JUDGEMENT,
             label: "Judgement",
-            specialClass: "ascend-button"
-        }
-    ]
-}
+            specialClass: "ascend-button",
+        },
+    ];
+};
 
 export const getNormalActions = (
     arrayActive,
@@ -98,7 +98,7 @@ export const getNormalActions = (
     canUseSpAtk,
     canUseDeploy,
     progMode,
-    progStatus
+    progStatus,
 ) => {
     if (currEntity.states[effectKeys.ZENITH_OF_MORTALITY]) {
         return [
@@ -144,78 +144,162 @@ export const getNormalActions = (
         {
             key: actionKeys.SACRIFICE,
             label: "Self Sacrifice",
-            disabled: progMode && !(progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED || progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN)
+            disabled:
+                progMode &&
+                !(
+                    progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED ||
+                    progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN
+                ),
         },
         arrayActive
             ? {
                   key: actionKeys.CURSE,
                   label: "Curse",
-                  disabled: progMode && !(progStatus[aiKeys.HEXER] === progKeys.DEFEATED || progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN)
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.HEXER] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN
+                      ),
               }
             : {
                   key: actionKeys.ARRAY,
                   label: "Array",
-                  disabled: progMode && !(progStatus[aiKeys.HEXER] === progKeys.DEFEATED || progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN)
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.HEXER] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN
+                      ),
               },
         currEntity.states.weaponsDeployed
             ? {
                   key: actionKeys.LASER,
                   label: "Laser",
-                  disabled: progMode && !(progStatus[aiKeys.CYBORG] === progKeys.DEFEATED || progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN)
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.CYBORG] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN
+                      ),
               }
             : {
                   key: actionKeys.DEPLOY,
                   label: "Deploy",
-                  disabled: !canUseDeploy || progMode && !(progStatus[aiKeys.CYBORG] === progKeys.DEFEATED || progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN),
+                  disabled:
+                      !canUseDeploy ||
+                      (progMode &&
+                          !(
+                              progStatus[aiKeys.CYBORG] === progKeys.DEFEATED ||
+                              progStatus[aiKeys.CYBORG] === progKeys.ALWAYS_OPEN
+                          )),
               },
 
         !currEntity.states.resonant
             ? {
                   key: actionKeys.ATTUNE,
                   label: "Attune",
-                  disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN
+                      ),
               }
             : currEntity.sonority > 0
               ? {
                     key: actionKeys.BABEL,
                     label: "Babel",
-                    disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
+                    disabled:
+                        progMode &&
+                        !(
+                            progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED ||
+                            progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN
+                        ),
                 }
               : currEntity.sonority < 0
                 ? {
                       key: actionKeys.SOUND_OF_SILENCE,
                       label: "The Sound of Silence",
-                      disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
+                      disabled:
+                          progMode &&
+                          !(
+                              progStatus[aiKeys.MAESTRO] ===
+                                  progKeys.DEFEATED ||
+                              progStatus[aiKeys.MAESTRO] ===
+                                  progKeys.ALWAYS_OPEN
+                          ),
                   }
                 : {
                       key: actionKeys.DA_CAPO,
                       label: "Da Capo",
-                      disabled: progMode && !(progStatus[aiKeys.MAESTRO] === progKeys.DEFEATED || progStatus[aiKeys.MAESTRO] === progKeys.ALWAYS_OPEN)
+                      disabled:
+                          progMode &&
+                          !(
+                              progStatus[aiKeys.MAESTRO] ===
+                                  progKeys.DEFEATED ||
+                              progStatus[aiKeys.MAESTRO] ===
+                                  progKeys.ALWAYS_OPEN
+                          ),
                   },
 
-        {
-            key: actionKeys.ALIGN,
-            label: "Align",
-            // disabled: progMode && !(progStatus[aiKeys.ELEMENTALIST] === progKeys.DEFEATED || progStatus[aiKeys.ELEMENTALIST] === progKeys.ALWAYS_OPEN)
-            disabled: true,
-        },
+        !currEntity.states[effectKeys.SELENIAN]
+            ? {
+                  key: actionKeys.ALIGN,
+                  label: "Align",
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.ELEMENTALIST] ===
+                              progKeys.DEFEATED ||
+                          progStatus[aiKeys.ELEMENTALIST] ===
+                              progKeys.ALWAYS_OPEN
+                      ),
+              }
+            : {
+                  key: actionKeys.MIRROR,
+                  label: "Mirror",
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.ELEMENTALIST] ===
+                              progKeys.DEFEATED ||
+                          progStatus[aiKeys.ELEMENTALIST] ===
+                              progKeys.ALWAYS_OPEN
+                      ),
+              },
 
         {
             key: actionKeys.CHART,
             label: "Chart",
-            disabled: progMode && !(progStatus[aiKeys.STARFARER] === progKeys.DEFEATED || progStatus[aiKeys.STARFARER] === progKeys.ALWAYS_OPEN)
+            disabled:
+                progMode &&
+                !(
+                    progStatus[aiKeys.STARFARER] === progKeys.DEFEATED ||
+                    progStatus[aiKeys.STARFARER] === progKeys.ALWAYS_OPEN
+                ),
         },
 
         {
             key: actionKeys.SHADOW_PACT,
             label: "Shadow Pact",
-            disabled: progMode && !(progStatus[aiKeys.SHADOW_SORCERER] === progKeys.DEFEATED || progStatus[aiKeys.SHADOW_SORCERER] === progKeys.ALWAYS_OPEN)
+            disabled:
+                progMode &&
+                !(
+                    progStatus[aiKeys.SHADOW_SORCERER] === progKeys.DEFEATED ||
+                    progStatus[aiKeys.SHADOW_SORCERER] === progKeys.ALWAYS_OPEN
+                ),
         },
 
         {
             key: actionKeys.AEGIS,
             label: "Aegis",
-            disabled: progMode && !(progStatus[aiKeys.PALADIN] === progKeys.DEFEATED || progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN)
+            disabled:
+                progMode &&
+                !(
+                    progStatus[aiKeys.PALADIN] === progKeys.DEFEATED ||
+                    progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN
+                ),
         },
     ];
 };

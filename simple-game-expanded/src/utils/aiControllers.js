@@ -33,8 +33,14 @@ export function simpleAI(context) {
 }
 
 export function bloodknightAI(context) {
-    const { agent, agentKey, nonAgentKey, isArrayActive, handleAction } =
-        context;
+    const {
+        agent,
+        agentKey,
+        nonAgentKey,
+        nonAgent,
+        isArrayActive,
+        handleAction,
+    } = context;
 
     const missingHp = agent.maxHp - agent.currHp;
     const missingMana = agent.maxMana - agent.currMana;
@@ -64,7 +70,15 @@ export function bloodknightAI(context) {
         return;
     }
 
-    // Standard Attack
+    // No attack if Array or Halo
+    if (
+        (isArrayActive &&
+            agent.attributes.str.value >= agent[effectKeys.HEALTH]) ||
+        nonAgent.resources[effectKeys.HALO] > 0
+    ) {
+        handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
+    }
+
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
 }
 
@@ -74,7 +88,7 @@ export function paladinAI(context) {
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
 
-    if (simAtk.entities[nonAgentKey].currHp <= 0) {
+    if (simAtk.entities[nonAgentKey][effectKeys.HEALTH] <= 0) {
         handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }

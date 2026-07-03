@@ -18,6 +18,8 @@ import {
     effectKeys,
     eyeKeys,
     angelActKeys,
+    moonKeys,
+    elementalKeys,
 } from "./enums.js";
 
 export const simulators = {
@@ -62,6 +64,8 @@ export const simulators = {
     [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
 
     [actionKeys.JUDGEMENT]: simulateJudgement,
+    [actionKeys.ALIGN]: simulateAlign,
+    [actionKeys.MIRROR]: simulateMirror,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -1087,5 +1091,39 @@ function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             },
         },
     };
+}
+
+function simulateAlign({ prev, agent, agentKey }) {
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
+                [effectKeys.ELEMENTAL_CRYSTALS]: elementalKeys.DULLED,
+                states: {
+                    ...agent.states,
+                    [effectKeys.SELENIAN]: true,
+                }
+            }
+        }
+    }
+}
+
+function simulateMirror({ prev, agent, agentKey }) {
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                states: {
+                    ...agent.states,
+                    [effectKeys.REFLECTED_FIRMAMENT]: true,
+                }
+            }
+        }
+    }
 }
 

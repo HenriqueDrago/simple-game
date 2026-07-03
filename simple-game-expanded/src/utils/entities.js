@@ -1,4 +1,4 @@
-import { constants, presetAi } from "./constants.js";
+import { actionsClass, constants, presetAi } from "./constants.js";
 import {
     sdmKeys,
     actionKeys,
@@ -7,6 +7,7 @@ import {
     elementalKeys,
     eyeKeys,
     angelActKeys,
+    moonKeys,
 } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
@@ -136,8 +137,7 @@ export function restoreResources(entity, amount) {
 
     // Health
     if (entity[effectKeys.MAX_HEALTH] > 0) {
-        const missingHp =
-            draftEntity.maxHp - draftEntity.currHp;
+        const missingHp = draftEntity.maxHp - draftEntity.currHp;
         const restoredHp = Math.min(missingHp, amount);
 
         amount -= restoredHp;
@@ -290,6 +290,11 @@ export function createBaseEntity() {
         [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
         lasersUsedThisTurn: 0,
 
+        // Align
+        [effectKeys.MIRRORED_MOON]: moonKeys.WANING,
+        [effectKeys.ELEMENTAL_CRYSTALS]: elementalKeys.DULLED,
+        [effectKeys.MOONLIGHT]: 0,
+
         resources: {
             [effectKeys.MANA_OVERFLOW]: 0,
             [effectKeys.BLOOD_SACRIFICE]: 0,
@@ -301,11 +306,16 @@ export function createBaseEntity() {
             [effectKeys.LINGERING_EMBER]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
             [effectKeys.HALO]: 0,
-            [effectKeys.CRYOGENESIS]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
             [effectKeys.INSPIRATION]: 0,
             [effectKeys.STARDUST]: 0,
             [effectKeys.DOME]: 0,
+
+            [effectKeys.MYCELIUM]: 0,
+            [effectKeys.CRYOGENESIS]: 0,
+            [effectKeys.RIME]: 0,
+            [effectKeys.INCANDESCENCE]: 0,
+            [effectKeys.KINDLING]: 0,
         },
         states: {
             // standalones
@@ -314,6 +324,8 @@ export function createBaseEntity() {
 
             [effectKeys.THORNED_SHACKLES]: false,
             [effectKeys.STARGAZER]: false,
+
+            [effectKeys.SELENIAN]: false,
 
             // Shadowflame
             [effectKeys.DARK_EMBRACE]: false,
@@ -382,6 +394,9 @@ export function processEntityDR(entity) {
     if (entity.states[effectKeys.VENTING]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
+    if (entity[effectKeys.ELEMENTAL_CRYSTALS] === elementalKeys.FROST) {
+        drMult *= Math.max(0, 1 - constants.FROST_DR);
+    }
 
     return drMult;
 }
@@ -396,6 +411,36 @@ export function processEntityDefEffect(entity) {
     }
 
     return defEffect;
+}
+
+export function processEntityDamageBonus(entity) {
+    let dmgBonus = 1.0;
+
+    if (entity[effectKeys.ELEMENTAL_CRYSTALS] === elementalKeys.SCORCH) {
+        dmgBonus *= constants.SCORCH_DMG_BONUS;
+    }
+
+    return dmgBonus;
+}
+
+export function processEntityFragility(entity) {
+    let frail = 1.0;
+
+    if (entity[effectKeys.ELEMENTAL_CRYSTALS] === elementalKeys.SCORCH) {
+        frail *= constants.SCORCH_FRAGILITY;
+    }
+
+    return frail;
+}
+
+export function processEntityWeakness(entity) {
+    let dmgBonus = 1.0;
+
+    if (entity[effectKeys.ELEMENTAL_CRYSTALS] === elementalKeys.FROST) {
+        dmgBonus *= Math.max(0, 1 - constants.FROST_WEAKNESS);
+    }
+
+    return dmgBonus;
 }
 
 export function dealDamage(
@@ -415,34 +460,14 @@ export function dealDamage(
 
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? draftAttacker.resources.bloodSacrifice + draftAttacker.sonority
+            ? draftAttacker.resources.bloodSacrifice + draftAttacker.sonority + draftAttacker.resources[effectKeys.KINDLING]
             : dmgType === dmgTypes.PIERCING
-              ? draftAttacker.sonority
+              ? draftAttacker.sonority + draftAttacker.resources[effectKeys.KINDLING]
               : 0;
-
-    // const scorchAtkMult =
-    //     attacker[effectKeys.ELEMENT] === elementalKeys.SCORCH
-    //         ? constants.SCORCH_PASSIVE_MULT
-    //         : 1.0;
-
-    // const scorchDefMult =
-    //     defender[effectKeys.ELEMENT] === elementalKeys.SCORCH
-    //         ? constants.SCORCH_PASSIVE_MULT
-    //         : 1.0;
-
-    // const frostAtkMult =
-    //     attacker[effectKeys.ELEMENT] === elementalKeys.FROST
-    //         ? constants.FROST_PASSIVE_MULT
-    //         : 1.0;
-
-    // const frostDefMult =
-    //     defender[effectKeys.ELEMENT] === elementalKeys.FROST
-    //         ? constants.FROST_PASSIVE_MULT
-    //         : 1.0;
 
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
-            ? (draftDefender.attributes.def.value) *
+            ? draftDefender.attributes.def.value *
               processEntityDefEffect(draftDefender)
             : 0;
 
@@ -456,19 +481,33 @@ export function dealDamage(
             ? -draftDefender.sonority
             : 0;
 
-    const finalDmg = Math.max(
-        1,
-        Math.floor(
-            (baseDmg + additionalDmg - effectiveDef - flatDr) *
-                drMult,
-        ),
+    const weakMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityWeakness(draftAttacker)
+            : 1.0;
+
+    const bonusMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityDamageBonus(draftAttacker)
+            : 1.0;
+
+    const frailMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityFragility(draftDefender)
+            : 1.0;
+
+    const dmgPostBonus = (baseDmg + additionalDmg) * bonusMult * weakMult;
+
+    const dmgPostReduction = Math.floor(
+        (dmgPostBonus - effectiveDef - flatDr) * drMult * frailMult,
     );
 
-    //     drMult *
-    // scorchAtkMult *
-    // scorchDefMult *
-    // frostAtkMult *
-    // frostDefMult,
+    const rimeConsumed =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? Math.min(dmgPostReduction, attacker.resources[effectKeys.RIME])
+            : 0;
+
+    const finalDmg = Math.max(1, dmgPostReduction - rimeConsumed);
 
     // Mitigation
     const domeConsumed =
@@ -549,6 +588,19 @@ export function dealDamage(
         },
     };
 
+    draftAttacker = {
+        ...draftAttacker,
+        resources: {
+            ...draftAttacker.resources,
+            [effectKeys.RIME]:
+                attacker.resources[effectKeys.RIME] - rimeConsumed,
+            [effectKeys.KINDLING]:
+                dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+                    ? 0
+                    : draftAttacker.resources[effectKeys.KINDLING],
+        },
+    };
+
     return {
         attacker: {
             ...draftAttacker,
@@ -564,20 +616,9 @@ export function takeDamage(entity, baseDmg, dmgType) {
         ...entity,
     };
 
-    // const scorchMult =
-    //     entity[effectKeys.ELEMENT] === elementalKeys.SCORCH
-    //         ? constants.SCORCH_PASSIVE_MULT
-    //         : 1.0;
-
-    // const frostMult =
-    //     entity[effectKeys.ELEMENT] === elementalKeys.FROST
-    //         ? constants.FROST_PASSIVE_MULT
-    //         : 1.0;
-
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
-            ? (entity.attributes.def.value) *
-              processEntityDefEffect(entity)
+            ? entity.attributes.def.value * processEntityDefEffect(entity)
             : 0;
 
     const drMult =
@@ -590,14 +631,15 @@ export function takeDamage(entity, baseDmg, dmgType) {
             ? -entity.sonority
             : 0;
 
+    const frailMult =
+        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
+            ? processEntityFragility(draftEntity)
+            : 1.0;
+
     const finalDmg = Math.max(
         1,
-        Math.floor(
-            (baseDmg - effectiveDef - flatDr) * drMult,
-        ),
+        Math.floor((baseDmg - effectiveDef - flatDr) * drMult * frailMult),
     );
-
-    // (baseDmg - effectiveDef - flatDr) * drMult * scorchMult * frostMult,
 
     // Mitigation
     const domeConsumed =
@@ -948,4 +990,156 @@ export function exitAllStates(entity) {
     };
 
     return draftEntity;
+}
+
+export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
+    let draftAgent = {
+        ...prev.entities[agentKey],
+    };
+    let draftNonAgent = {
+        ...prev.entities[nonAgentKey],
+    };
+
+    const isDefensive = actionsClass.defensiveActions.includes(action);
+    const isOffensive = actionsClass.offensiveActions.includes(action);
+
+    if (isDefensive) {
+        // Sonority
+        if (draftAgent.states[effectKeys.RESONANT]) {
+            const sonority = Math.min(
+                constants.SONORITY_HIGHER_LIMIT,
+                draftAgent.sonority + 1,
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                [effectKeys.SONORITY]: sonority,
+            };
+        }
+
+        // Overheat
+        if (draftAgent[effectKeys.OVERHEAT] > 0) {
+            const overheatLost = Math.min(
+                constants.NATURAL_OVERHEAT_LOSS,
+                draftAgent[effectKeys.OVERHEAT],
+            );
+
+            const newOverheat = draftAgent[effectKeys.OVERHEAT] - overheatLost;
+            const newDynamo = Math.min(
+                draftAgent[effectKeys.DYNAMO] + overheatLost,
+                constants.MAX_DYNAMO,
+            );
+            draftAgent = {
+                ...draftAgent,
+                [effectKeys.OVERHEAT]: newOverheat,
+                [effectKeys.DYNAMO]: newDynamo,
+            };
+        }
+
+        // Mycelium
+        if (draftAgent.resources[effectKeys.MYCELIUM] > 0) {
+            draftAgent = restoreResources(
+                draftAgent,
+                draftAgent.resources[effectKeys.MYCELIUM],
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.MYCELIUM]: 0,
+                },
+            };
+        }
+
+        // Rime
+        if (draftAgent.resources[effectKeys.RIME] > 0) {
+            const newCryo =
+                draftAgent.resources[effectKeys.CRYOGENESIS] +
+                draftAgent.resources[effectKeys.RIME];
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.RIME]: 0,
+                    [effectKeys.CRYOGENESIS]: newCryo,
+                },
+            };
+        }
+
+        // Incandescense
+        if (draftAgent.resources[effectKeys.INCANDESCENCE] > 0) {
+            draftAgent = takeDamage(
+                draftAgent,
+                draftAgent.resources[effectKeys.INCANDESCENCE],
+                dmgTypes.TRUE,
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.INCANDESCENCE]: 0,
+                },
+            };
+        }
+    }
+
+    if (isOffensive) {
+        // Sonority
+        if (draftAgent.states[effectKeys.RESONANT]) {
+            const sonority = Math.max(
+                constants.SONORITY_LOWER_LIMIT,
+                draftAgent.sonority - 1,
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                [effectKeys.SONORITY]: sonority,
+            };
+        }
+
+        // Cryo
+        if (draftAgent.resources[effectKeys.CRYOGENESIS] > 0) {
+            const newRime =
+                draftAgent.resources[effectKeys.CRYOGENESIS] +
+                draftAgent.resources[effectKeys.RIME];
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.RIME]: newRime,
+                    [effectKeys.CRYOGENESIS]: 0,
+                },
+            };
+        }
+
+        // Incandescense
+        if (draftAgent.resources[effectKeys.INCANDESCENCE] > 0) {
+            draftNonAgent = takeDamage(
+                draftNonAgent,
+                draftAgent.resources[effectKeys.INCANDESCENCE],
+                dmgTypes.TRUE,
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.INCANDESCENCE]: 0,
+                },
+            };
+        }
+    }
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: draftAgent,
+            [nonAgentKey]: draftNonAgent,
+        },
+    };
 }

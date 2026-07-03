@@ -6,11 +6,18 @@ import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
 import { constants, stackCounters } from "../utils/constants.js";
-import { sdmKeys, eyeKeys, effectKeys } from "../utils/enums.js";
+import {
+    sdmKeys,
+    eyeKeys,
+    effectKeys,
+    turnStatus,
+    entityKeys,
+} from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
+import SelenianTracker from "./SelenianTracker.jsx";
 
 function StatsPanel({
     game,
@@ -26,6 +33,12 @@ function StatsPanel({
     const resources = entity.resources;
 
     const isAngelView = states.ascendenceOfSpirit;
+
+    const isEntityTurn =
+        (entityKey === entityKeys.PLAYER_ONE &&
+            battleState === turnStatus.PLAYER_ONE_TURN) ||
+        (entityKey === entityKeys.PLAYER_TWO &&
+            battleState === turnStatus.PLAYER_TWO_TURN);
 
     const stateClassMap = {
         ascendenceOfSpirit: "state-ascendence",
@@ -83,6 +96,15 @@ function StatsPanel({
             className={`stats-panel-container ${statesClass}`}
             style={dynamicStyles}
         >
+            {entity.states[effectKeys.SELENIAN] && (
+                <SelenianTracker
+                    entity={entity}
+                    changeElement={(element) =>
+                        handleElementChange(entityKey, element)
+                    }
+                    clickable={isEntityTurn}
+                />
+            )}
             <StateBadges states={states} />
 
             {entity[effectKeys.TARNISHED_SIN] > 0 && (

@@ -97,6 +97,8 @@ export const actionKeys = Object.freeze({
     THE_WORD_MADE_FLESH: "theWordMadeFlesh",
 
     JUDGEMENT: "judgement",
+
+    MIRROR: "mirror",
 });
 
 export const effectKeys = Object.freeze({
@@ -140,7 +142,6 @@ export const effectKeys = Object.freeze({
     MAX_OVERHEAT: "maxOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
-    CRYOGENESIS: "cryogenesis",
     CUTOFF_WINGS: "cutoffWings",
     INSIGHT: "currInsight",
     MAX_INSIGHT: "maxInsight",
@@ -227,6 +228,15 @@ export const effectKeys = Object.freeze({
 
     MIRRORED_MOON: "mirrorMoon",
     MOONLIGHT: "moonlight",
+    ELEMENTAL_CRYSTALS: "elementalCrystals",
+    SELENIAN: "selenian",
+    REFLECTED_FIRMAMENT: "reflectedFirmament",
+
+    CRYOGENESIS: "cryogenesis",
+    RIME: "rime",
+    MYCELIUM: "mycelium",
+    KINDLING: "kindling",
+    INCANDESCENCE: "incandescence",
 });
 
 export const eyeKeys = Object.freeze({
@@ -236,7 +246,7 @@ export const eyeKeys = Object.freeze({
 });
 
 export const moonKeys = Object.freeze({
-    CLOUDED: 0,
+    HIDDEN: 0,
     WAXING: 1,
     WANING: 2,
 });

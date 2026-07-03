@@ -22,6 +22,8 @@ const STATE_MAPPINGS = [
     { key: "zenithOfMortality", label: "Zenith of Mortality" },
     { key: effectKeys.ABANDONED_BY_GRACE, label: "Abandoned by Grace" },
     { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
+
+    { key: effectKeys.SELENIAN, label: "Selenian" },
 ];
 
 function StateBadges({ states }) {

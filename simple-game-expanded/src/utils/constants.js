@@ -22,7 +22,6 @@ import {
     sdmKeys,
     entityKeys,
     mechanicKeys,
-    moonKeys,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -74,10 +73,6 @@ const MAX_DIVINE_SPARK = 100;
 
 const INSIGHT_TO_REV_FACTOR = 10;
 
-const NATURE_PASSIVE_MULT = 2;
-const FROST_PASSIVE_MULT = 0.5;
-const SCORCH_PASSIVE_MULT = 1.5;
-
 const FLAMES_ABSORPTION_MULTIPLIER = 1;
 const BENEDICTION_GEN = 2;
 
@@ -86,6 +81,11 @@ const STARDUST_RATE_CONVERSION = 3;
 
 const MAX_DYNAMO = 100;
 const STARTING_ENERGY = 1;
+
+const SCORCH_DMG_BONUS = 1.5;
+const SCORCH_FRAGILITY = 1.5;
+const FROST_DR = 0.5;
+const FROST_WEAKNESS = 0.5;
 
 const DISTRIBUTION_MODES = [
     "Random",
@@ -104,7 +104,11 @@ const freeResources = [
     effectKeys.MANA_OVERFLOW,
     effectKeys.SHACKLED_MANA,
 
+    effectKeys.RIME,
     effectKeys.CRYOGENESIS,
+    effectKeys.KINDLING,
+    effectKeys.INCANDESCENCE,
+    effectKeys.MYCELIUM,
 
     effectKeys.BLOOD_SACRIFICE,
 
@@ -151,9 +155,6 @@ export const constants = {
     VENTING_OVERHEAT_LOSS,
     MAX_ENLIT,
     INSIGHT_TO_REV_FACTOR,
-    SCORCH_PASSIVE_MULT,
-    FROST_PASSIVE_MULT,
-    NATURE_PASSIVE_MULT,
     BENEDICTION_GEN,
     FLAMES_ABSORPTION_MULTIPLIER,
     MAX_INSIGHT,
@@ -164,6 +165,11 @@ export const constants = {
     NATURAL_OVERHEAT_LOSS,
     MAX_DYNAMO,
     STARTING_ENERGY,
+
+    SCORCH_DMG_BONUS,
+    SCORCH_FRAGILITY,
+    FROST_DR,
+    FROST_WEAKNESS,
 };
 
 export const presetAi = {
@@ -471,9 +477,9 @@ export const stackCounters = {
     [effectKeys.CRYOGENESIS]: {
         label: "Cryogenesis",
         style: {
-            color: "#00e5ff",
-            borderColor: "#00e5ff",
-            backgroundColor: "rgba(0, 229, 255, 0.2)",
+            color: "#00b0ff",
+            borderColor: "#00b0ff",
+            backgroundColor: "rgba(0, 176, 255, 0.2)",
         },
     },
 
@@ -575,6 +581,42 @@ export const stackCounters = {
             backgroundColor: "rgba(255, 255, 255, 0.2)",
         },
     },
+
+    [effectKeys.RIME]: {
+        label: "Rime",
+        style: {
+            color: "#00e5ff",
+            borderColor: "#00e5ff",
+            backgroundColor: "rgba(0, 229, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.KINDLING]: {
+        label: "Kindling",
+        style: {
+            color: "#ff9100",
+            borderColor: "#ff9100",
+            backgroundColor: "rgba(255, 145, 0, 0.2)",
+        },
+    },
+
+    [effectKeys.INCANDESCENCE]: {
+        label: "Incandescence",
+        style: {
+            color: "#ff3d00",
+            borderColor: "#ff3d00",
+            backgroundColor: "rgba(255, 61, 0, 0.2)",
+        },
+    },
+
+    [effectKeys.MYCELIUM]: {
+        label: "Mycelium",
+        style: {
+            color: "#4caf50",
+            borderColor: "#4caf50",
+            backgroundColor: "rgba(76, 175, 80, 0.2)",
+        },
+    },
 };
 
 export const coloredStars = [
@@ -654,7 +696,6 @@ export const INITIAL_GAME_STATE = {
     starQueue: null,
     progressMode: false,
     [effectKeys.SEVERED_TIME]: false,
-    [effectKeys.MIRRORED_MOON]: moonKeys.CLOUDED,
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
         [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,

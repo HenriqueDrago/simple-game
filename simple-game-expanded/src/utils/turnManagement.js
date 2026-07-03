@@ -1,4 +1,4 @@
-import { constants, actionsClass, coloredStars } from "./constants.js";
+import { constants, coloredStars } from "./constants.js";
 import {
     consumeResources,
     exitAllStates,
@@ -21,6 +21,7 @@ import {
     dmgTypes,
     starfallPhases,
     moonKeys,
+    elementalKeys,
 } from "./enums.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
 
@@ -57,6 +58,8 @@ export function processUpkeep(prev) {
     // Cutoff Wings
     draftTarget = processEntityCutoffWings(draftTarget);
     draftNonTarget = processEntityCutoffWings(draftNonTarget);
+
+    console.log(prev[effectKeys.SEVERED_TIME]);
 
     let newEye = prev.eyeOfHeavens;
     if (!prev[effectKeys.SEVERED_TIME]) {
@@ -120,7 +123,7 @@ export function processUpkeep(prev) {
         if (draftTarget.resources.unrelentingShadows > 0) {
             draftTarget = restoreResources(
                 draftTarget,
-                draftTarget.resources.unrelentingShadows
+                draftTarget.resources.unrelentingShadows,
             );
 
             draftTarget = {
@@ -291,6 +294,9 @@ export function processUpkeep(prev) {
             };
         }
 
+        console.log("inpiration check")
+        console.log(draftTarget.resources[effectKeys.INSPIRATION])
+
         // Inspiration
         if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
             const missingEnlit =
@@ -453,51 +459,21 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                     },
                 };
             }
+
+            // Kindling
+            if (draftCurrActor.resources[effectKeys.KINDLING] > 0) {
+                draftCurrActor = takeDamage(
+                    draftCurrActor,
+                    draftCurrActor.resources[effectKeys.KINDLING],
+                    dmgTypes.PHYSICAL,
+                );
+            }
         }
 
         // Laser used
         draftCurrActor = {
             ...draftCurrActor,
             lasersUsedThisTurn: 0,
-        };
-    }
-
-    // Sonority
-    if (draftCurrActor.states.resonant) {
-        const newSonority = actionsClass.offensiveActions.includes(action)
-            ? Math.max(
-                  constants.SONORITY_LOWER_LIMIT,
-                  draftCurrActor.sonority - 1,
-              )
-            : actionsClass.defensiveActions.includes(action)
-              ? Math.min(
-                    constants.SONORITY_HIGHER_LIMIT,
-                    draftCurrActor.sonority + 1,
-                )
-              : draftCurrActor.sonority;
-
-        draftCurrActor = {
-            ...draftCurrActor,
-            sonority: newSonority,
-        };
-    }
-
-    // Overheat
-    if (actionsClass.defensiveActions.includes(action)) {
-        const overheatLost = Math.min(
-            constants.NATURAL_OVERHEAT_LOSS,
-            draftCurrActor[effectKeys.OVERHEAT],
-        );
-
-        const newOverheat = draftCurrActor[effectKeys.OVERHEAT] - overheatLost;
-        const newDynamo = Math.min(
-            draftCurrActor[effectKeys.DYNAMO] + overheatLost,
-            constants.MAX_DYNAMO,
-        );
-        draftCurrActor = {
-            ...draftCurrActor,
-            [effectKeys.OVERHEAT]: newOverheat,
-            [effectKeys.DYNAMO]: newDynamo,
         };
     }
 
@@ -515,19 +491,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             },
         };
     }
-
-    // Cryogenesis
-    const newCryogenesis = actionsClass.offensiveActions.includes(action)
-        ? 0
-        : draftCurrActor.resources.cryogenesis;
-
-    draftCurrActor = {
-        ...draftCurrActor,
-        resources: {
-            ...draftCurrActor.resources,
-            cryogenesis: newCryogenesis,
-        },
-    };
 
     // Death Logic
     draftCurrActor = processEntityDeathStates(draftCurrActor);
@@ -554,14 +517,15 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
         if (draftCurrActor.states[effectKeys.STARGAZER]) {
             nextStatus = turnStatus.STARS_TURN;
         } else if (
-            newGame.turnCount % 2 === 0 &&
-            newGame[effectKeys.MIRRORED_MOON] !== moonKeys.CLOUDED
+            newGame.whoStarts !== currActorKey &&
+            (draftCurrActor.states[effectKeys.SELENIAN] ||
+                draftNextActor.states[effectKeys.SELENIAN])
         ) {
             nextStatus = turnStatus.MOON_TURN;
         } else if (newGame.remainingArray > 0) {
             nextStatus = turnStatus.ARRAY_TURN;
         } else if (
-            newGame.turnCount % 2 === 0 &&
+            newGame.whoStarts !== currActorKey &&
             newGame.eyeOfHeavens !== eyeKeys.DORMANT
         ) {
             nextStatus = turnStatus.EMINENCE_TURN;
@@ -624,10 +588,190 @@ export function processMoonPhase(prev) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
 
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
+
+    if (prev.whoStarts === entityKeys.PLAYER_ONE) {
+        ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
+            playerOne,
+            playerTwo,
+        ));
+
+        ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
+            playerTwo,
+            playerOne,
+        ));
+    } else {
+        ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
+            playerTwo,
+            playerOne,
+        ));
+
+        ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
+            playerOne,
+            playerTwo,
+        ));
+    }
+
+    console.log(playerTwo);
+
     return {
         ...prev,
         status: turnStatus.TRANSITION,
         nextStatus: nextStatus,
+        entities: {
+            ...prev.entities,
+            [entityKeys.PLAYER_ONE]: playerOne,
+            [entityKeys.PLAYER_TWO]: playerTwo,
+        },
+    };
+}
+
+function auxiliarMoonPhase(target, nonTarget) {
+    let draftTarget = {
+        ...target,
+    };
+
+    let draftNonTarget = {
+        ...nonTarget,
+    };
+
+    // Helpers
+    const getRecipient = () => {
+        return draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]
+            ? draftNonTarget
+            : draftTarget;
+    };
+    const setRecipient = (changes) => {
+        if (draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]) {
+            draftNonTarget = {
+                ...draftNonTarget,
+                ...changes,
+            };
+        } else {
+            draftTarget = {
+                ...draftTarget,
+                ...changes,
+            };
+        }
+    };
+
+    const isWaxing = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WAXING;
+    const isWaning = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WANING;
+
+    const moonlight = draftTarget[effectKeys.MOONLIGHT];
+    const element = draftTarget[effectKeys.ELEMENTAL_CRYSTALS];
+
+    // No moon early return
+    if (draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.HIDDEN) {
+        return {
+            target: {
+                ...draftTarget,
+                [effectKeys.MIRRORED_MOON]: moonKeys.WAXING,
+                [effectKeys.MOONLIGHT]: draftTarget[effectKeys.MOONLIGHT] + 1,
+            },
+            nonTarget: draftNonTarget,
+        };
+    }
+
+    switch (element) {
+        case elementalKeys.FROST: {
+            // If waxing, gain cryogenesis
+            if (isWaxing) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.CRYOGENESIS]:
+                            getRecipient().resources[effectKeys.CRYOGENESIS] +
+                            moonlight,
+                    },
+                });
+            } else if (isWaning) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.RIME]:
+                            getRecipient().resources[effectKeys.RIME] +
+                            moonlight,
+                    },
+                });
+            }
+            break;
+        }
+
+        case elementalKeys.SCORCH: {
+            // If waxing, gain cryogenesis
+            if (isWaxing) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.INCANDESCENCE]:
+                            getRecipient().resources[effectKeys.INCANDESCENCE] +
+                            moonlight,
+                    },
+                });
+            } else if (isWaning) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.KINDLING]:
+                            getRecipient().resources[effectKeys.KINDLING] +
+                            moonlight,
+                    },
+                });
+            }
+            break;
+        }
+
+        case elementalKeys.NATURE: {
+            // If waxing, restore resources equal to moonlight
+            if (isWaxing) {
+                setRecipient({
+                    ...restoreResources(getRecipient(), moonlight),
+                });
+            } else if (isWaning) {
+                // if waning, consume resources equal to moonlight then gain mycelium equal to consumed
+                const { draftEntity, resourcesConsumed } = consumeResources(
+                    getRecipient(),
+                    moonlight,
+                    effectKeys.MIRRORED_MOON,
+                );
+                const newMycelium =
+                    draftEntity.resources[effectKeys.MYCELIUM] +
+                    resourcesConsumed.totalConsumption;
+
+                setRecipient({
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.MYCELIUM]: newMycelium,
+                    },
+                });
+            }
+            break;
+        }
+    }
+
+    const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
+
+    draftTarget = {
+        ...draftTarget,
+        [effectKeys.MIRRORED_MOON]: newMoon,
+    };
+
+    // Don't gain moonlight if no element
+    if (element !== elementalKeys.DULLED) {
+        const newMoonlight =
+            moonlight + (element === elementalKeys.NATURE ? 2 : 1);
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.MOONLIGHT]: newMoonlight,
+        };
+    }
+
+    return {
+        target: draftTarget,
+        nonTarget: draftNonTarget,
     };
 }
 
@@ -863,7 +1007,7 @@ export function processEminenceTurn(prev) {
         };
     } else {
         // Disables Severed Time if closing
-        severedTime = true;
+        severedTime = false;
     }
 
     // Switchs state
@@ -899,7 +1043,7 @@ export function processStarfallTurn(prev) {
 
     if (
         prev.turnCount % 2 === 0 &&
-        prev[effectKeys.MIRRORED_MOON] !== moonKeys.CLOUDED
+        prev[effectKeys.MIRRORED_MOON] !== moonKeys.HIDDEN
     ) {
         nextTurnStatus = turnStatus.MOON_TURN;
     } else if (prev.remainingArray > 0) {

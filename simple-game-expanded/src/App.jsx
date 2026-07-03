@@ -23,6 +23,7 @@ import {
     distributePoints,
     createBaseEntity,
     resetPlayerEntity,
+    processActionTypeUsed,
 } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
@@ -36,6 +37,7 @@ import {
     starfallPhases,
     effectKeys,
     progKeys,
+    elementalKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -49,7 +51,10 @@ function App() {
         try {
             const savedData = localStorage.getItem("gameCheckpoint");
             if (savedData) {
-                return JSON.parse(savedData);
+                return {
+                    ...INITIAL_GAME_STATE,
+                    ...JSON.parse(savedData),
+                };
             }
         } catch (error) {
             console.error("Failed to load saved game data:", error);
@@ -95,7 +100,14 @@ function App() {
 
             const simulationResult = sim(context);
 
-            return commitTurn(simulationResult, agentKey, nonAgentKey, action);
+            const newGameState = processActionTypeUsed(
+                simulationResult,
+                agentKey,
+                nonAgentKey,
+                action,
+            );
+
+            return commitTurn(newGameState, agentKey, nonAgentKey, action);
         });
     }
 
@@ -173,6 +185,7 @@ function App() {
                 turnCount: 0,
                 eyeOfHeavens: eyeKeys.DORMANT,
                 starQueue: null,
+                [effectKeys.SEVERED_TIME]: false,
                 entities: {
                     [entityKeys.PLAYER_ONE]: playerOne,
                     [entityKeys.PLAYER_TWO]: playerTwo,
@@ -362,13 +375,22 @@ function App() {
 
     function handleElementChange(entityKey, element) {
         setGame((prev) => {
+            let newElement =
+                prev.entities[entityKey][effectKeys.ELEMENTAL_CRYSTALS];
+
+            if (newElement !== element) {
+                newElement = element;
+            } else {
+                newElement = elementalKeys.DULLED;
+            }
+
             return {
                 ...prev,
                 entities: {
                     ...prev.entities,
                     [entityKey]: {
                         ...prev.entities[entityKey],
-                        [effectKeys.ELEMENT]: element,
+                        [effectKeys.ELEMENTAL_CRYSTALS]: newElement,
                     },
                 },
             };

@@ -1,0 +1,158 @@
+/* Core Layout Container */
+.selenian-grid-container {
+  display: grid;
+  grid-template-columns: 40px 1fr max-content; 
+  align-items: flex-end;         
+  row-gap: 10px;                 
+  column-gap: 16px;              
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0px 5px;
+  background-color: transparent; 
+}
+
+/* Graphic Track Center Alignment Axis */
+.graphic-column-cell {
+  display: flex;
+  justify-content: center;       
+  align-items: flex-end;         
+  width: 40px;
+  height: 40px;
+}
+
+/* Shared structural baseline style for tracking labels */
+.panel-text-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #4a4a5a;
+  line-height: 1;
+  justify-self: start;           
+  width: max-content;
+  transition: color 0.3s ease, border-color 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* --- Dynamic Label Color States --- */
+.label-default {
+  color: #fbf7eb;
+  border-bottom-color: #4a4a5a;
+}
+
+.label-green {
+  color: var(--nature-color);
+  border-bottom-color: var(--nature-color);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--nature-color) 40%, transparent);
+}
+
+.label-cyan {
+  color: var(--frost-color);
+  border-bottom-color: var(--frost-color);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--frost-color) 40%, transparent);
+}
+
+.label-red {
+  color: var(--scorch-color);
+  border-bottom-color: var(--scorch-color);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--scorch-color) 40%, transparent);
+}
+
+/* Far Right Moonlight Numeric Display */
+.moonlight-panel-value {
+  color: #fbf7eb;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(251, 247, 235, 0.6);
+  padding-bottom: 4px;
+  border-bottom: 2px solid #4a4a5a;
+  line-height: 1;
+  min-width: 24px;
+  text-align: center;
+  justify-self: end;
+}
+
+.grid-spacer-cell {
+  width: 0;
+  height: 0;
+}
+
+/* ==========================================================================
+   MODULE A: MOON GRAPHIC ENGINE
+   ========================================================================== */
+.moon-sphere {
+  position: relative;
+  width: 32px;                   
+  height: 32px;                  
+  border-radius: 50%;
+  background-color: #fbf7eb;
+  box-shadow: 0 0 16px 4px rgba(251, 247, 235, 0.4);
+  overflow: hidden;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.moon-sphere::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #111115;     
+  transition: transform 0.4s ease, left 0.4s ease;
+}
+
+.moon-sphere.waxing::after  { left: 0; transform: translateX(-45%); }
+.moon-sphere.waning::after  { left: 0; transform: translateX(45%); }
+.moon-sphere.clouded        { background-color: #4a4a5a; box-shadow: none; }
+.moon-sphere.clouded::after { left: 0; transform: translateX(0); opacity: 0.2; }
+
+/* ==========================================================================
+   MODULE B: CRYSTALS GRAPHIC ENGINE
+   ========================================================================== */
+.canvas-container {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.box {
+  position: absolute;
+  width: 13px;                   
+  height: 13px;                  
+  transform: rotate(45deg);
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+}
+
+/* Locks interactions and kills hovers completely when it's not your turn.
+   Because we aren't using HTML :disabled, the browser cannot apply gray overrides.
+*/
+.interaction-disabled {
+  cursor: default !important;
+  pointer-events: none !important; 
+}
+
+/* Inactive crystal base color configurations */
+.box-green { background-color: color-mix(in srgb, var(--nature-color) 25%, #050505); top: 2px;  left: 11px; }
+.box-cyan  { background-color: color-mix(in srgb, var(--frost-color) 25%, #050505);  top: 16px; left: -1px; }
+.box-red   { background-color: color-mix(in srgb, var(--scorch-color) 25%, #050505); top: 16px; left: 23px; }
+
+/* Interactive Hovers (Naturally ignored when .interaction-disabled kills pointer events) */
+.box-green:hover { background-color: color-mix(in srgb, var(--nature-color) 45%, #050505); }
+.box-cyan:hover  { background-color: color-mix(in srgb, var(--frost-color) 45%, #050505); }
+.box-red:hover   { background-color: color-mix(in srgb, var(--scorch-color) 45%, #050505); }
+
+/* Active Configurations */
+.box-green.active { background-color: var(--nature-color); box-shadow: 0 0 6px var(--nature-color); }
+.box-cyan.active  { background-color: var(--frost-color);  box-shadow: 0 0 6px var(--frost-color);  }
+.box-red.active   { background-color: var(--scorch-color); box-shadow: 0 0 6px var(--scorch-color); }
+
+/* Active Hover Adjustments */
+.box-green.active:hover { background-color: color-mix(in srgb, var(--nature-color) 85%, #ffffff); box-shadow: 0 0 10px var(--nature-color); }
+.box-cyan.active:hover  { background-color: color-mix(in srgb, var(--frost-color) 85%, #ffffff);  box-shadow: 0 0 10px var(--frost-color);  }
+.box-red.active:hover   { background-color: color-mix(in srgb, var(--scorch-color) 85%, #ffffff); box-shadow: 0 0 10px var(--scorch-color); }
