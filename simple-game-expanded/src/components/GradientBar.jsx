@@ -20,7 +20,7 @@ function GradientBar({
                 <span>{label}</span>
                 <span>
                     {showPercent
-                        ? `${gradientPercentage}%`
+                        ? `${Math.round(gradientPercentage * 100) / 100}%`
                         : `${currResource} / ${maxResource}`}
                 </span>
             </div>

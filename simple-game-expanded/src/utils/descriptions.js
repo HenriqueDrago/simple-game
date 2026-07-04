@@ -59,7 +59,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "BLACK MAYHEM",
         type: entryTypes.ACTION,
         description:
-            "Burns the target's RESOURCES equal to the user's SHADOWFLAME. Grants CINDERS to the target equal to the RESOURCES burnt. When burning CINDERS, gains LINGERING EMBER on self instead. Cannot burn SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS.",
+            "Burns the target's RESOURCES equal to the user's SHADOWFLAME. Grants CINDERS to the target equal to twice the RESOURCES burnt. When burning CINDERS, does not grant CINDERS. Cannot burn SHADOWFLAME, LINGERING EMBER and UNRELENTING SHADOWS.",
     },
 
     [actionKeys.SHADOW_MANTLE]: {
@@ -754,13 +754,6 @@ export const PALADIN_DESCRIPTIONS = {
         name: "BURDEN OF STIGMA",
         type: entryTypes.STATE,
         description: "Cannot act. Removed at turn end.",
-    },
-
-    [effectKeys.REMNANTS_OF_DIVINITY]: {
-        name: "REMNANTS OF DIVINITY",
-        type: entryTypes.STATE,
-        description:
-            "At turn start, loses this state and gains BURDEN OF STIGMA.",
     },
 
     [effectKeys.SEVERED_TIME]: {

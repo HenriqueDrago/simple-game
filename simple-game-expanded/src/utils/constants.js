@@ -54,7 +54,7 @@ const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 2;
+const HALO_GEN_MULT = 3;
 
 const SAC_HP_CONSUMPTION = 0.5;
 
@@ -87,6 +87,8 @@ const SCORCH_FRAGILITY = 1.5;
 const FROST_DR = 0.5;
 const FROST_WEAKNESS = 0.5;
 
+const RESOURCES_CINDERS_MULT = 2;
+
 const DISTRIBUTION_MODES = [
     "Random",
     "Randomize Enemy",
@@ -94,7 +96,7 @@ const DISTRIBUTION_MODES = [
     "Custom",
 ];
 
-const freeResources = [
+export const freeResources = [
     effectKeys.SHADOWFLAME,
     effectKeys.UNRELENTING_SHADOWS,
     effectKeys.LINGERING_EMBER,
@@ -118,10 +120,11 @@ const freeResources = [
     effectKeys.RADIANCE,
     effectKeys.HALO,
     effectKeys.INSPIRATION,
+    effectKeys.AFTERGLOW,
     effectKeys.SACRED_FLAMES,
 ];
 
-const limitedResources = [
+export const limitedResources = [
     effectKeys.MANA,
     effectKeys.HEALTH,
     effectKeys.INSIGHT,
@@ -170,6 +173,8 @@ export const constants = {
     SCORCH_FRAGILITY,
     FROST_DR,
     FROST_WEAKNESS,
+
+    RESOURCES_CINDERS_MULT,
 };
 
 export const presetAi = {
@@ -449,10 +454,26 @@ const transformativeActions = [
     actionKeys.CHART,
 ];
 
+const actsOfBenediction = [
+    actionKeys.BAPTISM_OF_THE_FLAMES,
+    actionKeys.CELESTIAL_SCALE,
+    actionKeys.HYMNS_OF_SANCTIFICATION,
+    actionKeys.GIFT_OF_APOTHEOSIS,
+];
+
+const actsOfMalediction = [
+    actionKeys.SERAPH_OF_CONDEMNATION,
+    actionKeys.GLIMPSE_OF_PANDEMONIUM,
+    actionKeys.EDICT_OF_SEVERANCE,
+    actionKeys.THE_WORD_MADE_FLESH,
+];
+
 export const actionsClass = {
     offensiveActions,
     defensiveActions,
     transformativeActions,
+    actsOfBenediction,
+    actsOfMalediction,
 };
 
 export const stackCounters = {
@@ -615,6 +636,15 @@ export const stackCounters = {
             color: "#4caf50",
             borderColor: "#4caf50",
             backgroundColor: "rgba(76, 175, 80, 0.2)",
+        },
+    },
+
+    [effectKeys.AFTERGLOW]: {
+        label: "Afterglow",
+        style: {
+            color: "white",
+            borderColor: "white",
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
         },
     },
 };

@@ -9,15 +9,14 @@ import {
     loseMana,
     gainInsight,
     gainHp,
-    applyBenedictionMalediction,
     exitAllStates,
+    processExitAscendence,
 } from "./entities.js";
 import {
     actionKeys,
     dmgTypes,
     effectKeys,
     eyeKeys,
-    angelActKeys,
     moonKeys,
     elementalKeys,
 } from "./enums.js";
@@ -94,10 +93,7 @@ function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newHalo =
         agent.resources.halo +
-        Math.ceil(
-            (agent.attributes.def.value) *
-                constants.HALO_GEN_MULT,
-        );
+        Math.ceil(agent.attributes.def.value * constants.HALO_GEN_MULT);
 
     return {
         ...prev,
@@ -244,6 +240,10 @@ function simulateHeal({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.POISON]: 0,
+                }
             },
         },
     };
@@ -454,7 +454,7 @@ function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     };
 }
 
-function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateBlackMayhem({ prev, agent, nonAgent, nonAgentKey }) {
     const { draftEntity, resourcesConsumed } = consumeResources(
         { ...nonAgent },
         agent.resources.shadowflame,
@@ -469,9 +469,7 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         resourcesConsumed.totalConsumption - (resourcesConsumed.cinders || 0);
 
     const newNonAgentCinders =
-        draftNonAgent.resources.cinders + burntNonCindersNonRad;
-    const newAgentLE =
-        agent.resources.lingeringEmber + (resourcesConsumed.cinders || 0);
+        draftNonAgent.resources.cinders + burntNonCindersNonRad * constants.RESOURCES_CINDERS_MULT;
 
     return {
         ...prev,
@@ -482,13 +480,6 @@ function simulateBlackMayhem({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 resources: {
                     ...draftNonAgent.resources,
                     cinders: newNonAgentCinders,
-                },
-            },
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    lingeringEmber: newAgentLE,
                 },
             },
         },
@@ -752,12 +743,6 @@ function simulateSeraphOfCondemnation({
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.MALEDICTION,
-    );
-
     const newSin = Math.min(
         constants.MAX_TARNISHED_SIN,
         nonAgent[effectKeys.TARNISHED_SIN] + agent[effectKeys.REVELATION],
@@ -782,12 +767,6 @@ function simulateScale({ prev, agent, agentKey }) {
     let draftAgent = {
         ...agent,
     };
-
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.BENEDICTION,
-    );
 
     const totalKnowledge =
         agent[effectKeys.ENLIGHTENMENT] + agent[effectKeys.INSIGHT];
@@ -821,12 +800,6 @@ function simulateBaptismOfTheFlames({
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.BENEDICTION,
-    );
-
     const newFlames =
         nonAgent.resources[effectKeys.SACRED_FLAMES] +
         agent[effectKeys.REVELATION];
@@ -854,12 +827,6 @@ function simulateHymns({ prev, agent, agentKey }) {
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.BENEDICTION,
-    );
-
     const { draftEntity, resourcesConsumed } = consumeResources(
         draftAgent,
         Infinity,
@@ -884,22 +851,17 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.MALEDICTION,
-    );
-
     let draftNonAgent = {
         ...nonAgent,
     };
 
     if (draftAgent.resources[effectKeys.SACRED_FLAMES] > 0) {
-        const { draftEntity } = consumeResources(
+        const { draftEntity, resourcesConsumed } = consumeResources(
             draftAgent,
             draftAgent.resources[effectKeys.SACRED_FLAMES],
             effectKeys.SACRED_FLAMES,
         );
+
         draftAgent = {
             ...draftEntity,
             resources: {
@@ -907,10 +869,12 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 [effectKeys.SACRED_FLAMES]: 0,
             },
         };
+
+        draftAgent = restoreResources(draftAgent, resourcesConsumed.totalConsumption);
     }
 
     if (draftNonAgent.resources[effectKeys.SACRED_FLAMES] > 0) {
-        const { draftEntity } = consumeResources(
+        const { draftEntity, resourcesConsumed } = consumeResources(
             draftNonAgent,
             draftNonAgent.resources[effectKeys.SACRED_FLAMES],
             effectKeys.SACRED_FLAMES,
@@ -922,6 +886,8 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 [effectKeys.SACRED_FLAMES]: 0,
             },
         };
+
+        draftNonAgent = restoreResources(draftNonAgent, resourcesConsumed.totalConsumption);
     }
 
     return {
@@ -943,12 +909,6 @@ function simulateEdict({ prev, agent, agentKey }) {
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.MALEDICTION,
-    );
-
     return {
         ...prev,
         [effectKeys.SEVERED_TIME]: true,
@@ -968,39 +928,25 @@ function simulateGiftOfApotheosis({
     nonAgent,
     nonAgentKey,
 }) {
-    if (nonAgent.states.ascendenceOfSpirit) {
+    if (
+        nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
+        nonAgent.states[effectKeys.ZENITH_OF_MORTALITY] ||
+        nonAgent.states[effectKeys.CUTOFF_WINGS]
+    ) {
         return prev;
     }
-
-    let draftNonAgent = {
-        ...nonAgent,
-    };
-
-    draftNonAgent = applyBenedictionMalediction(
-        draftNonAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.BENEDICTION,
-    );
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...draftNonAgent,
-                states: {
-                    ...draftNonAgent.states,
-                    [effectKeys.BURDEN_OF_STIGMA]: true,
-                },
-                controller: agent.controller,
-                statDistributionMode: agent.statDistributionMode,
-                unspentPoints: agent.unspentPoints,
+                ...agent,
+                [effectKeys.TARNISHED_SIN]: 0,
             },
             [nonAgentKey]: {
-                ...agent,
-                controller: nonAgent.controller,
-                statDistributionMode: nonAgent.statDistributionMode,
-                unspentPoints: nonAgent.unspentPoints,
+                ...nonAgent,
+                [effectKeys.DIVINE_SPARK]: 100,
             },
         },
     };
@@ -1017,12 +963,6 @@ function simulateWordMadeFlesh({
         ...agent,
     };
 
-    draftAgent = applyBenedictionMalediction(
-        draftAgent,
-        prev[effectKeys.EYE_OF_HEAVENS],
-        angelActKeys.MALEDICTION,
-    );
-
     const { draftEntity, resourcesConsumed } = consumeResources(
         draftAgent,
         Infinity,
@@ -1031,19 +971,9 @@ function simulateWordMadeFlesh({
 
     draftAgent = {
         ...draftEntity,
-        currHp: 1,
-        maxHp: 1,
-        states: {
-            ...draftEntity.states,
-            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-            [effectKeys.CUTOFF_WINGS]: true,
-        },
-    };
+    }
 
-    draftAgent = restoreResources(
-        draftAgent,
-        resourcesConsumed.totalConsumption,
-    );
+    draftAgent = processExitAscendence(draftAgent);
 
     return {
         ...prev,
@@ -1051,6 +981,10 @@ function simulateWordMadeFlesh({
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.AFTERGLOW]: resourcesConsumed.totalConsumption,
+                },
             },
             [nonAgentKey]: {
                 ...nonAgent,
@@ -1088,6 +1022,7 @@ function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             },
             [nonAgentKey]: {
                 ...draftNonAgent,
+                [effectKeys.TARNISHED_SIN]: 0,
             },
         },
     };
@@ -1105,10 +1040,10 @@ function simulateAlign({ prev, agent, agentKey }) {
                 states: {
                     ...agent.states,
                     [effectKeys.SELENIAN]: true,
-                }
-            }
-        }
-    }
+                },
+            },
+        },
+    };
 }
 
 function simulateMirror({ prev, agent, agentKey }) {
@@ -1121,9 +1056,8 @@ function simulateMirror({ prev, agent, agentKey }) {
                 states: {
                     ...agent.states,
                     [effectKeys.REFLECTED_FIRMAMENT]: true,
-                }
-            }
-        }
-    }
+                },
+            },
+        },
+    };
 }
-

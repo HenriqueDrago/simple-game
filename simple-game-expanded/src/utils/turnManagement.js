@@ -2,8 +2,8 @@ import { constants, coloredStars } from "./constants.js";
 import {
     consumeResources,
     exitAllStates,
-    gainEnlit,
     gainHp,
+    gainInsight,
     gainMana,
     isEntityDead,
     loseMana,
@@ -63,18 +63,6 @@ export function processUpkeep(prev) {
 
     let newEye = prev.eyeOfHeavens;
     if (!prev[effectKeys.SEVERED_TIME]) {
-        // Remnants
-        if (draftTarget.states[effectKeys.REMNANTS_OF_DIVINITY]) {
-            draftTarget = {
-                ...draftTarget,
-                states: {
-                    ...draftTarget.states,
-                    [effectKeys.REMNANTS_OF_DIVINITY]: false,
-                    [effectKeys.BURDEN_OF_STIGMA]: true,
-                },
-            };
-        }
-
         // Stardust
         if (draftTarget.resources[effectKeys.STARDUST] > 0) {
             const newStardust =
@@ -272,16 +260,39 @@ export function processUpkeep(prev) {
 
         // Sacred Flames
         if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
+            let remainingFlames =
+                draftTarget.resources[effectKeys.SACRED_FLAMES];
+
+            const sparkConsumed = Math.min(
+                remainingFlames,
+                draftTarget[effectKeys.DIVINE_SPARK],
+            );
+            remainingFlames -= sparkConsumed;
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.DIVINE_SPARK]:
+                    draftTarget[effectKeys.DIVINE_SPARK] - sparkConsumed,
+            };
+
+            const enlitConsumed = Math.min(
+                remainingFlames,
+                draftTarget[effectKeys.ENLIGHTENMENT],
+            );
+            remainingFlames -= enlitConsumed;
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.ENLIGHTENMENT]:
+                    draftTarget[effectKeys.ENLIGHTENMENT] - enlitConsumed,
+            };
+
             const missingHp =
                 draftTarget[effectKeys.MAX_HEALTH] -
                 draftTarget[effectKeys.HEALTH];
 
-            const hpRestored = Math.min(
-                missingHp,
-                draftTarget.resources[effectKeys.SACRED_FLAMES],
-            );
-            const newFlames =
-                draftTarget.resources[effectKeys.SACRED_FLAMES] - hpRestored;
+            const hpRestored = Math.min(missingHp, remainingFlames);
+            const newFlames = remainingFlames - hpRestored;
 
             draftTarget = gainHp(draftTarget, hpRestored);
 
@@ -294,23 +305,20 @@ export function processUpkeep(prev) {
             };
         }
 
-        console.log("inpiration check")
-        console.log(draftTarget.resources[effectKeys.INSPIRATION])
-
         // Inspiration
         if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
-            const missingEnlit =
-                draftTarget[effectKeys.MAX_ENLIGHTENMENT] -
-                draftTarget[effectKeys.ENLIGHTENMENT];
+            const missingInsight =
+                draftTarget[effectKeys.MAX_INSIGHT] -
+                draftTarget[effectKeys.INSIGHT];
 
-            const enlitRestored = Math.min(
-                missingEnlit,
+            const insightRestored = Math.min(
+                missingInsight,
                 draftTarget.resources[effectKeys.INSPIRATION],
             );
             const newInspiration =
-                draftTarget.resources[effectKeys.INSPIRATION] - enlitRestored;
+                draftTarget.resources[effectKeys.INSPIRATION] - insightRestored;
 
-            draftTarget = gainEnlit(draftTarget, enlitRestored);
+            draftTarget = gainInsight(draftTarget, insightRestored);
 
             draftTarget = {
                 ...draftTarget,
@@ -931,6 +939,8 @@ export function processEminenceTurn(prev) {
                         [effectKeys.ANOINTED_PROXY]: true,
                     },
                 };
+
+                nextStatus = turnStatus.UPKEEP_PLAYER_TWO;
             }
         } else {
             // Chooses a proxy
@@ -941,6 +951,8 @@ export function processEminenceTurn(prev) {
                     [effectKeys.ANOINTED_PROXY]: true,
                 },
             };
+
+            nextStatus = turnStatus.UPKEEP_PLAYER_ONE;
         }
 
         playerOne = processEntityDeathStates(playerOne);

@@ -295,11 +295,11 @@ export const getNormalActions = (
             key: actionKeys.AEGIS,
             label: "Aegis",
             disabled:
-                progMode &&
+                (progMode &&
                 !(
                     progStatus[aiKeys.PALADIN] === progKeys.DEFEATED ||
                     progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN
-                ),
+                )) || currEntity.states[effectKeys.CUTOFF_WINGS],
         },
     ];
 };

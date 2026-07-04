@@ -140,7 +140,6 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin: 8px 0;
 }
 
 .energy-line-row {
@@ -150,7 +149,6 @@
     padding: 6px 0;
     border-bottom: 2px solid transparent;
     border-image: linear-gradient(to right, lime, yellow) 1;
-    margin-bottom: 8px;
 }
 
 .energy-line-label {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
 import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
-import { simpleAI } from "./utils/aiControllers.js";
+import { centralAIManagement, simpleAI } from "./utils/aiControllers.js";
 import {
     CHECKPOINT_STATES,
     constants,
@@ -33,7 +33,6 @@ import {
     sdmKeys,
     whoStartsKeys,
     eyeKeys,
-    actionKeys,
     starfallPhases,
     effectKeys,
     progKeys,
@@ -467,6 +466,8 @@ function App() {
     }
 
     // Efeitos
+
+    // AI turn
     useEffect(() => {
         const activeKey =
             game.status === turnStatus.PLAYER_ONE_TURN
@@ -486,7 +487,7 @@ function App() {
 
         if (agent.states.burdenOfStigma) {
             const timer = setTimeout(
-                () => handleAction(actionKeys.WAIT, agentKey, nonAgentKey),
+                () => handleAction(null, agentKey, nonAgentKey),
                 1000,
             );
 
@@ -514,7 +515,7 @@ function App() {
                 };
 
                 const executeAI = presetAi[agent.controller].caller || simpleAI;
-                executeAI(context);
+                centralAIManagement(context, executeAI);
             };
 
             const timer = setTimeout(triggerAI, 1000);

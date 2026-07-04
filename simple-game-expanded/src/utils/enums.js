@@ -214,7 +214,7 @@ export const effectKeys = Object.freeze({
     INSPIRATION: "inspiration",
 
     SEVERED_TIME: "severedTime",
-    REMNANTS_OF_DIVINITY: "remnantsOfDivinity",
+    AFTERGLOW: "afterglow",
     DIVINE_SPARK: "currDivineSpark",
     MAX_DIVINE_SPARK: "maxDivineSpark",
 
@@ -311,10 +311,4 @@ export const mechanicKeys = Object.freeze({
     ACTS_OF_MALEDICTION: "actsOfMalediction",
 
     MOON_PHASE: "moonPhase",
-});
-
-export const angelActKeys = Object.freeze({
-    BENEDICTION: 2,
-    MALEDICTION: 1,
-    NONE: 0,
 });
