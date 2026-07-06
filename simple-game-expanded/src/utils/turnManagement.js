@@ -7,7 +7,6 @@ import {
     gainMana,
     isEntityDead,
     loseMana,
-    processEntityCutoffWings,
     processEntityDeathStates,
     restoreResources,
     takeDamage,
@@ -54,10 +53,6 @@ export function processUpkeep(prev) {
     let draftNonTarget = {
         ...prev.entities[nonTargetKey],
     };
-
-    // Cutoff Wings
-    draftTarget = processEntityCutoffWings(draftTarget);
-    draftNonTarget = processEntityCutoffWings(draftNonTarget);
 
     console.log(prev[effectKeys.SEVERED_TIME]);
 
@@ -363,6 +358,28 @@ export function processUpkeep(prev) {
                 newEye = eyeKeys.CLOSED;
             }
         }
+
+        // Burden
+        if (draftTarget[effectKeys.BURDEN_OF_STIGMA] > 0) {
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.BURDEN_OF_STIGMA]:
+                    draftTarget[effectKeys.BURDEN_OF_STIGMA] - 1,
+            };
+        }
+
+        // States cleared at turn start
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                guarding: false,
+                sacrificial: false,
+                radiant: false,
+                darkEmbrace: false,
+                dimmingDarkness: false,
+            },
+        };
     }
 
     // Death logic
@@ -385,15 +402,6 @@ export function processUpkeep(prev) {
         nextStatus,
     );
 
-    const draftTargetStates = {
-        ...draftTarget.states,
-        guarding: false,
-        sacrificial: false,
-        radiant: false,
-        darkEmbrace: false,
-        dimmingDarkness: false,
-    };
-
     return {
         ...prev,
         status: nextStatus,
@@ -407,7 +415,6 @@ export function processUpkeep(prev) {
                 resources: {
                     ...draftTarget.resources,
                 },
-                states: draftTargetStates,
             },
             [nonTargetKey]: {
                 ...draftNonTarget,
@@ -425,7 +432,8 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
             // Mana Overflow
             if (
                 draftCurrActor.resources.manaOverflow > 0 &&
-                !draftCurrActor.states.dimmingDarkness
+                !draftCurrActor.states.dimmingDarkness &&
+                newGame.remainingArray <= 0
             ) {
                 draftCurrActor = takeDamage(
                     draftCurrActor,
@@ -453,17 +461,6 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                         ...draftCurrActor.stars,
                         [effectKeys.WHITE_STAR]: newWhite,
                         [effectKeys.GRAY_STAR]: 0,
-                    },
-                };
-            }
-
-            // Burden
-            if (draftCurrActor.states.burdenOfStigma) {
-                draftCurrActor = {
-                    ...draftCurrActor,
-                    states: {
-                        ...draftCurrActor.states,
-                        burdenOfStigma: false,
                     },
                 };
             }
@@ -592,7 +589,10 @@ export function processMoonPhase(prev) {
 
     if (prev.remainingArray > 0) {
         nextStatus = turnStatus.ARRAY_TURN;
-    } else if (prev.eyeOfHeavens !== eyeKeys.DORMANT) {
+    } else if (
+        prev.whoStarts !== prev.lastPlayerTurn &&
+        prev.eyeOfHeavens !== eyeKeys.DORMANT
+    ) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
 
@@ -603,25 +603,27 @@ export function processMoonPhase(prev) {
         ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
             playerOne,
             playerTwo,
+            prev[effectKeys.SEVERED_TIME],
         ));
 
         ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
             playerTwo,
             playerOne,
+            prev[effectKeys.SEVERED_TIME],
         ));
     } else {
         ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
             playerTwo,
             playerOne,
+            prev[effectKeys.SEVERED_TIME],
         ));
 
         ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
             playerOne,
             playerTwo,
+            prev[effectKeys.SEVERED_TIME],
         ));
     }
-
-    console.log(playerTwo);
 
     return {
         ...prev,
@@ -635,7 +637,7 @@ export function processMoonPhase(prev) {
     };
 }
 
-function auxiliarMoonPhase(target, nonTarget) {
+function auxiliarMoonPhase(target, nonTarget, severedTime) {
     let draftTarget = {
         ...target,
     };
@@ -760,12 +762,15 @@ function auxiliarMoonPhase(target, nonTarget) {
         }
     }
 
-    const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
+    // Changes moon if time is not severed
+    if (!severedTime) {
+        const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
 
-    draftTarget = {
-        ...draftTarget,
-        [effectKeys.MIRRORED_MOON]: newMoon,
-    };
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.MIRRORED_MOON]: newMoon,
+        };
+    }
 
     // Don't gain moonlight if no element
     if (element !== elementalKeys.DULLED) {
@@ -776,6 +781,15 @@ function auxiliarMoonPhase(target, nonTarget) {
             [effectKeys.MOONLIGHT]: newMoonlight,
         };
     }
+
+    // Disables reflected firmament
+    draftTarget = {
+        ...draftTarget,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.REFLECTED_FIRMAMENT]: false,
+        },
+    };
 
     return {
         target: draftTarget,
@@ -789,7 +803,10 @@ export function processArrayTurn(prev) {
             ? turnStatus.UPKEEP_PLAYER_TWO
             : turnStatus.UPKEEP_PLAYER_ONE;
 
-    if (prev.eyeOfHeavens !== eyeKeys.DORMANT) {
+    if (
+        prev.whoStarts !== prev.lastPlayerTurn &&
+        prev.eyeOfHeavens !== eyeKeys.DORMANT
+    ) {
         nextStatus = turnStatus.EMINENCE_TURN;
     }
 
@@ -804,7 +821,7 @@ export function processArrayTurn(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    const newArray = prev[effectKeys.SEVERED_TIME]
+    const newArray = !prev[effectKeys.SEVERED_TIME]
         ? prev.remainingArray - 1
         : prev.remainingArray;
 
@@ -1054,14 +1071,14 @@ export function processStarfallTurn(prev) {
             : turnStatus.UPKEEP_PLAYER_ONE;
 
     if (
-        prev.turnCount % 2 === 0 &&
+        prev.whoStarts !== prev.lastPlayerTurn &&
         prev[effectKeys.MIRRORED_MOON] !== moonKeys.HIDDEN
     ) {
         nextTurnStatus = turnStatus.MOON_TURN;
     } else if (prev.remainingArray > 0) {
         nextTurnStatus = turnStatus.ARRAY_TURN;
     } else if (
-        prev.turnCount % 2 === 0 &&
+        prev.whoStarts !== prev.lastPlayerTurn &&
         prev.eyeOfHeavens !== eyeKeys.DORMANT
     ) {
         nextTurnStatus = turnStatus.EMINENCE_TURN;

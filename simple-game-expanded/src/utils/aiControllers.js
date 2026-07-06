@@ -1,6 +1,6 @@
 import { constants } from "./constants.js";
 import { simulators } from "./simulators.js";
-import { consumeResources, restoreResources } from "./entities.js";
+import { consumeResources, isEntityDead, restoreResources } from "./entities.js";
 import { actionKeys, effectKeys } from "./enums.js";
 
 // Auxiliary Functions
@@ -24,7 +24,15 @@ function isEntityEffectivellyDead(entity) {
         );
     }
 
-    return entity[effectKeys.HEALTH] <= 0;
+    return (
+        (entity[effectKeys.HEALTH] <= 0 &&
+            entity[effectKeys.BURDEN_OF_STIGMA] <= 0) ||
+        entity[effectKeys.TARNISHED_SIN] >= 100
+    );
+}
+
+function isEntityTrulyDead(entity) {
+    return isEntityDead(entity);
 }
 
 // Central router
@@ -47,12 +55,6 @@ export function centralAIManagement(context, defaultAI) {
     // Use Meltdown if on Overload
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         handleAction(actionKeys.MELTDOWN, agentKey, nonAgentKey);
-        return;
-    }
-
-    // Use heal if poisoned
-    if (agent.resources[effectKeys.POISON] > 0) {
-        handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
         return;
     }
 
@@ -142,17 +144,24 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const { agentKey, nonAgentKey, handleAction } = context;
+    const { agent, agentKey, nonAgentKey, handleAction } = context;
 
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
 
+    // Use ATTACK if it kills
     if (isEntityEffectivellyDead(simAtk.entities[nonAgentKey])) {
         handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }
 
-    handleAction(actionKeys.AEGIS, agentKey, nonAgentKey);
+    // Use AEGIS if available
+    if (!agent.states[effectKeys.CUTOFF_WINGS]) {
+        handleAction(actionKeys.AEGIS, agentKey, nonAgentKey);
+    }
+
+    // safeguard: ATTACK
+    handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
 }
 
 export function hexerAI(context) {
@@ -311,7 +320,7 @@ export function shadowSorcererAI(context) {
     // Kill check
     // Always do Black Mayhem if lethal
     const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
-    if (isEntityEffectivellyDead(simMayhem.entities[nonAgentKey])) {
+    if (isEntityTrulyDead(simMayhem.entities[nonAgentKey])) {
         handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
         return;
     }

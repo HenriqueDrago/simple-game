@@ -64,12 +64,8 @@ export function consumeResources(entity, amount, cause) {
 
     resourceIndex = 0;
 
-    // Limited resource consumption, skips if cause is Hymmns or Orange Star/Trail
-    if (
-        cause !== actionKeys.HYMNS_OF_SANCTIFICATION &&
-        cause !== effectKeys.ORANGE_STAR &&
-        cause !== effectKeys.ORANGE_TRAIL
-    ) {
+    // Limited resource consumption, skips if cause is Orange Star/Trail
+    if (cause !== effectKeys.ORANGE_STAR && cause !== effectKeys.ORANGE_TRAIL) {
         while (
             amount > 0 &&
             resourceIndex < constants.limitedResources.length &&
@@ -271,8 +267,7 @@ export function createBaseEntity() {
         currHp: constants.BASE_STATS.hp,
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
-        maxOverheat: constants.MAX_OVERHEAT,
-        currOverheat: 0,
+
         maxEnlit: 0,
         currEnlit: 0,
         maxInsight: 0,
@@ -282,12 +277,14 @@ export function createBaseEntity() {
         [effectKeys.TARNISHED_SIN]: 0,
         [effectKeys.DIVINE_SPARK]: 0,
         [effectKeys.DYNAMO]: 0,
+        [effectKeys.OVERHEAT]: 0,
 
         // other
         [effectKeys.SONORITY]: 0,
         [effectKeys.REVELATION]: 0,
         [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
         lasersUsedThisTurn: 0,
+        [effectKeys.BURDEN_OF_STIGMA]: 0,
 
         // Align
         [effectKeys.MIRRORED_MOON]: moonKeys.WANING,
@@ -315,8 +312,6 @@ export function createBaseEntity() {
             [effectKeys.RIME]: 0,
             [effectKeys.INCANDESCENCE]: 0,
             [effectKeys.KINDLING]: 0,
-
-            [effectKeys.AFTERGLOW]: 0,
         },
         states: {
             // standalones
@@ -345,7 +340,7 @@ export function createBaseEntity() {
             [effectKeys.RADIANT]: false,
             [effectKeys.CUTOFF_WINGS]: false,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-            [effectKeys.BURDEN_OF_STIGMA]: false,
+            
             [effectKeys.ZENITH_OF_MORTALITY]: false,
         },
         stars: {
@@ -560,22 +555,11 @@ export function dealDamage(
 
     damagePostMitigation -= emberConsumed;
 
-    const afterglowConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  draftDefender.resources[effectKeys.AFTERGLOW],
-              )
-            : 0;
-
-    damagePostMitigation -= afterglowConsumed;
 
     const defenderNewHalo = defender.resources.halo - haloConsumed;
     const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
     const defenderNewEmbers = defender.resources.lingeringEmber - emberConsumed;
     const defenderNewDome = defender.resources[effectKeys.DOME] - domeConsumed;
-    const defenderNewAfterglow =
-        defender.resources[effectKeys.AFTERGLOW] - afterglowConsumed;
 
     const defenderNewRadiance = defender.resources.radiance + haloConsumed;
     const newCinders = defender.resources.cinders + emberConsumed;
@@ -619,7 +603,6 @@ export function dealDamage(
             cryogenesis: defenderNewCryo,
             cinders: newCinders,
             [effectKeys.DOME]: defenderNewDome,
-            [effectKeys.AFTERGLOW]: defenderNewAfterglow,
         },
     };
 
@@ -706,16 +689,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     damagePostMitigation -= emberConsumed;
 
-    const afterglowConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  entity.resources[effectKeys.AFTERGLOW],
-              )
-            : 0;
-
-    damagePostMitigation -= afterglowConsumed;
-
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         if (dmgType === dmgTypes.TRUE) {
             draftEntity = gainSin(draftEntity, damagePostMitigation);
@@ -742,8 +715,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
     const newRadiance = entity.resources.radiance + haloConsumed;
     const newCinders = entity.resources.cinders + emberConsumed;
     const newDome = entity.resources[effectKeys.DOME] - domeConsumed;
-    const newAfterglow =
-        entity.resources[effectKeys.AFTERGLOW] - afterglowConsumed;
 
     return {
         ...draftEntity,
@@ -755,7 +726,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
             cryogenesis: newCryo,
             cinders: newCinders,
             dome: newDome,
-            [effectKeys.AFTERGLOW]: newAfterglow,
         },
     };
 }
@@ -775,33 +745,16 @@ export function processEntityDeathStates(entity) {
 
     if (
         draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        (draftEntity[effectKeys.ENLIGHTENMENT] <= 0)
+        draftEntity[effectKeys.ENLIGHTENMENT] <= 0
     ) {
-        draftEntity = processExitAscendence(draftEntity)
+        draftEntity = processExitAscendence(draftEntity);
     }
 
     return draftEntity;
 }
 
-export function processEntityCutoffWings(entity) {
-    let draft = { ...entity };
-
-    if (draft.states[effectKeys.CUTOFF_WINGS]) {
-        draft = {
-            ...draft,
-            [effectKeys.HEALTH]: Math.max(
-                0,
-                Math.min(1, draft[effectKeys.HEALTH]),
-            ),
-            [effectKeys.MAX_HEALTH]: 1,
-        };
-    }
-
-    return draft;
-}
-
 export function isEntityDead(entity) {
-    return entity.currHp <= 0 && !entity.states.ascendenceOfSpirit;
+    return entity.currHp <= 0 && !entity.states.ascendenceOfSpirit && entity[effectKeys.BURDEN_OF_STIGMA] <= 0;
 }
 
 export function resetPlayerEntity(prev, entityKey) {
@@ -993,6 +946,7 @@ export function processExitAscendence(entity) {
         ...draftEntity,
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
         [effectKeys.MAX_INSIGHT]: 0,
+        [effectKeys.REVELATION]: 0,
         states: {
             ...draftEntity.states,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
@@ -1000,6 +954,21 @@ export function processExitAscendence(entity) {
     };
 
     return processEnterCutoffWings(draftEntity);
+}
+
+export function processExitSelenian(entity) {
+    let draftEntity = {
+        ...entity,
+    }
+
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.MOONLIGHT]: 0,
+        [effectKeys.ELEMENTAL_CRYSTALS]: elementalKeys.DULLED,
+        [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
+    }
+
+    return draftEntity;
 }
 
 export function processEnterCutoffWings(entity) {
@@ -1030,6 +999,10 @@ export function exitAllStates(entity) {
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         draftEntity = processExitAscendence(draftEntity);
     }
+    if (draftEntity.states[effectKeys.SELENIAN]) {
+        draftEntity = processExitSelenian(draftEntity);
+    }
+
 
     draftEntity = {
         ...draftEntity,

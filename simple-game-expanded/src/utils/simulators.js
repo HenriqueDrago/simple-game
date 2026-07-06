@@ -7,7 +7,6 @@ import {
     takeDamage,
     gainMana,
     loseMana,
-    gainInsight,
     gainHp,
     exitAllStates,
     processExitAscendence,
@@ -243,7 +242,7 @@ function simulateHeal({ prev, agent, agentKey }) {
                 resources: {
                     ...draftAgent.resources,
                     [effectKeys.POISON]: 0,
-                }
+                },
             },
         },
     };
@@ -469,7 +468,8 @@ function simulateBlackMayhem({ prev, agent, nonAgent, nonAgentKey }) {
         resourcesConsumed.totalConsumption - (resourcesConsumed.cinders || 0);
 
     const newNonAgentCinders =
-        draftNonAgent.resources.cinders + burntNonCindersNonRad * constants.RESOURCES_CINDERS_MULT;
+        draftNonAgent.resources.cinders +
+        burntNonCindersNonRad * constants.RESOURCES_CINDERS_MULT;
 
     return {
         ...prev,
@@ -833,7 +833,10 @@ function simulateHymns({ prev, agent, agentKey }) {
         actionKeys.HYMNS_OF_SANCTIFICATION,
     );
 
-    draftAgent = gainInsight(draftEntity, resourcesConsumed.totalConsumption);
+    draftAgent = restoreResources(
+        draftEntity,
+        resourcesConsumed.totalConsumption,
+    );
 
     return {
         ...prev,
@@ -870,7 +873,10 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             },
         };
 
-        draftAgent = restoreResources(draftAgent, resourcesConsumed.totalConsumption);
+        draftAgent = restoreResources(
+            draftAgent,
+            resourcesConsumed.totalConsumption,
+        );
     }
 
     if (draftNonAgent.resources[effectKeys.SACRED_FLAMES] > 0) {
@@ -887,7 +893,10 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             },
         };
 
-        draftNonAgent = restoreResources(draftNonAgent, resourcesConsumed.totalConsumption);
+        draftNonAgent = restoreResources(
+            draftNonAgent,
+            resourcesConsumed.totalConsumption,
+        );
     }
 
     return {
@@ -936,42 +945,34 @@ function simulateGiftOfApotheosis({
         return prev;
     }
 
+    const newTarnishedSin = Math.min(
+        constants.MAX_TARNISHED_SIN,
+        nonAgent[effectKeys.TARNISHED_SIN] + agent[effectKeys.TARNISHED_SIN],
+    );
+
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                [effectKeys.TARNISHED_SIN]: 0,
+                [effectKeys.TARNISHED_SIN]: newTarnishedSin,
             },
             [nonAgentKey]: {
                 ...nonAgent,
                 [effectKeys.DIVINE_SPARK]: 100,
+                [effectKeys.TARNISHED_SIN]: 0,
             },
         },
     };
 }
 
-function simulateWordMadeFlesh({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
+function simulateWordMadeFlesh({ prev, agent, agentKey }) {
     let draftAgent = {
         ...agent,
     };
 
-    const { draftEntity, resourcesConsumed } = consumeResources(
-        draftAgent,
-        Infinity,
-        actionKeys.THE_WORD_MADE_FLESH,
-    );
-
-    draftAgent = {
-        ...draftEntity,
-    }
+    const burden = Math.floor(draftAgent[effectKeys.REVELATION] / 10);
 
     draftAgent = processExitAscendence(draftAgent);
 
@@ -981,16 +982,9 @@ function simulateWordMadeFlesh({
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
+                [effectKeys.BURDEN_OF_STIGMA]: burden,
                 resources: {
                     ...draftAgent.resources,
-                    [effectKeys.AFTERGLOW]: resourcesConsumed.totalConsumption,
-                },
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                states: {
-                    ...nonAgent.states,
-                    [effectKeys.BURDEN_OF_STIGMA]: true,
                 },
             },
         },

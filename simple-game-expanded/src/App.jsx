@@ -122,11 +122,6 @@ function App() {
             const agent = prev.entities[agentKey];
             const nonAgent = prev.entities[nonAgentKey];
 
-            // Skipping if sealed
-            if (agent.states.burdenOfStigma) {
-                return commitTurn(prev, agentKey, nonAgentKey, null);
-            }
-
             const context = {
                 agent,
                 agentKey,
@@ -484,15 +479,6 @@ function App() {
                 ? entityKeys.PLAYER_TWO
                 : entityKeys.PLAYER_ONE;
         const agent = game.entities[agentKey];
-
-        if (agent.states.burdenOfStigma) {
-            const timer = setTimeout(
-                () => handleAction(null, agentKey, nonAgentKey),
-                1000,
-            );
-
-            return () => clearTimeout(timer);
-        }
 
         if (agent.controller !== aiKeys.HUMAN) {
             const triggerAI = () => {

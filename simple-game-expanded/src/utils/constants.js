@@ -22,6 +22,7 @@ import {
     sdmKeys,
     entityKeys,
     mechanicKeys,
+    entryTypes,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -54,8 +55,7 @@ const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 3;
-
+const HALO_GEN_MULT = 20
 const SAC_HP_CONSUMPTION = 0.5;
 
 const SHADOW_PACT_BURN = 5;
@@ -120,7 +120,7 @@ export const freeResources = [
     effectKeys.RADIANCE,
     effectKeys.HALO,
     effectKeys.INSPIRATION,
-    effectKeys.AFTERGLOW,
+
     effectKeys.SACRED_FLAMES,
 ];
 
@@ -183,6 +183,7 @@ export const presetAi = {
         best: {
             str: 5,
             def: 5,
+            
         },
         caller: simpleAI,
         desc: [
@@ -204,7 +205,16 @@ export const presetAi = {
             effectKeys.DEF_EFFECTIVENESS,
             effectKeys.DAMAGE_REDUCTION,
             effectKeys.RESOURCES,
-            effectKeys.MITIGATION_RESOURCES,
+
+            entryTypes.FIELD_EFFECT,
+            entryTypes.STATE,
+            entryTypes.DAMAGE_TYPE,
+            entryTypes.FREE_RESOURCE,
+            entryTypes.LIMITED_RESOURCE,
+            entryTypes.FIXED_RESOURCE,
+            entryTypes.MITIGATION_RESOURCE,
+            entryTypes.BATTLE_PHASE,
+            entryTypes.STAR,
             mechanicKeys.OFFENSIVE_ACTIONS,
             mechanicKeys.DEFENSIVE_ACTIONS,
             mechanicKeys.TRANSFORMATIVE_ACTIONS,
@@ -284,7 +294,9 @@ export const presetAi = {
             effectKeys.THERMAL_OVERLOAD,
             effectKeys.VENTING,
             effectKeys.OVERHEAT,
-            effectKeys.MAX_OVERHEAT,
+
+            effectKeys.DYNAMO,
+            effectKeys.ENERGY_LEVEL,
         ],
     },
     [aiKeys.MAESTRO]: {
@@ -381,6 +393,34 @@ export const presetAi = {
         ],
     },
 
+    [aiKeys.ELEMENTALIST]: {
+        name: "Elementalist (Unimplemented)",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: simpleAI,
+        desc: [
+
+            actionKeys.ALIGN,
+            effectKeys.SELENIAN,
+            effectKeys.ELEMENTAL_CRYSTALS,
+            effectKeys.NATURE,
+            effectKeys.MYCELIUM,
+            effectKeys.FROST,
+            effectKeys.CRYOGENESIS,
+            effectKeys.RIME,
+            effectKeys.SCORCH,
+            effectKeys.KINDLING,
+            effectKeys.INCANDESCENCE,
+            effectKeys.MIRRORED_MOON,
+            actionKeys.MIRROR,
+            effectKeys.REFLECTED_FIRMAMENT,
+            mechanicKeys.MOON_PHASE,
+            effectKeys.MOONLIGHT,
+        ],
+    },
+
     [aiKeys.PALADIN]: {
         name: "Paladin (Incomplete)",
         best: {
@@ -390,39 +430,40 @@ export const presetAi = {
         caller: paladinAI,
         desc: [
             actionKeys.AEGIS,
-
             effectKeys.RADIANT,
             effectKeys.HALO,
             effectKeys.RADIANCE,
             effectKeys.ENLIGHTENMENT,
+            effectKeys.MAX_ENLIGHTENMENT,
             effectKeys.ZENITH_OF_MORTALITY,
-
             actionKeys.ASCEND,
-
             effectKeys.ASCENDENCE_OF_SPIRIT,
-
             mechanicKeys.ACTS_OF_BENEDICTION,
             mechanicKeys.ACTS_OF_MALEDICTION,
-
             effectKeys.TARNISHED_SIN,
             effectKeys.EYE_OF_HEAVENS,
             effectKeys.INSIGHT,
+            effectKeys.MAX_INSIGHT,
             effectKeys.CUTOFF_WINGS,
             effectKeys.REVELATION,
             effectKeys.BURDEN_OF_STIGMA,
             effectKeys.SEVERED_TIME,
             effectKeys.INSPIRATION,
             effectKeys.SACRED_FLAMES,
-
             actionKeys.BAPTISM_OF_THE_FLAMES,
             actionKeys.CELESTIAL_SCALE,
             actionKeys.HYMNS_OF_SANCTIFICATION,
             actionKeys.GIFT_OF_APOTHEOSIS,
-
             actionKeys.SERAPH_OF_CONDEMNATION,
             actionKeys.GLIMPSE_OF_PANDEMONIUM,
             actionKeys.EDICT_OF_SEVERANCE,
             actionKeys.THE_WORD_MADE_FLESH,
+
+            effectKeys.DIVINE_SPARK,
+            actionKeys.JUDGEMENT,
+            effectKeys.ABANDONED_BY_GRACE,
+            effectKeys.ANOINTED_PROXY,
+            mechanicKeys.EMANATION,
         ],
     },
 };
@@ -636,15 +677,6 @@ export const stackCounters = {
             color: "#4caf50",
             borderColor: "#4caf50",
             backgroundColor: "rgba(76, 175, 80, 0.2)",
-        },
-    },
-
-    [effectKeys.AFTERGLOW]: {
-        label: "Afterglow",
-        style: {
-            color: "white",
-            borderColor: "white",
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
         },
     },
 };

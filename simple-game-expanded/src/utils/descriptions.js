@@ -24,14 +24,14 @@ export const ACTION_DESCRIPTIONS = {
         name: "SPECIAL ATTACK",
         type: entryTypes.ACTION,
         description:
-            "Consumes 6 MANA to deal PIERCING DAMAGE equal to the user's STR plus MANA IMBALANCE. The target restores MANA equal to the MANA IMBALANCE value.",
+            "Consumes 6 MANA to deal PIERCING DAMAGE equal to the user's STR plus MANA IMBALANCE. The target restores MANA equal to the MANA IMBALANCE value. MANA IMBALANCE is calculated before the cost deduction.",
     },
 
     [actionKeys.SACRIFICE]: {
         name: "SELF-SACRIFICE",
         type: entryTypes.ACTION,
         description:
-            "Takes TRUE DAMAGE equal to half of current HEALTH. Gains BLOOD SACRIFICE and MAX MANA equal to the HEALTH lost this way, then enters SACRIFICIAL state until next turn start.",
+            "Loses half of current HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the HEALTH lost this way, then enters SACRIFICIAL state until next turn start.",
     },
 
     [actionKeys.ARRAY]: {
@@ -126,22 +126,23 @@ export const ACTION_DESCRIPTIONS = {
     [actionKeys.MELTDOWN]: {
         name: "MELTDOWN",
         type: entryTypes.ACTION,
-        description: "All entities take PHYSICAL DAMAGE equal to your current ENERGY LEVEL. Increases damage dealt by 1 for every 10% DYNAMO on self, then multiples the resulting damage by current OVERHEAT. Afterwards, loses all DYNAMO on self, exits THERMAL OVERLOAD and enters VENTING state."
+        description:
+            "All entities take PHYSICAL DAMAGE equal to your current ENERGY LEVEL. Increases damage dealt by 1 for every 10% DYNAMO on self, then multiples the resulting damage by current OVERHEAT. Afterwards, loses all DYNAMO on self, exits THERMAL OVERLOAD and enters VENTING state.",
     },
-
 };
 
 export const STATE_DESCRIPTIONS = {
     [effectKeys.GUARDING_STATE]: {
         name: "GUARDING",
         type: entryTypes.STATE,
-        description: "Raises DEF EFFECTIVENESS and DAMAGE REDUCTION by 50%.",
+        description:
+            "Raises DEF EFFECTIVENESS and DAMAGE REDUCTION by 50%. Cleared at turn start.",
     },
 
     [effectKeys.SACRIFICIAL_STATE]: {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
-        description: "Raises DAMAGE REDUCTION by 50%.",
+        description: "Raises DAMAGE REDUCTION by 50%. Cleared at turn start.",
     },
 
     [effectKeys.THORNED_SHACKLES]: {
@@ -162,14 +163,14 @@ export const STATE_DESCRIPTIONS = {
         name: "DARK EMBRACE",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. While active, SHADOWFLAME on self does not burn RESOURCES.",
+            "Raises DAMAGE REDUCTION by 50%. While active, SHADOWFLAME on self does not burn RESOURCES. Cleared at turn start.",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
         name: "DIMMING DARKNESS",
         type: entryTypes.STATE,
         description:
-            "Does not activate POISON and MANA OVERFLOW effects on self.",
+            "Does not activate POISON and MANA OVERFLOW effects on self. Cleared at turn start.",
     },
 
     [effectKeys.RESONANT]: {
@@ -203,7 +204,7 @@ export const STATE_DESCRIPTIONS = {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, lowers OVERHEAT by 50%. At turn start, if at 0% OVERHEAT, exits VENTING and enters WEAPONS DEPLOYED.",
+            "Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, lowers OVERHEAT by 50%. Additionally, if at 0% OVERHEAT, exits VENTING state and enters WEAPONS DEPLOYED.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -245,7 +246,7 @@ export const RESOURCE_DESCRIPTIONS = {
         name: "LINGERING EMBER",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "Cannot be consumed by SHADOWFLAME. When suffering PHYSICAL DAMAGE or PIERCING DAMAGE from enemy attacks, consumes LINGERING EMBER to reduce the damage taken and gains CINDERS equal to the amount lost this way. At turn start, converts half of current LINGERING EMBER into both SHADOWFLAME and CINDERS.",
+            "Cannot be consumed by SHADOWFLAME. When suffering PHYSICAL DAMAGE or PIERCING DAMAGE, consumes LINGERING EMBER to reduce the damage taken and gains CINDERS equal to the amount lost this way. At turn start, converts half of current LINGERING EMBER into both SHADOWFLAME and CINDERS.",
     },
 
     [effectKeys.CINDERS]: {
@@ -258,7 +259,7 @@ export const RESOURCE_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self when using ATTACK. Causes MANA BLEED at turn start.",
+            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self. Causes MANA BLEED at turn start.",
     },
 
     [effectKeys.UNRELENTING_SHADOWS]: {
@@ -268,24 +269,18 @@ export const RESOURCE_DESCRIPTIONS = {
             "At turn start, loses all UNRELENTING SHADOWS. Then, restores RESOURCES based on the UNRELENTING SHADOWS lost this way.",
     },
 
-    [effectKeys.CRYOGENESIS]: {
-        name: "CRYOGENESIS",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CRYOGENESIS to reduce the damage taken. When using an OFFENSIVE ACTION, lose all CRYOGENESIS on self.",
-    },
-
     [effectKeys.OVERHEAT]: {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
-        description: "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD and VENTING states. Can go over 100%. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30% and raises DYNAMO by the amount lowered this way.",
+        description:
+            "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD or VENTING states. Can go over 100%. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30% and raises DYNAMO by the amount lowered this way.",
     },
 
     [effectKeys.MANA]: {
         name: "MANA",
         type: entryTypes.LIMITED_RESOURCE,
         description:
-            "Capped at MAX MANA. When restoring MANA above the limit, gain MANA OVERFLOW instead.",
+            "Capped at MAX MANA. When restoring MANA above the limit, gains MANA OVERFLOW instead.",
     },
 
     [effectKeys.HEALTH]: {
@@ -301,9 +296,8 @@ export const FIELD_EFFECT_DESCRIPTIONS = {
         name: "RUNIC ARRAY",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While active, enables RUNIC INSCRIPTION at round end. On RUNIC INSCRIPTION, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on RUNIC INSCRIPTION, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consumes all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES.",
+            "While active, enables RUNIC INSCRIPTION at round end. On RUNIC INSCRIPTION, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on RUNIC INSCRIPTION, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consumes all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES. Disables MANA OVERFLOW turn end effects.",
     },
-
 };
 
 export const DAMAGE_TYPE_DESCRIPTIONS = {
@@ -357,14 +351,14 @@ export const STAR_DESCRIPTIONS = {
         name: "STARGAZER",
         type: entryTypes.STATE,
         description:
-            "While active, enables STARFALL at turn end. During the action phase, enables a side-menu for star assignment.",
+            "While active, enables STARFALL after turn end. During the action phase, enables a side-menu for star assignment.",
     },
 
     [effectKeys.STARFALL]: {
         name: "STARFALL",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. Trailfall phases are skipped if the user has no trails on self.",
+            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. Starfall phases are skipped if the user has no colored stars on self. Trailfall phases are skipped if the user has no trails on self.",
     },
 
     [effectKeys.RED_STARFALL]: {
@@ -493,21 +487,21 @@ export const STAR_DESCRIPTIONS = {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, loses all BLUE STAR, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
+            "At BLUE STARFALL, loses all BLUE STAR on self, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.INDIGO_STAR]: {
         name: "INDIGO STAR",
         type: entryTypes.STAR,
         description:
-            "When a colored star takes an action, consumes INDIGO STAR to use the fractured version of that action instead. Fractured actions take priority over augmented ones. At INDIGO STARFALL, loses all INDIGO STAR and gains DIMMED INDIGO STAR equal to the amount lost.",
+            "When a colored star takes an action, consumes INDIGO STAR to use the fractured version of that action instead. Fractured actions take priority over augmented ones. At INDIGO STARFALL, loses all INDIGO STAR and gains DIMMED INDIGO STAR equal to the amount lost. When multiple action types are used at once, each is calculated separately.",
     },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "When a colored star takes an action, consumes VIOLET STAR to use the augmented version of that action instead. Then, gains DIMMED VIOLET STAR equal to the amount consumed. At VIOLET STARFALL, loses all VIOLET STAR and gains DIMMED VIOLET STAR equal to the amount lost.",
+            "When a colored star takes an action, consumes VIOLET STAR to use the augmented version of that action instead. Then, gains DIMMED VIOLET STAR equal to the amount consumed. At VIOLET STARFALL, loses all VIOLET STAR and gains DIMMED VIOLET STAR equal to the amount lost. When multiple action types are used at once, each is calculated separately.",
     },
 
     [effectKeys.DOME]: {
@@ -528,7 +522,7 @@ export const STAR_DESCRIPTIONS = {
         name: "STARDUST",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, for every 3 STARDUST on self, lose STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
+            "At turn start, for every 3 STARDUST on self, loses STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
     },
 
     [effectKeys.DIMMED_RED_STAR]: {
@@ -584,7 +578,7 @@ export const STAR_DESCRIPTIONS = {
         name: "ORANGE TRAIL",
         type: entryTypes.STAR,
         description:
-            "At ORANGE TRAILFALL, consumes DIMMED ORANGE STAR equal to ORANGE TRAIL and burns FREE RESOURCES on the opponent equal to the amount lost. If there are not enough DIMMED ORANGE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
+            "At ORANGE TRAILFALL, consumes DIMMED ORANGE STAR equal to ORANGE TRAIL and burns FREE RESOURCES on the opponent equal to the amount lost. If there are not enough DIMMED ORANGE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all ORANGE TRAIL on self.",
     },
 
     [effectKeys.YELLOW_TRAIL]: {
@@ -621,7 +615,6 @@ export const STAR_DESCRIPTIONS = {
     },
 };
 
-// Work in progress
 export const PALADIN_DESCRIPTIONS = {
     [actionKeys.AEGIS]: {
         name: "AEGIS",
@@ -640,14 +633,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "HALO",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, loses HALO instead of HEALTH, then gains RADIANCE equal to the amount lost. At turn start, lose all HALO, then raise DIVINE SPARK by 1% for every HALO lost this way.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HALO to decrease the damage taken, then gains RADIANCE equal to the amount lost. At turn start, lose all HALO, then raises DIVINE SPARK by 1% for every HALO lost this way.",
     },
 
     [effectKeys.RADIANCE]: {
         name: "RADIANCE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using ATTACK, consumes all RADIANCE on self to increase the DAMAGE dealt.",
+            "When using ATTACK, consumes all RADIANCE on self to increase the damage dealt.",
     },
 
     [effectKeys.DIVINE_SPARK]: {
@@ -660,7 +653,8 @@ export const PALADIN_DESCRIPTIONS = {
     [effectKeys.ENLIGHTENMENT]: {
         name: "ENLIGHTENMENT",
         type: entryTypes.LIMITED_RESOURCE,
-        description: "Cannot exceed MAX ENLIGHTENMENT.",
+        description:
+            "Cannot exceed MAX ENLIGHTENMENT. Replaces HEALTH for entities on the ASCENDENCE OF SPIRIT state.",
     },
 
     [effectKeys.ZENITH_OF_MORTALITY]: {
@@ -673,14 +667,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.ACTION,
         description:
-            "Opens the EYE OF HEAVENS, exits all other states, and consumes all RESOURCES on self. Then gains REVELATION based on STR and DEF on self and enters ASCENDENCE OF SPIRIT. Afterwards, loses all STR and DEF on self, and restores RESOURCES. Aditionaly, sets MAX ENLIGHTENMENT and MAX INSIGHT to 100. This action does not end the turn.",
+            "Opens the EYE OF HEAVENS, exits all other states, and consumes all RESOURCES on self. Then gains REVELATION based on STR and DEF on self and enters ASCENDENCE OF SPIRIT. Afterwards, loses all STR and DEF on self, and gains INSPIRATION equal to the RESOURCES consumed previously. Aditionaly, sets MAX ENLIGHTENMENT and MAX INSIGHT to 100, then gain 100 ENLIGHTENMENT. This action does not end the turn.",
     },
 
     [effectKeys.ASCENDENCE_OF_SPIRIT]: {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state, then enters CUTOFF WINGS and recovers 1 HEALTH. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose ENLIGHTENMENT instead of HEALTH. Additionally, if it was PHYSICAL DAMAGE taken, gain INSPIRATION equal to the ENLIGHTENMENT lost. When taking TRUE DAMAGE, raise TARNISHED SIN by 1% for every point of damage received instead of losing HEALTH. When restoring HEALTH or MANA, gain INSPIRATION instead. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
+            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state and enters CUTOFF WINGS. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, lose ENLIGHTENMENT instead of HEALTH, then gains INSPIRATION equal to the ENLIGHTENMENT lost. Additionally, when taking PHYSICAL DAMAGE, decrease the damage taken by the REVELATION on self. When taking TRUE DAMAGE, raise TARNISHED SIN by 1% for every point of damage received instead of losing HEALTH. When restoring HEALTH or MANA, gain INSPIRATION instead. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
     },
 
     [mechanicKeys.ACTS_OF_BENEDICTION]: {
@@ -701,7 +695,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "TARNISHED SIN",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "When reaching 100% TARNISHED SIN, receives ABANDONED BY GRACE state.",
+            "When reaching 100% TARNISHED SIN, enters ABANDONED BY GRACE state.",
     },
 
     [effectKeys.ABANDONED_BY_GRACE]: {
@@ -720,14 +714,15 @@ export const PALADIN_DESCRIPTIONS = {
     [actionKeys.JUDGEMENT]: {
         name: "JUDGEMENT",
         type: entryTypes.ACTION,
-        description: "Cleases all STATES and RESOURCES from the opponent.",
+        description:
+            "Cleases all STATES and consumes all RESOURCES from the opponent.",
     },
 
     [effectKeys.EYE_OF_HEAVENS]: {
         name: "EYE OF HEAVENS",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While awoken, triggers EMANATION at round end. During EMANATION, if closed, opens and grants REVELATION to all entites for every 10 INSIGHT on each; otherwise, closes and removes SEVERED TIME from the battlefield. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, cleanses all STATES and RESOURCES from both entities, then ends battle.",
+            "Enables EMANATION at round end. During EMANATION, if closed, opens and grants REVELATION to each entity for every 10 INSIGHT on them; otherwise, closes and removes SEVERED TIME from the battlefield. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES and consumes all RESOURCES from both entities, then ends battle.",
     },
 
     [effectKeys.INSIGHT]: {
@@ -741,40 +736,37 @@ export const PALADIN_DESCRIPTIONS = {
         name: "CUTOFF WINGS",
         type: entryTypes.STATE,
         description:
-            "Cannot use AEGIS. While on this state, MAX HEALTH is set to 1.",
+            "Cannot use AEGIS. Upon entering this state, sets MAX HEALTH to 1 and recovers 1 HEALTH.",
     },
 
     [effectKeys.REVELATION]: {
         name: "REVELATION",
         type: entryTypes.STAT,
-        description: "An alternative stat used by certain effects.",
+        description:
+            "An alternative stat used by certain effects. When taking PHYSICAL DAMAGE on ENLIGHTENMENT, decrease damage taken by REVELATION on self.",
     },
 
-    [effectKeys.BURDEN_OF_STIGMA]: {
-        name: "BURDEN OF STIGMA",
-        type: entryTypes.STATE,
-        description: "Cannot act. Removed at turn end.",
-    },
+    
 
     [effectKeys.SEVERED_TIME]: {
         name: "SEVERED TIME",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "Turn Start and Turn End effects do not trigger. The ELEMENTAL WHEEL does not turn. RUNIC ARRAY duration does not decrease.",
+            "Turn start and turn end effects do not trigger. At MOON PHASE, MIRRORED MOON does not change phases. At RUNIC INSCRIPTION, RUNIC ARRAY duration does not decrease.",
     },
 
     [effectKeys.INSPIRATION]: {
         name: "INSPIRATION",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, loses INSPIRATION equal to missing ENLIGHTENMENT, then gains ENLIGHTENMENT equal to the amount lost this way.",
+            "At turn start, loses INSPIRATION equal to missing INSIGHT, then restores INSIGHT equal to the amount lost this way.",
     },
 
     [effectKeys.SACRED_FLAMES]: {
         name: "SACRED FLAMES",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, loses SACRED FLAMES equal to missing HEALTH, then restores HEALTH equal to the amount lost this way.",
+            "At turn start, loses SACRED FLAMES for every 1% DIVINE SPARK on self, then lose 1% DIVINE SPARK for every SACRED FLAMES lost this way. Afterwards, loses SACRED FLAMES equal to ENLIGHTENMENT on self, then lose ENLIGHTENMENT equal to the amount lost this way. Finally, loses SACRED FLAMES equal to missing HEALTH, then restores HEALTH equal to the amount lost this way.",
     },
 
     [actionKeys.BAPTISM_OF_THE_FLAMES]: {
@@ -794,14 +786,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "HYMNS OF SANCTIFICATION",
         type: entryTypes.ACTION,
         description:
-            "Consumes all FREE RESOURCES on self, then gains INSIGHT based on the amount consumed.",
+            "Consumes all RESOURCES on self, then restores RESOURCES equal to the amount consumed.",
     },
 
     [actionKeys.GIFT_OF_APOTHEOSIS]: {
         name: "GIFT OF APOTHEOSIS",
         type: entryTypes.ACTION,
         description:
-            "Swaps the user's current condition with the target's, then gain BURDEN OF STIGMA on self. Cannot be used if the target is in ASCENDENCE OF SPIRIT state.",
+            "Absorbs all TARNISHED SIN on the opponent, then raises their DIVINE SPARK to 100%. Cannot be used if the target is in ASCENDENCE OF SPIRIT, ZENITH OF MORTALITY or CUTOFF WINGS states.",
     },
 
     [actionKeys.SERAPH_OF_CONDEMNATION]: {
@@ -815,7 +807,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "GLIMPSE OF PANDEMONIUM",
         type: entryTypes.ACTION,
         description:
-            "Burns RESOURCES on every entity equal to SACRED FLAMES on each. Then, all entities lose all SACRED FLAMES on them. Cannot burn SACRED FLAMES this way.",
+            "Burns RESOURCES on every entity equal to SACRED FLAMES on each, then restores RESOURCES equal to the amount consumed on each. Afterwards, all entities lose all SACRED FLAMES on them. Cannot burn SACRED FLAMES this way.",
     },
 
     [actionKeys.EDICT_OF_SEVERANCE]: {
@@ -828,7 +820,34 @@ export const PALADIN_DESCRIPTIONS = {
         name: "THE WORD MADE FLESH",
         type: entryTypes.ACTION,
         description:
-            "Consumes all RESOURCES on self and inflicts BURDEN OF STIGMA on the target. Then, exits ASCENDENCE OF SPIRIT and enters CUTOFF WINGS. Afterwards, restores RESOURCES on self equal to the amount consumed.",
+            "Gains BURDEN OF STIGMA equal to a tenth of current REVELATION. Then, exits ASCENDENCE OF SPIRIT.",
+    },
+
+    [effectKeys.BURDEN_OF_STIGMA]: {
+        name: "BURDEN OF STIGMA",
+        type: entryTypes.MECHANIC,
+        description: "Cannot die. At turn start, lose 1 BURDEN OF STIGMA.",
+    },
+
+    [mechanicKeys.EMANATION]: {
+        name: "EMANATION",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken.",
+    },
+
+    [effectKeys.MAX_ENLIGHTENMENT]: {
+        name: "MAX ENLIGHTENMENT",
+        type: entryTypes.MECHANIC,
+        description:
+            "Starts at 0. Limits how much ENLIGHTENMENT you can hold. Increased to 100 upon using ASCEND.",
+    },
+
+    [effectKeys.MAX_INSIGHT]: {
+        name: "MAX INSIGHT",
+        type: entryTypes.MECHANIC,
+        description:
+            "Starts at 0. Limits how much INSIGHT you can hold. Increased to 100 upon using ASCEND.",
     },
 };
 
@@ -884,14 +903,14 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "DEF EFFECTIVENESS",
         type: entryTypes.MECHANIC,
         description:
-            "When taking PHYSICAL DAMAGE, increases how much damage can be blocked by DEF by the percentage.",
+            "When taking PHYSICAL DAMAGE, increases or decreases how much damage can be blocked by DEF by the percentage.",
     },
 
     [mechanicKeys.ACTIONS]: {
         name: "ACTIONS",
         type: entryTypes.MECHANIC,
         description:
-            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT.",
+            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, TRANSFORMATIVE ACTIONS, ACTS OF BENEDICTION and ACTS OF MALEDICTION. Most actions automatically advance the turn phase to COMMIT.",
     },
 
     [effectKeys.DYNAMO]: {
@@ -904,8 +923,7 @@ export const MECHANIC_DESCRIPTIONS = {
     [effectKeys.ENERGY_LEVEL]: {
         name: "ENERGY LEVEL",
         type: entryTypes.STAT,
-        description:
-            "Alternative STAT. Increases LASER and MELTDOWN damage.",
+        description: "Alternative STAT. Increases LASER and MELTDOWN damage.",
     },
 };
 
@@ -914,7 +932,7 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         name: "ROUND",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A full game cycle. A basic ROUND consists only a TURN from each player, but can be extended via additional phases. A full ROUND can be subdivided as follows: FIRST PLAYER TURN, FIRST PLAYER STARFALL, RUNIC INSCRIPTION, SECOND PLAYER TURN, SECOND PLAYER STARFALL, RUNIC INSCRIPTION, ELEMENTAL CYCLE and EMANATION.",
+            "A full game cycle. A basic ROUND consists of a single TURN from each player, but can be extended via additional phases. A full ROUND can be subdivided as follows: FIRST PLAYER TURN, FIRST PLAYER STARFALL, RUNIC INSCRIPTION, SECOND PLAYER TURN, SECOND PLAYER STARFALL, RUNIC INSCRIPTION, MOON PHASE and EMANATION.",
     },
 
     [mechanicKeys.TURN]: {
@@ -949,13 +967,6 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         type: entryTypes.BATTLE_PHASE,
         description:
             "A special phase triggered at between each player's TURN while RUNIC ARRAY is active.",
-    },
-
-    [mechanicKeys.EMANATION]: {
-        name: "EMANATION",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken.",
     },
 };
 
@@ -1011,21 +1022,21 @@ export const CATEGORY_DESCRIPTIONS = {
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
-        name: "LIMITED RESOURCE",
+        name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
             "A subset of RESOURCES that has upper cap. Includes MANA, HEALTH, INSIGHT, ENLIGHTENMENT. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continue to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follow that rule; otherwise continue to the next RESOURCE on the list.",
     },
 
     [entryTypes.FIXED_RESOURCE]: {
-        name: "FIXED RESOURCE",
+        name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
             "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, TARNISHED SIN and DIVINE SPARK. Cannot restore or consume FIXED RESOURCES.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
-        name: "MITIGATION RESOURCE",
+        name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
             "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken. Includes HALO, CRYOGENESIS, DOME and LINGERING EMBER. When consuming this type of resource due to damage taken, consume them in this order.",
@@ -1045,6 +1056,119 @@ export const CATEGORY_DESCRIPTIONS = {
     },
 };
 
+export const ELEMENTALIST_DESCRIPTIONS = {
+    [actionKeys.ALIGN]: {
+        name: "ALIGN",
+        type: entryTypes.ACTION,
+        description:
+            "Enters SELENIAN state. Sets MIRRORED MOON to HIDDEN and ELEMENTAL CRYSTALS to DULLED.",
+    },
+
+    [effectKeys.SELENIAN]: {
+        name: "SELENIAN",
+        type: entryTypes.STATE,
+        description:
+            "Replaces ALIGN with MIRROR. Enables MIRRORED MOON and ELEMENTAL CRYSTALS on self. Upon exiting this state, sets MIRRORED MOON to HIDDEN and ELEMENTAL CRYSTALS to DULLED, then lose all MOONLIGHT.",
+    },
+
+    [effectKeys.ELEMENTAL_CRYSTALS]: {
+        name: "ELEMENTAL CRYSTALS",
+        type: entryTypes.STATE,
+        description:
+            "Can be interacted with during the PLAN phase of a TURN to choose one of three elements: NATURE, FROST and SCORCH.",
+    },
+
+    [effectKeys.NATURE]: {
+        name: "NATURE",
+        type: entryTypes.STATE,
+        description:
+            "While active, at MOON PHASE, gain 1 additional MOONLIGHT. At MOON PHASE, if MIRRORED MOON is on WAXING, restore RESOURCES on target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, consume RESOURCES on target equal to MOONLIGHT on self, then grants MYCELIUM to target equal to the amount consumed.",
+    },
+
+    [effectKeys.MYCELIUM]: {
+        name: "MYCELIUM",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When using DEFENSIVE ACTIONS, loses all MYCELIUM on self and restores RESOURCES equal to the amount consumed.",
+    },
+
+    [effectKeys.FROST]: {
+        name: "FROST",
+        type: entryTypes.STATE,
+        description:
+            "While active, takes and deals -50% PHYSICAL DAMAGE and PIERCING DAMAGE. At MOON PHASE, if MIRRORED MOON is on WAXING, grants CRYOGENESIS to target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, grants RIME to target equal to MOONLIGHT on self.",
+    },
+
+    [effectKeys.CRYOGENESIS]: {
+        name: "CRYOGENESIS",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CRYOGENESIS to decrease the damage taken. When using OFFENSIVE ACTIONS, thaws all CRYOGENESIS on self into RIME.",
+    },
+
+    [effectKeys.RIME]: {
+        name: "RIME",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When dealing PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RIME to decrease the damage dealt. When using DEFENSIVE ACTIONS, condenses all RIME on self into CRYOGENESIS.",
+    },
+
+    [effectKeys.SCORCH]: {
+        name: "SCORCH",
+        type: entryTypes.STATE,
+        description:
+            "While active, takes and deals +50% PHYSICAL DAMAGE and PIERCING DAMAGE. At MOON PHASE, if MIRRORED MOON is on WAXING, grants INCANDESCENCE to target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, grants KINDLING to target equal to MOONLIGHT on self.",
+    },
+
+    [effectKeys.KINDLING]: {
+        name: "KINDLING",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When dealing PHYSICAL DAMAGE or PIERCING DAMAGE, consumes KINDLING to increase the damage dealt. At turn end, takes PHYSICAL DAMAGE equal to KINDLING on self.",
+    },
+
+    [effectKeys.INCANDESCENCE]: {
+        name: "INCANDESCENCE",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When using OFFENSIVE ACTIONS, deals TRUE DAMAGE to the opponent equal to INCANDESCENCE on self. When using DEFENSIVE ACTIONS, take TRUE DAMAGE equal to INCANDESCENCE on self.",
+    },
+
+    [effectKeys.MIRRORED_MOON]: {
+        name: "MIRRORED MOON",
+        type: entryTypes.STATE,
+        description:
+            "Enables MOON PHASE while not HIDDEN. At MOON PHASE, activates all entities elemental abilities on the corresponding target. Additionally, if on WAXING, change to WANING. If on WANING, change to WAXING. Then grants 1 MOONLIGHT for all players on SELENIAN state.",
+    },
+
+    [actionKeys.MIRROR]: {
+        name: "MIRROR",
+        type: entryTypes.ACTION,
+        description: "Casts REFLECTED FIRMAMENT upon self.",
+    },
+
+    [effectKeys.REFLECTED_FIRMAMENT]: {
+        name: "REFLECTED FIRMAMENT",
+        type: entryTypes.STATE,
+        description:
+            "At MOON PHASE, clears this effect and sets the target for an entity's active elemental effects as their opponent.",
+    },
+
+    [mechanicKeys.MOON_PHASE]: {
+        name: "MOON PHASE",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "Triggers at round end. By default, sets the target for an entity's active elemental effects as the entity itself.",
+    },
+
+    [effectKeys.MOONLIGHT]: {
+        name: "MOONLIGHT",
+        type: entryTypes.STAT,
+        description:
+            "Alternate STAT. Used by certain MIRRORED MOON effects.",
+    },
+};
+
 export const DESCRIPTIONS = {
     ...ACTION_DESCRIPTIONS,
     ...DAMAGE_TYPE_DESCRIPTIONS,
@@ -1058,4 +1182,5 @@ export const DESCRIPTIONS = {
     ...ACTION_CATEGORY_DESCRIPTIONS,
     ...CATEGORY_DESCRIPTIONS,
     ...BATTLE_PHASE_DESCRIPTIONS,
+    ...ELEMENTALIST_DESCRIPTIONS,
 };

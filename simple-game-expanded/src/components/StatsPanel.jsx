@@ -19,6 +19,15 @@ import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
 
+// Roman numerals helper
+const romanFormatter = new Intl.NumberFormat("en", {
+  numberingSystem: "roman",
+});
+
+function toRoman(num) {
+  return romanFormatter.format(num);
+}
+
 function StatsPanel({
     game,
     updateStatsPoints,
@@ -54,7 +63,6 @@ function StatsPanel({
         darkEmbrace: "state-dark-embrace",
         dimmingDarkness: "state-dimming",
         bleakDeception: "state-bleak-deception",
-        burdenOfStigma: "state-burden-of-stigma",
         thornedShackles: "state-thorned",
         cutoffWings: "state-cutoff-wings",
     };
@@ -238,6 +246,16 @@ function StatsPanel({
                     )}
                 </>
             )}
+
+            {entity[effectKeys.BURDEN_OF_STIGMA] > 0 && <>
+                    <div
+                        className="burden-container"
+                    >
+                        <span>
+                            BURDEN OF STIGMA: {toRoman(entity[effectKeys.BURDEN_OF_STIGMA])}
+                        </span>
+                    </div>
+                </>}
 
             <div className="stacks-wrapper">
                 {[...constants.freeResources].reverse().map((key) => {

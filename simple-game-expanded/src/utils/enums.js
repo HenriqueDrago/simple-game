@@ -139,7 +139,6 @@ export const effectKeys = Object.freeze({
     DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
     OVERHEAT: "currOverheat",
-    MAX_OVERHEAT: "maxOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
     CUTOFF_WINGS: "cutoffWings",
@@ -147,21 +146,19 @@ export const effectKeys = Object.freeze({
     MAX_INSIGHT: "maxInsight",
     BLEAK_DECEPTION: "bleakDeception",
     SACRED_FLAMES: "sacredFlames",
-    BENEDICTION: "benediction",
+
     BURDEN_OF_STIGMA: "burdenOfStigma",
     REVELATION: "revelation",
     RUNIC_ARRAY: "runicArray",
     HEALTH: "currHp",
     MANA: "currMana",
     TARNISHED_SIN: "currTarnishedSin",
-    MAX_TARNISHED_SIN: "maxTarnishedSin",
     MAX_MANA: "maxMana",
     MAX_HEALTH: "maxHp",
     STR: "str",
     DEF: "def",
     DAMAGE_REDUCTION: "dr",
     DEF_EFFECTIVENESS: "defEffect",
-    MITIGATION_RESOURCES: "mitigationResources",
     ZENITH_OF_MORTALITY: "zenithOfMortality",
 
     WHITE_STAR: "white",
@@ -214,9 +211,8 @@ export const effectKeys = Object.freeze({
     INSPIRATION: "inspiration",
 
     SEVERED_TIME: "severedTime",
-    AFTERGLOW: "afterglow",
+
     DIVINE_SPARK: "currDivineSpark",
-    MAX_DIVINE_SPARK: "maxDivineSpark",
 
     ABANDONED_BY_GRACE: "abandonedByGrace",
     ANOINTED_PROXY: "anointedProxy",

@@ -16,7 +16,6 @@ const STATE_MAPPINGS = [
     { key: "thornedShackles", label: "Thorned Shackles" },
     { key: "cutoffWings", label: "Cutoff Wings" },
 
-    { key: "burdenOfStigma", label: "Burden of Stigma" },
     { key: "ascendenceOfSpirit", label: "Ascendence of Spirit" },
     { key: "stargazer", label: "Stargazer" },
     { key: "zenithOfMortality", label: "Zenith of Mortality" },

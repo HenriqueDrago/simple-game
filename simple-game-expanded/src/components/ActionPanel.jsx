@@ -35,7 +35,7 @@ function ActionPanel({
         (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
         (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
 
-    const showButtons = isHumanTurn && !currEntity.states.burdenOfStigma;
+    const showButtons = isHumanTurn;
     const showUmbralButtons = showButtons && currEntity.states.umbralCore;
     const showAngelButtons =
         showButtons && currEntity.states.ascendenceOfSpirit;
@@ -46,38 +46,34 @@ function ActionPanel({
     const canUseDeploy = !currEntity.states.venting;
 
     // Label Generation Helpers
-    const getActorLabel = (controller, isPlayerOne, isSealed) => {
+    const getActorLabel = (controller, isPlayerOne) => {
         if (controller === aiKeys.HUMAN) {
             if (
                 playerController === aiKeys.HUMAN &&
                 enemyController === aiKeys.HUMAN
             ) {
-                return `${isPlayerOne ? "Player One Turn" : "Player Two Turn"} ${isSealed ? "(Skipped)" : ""}`;
+                return `${isPlayerOne ? "Player One Turn" : "Player Two Turn"}`;
             }
-            return `Player Turn ${isSealed ? "(Skipped)" : ""}`;
+            return `Player Turn`;
         }
         if (playerController === enemyController) {
-            return `${presetAi[controller].name} ${isPlayerOne ? "One" : "Two"} ${isSealed ? "(Skipped)" : ""}`;
+            return `${presetAi[controller].name} ${isPlayerOne ? "One" : "Two"}`;
         }
-        return `${presetAi[controller].name} ${isSealed ? "(Skipped)" : ""}`;
+        return `${presetAi[controller].name}`;
     };
 
     const playerLabel = getActorLabel(
         playerController,
         true,
-        playerOne.states.burdenOfStigma,
     );
     const enemyLabel = getActorLabel(
         enemyController,
         false,
-        playerTwo.states.burdenOfStigma,
     );
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
-    if (currEntity.states.burdenOfStigma) {
-        waitLabel = currActorLabel;
-    } else if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
+   if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
@@ -104,9 +100,8 @@ function ActionPanel({
 
     // Determine Available Actions
     let currentActions = [];
-    if (currEntity.states.burdenOfStigma) {
-        currentActions = [];
-    } else if (currEntity.states[effectKeys.ANOINTED_PROXY]) {
+
+  if (currEntity.states[effectKeys.ANOINTED_PROXY]) {
         currentActions = getJudgement();
     } else if (showAngelButtons) {
         currentActions = getAngelActions();
