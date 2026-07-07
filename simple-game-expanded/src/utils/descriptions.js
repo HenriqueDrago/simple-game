@@ -695,7 +695,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "ABANDONED BY GRACE",
         type: entryTypes.STATE,
         description:
-            "If there's any entity on this state, but no entity on ANOINTED PROXY state, immediatelly opens the EYE OF HEAVENS and triggers an EMANATION.",
+            "If there's any entity on this state, but no entity on ANOINTED PROXY state, immediatelly opens the EYE OF HEAVENS and triggers ANOINTMENT.",
     },
 
     [effectKeys.ANOINTED_PROXY]: {
@@ -717,6 +717,21 @@ export const PALADIN_DESCRIPTIONS = {
         description:
             "Enables EMANATION at round end. During EMANATION, if closed, opens, grants REVELATION to each entity for every 10 INSIGHT on them and removes SEVERED TIME from the battlefield; otherwise, closes. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES and consumes all RESOURCES from both entities, then ends battle.",
     },
+
+    [effectKeys.ANOINTMENT]: {
+        name: "ANOINTMENT",
+        type: entryTypes.STATE,
+        description:
+            "A special phase triggered when there's an entity in the ABANDONED BY GRACE state present, but no entity in the ANOINTED PROXY state. If there's at least one entity with ABANDONED BY GRACE on the battlefield, grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES, TARNISHED SIN and RESOURCES from both entities.",
+    },
+
+    [mechanicKeys.EMANATION]: {
+        name: "EMANATION",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken. On this phase, if there's no entities on the ASCENDENCE OF SPIRIT state present, EYE OF HEAVENS is set to DORMANT; if EYE OF HEAVENS is CLOSED, opens it, grants REVELATION to each entity for every 10 INSIGHT on them, and removes SEVERED TIME from the battlefield; if EYE OF HEAVENS is OPEN, closes it. ",
+    },
+
 
     [effectKeys.INSIGHT]: {
         name: "INSIGHT",
@@ -820,12 +835,7 @@ export const PALADIN_DESCRIPTIONS = {
         description: "Cannot die. At turn start, lose 1 BURDEN OF STIGMA.",
     },
 
-    [mechanicKeys.EMANATION]: {
-        name: "EMANATION",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken.",
-    },
+    
 
     [effectKeys.MAX_ENLIGHTENMENT]: {
         name: "MAX ENLIGHTENMENT",
@@ -953,7 +963,7 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         description: "A TURN subphase where ACTIONS can be used.",
     },
 
-    [mechanicKeys.RUNIC_INSCRIPTION]: {
+    [mechanicKeys.RUNIC_PULSE]: {
         name: "RUNIC PULSE",
         type: entryTypes.BATTLE_PHASE,
         description:

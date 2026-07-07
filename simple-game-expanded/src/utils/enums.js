@@ -322,4 +322,7 @@ export const mechanicKeys = Object.freeze({
     ACTS_OF_MALEDICTION: "actsOfMalediction",
 
     MOON_PHASE: "moonPhase",
+
+    ANOINTMENT: "anointment",
+    
 });
