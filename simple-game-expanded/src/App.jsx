@@ -173,14 +173,14 @@ function App() {
                     ? prev.playerQueue
                     : prev.playerQueue.slice(1);
 
-            return {
+            return buildRoundQueue({
                 ...newGameState,
                 status:
                     newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
                         ? turnStatus.ONGOING
                         : newGameState.status,
                 playerQueue: newQueue,
-            };
+            });
         });
     }
 

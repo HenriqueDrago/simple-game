@@ -6,6 +6,7 @@ import {
     aiKeys,
     effectKeys,
     roundPhases,
+    playerTurnPhases,
 } from "../utils/enums";
 import { constants, presetAi } from "../utils/constants";
 
@@ -33,6 +34,11 @@ function ActionPanel({
             ? game.roundQueue[game.roundIndex]
             : null;
 
+    const currPlayerPhase =
+        game.playerQueue && game.playerQueue.length > 0
+            ? game.playerQueue[0]
+            : null;
+
     const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN;
     const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN;
 
@@ -46,7 +52,8 @@ function ActionPanel({
         (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
         (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
 
-    const showButtons = isHumanTurn && battleState === turnStatus.ONGOING;
+    const showButtons =
+        isHumanTurn && battleState === turnStatus.ONGOING && currPlayerPhase === playerTurnPhases.PLAN;
     const showUmbralButtons = showButtons && currEntity.states.umbralCore;
     const showAngelButtons =
         showButtons && currEntity.states.ascendenceOfSpirit;
@@ -78,7 +85,7 @@ function ActionPanel({
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
-    if(battleState !== turnStatus.ONGOING) {
+    if (battleState !== turnStatus.ONGOING) {
         waitLabel = null;
     } else if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
