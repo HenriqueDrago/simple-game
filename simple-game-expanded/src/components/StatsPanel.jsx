@@ -10,8 +10,9 @@ import {
     sdmKeys,
     eyeKeys,
     effectKeys,
-    turnStatus,
     entityKeys,
+    roundPhases,
+    playerTurnPhases,
 } from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
@@ -43,11 +44,16 @@ function StatsPanel({
 
     const isAngelView = states.ascendenceOfSpirit;
 
+    const currPhase = game.roundQueue && game.roundQueue.length > 0 ? game.roundQueue[game.roundIndex] : null;
+
+    const currPlayerPhase =
+            game.playerQueue && game.playerQueue.length > 0
+                ? game.playerQueue[0]
+                : null;
+
     const isEntityTurn =
-        (entityKey === entityKeys.PLAYER_ONE &&
-            battleState === turnStatus.PLAYER_ONE_TURN) ||
-        (entityKey === entityKeys.PLAYER_TWO &&
-            battleState === turnStatus.PLAYER_TWO_TURN);
+        (entityKey === entityKeys.PLAYER_ONE && currPhase === roundPhases.PLAYER_ONE_TURN && currPlayerPhase === playerTurnPhases.PLAN) ||
+        (entityKey === entityKeys.PLAYER_TWO && currPhase === roundPhases.PLAYER_TWO_TURN && currPlayerPhase === playerTurnPhases.PLAN);
 
     const stateClassMap = {
         ascendenceOfSpirit: "state-ascendence",
@@ -63,7 +69,7 @@ function StatsPanel({
         darkEmbrace: "state-dark-embrace",
         dimmingDarkness: "state-dimming",
         bleakDeception: "state-bleak-deception",
-        thornedShackles: "state-thorned",
+
         cutoffWings: "state-cutoff-wings",
     };
 

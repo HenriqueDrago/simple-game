@@ -7,6 +7,8 @@ import {
     elementalKeys,
     eyeKeys,
     moonKeys,
+    entityKeys,
+    turnStatus,
 } from "./enums.js";
 
 export function consumeResources(entity, amount, cause) {
@@ -280,7 +282,7 @@ export function createBaseEntity() {
         [effectKeys.OVERHEAT]: 0,
 
         // other
-        [effectKeys.SONORITY]: 0,
+        [effectKeys.SONORITY]: constants.STARTING_SONORITY,
         [effectKeys.REVELATION]: 0,
         [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
         lasersUsedThisTurn: 0,
@@ -318,7 +320,6 @@ export function createBaseEntity() {
             [effectKeys.GUARDING_STATE]: false,
             [effectKeys.SACRIFICIAL_STATE]: false,
 
-            [effectKeys.THORNED_SHACKLES]: false,
             [effectKeys.STARGAZER]: false,
 
             [effectKeys.SELENIAN]: false,
@@ -340,7 +341,7 @@ export function createBaseEntity() {
             [effectKeys.RADIANT]: false,
             [effectKeys.CUTOFF_WINGS]: false,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-            
+
             [effectKeys.ZENITH_OF_MORTALITY]: false,
         },
         stars: {
@@ -555,7 +556,6 @@ export function dealDamage(
 
     damagePostMitigation -= emberConsumed;
 
-
     const defenderNewHalo = defender.resources.halo - haloConsumed;
     const defenderNewCryo = defender.resources.cryogenesis - cryoConsumed;
     const defenderNewEmbers = defender.resources.lingeringEmber - emberConsumed;
@@ -564,9 +564,10 @@ export function dealDamage(
     const defenderNewRadiance = defender.resources.radiance + haloConsumed;
     const newCinders = defender.resources.cinders + emberConsumed;
 
+    // Shackled Mana thorns
     const thornsDmg =
         isArrayActive && dmgType === dmgTypes.PHYSICAL
-            ? attacker.attributes.str.value
+            ? defender.resources[effectKeys.SHACKLED_MANA]
             : 0;
 
     if (thornsDmg > 0) {
@@ -728,33 +729,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
             dome: newDome,
         },
     };
-}
-
-export function processEntityDeathStates(entity) {
-    let draftEntity = { ...entity };
-
-    if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
-        draftEntity = {
-            ...draftEntity,
-            states: {
-                ...draftEntity.states,
-                [effectKeys.ABANDONED_BY_GRACE]: true,
-            },
-        };
-    }
-
-    if (
-        draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        draftEntity[effectKeys.ENLIGHTENMENT] <= 0
-    ) {
-        draftEntity = processExitAscendence(draftEntity);
-    }
-
-    return draftEntity;
-}
-
-export function isEntityDead(entity) {
-    return entity.currHp <= 0 && !entity.states.ascendenceOfSpirit && entity[effectKeys.BURDEN_OF_STIGMA] <= 0;
 }
 
 export function resetPlayerEntity(prev, entityKey) {
@@ -959,14 +933,14 @@ export function processExitAscendence(entity) {
 export function processExitSelenian(entity) {
     let draftEntity = {
         ...entity,
-    }
+    };
 
     draftEntity = {
         ...draftEntity,
         [effectKeys.MOONLIGHT]: 0,
         [effectKeys.ELEMENTAL_CRYSTALS]: elementalKeys.DULLED,
         [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
-    }
+    };
 
     return draftEntity;
 }
@@ -1002,7 +976,6 @@ export function exitAllStates(entity) {
     if (draftEntity.states[effectKeys.SELENIAN]) {
         draftEntity = processExitSelenian(draftEntity);
     }
-
 
     draftEntity = {
         ...draftEntity,
@@ -1197,4 +1170,59 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             [nonAgentKey]: draftNonAgent,
         },
     };
+}
+
+export function processDeathCheck(prev) {
+    let p1 = prev.entities[entityKeys.PLAYER_ONE];
+    let p2 = prev.entities[entityKeys.PLAYER_TWO];
+
+    p1 = processEntityDeathStates(p1);
+    p2 = processEntityDeathStates(p2);
+
+    const p1Dead = isEntityDead(p1);
+    const p2Dead = isEntityDead(p2);
+
+    let status = prev.status;
+
+    if (p1Dead) {
+        status = p2Dead ? turnStatus.DRAW : turnStatus.DEFEAT;
+    } else if (p2Dead) {
+        status = turnStatus.VICTORY;
+    }
+
+    return {
+        ...prev,
+        status: status,
+    };
+}
+
+export function processEntityDeathStates(entity) {
+    let draftEntity = { ...entity };
+
+    if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
+        draftEntity = {
+            ...draftEntity,
+            states: {
+                ...draftEntity.states,
+                [effectKeys.ABANDONED_BY_GRACE]: true,
+            },
+        };
+    }
+
+    if (
+        draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        draftEntity[effectKeys.ENLIGHTENMENT] <= 0
+    ) {
+        draftEntity = processExitAscendence(draftEntity);
+    }
+
+    return draftEntity;
+}
+
+export function isEntityDead(entity) {
+    return (
+        entity.currHp <= 0 &&
+        !entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        entity[effectKeys.BURDEN_OF_STIGMA] <= 0
+    );
 }

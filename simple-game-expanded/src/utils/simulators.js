@@ -154,7 +154,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         agent.attributes.str.value + agent.resources.radiance,
         dmgTypes.PHYSICAL,
-        prev.remainingArray > 0,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const draftAttacker = {
@@ -200,7 +200,7 @@ function simulateSpecialAttack({
         nonAgent,
         manaDiff + agent.attributes.str.value,
         dmgTypes.PIERCING,
-        prev.remainingArray > 0,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const draftDefender = gainMana(defender, manaDiff);
@@ -256,7 +256,7 @@ function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     return {
         ...prev,
-        remainingArray: 0,
+        [effectKeys.RUNIC_ARRAY]: 0,
         entities: {
             ...prev.entities,
             [nonAgentKey]: {
@@ -266,10 +266,6 @@ function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     poison: nonAgentNewPoison,
                     shackledMana: 0,
                 },
-                states: {
-                    ...nonAgent.states,
-                    thornedShackles: false,
-                },
             },
             [agentKey]: {
                 ...agent,
@@ -277,10 +273,6 @@ function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     ...agent.resources,
                     poison: agentNewPoison,
                     shackledMana: 0,
-                },
-                states: {
-                    ...agent.states,
-                    thornedShackles: false,
                 },
             },
         },
@@ -299,7 +291,7 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
     return {
         ...prev,
-        remainingArray: constants.ARRAY_DURATION,
+        [effectKeys.RUNIC_ARRAY]: constants.ARRAY_DURATION,
         entities: {
             ...prev.entities,
             [nonAgentKey]: {
@@ -310,10 +302,6 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     manaOverflow: 0,
                     shackledMana: nonAgentShackledMana,
                 },
-                states: {
-                    ...nonAgent.states,
-                    thornedShackles: true,
-                },
             },
             [agentKey]: {
                 ...agent,
@@ -322,10 +310,6 @@ function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     ...agent.resources,
                     manaOverflow: 0,
                     shackledMana: agentShackledMana,
-                },
-                states: {
-                    ...agent.states,
-                    thornedShackles: true,
                 },
             },
         },
@@ -493,7 +477,7 @@ function simulateAttune({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                sonority: constants.STARTING_SONORORITY,
+                sonority: constants.STARTING_SONORITY,
                 states: {
                     ...agent.states,
                     resonant: true,
@@ -553,7 +537,7 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         musicalShift,
         dmgTypes.TRUE,
-        prev.remainingArray > 0,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     return {
@@ -597,7 +581,7 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         agent[effectKeys.ENERGY_LEVEL],
         dmgTypes.PIERCING,
-        prev.remainingArray > 0,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const newOverheat =
@@ -608,6 +592,8 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     );
     const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
 
+    console.log(newOverheat);
+
     return {
         ...prev,
         entities: {
@@ -617,6 +603,11 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                 [effectKeys.OVERHEAT]: newOverheat,
                 [effectKeys.DYNAMO]: newDynamo,
                 lasersUsedThisTurn: newlasersUsedThisTurn,
+                states: {
+                    ...attacker.states,
+                    [effectKeys.THERMAL_OVERLOAD]:
+                        newOverheat >= constants.MAX_OVERHEAT,
+                },
             },
             [nonAgentKey]: {
                 ...defender,

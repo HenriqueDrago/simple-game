@@ -49,20 +49,20 @@ const MANA_BLEED_MULT = 0.5;
 const BLOOD_SACRIFICE_MULT = 1.0;
 
 const ARRAY_DURATION = 3;
-const MANA_SHACKLE_TURN_GAIN = 4;
+const MANA_SHACKLE_TURN_GAIN = 5;
 
 const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 20
+const HALO_GEN_MULT = 20;
 const SAC_HP_CONSUMPTION = 0.5;
 
 const SHADOW_PACT_BURN = 5;
 
 const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
 
-const STARTING_SONORORITY = 0;
+const STARTING_SONORITY = 0;
 const SONORITY_LOWER_LIMIT = -10;
 const SONORITY_HIGHER_LIMIT = 10;
 
@@ -152,7 +152,7 @@ export const constants = {
     limitedResources,
     SHADOW_PACT_BURN,
     RADIANT_DEF_EFFECT_MULTIPLIER,
-    STARTING_SONORORITY,
+    STARTING_SONORITY,
     SONORITY_LOWER_LIMIT,
     SONORITY_HIGHER_LIMIT,
     VENTING_OVERHEAT_LOSS,
@@ -183,7 +183,6 @@ export const presetAi = {
         best: {
             str: 5,
             def: 5,
-            
         },
         caller: simpleAI,
         desc: [
@@ -272,8 +271,8 @@ export const presetAi = {
             actionKeys.ARRAY,
             actionKeys.CURSE,
             effectKeys.RUNIC_ARRAY,
-            mechanicKeys.RUNIC_INSCRIPTION,
-            effectKeys.THORNED_SHACKLES,
+            mechanicKeys.RUNIC_PULSE,
+            mechanicKeys.MANA_SIPHON,
             effectKeys.SHACKLED_MANA,
             effectKeys.POISON,
         ],
@@ -401,7 +400,6 @@ export const presetAi = {
         },
         caller: simpleAI,
         desc: [
-
             actionKeys.ALIGN,
             effectKeys.SELENIAN,
             effectKeys.ELEMENTAL_CRYSTALS,
@@ -748,16 +746,26 @@ export const coloredStars = [
 ];
 
 export const INITIAL_GAME_STATE = {
+    // turn logic
     status: turnStatus.SETUP,
     nextStatus: null,
     lastPlayerTurn: null,
-    remainingArray: 0,
-    whoStarts: whoStartsKeys.PLAYER_ONE,
-    turnCount: 0,
-    eyeOfHeavens: eyeKeys.DORMANT,
+    roundCount: 0,
     starQueue: null,
-    progressMode: false,
+    playerQueue: null,
+    roundQueue: null,
+    roundIndex: 0,
+
+    // game logic
+    [effectKeys.RUNIC_ARRAY]: 0,
+    eyeOfHeavens: eyeKeys.DORMANT,
     [effectKeys.SEVERED_TIME]: false,
+
+    // other
+    whoStarts: whoStartsKeys.PLAYER_ONE,
+    startingPlayer: entityKeys.PLAYER_ONE,
+    progressMode: false,
+
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
         [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,

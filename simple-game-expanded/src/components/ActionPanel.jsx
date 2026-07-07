@@ -1,6 +1,12 @@
 import "./ActionPanel.css";
 
-import { entityKeys, turnStatus, aiKeys, effectKeys } from "../utils/enums";
+import {
+    entityKeys,
+    turnStatus,
+    aiKeys,
+    effectKeys,
+    roundPhases,
+} from "../utils/enums";
 import { constants, presetAi } from "../utils/constants";
 
 import {
@@ -20,10 +26,15 @@ function ActionPanel({
     handleClearTooltip,
 }) {
     const battleState = game.status;
-    const arrayActive = game.remainingArray > 0;
+    const arrayActive = game[effectKeys.RUNIC_ARRAY] > 0;
 
-    const isPlayerOneTurn = battleState === turnStatus.PLAYER_ONE_TURN;
-    const isPlayerTwoTurn = battleState === turnStatus.PLAYER_TWO_TURN;
+    const currPhase =
+        game.roundQueue && game.roundQueue.length > 0
+            ? game.roundQueue[game.roundIndex]
+            : null;
+
+    const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN;
+    const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN;
 
     const playerOne = game.entities[entityKeys.PLAYER_ONE];
     const playerTwo = game.entities[entityKeys.PLAYER_TWO];
@@ -35,7 +46,7 @@ function ActionPanel({
         (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
         (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
 
-    const showButtons = isHumanTurn;
+    const showButtons = isHumanTurn && battleState === turnStatus.ONGOING;
     const showUmbralButtons = showButtons && currEntity.states.umbralCore;
     const showAngelButtons =
         showButtons && currEntity.states.ascendenceOfSpirit;
@@ -62,29 +73,30 @@ function ActionPanel({
         return `${presetAi[controller].name}`;
     };
 
-    const playerLabel = getActorLabel(
-        playerController,
-        true,
-    );
-    const enemyLabel = getActorLabel(
-        enemyController,
-        false,
-    );
+    const playerLabel = getActorLabel(playerController, true);
+    const enemyLabel = getActorLabel(enemyController, false);
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
-   if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
+    if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
-    } else if (battleState === turnStatus.ARRAY_TURN) {
-        waitLabel = "Runic Inscription";
-    } else if (battleState === turnStatus.EMINENCE_TURN) {
+    } else if (currPhase === roundPhases.ARRAY_TURN) {
+        waitLabel = "Runic Pulse";
+    } else if (currPhase === roundPhases.EMINENCE_TURN) {
         waitLabel = "Emanation";
-    } else if (battleState === turnStatus.STARS_TURN) {
+    } else if (
+        currPhase === roundPhases.P1_STARS_TURN ||
+        currPhase === roundPhases.P2_STARS_TURN
+    ) {
         waitLabel = "Starfall";
-    } else if (battleState === turnStatus.MOON_TURN) {
+    } else if (currPhase === roundPhases.MOON_TURN) {
         waitLabel = "Moon Phase";
+    } else if (currPhase === roundPhases.MINI_ARRAY_TURN) {
+        waitLabel = "Mana Siphon";
+    } else if (currPhase === roundPhases.SPECIAL_EMINENCE_TURN) {
+        waitLabel = "Anointment";
     }
 
     const showWait = waitLabel !== null;
@@ -101,7 +113,7 @@ function ActionPanel({
     // Determine Available Actions
     let currentActions = [];
 
-  if (currEntity.states[effectKeys.ANOINTED_PROXY]) {
+    if (currEntity && currEntity.states[effectKeys.ANOINTED_PROXY]) {
         currentActions = getJudgement();
     } else if (showAngelButtons) {
         currentActions = getAngelActions();
@@ -123,9 +135,10 @@ function ActionPanel({
     let containerClass = "button-grid";
 
     if (
-        currEntity.states[effectKeys.ANOINTED_PROXY] ||
-        currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
-        currEntity.states[effectKeys.ZENITH_OF_MORTALITY]
+        currEntity &&
+        (currEntity.states[effectKeys.ANOINTED_PROXY] ||
+            currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
+            currEntity.states[effectKeys.ZENITH_OF_MORTALITY])
     ) {
         containerClass = "single-button-container";
     } else if (showAngelButtons) {

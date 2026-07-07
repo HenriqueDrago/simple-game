@@ -22,7 +22,7 @@ function Header({
         announcement = "Player Two Wins!";
     else if (battleState === turnStatus.DRAW) announcement = "Draw!";
     else if (battleState !== turnStatus.SETUP)
-        announcement = `Round ${Math.ceil(game.turnCount / 2)}`;
+        announcement = `Round ${game.roundCount}`;
 
     return (
         <div className="header-container">
@@ -105,7 +105,6 @@ function Header({
                             title={"Reset Progression Data"}
                         >
                             <RotateCcw size={18} strokeWidth={2.5} />
-                            
                         </button>
                     </div>
                 )}

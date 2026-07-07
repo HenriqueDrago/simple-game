@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
 import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
-import { centralAIManagement, simpleAI } from "./utils/aiControllers.js";
+import { centralAIManagement } from "./utils/aiControllers.js";
 import {
     CHECKPOINT_STATES,
     constants,
@@ -14,16 +14,20 @@ import {
 import {
     processUpkeep,
     commitTurn,
-    processArrayTurn,
-    processEminenceTurn,
     processStarfallTurn,
     processMoonPhase,
+    buildRoundQueue,
+    processManaSiphon,
+    processRunicPulse,
+    processAnnoitement,
+    processEmanation,
 } from "./utils/turnManagement.js";
 import {
     distributePoints,
     createBaseEntity,
     resetPlayerEntity,
     processActionTypeUsed,
+    processDeathCheck,
 } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
@@ -37,6 +41,9 @@ import {
     effectKeys,
     progKeys,
     elementalKeys,
+    playerTurnPhases,
+    actionKeys,
+    roundPhases,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -52,14 +59,21 @@ function resetGameState(prev) {
 
     return {
         ...prev,
+        // turn logic
         status: turnStatus.SETUP,
         nextStatus: null,
         lastPlayerTurn: null,
-        remainingArray: 0,
-        turnCount: 0,
-        eyeOfHeavens: eyeKeys.DORMANT,
+        roundCount: 0,
         starQueue: null,
+        playerQueue: null,
+        roundQueue: null,
+        roundIndex: 0,
+
+        // game logic
+        [effectKeys.RUNIC_ARRAY]: 0,
+        eyeOfHeavens: eyeKeys.DORMANT,
         [effectKeys.SEVERED_TIME]: false,
+
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
             [entityKeys.PLAYER_TWO]: playerTwo,
@@ -111,14 +125,20 @@ function App() {
     function handleAction(action, agentKey, nonAgentKey) {
         console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
-            // Skipping ghost clicks
+            // Safeguard
+            const currPhase =
+                prev.roundQueue && prev.roundQueue[prev.roundIndex];
+            const currSubPhase = prev.playerQueue && prev.playerQueue[0];
+
             if (
-                prev.status !== turnStatus.PLAYER_ONE_TURN &&
-                prev.status !== turnStatus.PLAYER_TWO_TURN
+                (currPhase !== roundPhases.PLAYER_ONE_TURN &&
+                    currPhase !== roundPhases.PLAYER_TWO_TURN) ||
+                currSubPhase !== playerTurnPhases.PLAN
             ) {
                 return prev;
             }
 
+            // Run the action
             const agent = prev.entities[agentKey];
             const nonAgent = prev.entities[nonAgentKey];
 
@@ -134,14 +154,32 @@ function App() {
 
             const simulationResult = sim(context);
 
-            const newGameState = processActionTypeUsed(
+            // process effects that depend on action type (offensive, defensive, etc)
+            let newGameState = processActionTypeUsed(
                 simulationResult,
                 agentKey,
                 nonAgentKey,
                 action,
             );
 
-            return commitTurn(newGameState, agentKey, nonAgentKey, action);
+            // Death check
+            newGameState = processDeathCheck(newGameState);
+
+            // Determine if PLAN subphase ends or not
+            const newQueue =
+                (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
+                newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
+                    ? prev.playerQueue
+                    : prev.playerQueue.slice(1);
+
+            return {
+                ...newGameState,
+                status:
+                    newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
+                        ? turnStatus.ONGOING
+                        : newGameState.status,
+                playerQueue: newQueue,
+            };
         });
     }
 
@@ -219,17 +257,16 @@ function App() {
 
     function handleStart() {
         setGame((prev) => {
-            const initialStatus =
+            const startingPlayer =
                 prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
                 (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
-                    ? turnStatus.UPKEEP_PLAYER_ONE
-                    : turnStatus.UPKEEP_PLAYER_TWO;
+                    ? entityKeys.PLAYER_ONE
+                    : entityKeys.PLAYER_TWO;
 
             return {
                 ...prev,
-                status: initialStatus,
-                lastPlayerTurn: entityKeys.PLAYER_ONE,
-                turnCount: 1,
+                status: turnStatus.ONGOING,
+                startingPlayer: startingPlayer,
             };
         });
     }
@@ -324,7 +361,6 @@ function App() {
 
     function handleProgressToggle() {
         setGame((prev) => {
-            console.log(prev);
             if (prev.status !== turnStatus.SETUP) {
                 return prev;
             }
@@ -462,131 +498,253 @@ function App() {
 
     // Efeitos
 
-    // AI turn
+    // Turn Management
     useEffect(() => {
-        const activeKey =
-            game.status === turnStatus.PLAYER_ONE_TURN
-                ? entityKeys.PLAYER_ONE
-                : game.status === turnStatus.PLAYER_TWO_TURN
-                  ? entityKeys.PLAYER_TWO
-                  : null;
-
-        if (!activeKey) return;
-
-        const agentKey = activeKey;
-        const nonAgentKey =
-            activeKey === entityKeys.PLAYER_ONE
-                ? entityKeys.PLAYER_TWO
-                : entityKeys.PLAYER_ONE;
-        const agent = game.entities[agentKey];
-
-        if (agent.controller !== aiKeys.HUMAN) {
-            const triggerAI = () => {
-                const nonAgent = game.entities[nonAgentKey];
-                const isArrayActive = game.remainingArray > 0;
-
-                const totalMana = agent.currMana + agent.resources.manaOverflow;
-                const hasManaForSpecial = totalMana >= constants.SP_ATTACK_COST;
-
-                const context = {
-                    agent,
-                    agentKey,
-                    nonAgent,
-                    nonAgentKey,
-                    isArrayActive,
-                    totalMana,
-                    hasManaForSpecial,
-                    handleAction,
-                    prev: game,
-                };
-
-                const executeAI = presetAi[agent.controller].caller || simpleAI;
-                centralAIManagement(context, executeAI);
+        if (game.status === turnStatus.ONGOING) {
+            // Rebuilds the queue
+            let gameState = {
+                ...game,
+                roundIndex: game.roundIndex ? game.roundIndex : 0,
             };
+            gameState = buildRoundQueue(gameState);
 
-            const timer = setTimeout(triggerAI, 1000);
+            // Grab current phase
+            const currPhase = gameState.roundQueue[gameState.roundIndex];
+            let targetKey = null;
+            let nonTargetKey = null;
+            let nextState = null;
+            let delayAmount = 0;
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+            switch (currPhase) {
+                case roundPhases.ROUND_START: {
+                    nextState = {
+                        ...gameState,
+                        roundCount: gameState.roundCount + 1,
+                        roundIndex: gameState.roundIndex + 1,
+                    };
+                    break;
+                }
 
-    useEffect(() => {
-        if (game.status === turnStatus.TRANSITION) {
-            const timer = setTimeout(() => {
-                setGame((prev) => ({ ...prev, status: prev.nextStatus }));
-            }, 1000);
+                case roundPhases.MINI_ARRAY_TURN: {
+                    nextState = processManaSiphon(gameState);
+                    delayAmount = 1200;
+                    break;
+                }
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+                case roundPhases.ARRAY_TURN: {
+                    nextState = processRunicPulse(gameState);
+                    delayAmount = 1200;
+                    break;
+                }
 
-    useEffect(() => {
-        if (game.status === turnStatus.SHORT_TRANSITION) {
-            const timer = setTimeout(() => {
-                setGame((prev) => ({ ...prev, status: prev.nextStatus }));
-            }, 400);
+                case roundPhases.SPECIAL_EMINENCE_TURN: {
+                    nextState = processAnnoitement(gameState);
+                    delayAmount = 1200;
+                    break;
+                }
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+                case roundPhases.EMINENCE_TURN: {
+                    nextState = processEmanation(gameState);
+                    delayAmount = 1200;
+                    break;
+                }
 
-    useEffect(() => {
-        if (game.status === turnStatus.MOON_TURN) {
-            const timer = setTimeout(() => {
-                setGame(processMoonPhase);
-            }, 1000);
+                case roundPhases.MOON_TURN: {
+                    nextState = processMoonPhase(gameState);
+                    delayAmount = 1200;
+                    break;
+                }
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+                case roundPhases.P1_STARS_TURN: {
+                    targetKey = entityKeys.PLAYER_ONE;
+                    nonTargetKey = entityKeys.PLAYER_TWO;
+                    break;
+                }
 
-    useEffect(() => {
-        if (game.status === turnStatus.ARRAY_TURN) {
-            const timer = setTimeout(() => {
-                setGame(processArrayTurn);
-            }, 1000);
+                case roundPhases.P2_STARS_TURN: {
+                    targetKey = entityKeys.PLAYER_TWO;
+                    nonTargetKey = entityKeys.PLAYER_ONE;
+                    break;
+                }
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+                case roundPhases.PLAYER_ONE_TURN: {
+                    targetKey = entityKeys.PLAYER_ONE;
+                    nonTargetKey = entityKeys.PLAYER_TWO;
+                    break;
+                }
 
-    useEffect(() => {
-        if (game.status === turnStatus.EMINENCE_TURN) {
-            const timer = setTimeout(() => {
-                setGame(processEminenceTurn);
-            }, 1000);
+                case roundPhases.PLAYER_TWO_TURN: {
+                    targetKey = entityKeys.PLAYER_TWO;
+                    nonTargetKey = entityKeys.PLAYER_ONE;
+                    break;
+                }
 
-            return () => clearTimeout(timer);
-        }
-    }, [game.status]);
+                case roundPhases.ROUND_END: {
+                    nextState = {
+                        ...gameState,
+                        roundIndex: 0,
+                        roundQueue: [],
+                    };
+                    break;
+                }
+            }
 
-    useEffect(() => {
-        if (game.status === turnStatus.STARS_TURN) {
-            if (!game.starQueue) {
-                const newQueue = Object.values(starfallPhases);
-
-                setGame((prev) => {
-                    return {
-                        ...prev,
+            // starfall
+            if (
+                !nextState &&
+                (currPhase === roundPhases.P1_STARS_TURN ||
+                    currPhase === roundPhases.P2_STARS_TURN)
+            ) {
+                if (!gameState.starQueue) {
+                    const newQueue = Object.values(starfallPhases);
+                    nextState = {
+                        ...gameState,
                         starQueue: newQueue,
                     };
-                });
-            } else {
-                const timer = setTimeout(() => {
-                    setGame(processStarfallTurn);
-                }, 800);
-                return () => clearTimeout(timer);
+                } else {
+                    nextState = processStarfallTurn(
+                        gameState,
+                        targetKey,
+                        nonTargetKey,
+                    );
+                }
             }
-        }
-    }, [game.status, game.starQueue]);
 
-    // Turn Start effects
+            // player turn
+            if (
+                !nextState &&
+                (currPhase === roundPhases.PLAYER_ONE_TURN ||
+                    currPhase === roundPhases.PLAYER_TWO_TURN)
+            ) {
+                console.log(gameState.playerQueue);
+
+                if (
+                    !gameState.playerQueue ||
+                    gameState.playerQueue.length === 0
+                ) {
+                    nextState = {
+                        ...gameState,
+                        playerQueue: Object.values(playerTurnPhases),
+                    };
+                } else {
+                    const currPlayerPhase = gameState.playerQueue[0];
+
+                    if (currPlayerPhase === playerTurnPhases.UPKEEP) {
+                        nextState = processUpkeep(
+                            gameState,
+                            targetKey,
+                            nonTargetKey,
+                        );
+                    }
+
+                    if (currPlayerPhase === playerTurnPhases.COMMIT) {
+                        nextState = commitTurn(
+                            gameState,
+                            targetKey,
+                            nonTargetKey,
+                        );
+                    }
+                }
+            }
+
+            // Fallback
+            if (!nextState) {
+                nextState = game;
+            }
+
+            let timer = null;
+
+            if (delayAmount > 0) {
+                timer = setTimeout(() => {
+                    setGame(nextState);
+                }, delayAmount);
+            } else {
+                setGame(nextState);
+            }
+
+            return () => {
+                if (timer) {
+                    clearTimeout(timer);
+                }
+            };
+        }
+    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue]);
+
+    // AI turn
     useEffect(() => {
+        if (game.status !== turnStatus.ONGOING) {
+            return;
+        }
+
+        const currPhase =
+            game.roundQueue && game.roundQueue.length > 0
+                ? game.roundQueue[game.roundIndex]
+                : null;
         if (
-            game.status === turnStatus.UPKEEP_PLAYER_ONE ||
-            game.status === turnStatus.UPKEEP_PLAYER_TWO
+            currPhase !== roundPhases.PLAYER_ONE_TURN &&
+            currPhase !== roundPhases.PLAYER_TWO_TURN
         ) {
-            setGame(processUpkeep);
+            return;
+        }
+
+        const targetKey =
+            currPhase === roundPhases.PLAYER_ONE_TURN
+                ? entityKeys.PLAYER_ONE
+                : entityKeys.PLAYER_TWO;
+        const nonTargetKey =
+            targetKey === entityKeys.PLAYER_ONE
+                ? entityKeys.PLAYER_TWO
+                : entityKeys.PLAYER_ONE;
+
+        const activePlayer = game.entities[targetKey];
+        const currentSubPhase =
+            game.playerQueue && game.playerQueue.length > 0
+                ? game.playerQueue[0]
+                : null;
+
+        if (
+            currentSubPhase === playerTurnPhases.PLAN &&
+            activePlayer.controller !== aiKeys.HUMAN
+        ) {
+            const aiTimer = setTimeout(() => {
+                centralAIManagement(
+                    game,
+                    targetKey,
+                    nonTargetKey,
+                    handleAction,
+                );
+            }, 1200);
+
+            return () => clearTimeout(aiTimer);
+        }
+    }, [game.status, game.roundIndex, game.playerQueue, handleAction]);
+
+    // Round Transition
+    useEffect(() => {
+        if (game.status === turnStatus.ROUND_TRANSITION) {
+            const timer = setTimeout(() => {
+                setGame((prev) => ({
+                    ...prev,
+                    status: turnStatus.ONGOING,
+                    roundIndex: prev.roundIndex + 1,
+                }));
+            }, 1200);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game.status]);
+
+    // Starfall Transition
+    useEffect(() => {
+        if (game.status === turnStatus.STARFALL_TRANSITION) {
+            const timer = setTimeout(() => {
+                setGame((prev) => ({
+                    ...prev,
+                    status: turnStatus.ONGOING,
+                }));
+            }, 700);
+
+            return () => clearTimeout(timer);
         }
     }, [game.status]);
 

@@ -1,5 +1,10 @@
 import "./StarsPanel.css";
-import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
+import {
+    effectKeys,
+    entityKeys,
+    playerTurnPhases,
+    roundPhases,
+} from "../utils/enums";
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
@@ -9,15 +14,29 @@ function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
     const entity = game.entities[entityKey];
     const currPhase = game.starQueue ? game.starQueue[0] : null;
 
+    const currRoundPhase =
+        game.roundQueue && game.roundQueue.length > 0
+            ? game.roundQueue[game.roundIndex]
+            : null;
+    const currPlayerPhase =
+        game.playerQueue && game.playerQueue.length > 0
+            ? game.playerQueue[0]
+            : null;
+
     const showButton =
         entityKey === entityKeys.PLAYER_ONE
-            ? game.status === turnStatus.PLAYER_ONE_TURN
-            : game.status === turnStatus.PLAYER_TWO_TURN;
+            ? currRoundPhase === roundPhases.PLAYER_ONE_TURN &&
+              currPlayerPhase === playerTurnPhases.PLAN
+            : currRoundPhase === roundPhases.PLAYER_TWO_TURN &&
+              currPlayerPhase === playerTurnPhases.PLAN;
 
     return (
-        <div className="star-panel-container" style={{
-            flexDirection: reversed ? "row-reverse" : "row"
-        }}>
+        <div
+            className="star-panel-container"
+            style={{
+                flexDirection: reversed ? "row-reverse" : "row",
+            }}
+        >
             <div className="star-panel-main-container">
                 <div className="white-and-gray-container">
                     <div className="special-star">

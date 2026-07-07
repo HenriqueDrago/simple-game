@@ -10,7 +10,7 @@ function GradientBar({
 }) {
     const gradientPercentage = Math.max(
         0,
-        Math.min(1, currResource / maxResource) * 100,
+        (currResource / maxResource) * 100,
     );
     const nonFillPercentage = 100 - gradientPercentage;
 
@@ -39,7 +39,7 @@ function GradientBar({
                 <div
                     className="gradient-fill"
                     style={{
-                        width: `${gradientPercentage}%`,
+                        width: `${Math.min(1, gradientPercentage / 100) * 100}%`,
                     }}
                 />
                 <div

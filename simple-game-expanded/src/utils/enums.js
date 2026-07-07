@@ -1,18 +1,26 @@
 export const turnStatus = Object.freeze({
     SETUP: 0,
+    VICTORY: 1,
+    DEFEAT: 2,
+    DRAW: 3,
+    ONGOING: 4,
+    ROUND_TRANSITION: 5,
+    STARFALL_TRANSITION: 6,
+});
+
+export const roundPhases = Object.freeze({
+    ROUND_START: 0,
     PLAYER_ONE_TURN: 1,
     PLAYER_TWO_TURN: 2,
-    UPKEEP_PLAYER_ONE: 3,
-    UPKEEP_PLAYER_TWO: 4,
-    VICTORY: 5,
-    DEFEAT: 6,
-    DRAW: 7,
-    TRANSITION: 8,
-    SHORT_TRANSITION: 9,
     ARRAY_TURN: 11,
     EMINENCE_TURN: 12,
-    STARS_TURN: 13,
+    P1_STARS_TURN: 13,
     MOON_TURN: 14,
+    P2_STARS_TURN: 15,
+    SPECIAL_EMINENCE_TURN: 16,
+    MINI_ARRAY_TURN: 17,
+
+    ROUND_END: 99,
 });
 
 export const entityKeys = Object.freeze({
@@ -107,7 +115,7 @@ export const effectKeys = Object.freeze({
     MANA_OVERFLOW: "manaOverflow",
     SACRIFICIAL_STATE: "sacrificial",
 
-    THORNED_SHACKLES: "thornedShackles",
+
     SHACKLED_MANA: "shackledMana",
     POISON: "poison",
     RADIANCE: "radiance",
@@ -281,6 +289,12 @@ export const starfallPhases = Object.freeze({
     VIOLET_TRAIL: effectKeys.VIOLET_TRAIL,
 });
 
+export const playerTurnPhases = Object.freeze({
+    UPKEEP: 0,
+    PLAN: 1,
+    COMMIT: 2,
+})
+
 export const progKeys = Object.freeze({
     ALWAYS_OPEN: 0,
     DEFEATED: 1,
@@ -297,7 +311,8 @@ export const mechanicKeys = Object.freeze({
     COMMIT: "commit",
     MANA_IMBALANCE: "manaImbalance",
     MANA_BLEED: "manaBleed",
-    RUNIC_INSCRIPTION: "runicInscription",
+    RUNIC_PULSE: "runicPulse",
+    MANA_SIPHON: "manaSiphon",
 
     EMANATION: "emanation",
     OFFENSIVE_ACTIONS: "offensiveActions",

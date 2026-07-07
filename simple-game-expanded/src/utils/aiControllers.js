@@ -1,6 +1,10 @@
-import { constants } from "./constants.js";
+import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
-import { consumeResources, isEntityDead, restoreResources } from "./entities.js";
+import {
+    consumeResources,
+    isEntityDead,
+    restoreResources,
+} from "./entities.js";
 import { actionKeys, effectKeys } from "./enums.js";
 
 // Auxiliary Functions
@@ -36,9 +40,27 @@ function isEntityTrulyDead(entity) {
 }
 
 // Central router
-export function centralAIManagement(context, defaultAI) {
-    // Generic overrides
-    const { agent, agentKey, nonAgentKey, handleAction } = context;
+export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
+    // Build context
+    const agent = prev.entities[agentKey];
+    const nonAgent = prev.entities[nonAgentKey];
+
+    const totalAgentMana =
+        agent[effectKeys.MANA] + agent.resources[effectKeys.MANA_OVERFLOW];
+
+    const context = {
+        prev,
+        agent,
+        agentKey,
+        nonAgent,
+        nonAgentKey,
+        isArrayActive: prev[effectKeys.RUNIC_ARRAY] > 0,
+        totalMana: totalAgentMana,
+        hasManaForSpecial: totalAgentMana >= constants.SP_ATTACK_COST,
+        handleAction,
+    };
+
+    console.log(`array: ${prev[effectKeys.RUNIC_ARRAY]}`)
 
     // Use Judgement if Annointed
     if (agent.states[effectKeys.ANOINTED_PROXY]) {
@@ -71,6 +93,7 @@ export function centralAIManagement(context, defaultAI) {
     }
 
     // Use default AI otherwise
+    const defaultAI = presetAi[agent.controller].caller || simpleAI;
     defaultAI(context);
     return;
 }
@@ -138,6 +161,20 @@ export function bloodknightAI(context) {
         nonAgent.resources[effectKeys.HALO] > 0
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
+        return;
+    }
+
+    // If no bloodsacrifice and low hp
+    if (
+        agent.currHp < agent.maxHp * 0.6 &&
+        agent.resources[effectKeys.BLOOD_SACRIFICE] <= 0
+    ) {
+        if (agent[effectKeys.MANA] >= 5) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+        } else {
+            handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+        }
+        return;
     }
 
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
@@ -158,6 +195,7 @@ export function paladinAI(context) {
     // Use AEGIS if available
     if (!agent.states[effectKeys.CUTOFF_WINGS]) {
         handleAction(actionKeys.AEGIS, agentKey, nonAgentKey);
+        return;
     }
 
     // safeguard: ATTACK

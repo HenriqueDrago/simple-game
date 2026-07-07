@@ -145,13 +145,6 @@ export const STATE_DESCRIPTIONS = {
         description: "Raises DAMAGE REDUCTION by 50%. Cleared at turn start.",
     },
 
-    [effectKeys.THORNED_SHACKLES]: {
-        name: "THORNED SHACKLES",
-        type: entryTypes.STATE,
-        description:
-            "When suffering PHYSICAL DAMAGE, the attacker takes TRUE DAMAGE equal to their own STR.",
-    },
-
     [effectKeys.UMBRAL_CORE]: {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
@@ -225,7 +218,7 @@ export const RESOURCE_DESCRIPTIONS = {
     [effectKeys.SHACKLED_MANA]: {
         name: "SHACKLED MANA",
         type: entryTypes.FREE_RESOURCE,
-        description: "Inactive. Cannot be used as MANA.",
+        description: "Inactive. Cannot be used as MANA. When taking PHYSICAL DAMAGE, the attacker takes damage equal to SHACKLED MANA on self.",
     },
 
     [effectKeys.POISON]: {
@@ -296,7 +289,7 @@ export const FIELD_EFFECT_DESCRIPTIONS = {
         name: "RUNIC ARRAY",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "While active, enables RUNIC INSCRIPTION at round end. On RUNIC INSCRIPTION, consumes all MANA and MANA OVERFLOW from all entities, then grants SHACKLED MANA equal to the amount consumed on each entity. Furthermore, on RUNIC INSCRIPTION, grants every player 3 SHACKLED MANA. Additionally, if RUNIC ARRAY is about to end, consumes all SHACKLED MANA on all entities, then distributes it evenly as MANA and MANA OVERFLOW between all entities. While RUNIC ARRAY is active, replaces ARRAY with CURSE, and all entities gain THORNED SHACKLES. Disables MANA OVERFLOW turn end effects.",
+            "While active, enables MANA SIPHON and RUNIC PULSE. Additionally, replaces ARRAY with CURSE and disables MANA OVERFLOW turn end effects.",
     },
 };
 
@@ -487,7 +480,7 @@ export const STAR_DESCRIPTIONS = {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, loses all BLUE STAR on self, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
+            "At BLUE STARFALL, loses all BLUE STAR on self, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR, and doubles the amount of DOME gained. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
     },
 
     [effectKeys.INDIGO_STAR]: {
@@ -715,14 +708,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "JUDGEMENT",
         type: entryTypes.ACTION,
         description:
-            "Cleases all STATES and consumes all RESOURCES from the opponent.",
+            "Cleanses all STATES, TARNISHED SIN, and RESOURCES from the opponent. Then, exits ANOINTED PROXY.",
     },
 
     [effectKeys.EYE_OF_HEAVENS]: {
         name: "EYE OF HEAVENS",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "Enables EMANATION at round end. During EMANATION, if closed, opens and grants REVELATION to each entity for every 10 INSIGHT on them; otherwise, closes and removes SEVERED TIME from the battlefield. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES and consumes all RESOURCES from both entities, then ends battle.",
+            "Enables EMANATION at round end. During EMANATION, if closed, opens, grants REVELATION to each entity for every 10 INSIGHT on them and removes SEVERED TIME from the battlefield; otherwise, closes. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES and consumes all RESOURCES from both entities, then ends battle.",
     },
 
     [effectKeys.INSIGHT]: {
@@ -746,13 +739,11 @@ export const PALADIN_DESCRIPTIONS = {
             "An alternative stat used by certain effects. When taking PHYSICAL DAMAGE on ENLIGHTENMENT, decrease damage taken by REVELATION on self.",
     },
 
-    
-
     [effectKeys.SEVERED_TIME]: {
         name: "SEVERED TIME",
         type: entryTypes.FIELD_EFFECT,
         description:
-            "Turn start and turn end effects do not trigger. At MOON PHASE, MIRRORED MOON does not change phases. At RUNIC INSCRIPTION, RUNIC ARRAY duration does not decrease.",
+            "Turn start and turn end effects do not trigger. At MOON PHASE, MIRRORED MOON does not change phases. At RUNIC PULSE, RUNIC ARRAY duration does not decrease.",
     },
 
     [effectKeys.INSPIRATION]: {
@@ -963,10 +954,17 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
     },
 
     [mechanicKeys.RUNIC_INSCRIPTION]: {
-        name: "RUNIC INSCRIPTION",
+        name: "RUNIC PULSE",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase triggered at between each player's TURN while RUNIC ARRAY is active.",
+            "A special phase triggered at between each player's TURN while RUNIC ARRAY is active. On this phase, grants every entity 5 SHACKLED MANA and decrease remaining RUNIC ARRAY duration. If duration reaches 0 due to this effect, does not grant SHACKLED MANA; instead, absorbs all SHACKLED MANA on all entities, then redistributes it evenly between them and ends RUNIC ARRAY.",
+    },
+
+    [mechanicKeys.MANA_SIPHON]: {
+        name: "MANA SIPHON",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered whenever an entity as MANA or MANA OVERFLOW during a phase transition. On this phase, absorbs all MANA and MANA OVERFLOW from each entity, then grants SHACKLED MANA corresponding to the amount consumed on each.",
     },
 };
 
@@ -1164,8 +1162,7 @@ export const ELEMENTALIST_DESCRIPTIONS = {
     [effectKeys.MOONLIGHT]: {
         name: "MOONLIGHT",
         type: entryTypes.STAT,
-        description:
-            "Alternate STAT. Used by certain MIRRORED MOON effects.",
+        description: "Alternate STAT. Used by certain MIRRORED MOON effects.",
     },
 };
 

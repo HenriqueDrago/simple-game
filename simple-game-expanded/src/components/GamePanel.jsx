@@ -64,7 +64,7 @@ function GamePanel({
                     </div>
 
                     <div
-                        className={`stats-panels-container ${game.remainingArray > 0 ? "array-active" : ""}`}
+                        className={`stats-panels-container ${game[effectKeys.RUNIC_ARRAY] > 0 ? "array-active" : ""}`}
                     >
                         <StatsPanel
                             game={game}

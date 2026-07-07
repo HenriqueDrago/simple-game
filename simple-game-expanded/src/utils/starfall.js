@@ -388,7 +388,7 @@ function processBlueStar({ master, nonMaster }, normalStars, augmentedStars) {
             [effectKeys.DOME]:
                 draftMaster.resources[effectKeys.DOME] +
                 normalBlueConsumed +
-                augmentedBlueConsumed,
+                augmentedBlueConsumed * 2,
         },
     };
 

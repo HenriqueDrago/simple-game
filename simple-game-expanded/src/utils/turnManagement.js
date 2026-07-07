@@ -5,9 +5,8 @@ import {
     gainHp,
     gainInsight,
     gainMana,
-    isEntityDead,
     loseMana,
-    processEntityDeathStates,
+    processDeathCheck,
     restoreResources,
     takeDamage,
 } from "./entities.js";
@@ -21,31 +20,11 @@ import {
     starfallPhases,
     moonKeys,
     elementalKeys,
+    roundPhases,
 } from "./enums.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
 
-function evaluateMatchStatus(playerOne, playerTwo, defaultNextStatus) {
-    const p1Dead = isEntityDead(playerOne);
-    const p2Dead = isEntityDead(playerTwo);
-
-    if (p1Dead) {
-        return p2Dead ? turnStatus.DRAW : turnStatus.DEFEAT;
-    } else if (p2Dead) {
-        return turnStatus.VICTORY;
-    }
-    return defaultNextStatus;
-}
-
-export function processUpkeep(prev) {
-    const targetKey =
-        prev.status === turnStatus.UPKEEP_PLAYER_ONE
-            ? entityKeys.PLAYER_ONE
-            : entityKeys.PLAYER_TWO;
-    const nonTargetKey =
-        prev.status === turnStatus.UPKEEP_PLAYER_ONE
-            ? entityKeys.PLAYER_TWO
-            : entityKeys.PLAYER_ONE;
-
+export function processUpkeep(prev, targetKey, nonTargetKey) {
     let draftTarget = {
         ...prev.entities[targetKey],
     };
@@ -54,9 +33,7 @@ export function processUpkeep(prev) {
         ...prev.entities[nonTargetKey],
     };
 
-    console.log(prev[effectKeys.SEVERED_TIME]);
-
-    let newEye = prev.eyeOfHeavens;
+    let newEye = prev[effectKeys.EYE_OF_HEAVENS];
     if (!prev[effectKeys.SEVERED_TIME]) {
         // Stardust
         if (draftTarget.resources[effectKeys.STARDUST] > 0) {
@@ -382,195 +359,97 @@ export function processUpkeep(prev) {
         };
     }
 
-    // Death logic
-    draftTarget = processEntityDeathStates(draftTarget);
-    draftNonTarget = processEntityDeathStates(draftNonTarget);
+    // Add death check later
 
-    const playerOneEntity =
-        targetKey === entityKeys.PLAYER_ONE ? draftTarget : draftNonTarget;
-    const playerTwoEntity =
-        targetKey === entityKeys.PLAYER_TWO ? draftTarget : draftNonTarget;
+    const newQueue = prev.playerQueue.slice(1);
 
-    let nextStatus =
-        targetKey === entityKeys.PLAYER_ONE
-            ? turnStatus.PLAYER_ONE_TURN
-            : turnStatus.PLAYER_TWO_TURN;
-
-    nextStatus = evaluateMatchStatus(
-        playerOneEntity,
-        playerTwoEntity,
-        nextStatus,
-    );
-
-    return {
+    return processDeathCheck({
         ...prev,
-        status: nextStatus,
-        lastPlayerTurn: targetKey,
-        eyeOfHeavens: newEye,
-        turnCount: prev.turnCount + 1,
+        [effectKeys.EYE_OF_HEAVENS]: newEye,
+        playerQueue: newQueue,
         entities: {
             ...prev.entities,
             [targetKey]: {
                 ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                },
             },
             [nonTargetKey]: {
                 ...draftNonTarget,
             },
         },
-    };
+    });
 }
 
-export function commitTurn(newGame, currActorKey, nextActorKey, action) {
-    let draftCurrActor = newGame.entities[currActorKey];
-    let draftNextActor = newGame.entities[nextActorKey];
+export function commitTurn(prev, currActorKey, nextActorKey) {
+    let draftCurrActor = {
+        ...prev.entities[currActorKey],
+    };
+    let draftNextActor = {
+        ...prev.entities[nextActorKey],
+    };
 
-    if (action !== actionKeys.LASER && action !== actionKeys.ASCEND) {
-        if (!newGame[effectKeys.SEVERED_TIME]) {
-            // Mana Overflow
-            if (
-                draftCurrActor.resources.manaOverflow > 0 &&
-                !draftCurrActor.states.dimmingDarkness &&
-                newGame.remainingArray <= 0
-            ) {
-                draftCurrActor = takeDamage(
-                    draftCurrActor,
-                    draftCurrActor.resources.manaOverflow,
-                    dmgTypes.TRUE,
-                );
-
-                draftCurrActor = {
-                    ...draftCurrActor,
-                    resources: {
-                        ...draftCurrActor.resources,
-                        manaOverflow: 0,
-                    },
-                };
-            }
-
-            // Gray Stars
-            if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
-                const newWhite =
-                    draftCurrActor.stars[effectKeys.GRAY_STAR] +
-                    draftCurrActor.stars[effectKeys.WHITE_STAR];
-                draftCurrActor = {
-                    ...draftCurrActor,
-                    stars: {
-                        ...draftCurrActor.stars,
-                        [effectKeys.WHITE_STAR]: newWhite,
-                        [effectKeys.GRAY_STAR]: 0,
-                    },
-                };
-            }
-
-            // Kindling
-            if (draftCurrActor.resources[effectKeys.KINDLING] > 0) {
-                draftCurrActor = takeDamage(
-                    draftCurrActor,
-                    draftCurrActor.resources[effectKeys.KINDLING],
-                    dmgTypes.PHYSICAL,
-                );
-            }
-        }
-
-        // Laser used
-        draftCurrActor = {
-            ...draftCurrActor,
-            lasersUsedThisTurn: 0,
-        };
-    }
-
-    // Thermal Overload
-    if (
-        draftCurrActor[effectKeys.OVERHEAT] >= constants.MAX_OVERHEAT &&
-        !draftCurrActor.states[effectKeys.VENTING]
-    ) {
-        draftCurrActor = {
-            ...draftCurrActor,
-            states: {
-                ...draftCurrActor.states,
-                [effectKeys.WEAPONS_DEPLOYED]: false,
-                [effectKeys.THERMAL_OVERLOAD]: true,
-            },
-        };
-    }
-
-    // Death Logic
-    draftCurrActor = processEntityDeathStates(draftCurrActor);
-    draftNextActor = processEntityDeathStates(draftNextActor);
-
-    let nextStatus =
-        nextActorKey === entityKeys.PLAYER_ONE
-            ? turnStatus.UPKEEP_PLAYER_ONE
-            : turnStatus.UPKEEP_PLAYER_TWO;
-
-    let nextEye = newGame[effectKeys.EYE_OF_HEAVENS];
-    if (
-        (draftCurrActor.states[effectKeys.ABANDONED_BY_GRACE] ||
-            draftNextActor.states[effectKeys.ABANDONED_BY_GRACE]) &&
-        !(
-            draftCurrActor.states[effectKeys.ANOINTED_PROXY] ||
-            draftNextActor.states[effectKeys.ANOINTED_PROXY]
-        )
-    ) {
-        // Immediatelly triggers emanation and opens the eye
-        nextStatus = turnStatus.EMINENCE_TURN;
-        nextEye = eyeKeys.OPEN;
-    } else {
-        if (draftCurrActor.states[effectKeys.STARGAZER]) {
-            nextStatus = turnStatus.STARS_TURN;
-        } else if (
-            newGame.whoStarts !== currActorKey &&
-            (draftCurrActor.states[effectKeys.SELENIAN] ||
-                draftNextActor.states[effectKeys.SELENIAN])
+    if (!prev[effectKeys.SEVERED_TIME]) {
+        // Mana Overflow
+        if (
+            draftCurrActor.resources.manaOverflow > 0 &&
+            !draftCurrActor.states.dimmingDarkness &&
+            prev[effectKeys.RUNIC_ARRAY] <= 0
         ) {
-            nextStatus = turnStatus.MOON_TURN;
-        } else if (newGame.remainingArray > 0) {
-            nextStatus = turnStatus.ARRAY_TURN;
-        } else if (
-            newGame.whoStarts !== currActorKey &&
-            newGame.eyeOfHeavens !== eyeKeys.DORMANT
-        ) {
-            nextStatus = turnStatus.EMINENCE_TURN;
+            draftCurrActor = takeDamage(
+                draftCurrActor,
+                draftCurrActor.resources.manaOverflow,
+                dmgTypes.TRUE,
+            );
+
+            draftCurrActor = {
+                ...draftCurrActor,
+                resources: {
+                    ...draftCurrActor.resources,
+                    manaOverflow: 0,
+                },
+            };
         }
 
-        if (action === actionKeys.LASER || action === actionKeys.ASCEND) {
-            nextStatus =
-                currActorKey === entityKeys.PLAYER_ONE
-                    ? turnStatus.PLAYER_ONE_TURN
-                    : turnStatus.PLAYER_TWO_TURN;
+        // Gray Stars
+        if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
+            const newWhite =
+                draftCurrActor.stars[effectKeys.GRAY_STAR] +
+                draftCurrActor.stars[effectKeys.WHITE_STAR];
+            draftCurrActor = {
+                ...draftCurrActor,
+                stars: {
+                    ...draftCurrActor.stars,
+                    [effectKeys.WHITE_STAR]: newWhite,
+                    [effectKeys.GRAY_STAR]: 0,
+                },
+            };
+        }
+
+        // Kindling
+        if (draftCurrActor.resources[effectKeys.KINDLING] > 0) {
+            draftCurrActor = takeDamage(
+                draftCurrActor,
+                draftCurrActor.resources[effectKeys.KINDLING],
+                dmgTypes.PHYSICAL,
+            );
         }
     }
 
-    const playerOneEntity =
-        currActorKey === entityKeys.PLAYER_ONE
-            ? draftCurrActor
-            : draftNextActor;
-    const playerTwoEntity =
-        currActorKey === entityKeys.PLAYER_TWO
-            ? draftCurrActor
-            : draftNextActor;
+    // Laser used
+    draftCurrActor = {
+        ...draftCurrActor,
+        lasersUsedThisTurn: 0,
+    };
 
-    nextStatus = evaluateMatchStatus(
-        playerOneEntity,
-        playerTwoEntity,
-        nextStatus,
-    );
+    // add death check later
 
-    const newStatus =
-        action === actionKeys.LASER
-            ? turnStatus.SHORT_TRANSITION
-            : turnStatus.TRANSITION;
+    const newQueue = prev.playerQueue.slice(1);
 
-    return {
-        ...newGame,
-        status: newStatus,
-        nextStatus: nextStatus,
-        [effectKeys.EYE_OF_HEAVENS]: nextEye,
+    return processDeathCheck({
+        ...prev,
+        playerQueue: newQueue,
+        status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
         entities: {
-            ...newGame.entities,
+            ...prev.entities,
             [currActorKey]: {
                 ...draftCurrActor,
             },
@@ -578,356 +457,166 @@ export function commitTurn(newGame, currActorKey, nextActorKey, action) {
                 ...draftNextActor,
             },
         },
-    };
+    });
 }
 
-export function processMoonPhase(prev) {
-    let nextStatus =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? turnStatus.UPKEEP_PLAYER_TWO
-            : turnStatus.UPKEEP_PLAYER_ONE;
+export function buildRoundQueue(prev) {
+    const currIndex = prev.roundIndex;
+    const newQueue = prev.roundQueue
+        ? [...prev.roundQueue.slice(0, currIndex + 1)]
+        : [];
 
-    if (prev.remainingArray > 0) {
-        nextStatus = turnStatus.ARRAY_TURN;
-    } else if (
-        prev.whoStarts !== prev.lastPlayerTurn &&
-        prev.eyeOfHeavens !== eyeKeys.DORMANT
-    ) {
-        nextStatus = turnStatus.EMINENCE_TURN;
+    const p1 = prev.entities[entityKeys.PLAYER_ONE];
+    const p2 = prev.entities[entityKeys.PLAYER_TWO];
+
+    // Round Start
+    if (!newQueue.includes(roundPhases.ROUND_START)) {
+        newQueue.push(roundPhases.ROUND_START);
     }
 
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    if (prev.whoStarts === entityKeys.PLAYER_ONE) {
-        ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
-            playerOne,
-            playerTwo,
-            prev[effectKeys.SEVERED_TIME],
-        ));
-
-        ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
-            playerTwo,
-            playerOne,
-            prev[effectKeys.SEVERED_TIME],
-        ));
-    } else {
-        ({ target: playerTwo, nonTarget: playerOne } = auxiliarMoonPhase(
-            playerTwo,
-            playerOne,
-            prev[effectKeys.SEVERED_TIME],
-        ));
-
-        ({ target: playerOne, nonTarget: playerTwo } = auxiliarMoonPhase(
-            playerOne,
-            playerTwo,
-            prev[effectKeys.SEVERED_TIME],
-        ));
-    }
-
-    return {
-        ...prev,
-        status: turnStatus.TRANSITION,
-        nextStatus: nextStatus,
-        entities: {
-            ...prev.entities,
-            [entityKeys.PLAYER_ONE]: playerOne,
-            [entityKeys.PLAYER_TWO]: playerTwo,
-        },
-    };
-}
-
-function auxiliarMoonPhase(target, nonTarget, severedTime) {
-    let draftTarget = {
-        ...target,
-    };
-
-    let draftNonTarget = {
-        ...nonTarget,
-    };
-
-    // Helpers
-    const getRecipient = () => {
-        return draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]
-            ? draftNonTarget
-            : draftTarget;
-    };
-    const setRecipient = (changes) => {
-        if (draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]) {
-            draftNonTarget = {
-                ...draftNonTarget,
-                ...changes,
-            };
-        } else {
-            draftTarget = {
-                ...draftTarget,
-                ...changes,
-            };
-        }
-    };
-
-    const isWaxing = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WAXING;
-    const isWaning = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WANING;
-
-    const moonlight = draftTarget[effectKeys.MOONLIGHT];
-    const element = draftTarget[effectKeys.ELEMENTAL_CRYSTALS];
-
-    // No moon early return
-    if (draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.HIDDEN) {
-        return {
-            target: {
-                ...draftTarget,
-                [effectKeys.MIRRORED_MOON]: moonKeys.WAXING,
-                [effectKeys.MOONLIGHT]: draftTarget[effectKeys.MOONLIGHT] + 1,
-            },
-            nonTarget: draftNonTarget,
-        };
-    }
-
-    switch (element) {
-        case elementalKeys.FROST: {
-            // If waxing, gain cryogenesis
-            if (isWaxing) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.CRYOGENESIS]:
-                            getRecipient().resources[effectKeys.CRYOGENESIS] +
-                            moonlight,
-                    },
-                });
-            } else if (isWaning) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.RIME]:
-                            getRecipient().resources[effectKeys.RIME] +
-                            moonlight,
-                    },
-                });
-            }
-            break;
-        }
-
-        case elementalKeys.SCORCH: {
-            // If waxing, gain cryogenesis
-            if (isWaxing) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.INCANDESCENCE]:
-                            getRecipient().resources[effectKeys.INCANDESCENCE] +
-                            moonlight,
-                    },
-                });
-            } else if (isWaning) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.KINDLING]:
-                            getRecipient().resources[effectKeys.KINDLING] +
-                            moonlight,
-                    },
-                });
-            }
-            break;
-        }
-
-        case elementalKeys.NATURE: {
-            // If waxing, restore resources equal to moonlight
-            if (isWaxing) {
-                setRecipient({
-                    ...restoreResources(getRecipient(), moonlight),
-                });
-            } else if (isWaning) {
-                // if waning, consume resources equal to moonlight then gain mycelium equal to consumed
-                const { draftEntity, resourcesConsumed } = consumeResources(
-                    getRecipient(),
-                    moonlight,
-                    effectKeys.MIRRORED_MOON,
-                );
-                const newMycelium =
-                    draftEntity.resources[effectKeys.MYCELIUM] +
-                    resourcesConsumed.totalConsumption;
-
-                setRecipient({
-                    ...draftEntity,
-                    resources: {
-                        ...draftEntity.resources,
-                        [effectKeys.MYCELIUM]: newMycelium,
-                    },
-                });
-            }
-            break;
-        }
-    }
-
-    // Changes moon if time is not severed
-    if (!severedTime) {
-        const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
-
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.MIRRORED_MOON]: newMoon,
-        };
-    }
-
-    // Don't gain moonlight if no element
-    if (element !== elementalKeys.DULLED) {
-        const newMoonlight =
-            moonlight + (element === elementalKeys.NATURE ? 2 : 1);
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.MOONLIGHT]: newMoonlight,
-        };
-    }
-
-    // Disables reflected firmament
-    draftTarget = {
-        ...draftTarget,
-        states: {
-            ...draftTarget.states,
-            [effectKeys.REFLECTED_FIRMAMENT]: false,
-        },
-    };
-
-    return {
-        target: draftTarget,
-        nonTarget: draftNonTarget,
-    };
-}
-
-export function processArrayTurn(prev) {
-    let nextStatus =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? turnStatus.UPKEEP_PLAYER_TWO
-            : turnStatus.UPKEEP_PLAYER_ONE;
-
+    // Immediate Emanation trigger on special conditions
     if (
-        prev.whoStarts !== prev.lastPlayerTurn &&
-        prev.eyeOfHeavens !== eyeKeys.DORMANT
+        (p1.states[effectKeys.ABANDONED_BY_GRACE] ||
+            p2.states[effectKeys.ABANDONED_BY_GRACE]) &&
+        !p1.states[effectKeys.ANOINTED_PROXY] &&
+        !p2.states[effectKeys.ANOINTED_PROXY]
     ) {
-        nextStatus = turnStatus.EMINENCE_TURN;
+        newQueue.push(roundPhases.SPECIAL_EMINENCE_TURN);
     }
 
-    if (prev.remainingArray <= 0) {
-        return {
-            ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextStatus,
-        };
+    // Proxy insertion
+    if (p1.states[effectKeys.ANOINTED_PROXY]) {
+        newQueue.push(roundPhases.PLAYER_ONE_TURN);
+    }
+    if (p2.states[effectKeys.ANOINTED_PROXY]) {
+        newQueue.push(roundPhases.PLAYER_TWO_TURN);
     }
 
+    // Immediate Mana Siphon trigger on special conditions
+    if (
+        p1[effectKeys.MANA] +
+            p2[effectKeys.MANA] +
+            p1.resources[effectKeys.MANA_OVERFLOW] +
+            p2.resources[effectKeys.MANA_OVERFLOW] >
+            0 &&
+        prev[effectKeys.RUNIC_ARRAY] > 0
+    ) {
+        newQueue.push(roundPhases.MINI_ARRAY_TURN);
+    }
+
+    const players =
+        prev.startingPlayer === entityKeys.PLAYER_ONE
+            ? [
+                  [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_STARS_TURN, p1],
+                  [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_STARS_TURN, p2],
+              ]
+            : [
+                  [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_STARS_TURN, p2],
+                  [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_STARS_TURN, p1],
+              ];
+
+    for (let i = 0; i < players.length; i++) {
+        let value = players[i];
+
+        const turnIndex = newQueue.indexOf(value[0]);
+        const isPastTurn = turnIndex !== -1 && turnIndex < currIndex;
+
+        if (!newQueue.includes(value[0])) {
+            newQueue.push(value[0]);
+        }
+
+        if (
+            !newQueue.includes(value[1]) &&
+            value[2].states[effectKeys.STARGAZER]
+        ) {
+            newQueue.push(value[1]);
+        }
+
+        const count = newQueue.filter(
+            (item) => item === roundPhases.ARRAY_TURN,
+        ).length;
+        if (!isPastTurn && count <= i && prev[effectKeys.RUNIC_ARRAY] - i > 0) {
+            newQueue.push(roundPhases.ARRAY_TURN);
+        }
+    }
+
+    // Moon Phase
+    if (
+        (p1.states[effectKeys.SELENIAN] || p2.states[effectKeys.SELENIAN]) &&
+        !newQueue.includes(roundPhases.MOON_TURN)
+    ) {
+        newQueue.push(roundPhases.MOON_TURN);
+    }
+
+    // Emanation
+    if (
+        (p1.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
+            p2.states[effectKeys.ASCENDENCE_OF_SPIRIT]) &&
+        !newQueue.includes(roundPhases.EMINENCE_TURN)
+    ) {
+        newQueue.push(roundPhases.EMINENCE_TURN);
+    }
+
+    // Round End
+    if (!newQueue.includes(roundPhases.ROUND_END)) {
+        newQueue.push(roundPhases.ROUND_END);
+    }
+
+    return processDeathCheck({
+        ...prev,
+        roundQueue: newQueue,
+    });
+}
+
+export function processManaSiphon(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    const newArray = !prev[effectKeys.SEVERED_TIME]
-        ? prev.remainingArray - 1
-        : prev.remainingArray;
+    // Convert mana
+    const p1NewManaShackle =
+        playerOne[effectKeys.MANA] +
+        playerOne.resources[effectKeys.SHACKLED_MANA] +
+        playerOne.resources[effectKeys.MANA_OVERFLOW];
+    const p2NewManaShackle =
+        playerTwo[effectKeys.MANA] +
+        playerTwo.resources[effectKeys.SHACKLED_MANA] +
+        playerTwo.resources[effectKeys.MANA_OVERFLOW];
 
-    // If Array dying, redistribute mana
-    if (newArray <= 0) {
-        const totalShackledMana =
-            playerOne.resources.shackledMana + playerTwo.resources.shackledMana;
-        const manaShare = Math.floor(totalShackledMana / 2);
-
-        playerOne = gainMana(playerOne, manaShare);
-        playerOne = {
-            ...playerOne,
-            resources: {
-                ...playerOne.resources,
-                shackledMana: 0,
-            },
-        };
-
-        playerTwo = gainMana(playerTwo, manaShare);
-        playerTwo = {
-            ...playerTwo,
-            resources: {
-                ...playerTwo.resources,
-                shackledMana: 0,
-            },
-        };
-    } else {
-        // If Array alive and kicking, convert mana and add to it
-        const p1NewManaShackle =
-            playerOne.currMana +
-            playerOne.resources.shackledMana +
-            playerOne.resources.manaOverflow +
-            constants.MANA_SHACKLE_TURN_GAIN;
-        const p2NewManaShackle =
-            playerTwo.currMana +
-            playerTwo.resources.shackledMana +
-            playerTwo.resources.manaOverflow +
-            constants.MANA_SHACKLE_TURN_GAIN;
-
-        playerOne = {
-            ...playerOne,
-            currMana: 0,
-            resources: {
-                ...playerOne.resources,
-                manaOverflow: 0,
-                shackledMana: p1NewManaShackle,
-            },
-        };
-
-        playerTwo = {
-            ...playerTwo,
-            currMana: 0,
-            resources: {
-                ...playerTwo.resources,
-                manaOverflow: 0,
-                shackledMana: p2NewManaShackle,
-            },
-        };
-    }
-
-    // Thorned Shackles
     playerOne = {
         ...playerOne,
-        states: {
-            ...playerOne.states,
-            thornedShackles: newArray > 0,
+        [effectKeys.MANA]: 0,
+        resources: {
+            ...playerOne.resources,
+            [effectKeys.MANA_OVERFLOW]: 0,
+            [effectKeys.SHACKLED_MANA]: p1NewManaShackle,
         },
     };
 
     playerTwo = {
         ...playerTwo,
-        states: {
-            ...playerTwo.states,
-            thornedShackles: newArray > 0,
+        [effectKeys.MANA]: 0,
+        resources: {
+            ...playerTwo.resources,
+            [effectKeys.MANA_OVERFLOW]: 0,
+            [effectKeys.SHACKLED_MANA]: p2NewManaShackle,
         },
     };
 
-    // Death logic (tecnically they can't die here, but... why not?)
-    playerOne = processEntityDeathStates(playerOne);
-    playerTwo = processEntityDeathStates(playerTwo);
-
-    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
-
-    return {
+    return processDeathCheck({
         ...prev,
-        status: turnStatus.TRANSITION,
-        nextStatus: nextStatus,
-        remainingArray: newArray,
+        status: turnStatus.ROUND_TRANSITION,
         entities: {
             ...prev.entities,
             [entityKeys.PLAYER_ONE]: { ...playerOne },
             [entityKeys.PLAYER_TWO]: { ...playerTwo },
         },
-    };
+    });
 }
 
-export function processEminenceTurn(prev) {
-    let nextStatus =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? turnStatus.UPKEEP_PLAYER_TWO
-            : turnStatus.UPKEEP_PLAYER_ONE;
-
+export function processAnnoitement(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    // Abandoned by Grace logic
     const p1Graceless = playerOne.states[effectKeys.ABANDONED_BY_GRACE];
     const p2Graceless = playerTwo.states[effectKeys.ABANDONED_BY_GRACE];
     if (p1Graceless || p2Graceless) {
@@ -956,8 +645,6 @@ export function processEminenceTurn(prev) {
                         [effectKeys.ANOINTED_PROXY]: true,
                     },
                 };
-
-                nextStatus = turnStatus.UPKEEP_PLAYER_TWO;
             }
         } else {
             // Chooses a proxy
@@ -968,57 +655,49 @@ export function processEminenceTurn(prev) {
                     [effectKeys.ANOINTED_PROXY]: true,
                 },
             };
-
-            nextStatus = turnStatus.UPKEEP_PLAYER_ONE;
         }
 
-        playerOne = processEntityDeathStates(playerOne);
-        playerTwo = processEntityDeathStates(playerTwo);
+        // add death check later
 
-        nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
-
-        return {
+        return processDeathCheck({
             ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextStatus,
-            eyeOfHeavens: eyeKeys.OPEN,
-            [effectKeys.SEVERED_TIME]: false,
+            [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
+            status: turnStatus.ROUND_TRANSITION,
             entities: {
                 ...prev.entities,
                 [entityKeys.PLAYER_ONE]: { ...playerOne },
                 [entityKeys.PLAYER_TWO]: { ...playerTwo },
             },
-        };
+        });
     }
 
-    // Early return if eye is sleeping
-    if (prev.eyeOfHeavens === eyeKeys.DORMANT) {
-        return {
-            ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextStatus,
-            [effectKeys.SEVERED_TIME]: false,
-        };
-    }
+    return processDeathCheck({
+        ...prev,
+        status: turnStatus.ROUND_TRANSITION,
+    });
+}
+
+export function processEmanation(prev) {
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
     // Disables itself if no ascended players
     if (
-        !playerOne.states.ascendenceOfSpirit &&
-        !playerTwo.states.ascendenceOfSpirit
+        !playerOne.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        !playerTwo.states[effectKeys.ASCENDENCE_OF_SPIRIT]
     ) {
-        return {
+        return processDeathCheck({
             ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextStatus,
             eyeOfHeavens: eyeKeys.DORMANT,
             [effectKeys.SEVERED_TIME]: false,
-        };
+            status: turnStatus.ROUND_TRANSITION,
+        });
     }
 
     // else, runs current state logic
     let severedTime = prev[effectKeys.SEVERED_TIME];
     if (prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
-        // Grants revelation when opening
+        // When opening, grants Revelation and disables severed time
         const p1NewRev =
             playerOne.revelation +
             Math.floor(playerOne.currInsight / constants.INSIGHT_TO_REV_FACTOR);
@@ -1034,8 +713,7 @@ export function processEminenceTurn(prev) {
             ...playerTwo,
             revelation: p2NewRev,
         };
-    } else {
-        // Disables Severed Time if closing
+
         severedTime = false;
     }
 
@@ -1043,64 +721,96 @@ export function processEminenceTurn(prev) {
     const nextEye =
         prev.eyeOfHeavens === eyeKeys.OPEN ? eyeKeys.CLOSED : eyeKeys.OPEN;
 
-    // Checks deaths
-    playerOne = processEntityDeathStates(playerOne);
-    playerTwo = processEntityDeathStates(playerTwo);
+    // Add death check later
 
-    nextStatus = evaluateMatchStatus(playerOne, playerTwo, nextStatus);
-
-    return {
+    return processDeathCheck({
         ...prev,
         eyeOfHeavens: nextEye,
-        status: turnStatus.TRANSITION,
-        nextStatus: nextStatus,
         [effectKeys.SEVERED_TIME]: severedTime,
+        status: turnStatus.ROUND_TRANSITION,
         entities: {
             ...prev.entities,
             [entityKeys.PLAYER_ONE]: { ...playerOne },
             [entityKeys.PLAYER_TWO]: { ...playerTwo },
         },
-    };
+    });
 }
 
-export function processStarfallTurn(prev) {
-    // Calculate what the turn after starfall should be
-    let nextTurnStatus =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? turnStatus.UPKEEP_PLAYER_TWO
-            : turnStatus.UPKEEP_PLAYER_ONE;
+export function processRunicPulse(prev) {
+    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
+    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    if (
-        prev.whoStarts !== prev.lastPlayerTurn &&
-        prev[effectKeys.MIRRORED_MOON] !== moonKeys.HIDDEN
-    ) {
-        nextTurnStatus = turnStatus.MOON_TURN;
-    } else if (prev.remainingArray > 0) {
-        nextTurnStatus = turnStatus.ARRAY_TURN;
-    } else if (
-        prev.whoStarts !== prev.lastPlayerTurn &&
-        prev.eyeOfHeavens !== eyeKeys.DORMANT
-    ) {
-        nextTurnStatus = turnStatus.EMINENCE_TURN;
+    // Decrease Array duration if not on severed time
+    const newArray = !prev[effectKeys.SEVERED_TIME]
+        ? prev[effectKeys.RUNIC_ARRAY] - 1
+        : prev[effectKeys.RUNIC_ARRAY];
+
+    // If Array dying, redistribute mana
+    if (newArray <= 0) {
+        const totalShackledMana =
+            playerOne.resources[effectKeys.SHACKLED_MANA] +
+            playerTwo.resources[effectKeys.SHACKLED_MANA];
+        const manaShare = Math.floor(totalShackledMana / 2);
+
+        playerOne = gainMana(playerOne, manaShare);
+        playerOne = {
+            ...playerOne,
+            resources: {
+                ...playerOne.resources,
+                shackledMana: 0,
+            },
+        };
+
+        playerTwo = gainMana(playerTwo, manaShare);
+        playerTwo = {
+            ...playerTwo,
+            resources: {
+                ...playerTwo.resources,
+                shackledMana: 0,
+            },
+        };
+    } else {
+        // else, grants shackled mana
+        playerOne = {
+            ...playerOne,
+            resources: {
+                ...playerOne.resources,
+                [effectKeys.SHACKLED_MANA]:
+                    playerOne.resources[effectKeys.SHACKLED_MANA] +
+                    constants.MANA_SHACKLE_TURN_GAIN,
+            },
+        };
+
+        playerTwo = {
+            ...playerTwo,
+            resources: {
+                ...playerTwo.resources,
+                [effectKeys.SHACKLED_MANA]:
+                    playerTwo.resources[effectKeys.SHACKLED_MANA] +
+                    constants.MANA_SHACKLE_TURN_GAIN,
+            },
+        };
     }
 
-    // Then, calculate master/nonMaster
-    const masterKey =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? entityKeys.PLAYER_ONE
-            : entityKeys.PLAYER_TWO;
+    return processDeathCheck({
+        ...prev,
+        [effectKeys.RUNIC_ARRAY]: newArray,
+        status: turnStatus.ROUND_TRANSITION,
+        entities: {
+            ...prev.entities,
+            [entityKeys.PLAYER_ONE]: { ...playerOne },
+            [entityKeys.PLAYER_TWO]: { ...playerTwo },
+        },
+    });
+}
 
-    const nonMasterKey =
-        prev.lastPlayerTurn === entityKeys.PLAYER_ONE
-            ? entityKeys.PLAYER_TWO
-            : entityKeys.PLAYER_ONE;
-
+export function processStarfallTurn(prev, masterKey, nonMasterKey) {
     let master = { ...prev.entities[masterKey] };
     let nonMaster = { ...prev.entities[nonMasterKey] };
 
     const currentPhase = prev.starQueue[0];
 
-    // If the queue is empty or there's no stars remaining, exits starfall phase
+    // exit condition: queue reached its end (empty), or there's no star and trails (and it's the initial phase)
     const hasStars = coloredStars.some((curr) => master.stars[curr.star] > 0);
     const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
 
@@ -1111,12 +821,11 @@ export function processStarfallTurn(prev) {
             !hasTrails &&
             currentPhase === starfallPhases.STARFALL_INIT)
     ) {
-        return {
+        return processDeathCheck({
             ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextTurnStatus,
             starQueue: null,
-        };
+            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
+        });
     }
 
     // else, process current queue item
@@ -1316,59 +1025,226 @@ export function processStarfallTurn(prev) {
         }
     }
 
-    master = processEntityDeathStates(master);
-    nonMaster = processEntityDeathStates(nonMaster);
+    // Add death check later
 
-    const playerOneEntity =
-        masterKey === entityKeys.PLAYER_ONE ? master : nonMaster;
-    const playerTwoEntity =
-        masterKey === entityKeys.PLAYER_TWO ? master : nonMaster;
-
-    // Pass null as the default next status. If someone died, it returns the game over state.
-    const deathStatus = evaluateMatchStatus(
-        playerOneEntity,
-        playerTwoEntity,
-        null,
-    );
-
-    if (deathStatus) {
-        return {
-            ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: deathStatus,
-            starQueue: null,
-            entities: {
-                ...prev.entities,
-                [entityKeys.PLAYER_ONE]: playerOneEntity,
-                [entityKeys.PLAYER_TWO]: playerTwoEntity,
-            },
-        };
-    }
-
-    // If there's no trails, skip trails
+    // exit condition 2: If there's no trails at violet starfall, skip trails
     if (!hasTrails && currentPhase === starfallPhases.VIOLET_STAR) {
-        return {
+        return processDeathCheck({
             ...prev,
-            status: turnStatus.TRANSITION,
-            nextStatus: nextTurnStatus,
             starQueue: null,
+            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
             entities: {
                 ...prev.entities,
                 [masterKey]: master,
                 [nonMasterKey]: nonMaster,
             },
-        };
+        });
     }
 
-    // Else, apply the action changes and trigger the delay for the next starfall phase
-    return {
+    // else, continue to next starfall
+    return processDeathCheck({
         ...prev,
-        status: turnStatus.STARS_TURN,
         starQueue: newQueue,
+        status: turnStatus.STARFALL_TRANSITION,
         entities: {
             ...prev.entities,
             [masterKey]: master,
             [nonMasterKey]: nonMaster,
+        },
+    });
+}
+
+export function processMoonPhase(prev) {
+    const players =
+        prev.startingPlayer === entityKeys.PLAYER_ONE
+            ? [
+                  [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
+                  [entityKeys.PLAYER_TWO, entityKeys.PLAYER_ONE],
+              ]
+            : [
+                  [entityKeys.PLAYER_TWO, entityKeys.PLAYER_ONE],
+                  [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
+              ];
+
+    let newGameState = { ...prev };
+
+    for (let pArray of players) {
+        newGameState = moonPhaseAuxiliar(newGameState, pArray[0], pArray[1]);
+    }
+
+    // Add deat check later
+
+    return processDeathCheck({
+        ...newGameState,
+        status: turnStatus.ROUND_TRANSITION,
+    });
+}
+
+function moonPhaseAuxiliar(prev, targetKey, nonTargetKey) {
+    let draftTarget = {
+        ...prev.entities[targetKey],
+    };
+
+    let draftNonTarget = {
+        ...prev.entities[nonTargetKey],
+    };
+
+    // Helpers
+    const getRecipient = () => {
+        return draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]
+            ? draftNonTarget
+            : draftTarget;
+    };
+    const setRecipient = (changes) => {
+        if (draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]) {
+            draftNonTarget = {
+                ...draftNonTarget,
+                ...changes,
+            };
+        } else {
+            draftTarget = {
+                ...draftTarget,
+                ...changes,
+            };
+        }
+    };
+
+    const isWaxing = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WAXING;
+    const isWaning = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WANING;
+
+    const moonlight = draftTarget[effectKeys.MOONLIGHT];
+    const element = draftTarget[effectKeys.ELEMENTAL_CRYSTALS];
+
+    // No moon early return
+    if (draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.HIDDEN) {
+        return {
+            ...prev,
+            entities: {
+                ...prev.entities,
+                [targetKey]: {
+                    ...draftTarget,
+                    [effectKeys.MIRRORED_MOON]: moonKeys.WAXING,
+                    [effectKeys.MOONLIGHT]:
+                        draftTarget[effectKeys.MOONLIGHT] + 1,
+                },
+                [nonTargetKey]: draftNonTarget,
+            },
+        };
+    }
+
+    switch (element) {
+        case elementalKeys.FROST: {
+            // If waxing, gain cryogenesis
+            if (isWaxing) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.CRYOGENESIS]:
+                            getRecipient().resources[effectKeys.CRYOGENESIS] +
+                            moonlight,
+                    },
+                });
+            } else if (isWaning) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.RIME]:
+                            getRecipient().resources[effectKeys.RIME] +
+                            moonlight,
+                    },
+                });
+            }
+            break;
+        }
+
+        case elementalKeys.SCORCH: {
+            // If waxing, gain cryogenesis
+            if (isWaxing) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.INCANDESCENCE]:
+                            getRecipient().resources[effectKeys.INCANDESCENCE] +
+                            moonlight,
+                    },
+                });
+            } else if (isWaning) {
+                setRecipient({
+                    resources: {
+                        ...getRecipient().resources,
+                        [effectKeys.KINDLING]:
+                            getRecipient().resources[effectKeys.KINDLING] +
+                            moonlight,
+                    },
+                });
+            }
+            break;
+        }
+
+        case elementalKeys.NATURE: {
+            // If waxing, restore resources equal to moonlight
+            if (isWaxing) {
+                setRecipient({
+                    ...restoreResources(getRecipient(), moonlight),
+                });
+            } else if (isWaning) {
+                // if waning, consume resources equal to moonlight then gain mycelium equal to consumed
+                const { draftEntity, resourcesConsumed } = consumeResources(
+                    getRecipient(),
+                    moonlight,
+                    effectKeys.MIRRORED_MOON,
+                );
+                const newMycelium =
+                    draftEntity.resources[effectKeys.MYCELIUM] +
+                    resourcesConsumed.totalConsumption;
+
+                setRecipient({
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.MYCELIUM]: newMycelium,
+                    },
+                });
+            }
+            break;
+        }
+    }
+
+    // Changes moon if time is not severed
+    if (!prev[effectKeys.SEVERED_TIME]) {
+        const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.MIRRORED_MOON]: newMoon,
+        };
+    }
+
+    // Don't gain moonlight if no element
+    if (element !== elementalKeys.DULLED) {
+        const newMoonlight =
+            moonlight + (element === elementalKeys.NATURE ? 2 : 1);
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.MOONLIGHT]: newMoonlight,
+        };
+    }
+
+    // Disables reflected firmament
+    draftTarget = {
+        ...draftTarget,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.REFLECTED_FIRMAMENT]: false,
+        },
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: draftTarget,
+            [nonTargetKey]: draftNonTarget,
         },
     };
 }
