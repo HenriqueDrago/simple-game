@@ -469,6 +469,8 @@ export function buildRoundQueue(prev) {
     const p1 = prev.entities[entityKeys.PLAYER_ONE];
     const p2 = prev.entities[entityKeys.PLAYER_TWO];
 
+    const currentActivePhase = newQueue[currIndex];
+
     // Round Start
     if (!newQueue.includes(roundPhases.ROUND_START)) {
         newQueue.push(roundPhases.ROUND_START);
@@ -485,10 +487,10 @@ export function buildRoundQueue(prev) {
     }
 
     // Proxy insertion
-    if (p1.states[effectKeys.ANOINTED_PROXY]) {
+    if (p1.states[effectKeys.ANOINTED_PROXY] && currentActivePhase !== roundPhases.PLAYER_ONE_TURN) {
         newQueue.push(roundPhases.PLAYER_ONE_TURN);
     }
-    if (p2.states[effectKeys.ANOINTED_PROXY]) {
+    if (p2.states[effectKeys.ANOINTED_PROXY] && currentActivePhase !== roundPhases.PLAYER_TWO_TURN) {
         newQueue.push(roundPhases.PLAYER_TWO_TURN);
     }
 
@@ -515,11 +517,20 @@ export function buildRoundQueue(prev) {
                   [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_STARS_TURN, p1],
               ];
 
+    let futurePulsesAvailable = prev[effectKeys.RUNIC_ARRAY];
+
     for (let i = 0; i < players.length; i++) {
         let value = players[i];
 
         const turnIndex = newQueue.indexOf(value[0]);
-        const isPastTurn = turnIndex !== -1 && turnIndex < currIndex;
+        const pulseAlreadyLockedIn =
+            turnIndex !== -1 &&
+            newQueue
+                .slice(turnIndex + 1, currIndex + 1)
+                .includes(roundPhases.ARRAY_TURN);
+        const isPastTurn =
+            turnIndex !== -1 && turnIndex < currIndex && pulseAlreadyLockedIn;
+
 
         if (!newQueue.includes(value[0])) {
             newQueue.push(value[0]);
@@ -532,12 +543,18 @@ export function buildRoundQueue(prev) {
             newQueue.push(value[1]);
         }
 
-        const count = newQueue.filter(
-            (item) => item === roundPhases.ARRAY_TURN,
-        ).length;
-        if (!isPastTurn && count <= i && prev[effectKeys.RUNIC_ARRAY] - i > 0) {
+        if (!isPastTurn && futurePulsesAvailable > 0) {
             newQueue.push(roundPhases.ARRAY_TURN);
+            futurePulsesAvailable--;
         }
+    }
+
+    // Moon Phase
+    if (
+        (p1.states[effectKeys.SELENIAN] || p2.states[effectKeys.SELENIAN]) &&
+        !newQueue.includes(roundPhases.MOON_TURN)
+    ) {
+        newQueue.push(roundPhases.MOON_TURN);
     }
 
     // Moon Phase
@@ -630,12 +647,22 @@ export function processAnnoitement(prev) {
                     actionKeys.JUDGEMENT,
                 ).draftEntity;
 
+                playerOne = {
+                    ...playerOne,
+                    [effectKeys.TARNISHED_SIN]: 0,
+                }
+
                 playerTwo = exitAllStates(playerTwo);
                 playerTwo = consumeResources(
                     playerTwo,
                     Infinity,
                     actionKeys.JUDGEMENT,
                 ).draftEntity;
+
+                playerTwo = {
+                    ...playerTwo,
+                    [effectKeys.TARNISHED_SIN]: 0,
+                }
             } else {
                 // Chooses a proxy
                 playerTwo = {

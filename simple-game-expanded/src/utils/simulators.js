@@ -706,7 +706,7 @@ function simulateAscend({ prev, agent, agentKey }) {
                 [effectKeys.ENLIGHTENMENT]: 100,
                 [effectKeys.MAX_ENLIGHTENMENT]: 100,
                 [effectKeys.MAX_INSIGHT]: 100,
-                [effectKeys.REVELATION]: newRev,
+                [effectKeys.REVELATION]: newRev * 10,
                 [effectKeys.DIVINE_SPARK]: 0,
                 states: {
                     ...draftAgent.states,

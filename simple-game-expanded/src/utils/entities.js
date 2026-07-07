@@ -341,8 +341,9 @@ export function createBaseEntity() {
             [effectKeys.RADIANT]: false,
             [effectKeys.CUTOFF_WINGS]: false,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-
             [effectKeys.ZENITH_OF_MORTALITY]: false,
+            [effectKeys.ABANDONED_BY_GRACE]: false,
+            [effectKeys.ANOINTED_PROXY]: false,
         },
         stars: {
             white: 0,
@@ -1193,6 +1194,11 @@ export function processDeathCheck(prev) {
     return {
         ...prev,
         status: status,
+        entities: {
+            ...prev.entities,
+            [entityKeys.PLAYER_ONE]: p1,
+            [entityKeys.PLAYER_TWO]: p2,
+        },
     };
 }
 

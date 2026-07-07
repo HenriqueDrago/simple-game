@@ -78,7 +78,9 @@ function ActionPanel({
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
-    if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
+    if(battleState !== turnStatus.ONGOING) {
+        waitLabel = null;
+    } else if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;

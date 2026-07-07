@@ -1,0 +1,61 @@
+/* Fixed vertical bar panel on the left of the screen */
+.timeline-container {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+/* Base structural layout for all phase boxes */
+.timeline-item-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    /* Forces strict, uniform sizes across all boxes */
+    width: 130px;
+    height: 65px;
+    padding: 8px;
+    box-sizing: border-box;
+    
+    /* Header Inspiration: High-contrast, sharp edges */
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    
+    /* Typography adjustments */
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    
+    /* Wraps text to next line but prevents breaking mid-word */
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    
+    transition: background-color 0.5s ease, color 0.5s ease, opacity 0.5s ease;
+}
+
+/* Current active phase styling (Inverted look matching sub-announcer text) */
+.timeline-item-container.timeline-curr-phase {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Past phase styling (Slightly faded out to signify completion) */
+.timeline-item-container.timeline-past-phase {
+    opacity: 0.6;
+}
+
+/* Future phase styling (Heavily muted, using a retro dashed border look) */
+.timeline-item-container.timeline-future-phase {
+    opacity: 0.3;
+    border-style: dashed;
+}

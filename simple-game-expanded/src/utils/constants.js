@@ -23,6 +23,7 @@ import {
     entityKeys,
     mechanicKeys,
     entryTypes,
+    roundPhases,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -811,3 +812,17 @@ export const CHECKPOINT_STATES = [
     turnStatus.DEFEAT,
     turnStatus.DRAW,
 ];
+
+export const roundPhasesNameMap = {
+    [roundPhases.ROUND_START]: "Round Start",
+    [roundPhases.PLAYER_ONE_TURN]: "Player One Turn",
+    [roundPhases.PLAYER_TWO_TURN]: "Player Two Turn",
+    [roundPhases.ARRAY_TURN]: "Runic Pulse",
+    [roundPhases.EMINENCE_TURN]: "Emanation",
+    [roundPhases.P1_STARS_TURN]: "Player One Starfall",
+    [roundPhases.MOON_TURN]: "Moon Phase",
+    [roundPhases.P2_STARS_TURN]: "Player Two Starfall",
+    [roundPhases.SPECIAL_EMINENCE_TURN]: "Anointment",
+    [roundPhases.MINI_ARRAY_TURN]: "Mana Siphon",
+    [roundPhases.ROUND_END]: "Round End",
+};

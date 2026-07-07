@@ -51,6 +51,7 @@ import TooltipDisplay from "./components/TooltipDisplay.jsx";
 import Glossary from "./components/Glossary.jsx";
 import Modal from "./components/Modal.jsx";
 import ContinueModal from "./components/ContinueModal.jsx";
+import Timeline from "./components/Timeline.jsx";
 
 // Auxiliary Functions
 function resetGameState(prev) {
@@ -522,6 +523,7 @@ function App() {
                         roundCount: gameState.roundCount + 1,
                         roundIndex: gameState.roundIndex + 1,
                     };
+                    delayAmount = gameState.roundCount > 0 ? 1200 : 0;
                     break;
                 }
 
@@ -583,8 +585,8 @@ function App() {
                     nextState = {
                         ...gameState,
                         roundIndex: 0,
-                        roundQueue: [],
                     };
+                    delayAmount = 1200;
                     break;
                 }
             }
@@ -656,10 +658,10 @@ function App() {
 
             if (delayAmount > 0) {
                 timer = setTimeout(() => {
-                    setGame(nextState);
+                    setGame(buildRoundQueue(nextState));
                 }, delayAmount);
             } else {
-                setGame(nextState);
+                setGame(buildRoundQueue(nextState));
             }
 
             return () => {
@@ -809,6 +811,12 @@ function App() {
 
     return (
         <div className="app-container">
+            <Timeline
+                phases={game.roundQueue}
+                currIndex={game.roundIndex}
+                status={game.status}
+            />
+
             {tooltipStack.length > 0 && (
                 <div
                     className="backdrop"
