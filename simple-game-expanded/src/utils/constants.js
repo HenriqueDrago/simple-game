@@ -24,6 +24,8 @@ import {
     mechanicKeys,
     entryTypes,
     roundPhases,
+    elementalKeys,
+    moonKeys,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -56,7 +58,7 @@ const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 20;
+const HALO_GEN_MULT = 2;
 const SAC_HP_CONSUMPTION = 0.5;
 
 const SHADOW_PACT_BURN = 5;
@@ -83,12 +85,13 @@ const STARDUST_RATE_CONVERSION = 3;
 const MAX_DYNAMO = 100;
 const STARTING_ENERGY = 1;
 
-const SCORCH_DMG_BONUS = 1.5;
-const SCORCH_FRAGILITY = 1.5;
-const FROST_DR = 0.5;
-const FROST_WEAKNESS = 0.5;
-
 const RESOURCES_CINDERS_MULT = 2;
+
+const ALBEDO_ML_GAIN = 2;
+const BLOOD_CORONA_ML_GAIN = 1;
+const MIRROR_ML_GAIN = 2;
+const LUNAR_GROWTH_MULT = 1;
+const HIDDEN_MOON_ML_GAIN = 0;
 
 const DISTRIBUTION_MODES = [
     "Random",
@@ -107,12 +110,6 @@ export const freeResources = [
     effectKeys.MANA_OVERFLOW,
     effectKeys.SHACKLED_MANA,
 
-    effectKeys.RIME,
-    effectKeys.CRYOGENESIS,
-    effectKeys.KINDLING,
-    effectKeys.INCANDESCENCE,
-    effectKeys.MYCELIUM,
-
     effectKeys.BLOOD_SACRIFICE,
 
     effectKeys.DOME,
@@ -121,6 +118,10 @@ export const freeResources = [
     effectKeys.RADIANCE,
     effectKeys.HALO,
     effectKeys.INSPIRATION,
+
+    effectKeys.REFRACTED_DIVINITY,
+    effectKeys.LUNACY,
+    effectKeys.SILVER_BLOOD,
 
     effectKeys.SACRED_FLAMES,
 ];
@@ -170,12 +171,14 @@ export const constants = {
     MAX_DYNAMO,
     STARTING_ENERGY,
 
-    SCORCH_DMG_BONUS,
-    SCORCH_FRAGILITY,
-    FROST_DR,
-    FROST_WEAKNESS,
-
     RESOURCES_CINDERS_MULT,
+
+    ALBEDO_ML_GAIN,
+    MIRROR_ML_GAIN,
+    BLOOD_CORONA_ML_GAIN,
+    LUNAR_GROWTH_MULT,
+
+    HIDDEN_MOON_ML_GAIN,
 };
 
 export const presetAi = {
@@ -400,24 +403,7 @@ export const presetAi = {
             def: 10,
         },
         caller: simpleAI,
-        desc: [
-            actionKeys.ALIGN,
-            effectKeys.SELENIAN,
-            effectKeys.ELEMENTAL_CRYSTALS,
-            effectKeys.NATURE,
-            effectKeys.MYCELIUM,
-            effectKeys.FROST,
-            effectKeys.CRYOGENESIS,
-            effectKeys.RIME,
-            effectKeys.SCORCH,
-            effectKeys.KINDLING,
-            effectKeys.INCANDESCENCE,
-            effectKeys.MIRRORED_MOON,
-            actionKeys.MIRROR,
-            effectKeys.REFLECTED_FIRMAMENT,
-            mechanicKeys.MOON_PHASE,
-            effectKeys.MOONLIGHT,
-        ],
+        desc: [],
     },
 
     [aiKeys.PALADIN]: {
@@ -472,10 +458,20 @@ const offensiveActions = [
     actionKeys.SPECIAL_ATTACK,
     actionKeys.LASER,
     actionKeys.MELTDOWN,
-    actionKeys.SACRIFICE,
+
+    actionKeys.LUNAR_STRIKE,
+    actionKeys.LUNAR_SMITE,
 ];
 
-const defensiveActions = [actionKeys.HEAL, actionKeys.GUARD, actionKeys.AEGIS];
+const defensiveActions = [
+    actionKeys.HEAL,
+    actionKeys.GUARD,
+    actionKeys.AEGIS,
+
+    actionKeys.LUNAR_GROWTH,
+    actionKeys.LUNAR_VEIL,
+    actionKeys.LUNAR_SHROUD,
+];
 
 const transformativeActions = [
     actionKeys.ARRAY,
@@ -492,6 +488,9 @@ const transformativeActions = [
     actionKeys.BLACK_MAYHEM,
     actionKeys.ALIGN,
     actionKeys.CHART,
+
+    actionKeys.SACRIFICE,
+    actionKeys.LUNAR_TIDE,
 ];
 
 const actsOfBenediction = [
@@ -532,15 +531,6 @@ export const stackCounters = {
             color: "#00e676",
             borderColor: "#00e676",
             backgroundColor: "rgba(0, 230, 118, 0.2)",
-        },
-    },
-
-    [effectKeys.CRYOGENESIS]: {
-        label: "Cryogenesis",
-        style: {
-            color: "#00b0ff",
-            borderColor: "#00b0ff",
-            backgroundColor: "rgba(0, 176, 255, 0.2)",
         },
     },
 
@@ -643,39 +633,21 @@ export const stackCounters = {
         },
     },
 
-    [effectKeys.RIME]: {
-        label: "Rime",
+    [effectKeys.LUNACY]: {
+        label: "Lunacy",
         style: {
-            color: "#00e5ff",
-            borderColor: "#00e5ff",
-            backgroundColor: "rgba(0, 229, 255, 0.2)",
+            color: "white",
+            borderColor: "white",
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
         },
     },
 
-    [effectKeys.KINDLING]: {
-        label: "Kindling",
+    [effectKeys.REFRACTED_DIVINITY]: {
+        label: "Refracted Divinity",
         style: {
-            color: "#ff9100",
-            borderColor: "#ff9100",
-            backgroundColor: "rgba(255, 145, 0, 0.2)",
-        },
-    },
-
-    [effectKeys.INCANDESCENCE]: {
-        label: "Incandescence",
-        style: {
-            color: "#ff3d00",
-            borderColor: "#ff3d00",
-            backgroundColor: "rgba(255, 61, 0, 0.2)",
-        },
-    },
-
-    [effectKeys.MYCELIUM]: {
-        label: "Mycelium",
-        style: {
-            color: "#4caf50",
-            borderColor: "#4caf50",
-            backgroundColor: "rgba(76, 175, 80, 0.2)",
+            color: "white",
+            borderColor: "white",
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
         },
     },
 };
@@ -825,4 +797,30 @@ export const roundPhasesNameMap = {
     [roundPhases.SPECIAL_EMINENCE_TURN]: "Anointment",
     [roundPhases.MINI_ARRAY_TURN]: "Mana Siphon",
     [roundPhases.ROUND_END]: "Round End",
+};
+
+export const elementsMap = {
+    [elementalKeys.ALBEDO]: "ALBEDO",
+
+    [elementalKeys.NATURE]: "NATURE",
+    [elementalKeys.FROST]: "FROST",
+    [elementalKeys.SCORCH]: "SCORCH",
+
+    [elementalKeys.OCEAN]: "OCEAN",
+    [elementalKeys.WITHER]: "WITHER",
+    [elementalKeys.ASH]: "ASH",
+
+    [elementalKeys.SHATTERED]: "SHATTERED",
+
+    [elementalKeys.DULLED]: "DULLED",
+};
+
+export const moonMap = {
+    [moonKeys.HIDDEN]: "HIDDEN",
+
+    [moonKeys.WAXING]: "WAXING",
+    [moonKeys.BLOODSTAINED]: "BLOODSTAINED",
+
+    [moonKeys.WANING]: "WANING",
+    [moonKeys.CORONAL]: "CORONAL",
 };

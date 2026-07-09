@@ -435,13 +435,20 @@ function App() {
 
     function handleElementChange(entityKey, element) {
         setGame((prev) => {
-            let newElement =
+            const currElements =
                 prev.entities[entityKey][effectKeys.ELEMENTAL_CRYSTALS];
 
-            if (newElement !== element) {
-                newElement = element;
+            let newElements = [...currElements];
+            if (newElements.includes(elementalKeys.SHATTERED)) {
+                return prev;
+            }
+
+            if (!newElements.includes(element)) {
+                newElements.push(element);
             } else {
-                newElement = elementalKeys.DULLED;
+                newElements = newElements.filter((item) => {
+                    return item !== element;
+                });
             }
 
             return {
@@ -450,15 +457,14 @@ function App() {
                     ...prev.entities,
                     [entityKey]: {
                         ...prev.entities[entityKey],
-                        [effectKeys.ELEMENTAL_CRYSTALS]: newElement,
+                        [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
                     },
                 },
             };
         });
     }
 
-    // Auxiliary Functions
-    function updateStatsPoints(targetKey, statusKey, value) {
+    function handleUpdateStatsPoints(targetKey, statusKey, value) {
         setGame((prev) => {
             const currUnspent = prev.entities[targetKey].unspentPoints;
             const currAttPoints =
@@ -523,7 +529,7 @@ function App() {
                         roundCount: gameState.roundCount + 1,
                         roundIndex: gameState.roundIndex + 1,
                     };
-                    delayAmount = gameState.roundCount > 0 ? 1200 : 0;
+                    delayAmount = gameState.roundCount > 0 ? 600 : 0;
                     break;
                 }
 
@@ -586,7 +592,7 @@ function App() {
                         ...gameState,
                         roundIndex: 0,
                     };
-                    delayAmount = 1200;
+                    delayAmount = 600;
                     break;
                 }
             }
@@ -618,7 +624,7 @@ function App() {
                 (currPhase === roundPhases.PLAYER_ONE_TURN ||
                     currPhase === roundPhases.PLAYER_TWO_TURN)
             ) {
-                console.log(gameState.playerQueue);
+                // console.log(gameState.playerQueue);
 
                 if (
                     !gameState.playerQueue ||
@@ -719,7 +725,7 @@ function App() {
 
             return () => clearTimeout(aiTimer);
         }
-    }, [game.status, game.roundIndex, game.playerQueue, handleAction]);
+    }, [game.status, game.roundIndex, game.playerQueue]);
 
     // Round Transition
     useEffect(() => {
@@ -875,7 +881,7 @@ function App() {
 
             <GamePanel
                 game={game}
-                updateStatsPoints={updateStatsPoints}
+                updateStatsPoints={handleUpdateStatsPoints}
                 handleDistributionModeChange={handleDistributionModeChange}
                 handleAiChange={handleAiChange}
                 handleStarChange={handleStarChange}

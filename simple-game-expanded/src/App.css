@@ -1,7 +1,14 @@
 :root {
-  --nature-color: #32cd32;
-  --frost-color: cyan;
-  --scorch-color: #ff4500;
+    /* Core Elements */
+    --nature-color: #32cd32;
+    --frost-color: #00ffff;
+    --scorch-color: #ff4500;
+
+    /* Combination Elements */
+    --ocean-color: #00a8ff;
+    --wither-color: #8e9483;
+    --ash-color: #b87333;
+    --albedo-color: #ffffff;
 }
 
 body {

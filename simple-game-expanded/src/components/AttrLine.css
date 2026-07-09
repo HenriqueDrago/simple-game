@@ -12,7 +12,7 @@
     align-items: center;
     flex-direction: row;
     gap: 10px;
-    min-width: 80px; 
+    min-width: 80px;
 }
 
 .point-assign-container button {
@@ -23,14 +23,16 @@
     justify-content: center;
     align-items: center;
     line-height: 1;
-    
+
     background-color: #000000;
     color: #ffffff;
     border: 1px solid #ffffff;
     border-radius: 0;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .point-assign-container button:not(:disabled):hover {
@@ -66,4 +68,12 @@
     min-width: 20px;
 
     text-align: center;
+}
+
+.stat-value-str {
+    color: var(--scorch-color);
+}
+
+.stat-value-def {
+    color: var(--frost-color);
 }

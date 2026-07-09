@@ -12,7 +12,8 @@ function GradientBar({
         0,
         (currResource / maxResource) * 100,
     );
-    const nonFillPercentage = 100 - gradientPercentage;
+    
+    const nonFillPercentage = Math.max(0, 100 - gradientPercentage);
 
     return (
         <div className="gradient-bar-container">

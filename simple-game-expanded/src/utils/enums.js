@@ -51,9 +51,18 @@ export const sdmKeys = Object.freeze({
 
 export const elementalKeys = Object.freeze({
     DULLED: 0,
+    
     NATURE: 1,
     FROST: 2,
     SCORCH: 3,
+
+    OCEAN: 23,
+    ASH: 13,
+    WITHER: 12,
+
+    ALBEDO: 123,
+
+    SHATTERED: -1,
 });
 
 export const whoStartsKeys = Object.freeze({
@@ -89,7 +98,6 @@ export const actionKeys = Object.freeze({
     LASER: "laser",
     MELTDOWN: "meltdown",
     BABEL: "babel",
-    ALIGN: "align",
     CHART: "chart",
 
     ASCEND: "ascend",
@@ -106,7 +114,16 @@ export const actionKeys = Object.freeze({
 
     JUDGEMENT: "judgement",
 
+    REFRACT: "refract",
     MIRROR: "mirror",
+    LUNAR_STRIKE: "lunarStrike",
+    LUNAR_VEIL: "lunarVeil",
+    LUNAR_GROWTH: "lunarGrowth",
+    LUNAR_SMITE: "lunarSmite",
+    LUNAR_TIDE: "lunarTide",
+    LUNAR_SHROUD: "lunarShroud",
+    SHATTER: "shatter",
+    CHALK: "chalk",
 });
 
 export const effectKeys = Object.freeze({
@@ -234,13 +251,13 @@ export const effectKeys = Object.freeze({
     MOONLIGHT: "moonlight",
     ELEMENTAL_CRYSTALS: "elementalCrystals",
     SELENIAN: "selenian",
-    REFLECTED_FIRMAMENT: "reflectedFirmament",
 
-    CRYOGENESIS: "cryogenesis",
-    RIME: "rime",
-    MYCELIUM: "mycelium",
-    KINDLING: "kindling",
-    INCANDESCENCE: "incandescence",
+    LUNACY: "lunacy",
+    REFRACTED_DIVINITY: "refractedDivinity",
+    PRISMATIC: "prismatic",
+    VEILED: "veiled",
+
+    SILVER_BLOOD: "silverBlood",
 });
 
 export const eyeKeys = Object.freeze({
@@ -253,6 +270,8 @@ export const moonKeys = Object.freeze({
     HIDDEN: 0,
     WAXING: 1,
     WANING: 2,
+    BLOODSTAINED: 11,
+    CORONAL: 12,
 });
 
 export const entryTypes = Object.freeze({

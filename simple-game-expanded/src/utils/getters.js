@@ -1,4 +1,5 @@
-import { actionKeys, aiKeys, effectKeys, progKeys } from "./enums";
+import { isElementActive } from "./entities";
+import { actionKeys, aiKeys, effectKeys, elementalKeys, progKeys } from "./enums";
 
 export const getUmbralActions = () => [
     {
@@ -121,36 +122,76 @@ export const getNormalActions = (
     }
 
     return [
-        {
-            key: actionKeys.ATTACK,
-            label: "Attack",
-            disabled: false,
-        },
-        {
-            key: actionKeys.GUARD,
-            label: "Guard",
-            disabled: false,
-        },
-        {
-            key: actionKeys.HEAL,
-            label: "Heal",
-            disabled: false,
-        },
-        {
-            key: actionKeys.SPECIAL_ATTACK,
-            label: "Special Attack",
-            disabled: !canUseSpAtk,
-        },
-        {
-            key: actionKeys.SACRIFICE,
-            label: "Self Sacrifice",
-            disabled:
-                progMode &&
-                !(
-                    progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED ||
-                    progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN
-                ),
-        },
+        isElementActive(currEntity, elementalKeys.SCORCH)
+            ? {
+                  key: actionKeys.LUNAR_STRIKE,
+                  label: "Lunar Strike",
+                  disabled: false,
+              }
+            : {
+                  key: actionKeys.ATTACK,
+                  label: "Attack",
+                  disabled: false,
+              },
+              
+        isElementActive(currEntity, elementalKeys.WITHER)
+            ? {
+                  key: actionKeys.LUNAR_VEIL,
+                  label: "Lunar Veil",
+                  disabled: false,
+              }
+            : {
+                  key: actionKeys.GUARD,
+                  label: "Guard",
+                  disabled: false,
+              },
+              
+        isElementActive(currEntity, elementalKeys.NATURE)
+            ? {
+                  key: actionKeys.LUNAR_GROWTH,
+                  label: "Lunar Growth",
+                  disabled: false,
+              }
+            : {
+                  key: actionKeys.HEAL,
+                  label: "Heal",
+                  disabled: false,
+              },
+              
+        isElementActive(currEntity, elementalKeys.ASH)
+            ? {
+                  key: actionKeys.LUNAR_SMITE,
+                  label: "Lunar Smite",
+                  disabled: false,
+              }
+            : {
+                  key: actionKeys.SPECIAL_ATTACK,
+                  label: "Special Attack",
+                  disabled: !canUseSpAtk,
+              },
+              
+        isElementActive(currEntity, elementalKeys.OCEAN)
+            ? {
+                  key: actionKeys.LUNAR_TIDE,
+                  label: "Lunar Tide",
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN
+                      ),
+              }
+            : {
+                  key: actionKeys.SACRIFICE,
+                  label: "Self Sacrifice",
+                  disabled:
+                      progMode &&
+                      !(
+                          progStatus[aiKeys.BLOODKNIGHT] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.BLOODKNIGHT] === progKeys.ALWAYS_OPEN
+                      ),
+              },
+              
         arrayActive
             ? {
                   key: actionKeys.CURSE,
@@ -172,6 +213,7 @@ export const getNormalActions = (
                           progStatus[aiKeys.HEXER] === progKeys.ALWAYS_OPEN
                       ),
               },
+              
         currEntity.states.weaponsDeployed
             ? {
                   key: actionKeys.LASER,
@@ -245,8 +287,8 @@ export const getNormalActions = (
 
         !currEntity.states[effectKeys.SELENIAN]
             ? {
-                  key: actionKeys.ALIGN,
-                  label: "Align",
+                  key: actionKeys.REFRACT,
+                  label: "Refract",
                   disabled:
                       progMode &&
                       !(
@@ -256,18 +298,44 @@ export const getNormalActions = (
                               progKeys.ALWAYS_OPEN
                       ),
               }
-            : {
-                  key: actionKeys.MIRROR,
-                  label: "Mirror",
-                  disabled:
-                      progMode &&
-                      !(
-                          progStatus[aiKeys.ELEMENTALIST] ===
-                              progKeys.DEFEATED ||
-                          progStatus[aiKeys.ELEMENTALIST] ===
-                              progKeys.ALWAYS_OPEN
-                      ),
-              },
+            : isElementActive(currEntity, elementalKeys.SHATTERED)
+              ? {
+                    key: actionKeys.CHALK,
+                    label: "Chalk",
+                    disabled:
+                        progMode &&
+                        !(
+                            progStatus[aiKeys.ELEMENTALIST] ===
+                                progKeys.DEFEATED ||
+                            progStatus[aiKeys.ELEMENTALIST] ===
+                                progKeys.ALWAYS_OPEN
+                        ),
+                }
+              : isElementActive(currEntity, elementalKeys.ALBEDO)
+                ? {
+                      key: actionKeys.SHATTER,
+                      label: "Shatter",
+                      disabled:
+                          progMode &&
+                          !(
+                              progStatus[aiKeys.ELEMENTALIST] ===
+                                  progKeys.DEFEATED ||
+                              progStatus[aiKeys.ELEMENTALIST] ===
+                                  progKeys.ALWAYS_OPEN
+                          ),
+                  }
+                : {
+                      key: actionKeys.MIRROR,
+                      label: "Mirror",
+                      disabled:
+                          progMode &&
+                          !(
+                              progStatus[aiKeys.ELEMENTALIST] ===
+                                  progKeys.DEFEATED ||
+                              progStatus[aiKeys.ELEMENTALIST] ===
+                                  progKeys.ALWAYS_OPEN
+                          ),
+                  },
 
         {
             key: actionKeys.CHART,
@@ -291,15 +359,26 @@ export const getNormalActions = (
                 ),
         },
 
-        {
-            key: actionKeys.AEGIS,
-            label: "Aegis",
-            disabled:
-                (progMode &&
-                !(
-                    progStatus[aiKeys.PALADIN] === progKeys.DEFEATED ||
-                    progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN
-                )) || currEntity.states[effectKeys.CUTOFF_WINGS],
-        },
+        isElementActive(currEntity, elementalKeys.FROST)
+            ? {
+                  key: actionKeys.LUNAR_SHROUD,
+                  label: "Lunar Shroud",
+                  disabled:
+                      (progMode &&
+                      !(
+                          progStatus[aiKeys.PALADIN] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN
+                      )),
+              }
+            : {
+                  key: actionKeys.AEGIS,
+                  label: "Aegis",
+                  disabled:
+                      (progMode &&
+                      !(
+                          progStatus[aiKeys.PALADIN] === progKeys.DEFEATED ||
+                          progStatus[aiKeys.PALADIN] === progKeys.ALWAYS_OPEN
+                      )) || currEntity.states[effectKeys.CUTOFF_WINGS],
+              },
     ];
 };

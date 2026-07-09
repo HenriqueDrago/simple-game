@@ -2,6 +2,8 @@ import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
     consumeResources,
+    getEntityMaxHealth,
+    getEntityStr,
     isEntityDead,
     restoreResources,
 } from "./entities.js";
@@ -59,8 +61,6 @@ export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
         hasManaForSpecial: totalAgentMana >= constants.SP_ATTACK_COST,
         handleAction,
     };
-
-    console.log(`array: ${prev[effectKeys.RUNIC_ARRAY]}`)
 
     // Use Judgement if Annointed
     if (agent.states[effectKeys.ANOINTED_PROXY]) {
@@ -147,7 +147,7 @@ export function bloodknightAI(context) {
     // Use Sacrifice if not enough accumulated dmg
     if (
         agent.currHp >= agent.maxHp * 0.6 &&
-        agent.resources.bloodSacrifice + agent.attributes.str.value <
+        agent.resources.bloodSacrifice + getEntityStr(agent) <
             agent.maxHp
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
@@ -156,8 +156,7 @@ export function bloodknightAI(context) {
 
     // No attack if Array or Halo
     if (
-        (isArrayActive &&
-            agent.attributes.str.value >= agent[effectKeys.HEALTH]) ||
+        isArrayActive ||
         nonAgent.resources[effectKeys.HALO] > 0
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
@@ -433,7 +432,7 @@ export function cyborgAI(context) {
     // Pre-calculated HEAL evaluation
     const healWorth =
         agent[effectKeys.MANA] >= 5 &&
-        agent[effectKeys.HEALTH] <= agent[effectKeys.MAX_HEALTH] * 0.5;
+        agent[effectKeys.HEALTH] <= getEntityMaxHealth(agent) * 0.5;
 
     // 1. Thermal Overload -> Meltdown
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {

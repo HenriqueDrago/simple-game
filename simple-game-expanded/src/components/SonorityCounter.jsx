@@ -8,8 +8,6 @@ function SonorityCounter({ sonority }) {
     const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT) * 10);
     const harNonFill = 100 - harFill;
 
-    console.log(disNonFill, disFill, harNonFill, harFill);
-
     return (
         <div className="sonority-counter-container">
             <div className="sonority-counter-upper-labels">

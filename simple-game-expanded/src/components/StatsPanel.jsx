@@ -13,12 +13,14 @@ import {
     entityKeys,
     roundPhases,
     playerTurnPhases,
+    elementalKeys,
 } from "../utils/enums.js";
 import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
+import { isElementActive } from "../utils/entities.js";
 
 // Roman numerals helper
 const romanFormatter = new Intl.NumberFormat("en", {
@@ -113,10 +115,11 @@ function StatsPanel({
             {entity.states[effectKeys.SELENIAN] && (
                 <SelenianTracker
                     entity={entity}
-                    changeElement={(element) =>
+                    changeElement={(element) => {
                         handleElementChange(entityKey, element)
                     }
-                    clickable={isEntityTurn}
+                    }
+                    clickable={isEntityTurn && !isElementActive(entity, elementalKeys.SHATTERED)}
                 />
             )}
             <StateBadges states={states} />

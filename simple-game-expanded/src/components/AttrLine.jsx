@@ -1,6 +1,12 @@
 import "./AttrLine.css";
 
-import { turnStatus } from "../utils/enums";
+import { elementalKeys, turnStatus } from "../utils/enums";
+import { getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
+
+const gettersMap = {
+    str: getEntityStr,
+    def: getEntityDef,
+}
 
 function AttrLine({
     battleState,
@@ -14,19 +20,27 @@ function AttrLine({
         return null;
     }
 
+    let specialClass = "";
+    if(attr === "str") {
+        specialClass = isElementActive(entity, elementalKeys.SCORCH) ? "stat-value-str" : "";
+    }
+    if(attr === "def") {
+        specialClass = isElementActive(entity, elementalKeys.FROST) ? "stat-value-def" : "";
+    }
+
     const showControls = modifiable && battleState === turnStatus.SETUP;
 
     return (
         <div className="status-line-container">
             {showControls ? (
                 <p className="changeable-status">
-                    {attr.toUpperCase() + ": " + entity.attributes[attr].value}
+                    {attr.toUpperCase() + ": " + gettersMap[attr](entity)}
                 </p>
             ) : (
                 <p className="non-changeable-status">
                     {attr.toUpperCase() + ": "}
-                    <span>
-                        {entity.attributes[attr].value}
+                    <span className={specialClass}>
+                        {gettersMap[attr](entity)}
                     </span>
                 </p>
             )}
@@ -37,7 +51,7 @@ function AttrLine({
                         onClick={() => {
                             handleStatusChange(entityKey, attr, -1);
                         }}
-                        disabled={entity.attributes[attr].value <= 0}
+                        disabled={entity.attributes[attr].points <= 0}
                     >
                         -
                     </button>

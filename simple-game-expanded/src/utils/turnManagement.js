@@ -5,6 +5,8 @@ import {
     gainHp,
     gainInsight,
     gainMana,
+    getEntityMaxHealth,
+    isElementActive,
     loseMana,
     processDeathCheck,
     restoreResources,
@@ -160,6 +162,31 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             };
         }
 
+        // Shattered
+        if (isElementActive(draftTarget, elementalKeys.SHATTERED)) {
+            draftTarget = takeDamage(
+                draftTarget,
+                draftTarget[effectKeys.MOONLIGHT],
+                dmgTypes.TRUE,
+            );
+        }
+
+        // Divinity
+        if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
+            const newLunacy =
+                draftTarget.resources[effectKeys.LUNACY] +
+                draftTarget.resources[effectKeys.REFRACTED_DIVINITY];
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.REFRACTED_DIVINITY]: 0,
+                    [effectKeys.LUNACY]: newLunacy,
+                },
+            };
+        }
+
         // Poison
         if (
             draftTarget.resources.poison > 0 &&
@@ -260,7 +287,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             };
 
             const missingHp =
-                draftTarget[effectKeys.MAX_HEALTH] -
+                getEntityMaxHealth(draftTarget) -
                 draftTarget[effectKeys.HEALTH];
 
             const hpRestored = Math.min(missingHp, remainingFlames);
@@ -423,15 +450,6 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 },
             };
         }
-
-        // Kindling
-        if (draftCurrActor.resources[effectKeys.KINDLING] > 0) {
-            draftCurrActor = takeDamage(
-                draftCurrActor,
-                draftCurrActor.resources[effectKeys.KINDLING],
-                dmgTypes.PHYSICAL,
-            );
-        }
     }
 
     // Laser used
@@ -487,10 +505,16 @@ export function buildRoundQueue(prev) {
     }
 
     // Proxy insertion
-    if (p1.states[effectKeys.ANOINTED_PROXY] && currentActivePhase !== roundPhases.PLAYER_ONE_TURN) {
+    if (
+        p1.states[effectKeys.ANOINTED_PROXY] &&
+        currentActivePhase !== roundPhases.PLAYER_ONE_TURN
+    ) {
         newQueue.push(roundPhases.PLAYER_ONE_TURN);
     }
-    if (p2.states[effectKeys.ANOINTED_PROXY] && currentActivePhase !== roundPhases.PLAYER_TWO_TURN) {
+    if (
+        p2.states[effectKeys.ANOINTED_PROXY] &&
+        currentActivePhase !== roundPhases.PLAYER_TWO_TURN
+    ) {
         newQueue.push(roundPhases.PLAYER_TWO_TURN);
     }
 
@@ -530,7 +554,6 @@ export function buildRoundQueue(prev) {
                 .includes(roundPhases.ARRAY_TURN);
         const isPastTurn =
             turnIndex !== -1 && turnIndex < currIndex && pulseAlreadyLockedIn;
-
 
         if (!newQueue.includes(value[0])) {
             newQueue.push(value[0]);
@@ -650,7 +673,7 @@ export function processAnnoitement(prev) {
                 playerOne = {
                     ...playerOne,
                     [effectKeys.TARNISHED_SIN]: 0,
-                }
+                };
 
                 playerTwo = exitAllStates(playerTwo);
                 playerTwo = consumeResources(
@@ -662,7 +685,7 @@ export function processAnnoitement(prev) {
                 playerTwo = {
                     ...playerTwo,
                     [effectKeys.TARNISHED_SIN]: 0,
-                }
+                };
             } else {
                 // Chooses a proxy
                 playerTwo = {
@@ -1082,196 +1105,64 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 }
 
 export function processMoonPhase(prev) {
-    const players =
-        prev.startingPlayer === entityKeys.PLAYER_ONE
-            ? [
-                  [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
-                  [entityKeys.PLAYER_TWO, entityKeys.PLAYER_ONE],
-              ]
-            : [
-                  [entityKeys.PLAYER_TWO, entityKeys.PLAYER_ONE],
-                  [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
-              ];
+    const players = [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO];
 
     let newGameState = { ...prev };
 
-    for (let pArray of players) {
-        newGameState = moonPhaseAuxiliar(newGameState, pArray[0], pArray[1]);
-    }
+    for (let p of players) {
+        let draftEntity = {
+            ...newGameState.entities[p],
+        };
 
-    // Add deat check later
+        const moon = draftEntity[effectKeys.MIRRORED_MOON];
+        let newMoon = moon;
+        if (newGameState[effectKeys.SEVERED_TIME]) {
+            if (moon === moonKeys.CORONAL) {
+                newMoon = moonKeys.WANING;
+            } else if (moon === moonKeys.BLOODSTAINED) {
+                newMoon = moonKeys.WAXING;
+            }
+        } else {
+            if (
+                moon === moonKeys.HIDDEN ||
+                moon === moonKeys.WANING ||
+                moon === moonKeys.CORONAL
+            ) {
+                newMoon = moonKeys.WAXING;
+            } else if (
+                moon === moonKeys.BLOODSTAINED ||
+                moon === moonKeys.WAXING
+            ) {
+                newMoon = moonKeys.WANING;
+            }
+        }
+
+        let newMoonlight = draftEntity[effectKeys.MOONLIGHT];
+
+        if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.CORONAL) {
+            newMoonlight += constants.BLOOD_CORONA_ML_GAIN;
+        }
+        if (isElementActive(draftEntity, elementalKeys.ALBEDO)) {
+            newMoonlight += constants.ALBEDO_ML_GAIN;
+        }
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.MOONLIGHT]: newMoonlight,
+            [effectKeys.MIRRORED_MOON]: newMoon,
+        };
+
+        newGameState = {
+            ...newGameState,
+            entities: {
+                ...newGameState.entities,
+                [p]: draftEntity,
+            },
+        };
+    }
 
     return processDeathCheck({
         ...newGameState,
         status: turnStatus.ROUND_TRANSITION,
     });
-}
-
-function moonPhaseAuxiliar(prev, targetKey, nonTargetKey) {
-    let draftTarget = {
-        ...prev.entities[targetKey],
-    };
-
-    let draftNonTarget = {
-        ...prev.entities[nonTargetKey],
-    };
-
-    // Helpers
-    const getRecipient = () => {
-        return draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]
-            ? draftNonTarget
-            : draftTarget;
-    };
-    const setRecipient = (changes) => {
-        if (draftTarget.states[effectKeys.REFLECTED_FIRMAMENT]) {
-            draftNonTarget = {
-                ...draftNonTarget,
-                ...changes,
-            };
-        } else {
-            draftTarget = {
-                ...draftTarget,
-                ...changes,
-            };
-        }
-    };
-
-    const isWaxing = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WAXING;
-    const isWaning = draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.WANING;
-
-    const moonlight = draftTarget[effectKeys.MOONLIGHT];
-    const element = draftTarget[effectKeys.ELEMENTAL_CRYSTALS];
-
-    // No moon early return
-    if (draftTarget[effectKeys.MIRRORED_MOON] === moonKeys.HIDDEN) {
-        return {
-            ...prev,
-            entities: {
-                ...prev.entities,
-                [targetKey]: {
-                    ...draftTarget,
-                    [effectKeys.MIRRORED_MOON]: moonKeys.WAXING,
-                    [effectKeys.MOONLIGHT]:
-                        draftTarget[effectKeys.MOONLIGHT] + 1,
-                },
-                [nonTargetKey]: draftNonTarget,
-            },
-        };
-    }
-
-    switch (element) {
-        case elementalKeys.FROST: {
-            // If waxing, gain cryogenesis
-            if (isWaxing) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.CRYOGENESIS]:
-                            getRecipient().resources[effectKeys.CRYOGENESIS] +
-                            moonlight,
-                    },
-                });
-            } else if (isWaning) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.RIME]:
-                            getRecipient().resources[effectKeys.RIME] +
-                            moonlight,
-                    },
-                });
-            }
-            break;
-        }
-
-        case elementalKeys.SCORCH: {
-            // If waxing, gain cryogenesis
-            if (isWaxing) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.INCANDESCENCE]:
-                            getRecipient().resources[effectKeys.INCANDESCENCE] +
-                            moonlight,
-                    },
-                });
-            } else if (isWaning) {
-                setRecipient({
-                    resources: {
-                        ...getRecipient().resources,
-                        [effectKeys.KINDLING]:
-                            getRecipient().resources[effectKeys.KINDLING] +
-                            moonlight,
-                    },
-                });
-            }
-            break;
-        }
-
-        case elementalKeys.NATURE: {
-            // If waxing, restore resources equal to moonlight
-            if (isWaxing) {
-                setRecipient({
-                    ...restoreResources(getRecipient(), moonlight),
-                });
-            } else if (isWaning) {
-                // if waning, consume resources equal to moonlight then gain mycelium equal to consumed
-                const { draftEntity, resourcesConsumed } = consumeResources(
-                    getRecipient(),
-                    moonlight,
-                    effectKeys.MIRRORED_MOON,
-                );
-                const newMycelium =
-                    draftEntity.resources[effectKeys.MYCELIUM] +
-                    resourcesConsumed.totalConsumption;
-
-                setRecipient({
-                    ...draftEntity,
-                    resources: {
-                        ...draftEntity.resources,
-                        [effectKeys.MYCELIUM]: newMycelium,
-                    },
-                });
-            }
-            break;
-        }
-    }
-
-    // Changes moon if time is not severed
-    if (!prev[effectKeys.SEVERED_TIME]) {
-        const newMoon = isWaning ? moonKeys.WAXING : moonKeys.WANING;
-
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.MIRRORED_MOON]: newMoon,
-        };
-    }
-
-    // Don't gain moonlight if no element
-    if (element !== elementalKeys.DULLED) {
-        const newMoonlight =
-            moonlight + (element === elementalKeys.NATURE ? 2 : 1);
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.MOONLIGHT]: newMoonlight,
-        };
-    }
-
-    // Disables reflected firmament
-    draftTarget = {
-        ...draftTarget,
-        states: {
-            ...draftTarget.states,
-            [effectKeys.REFLECTED_FIRMAMENT]: false,
-        },
-    };
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [targetKey]: draftTarget,
-            [nonTargetKey]: draftNonTarget,
-        },
-    };
 }

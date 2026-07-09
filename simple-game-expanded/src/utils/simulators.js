@@ -10,14 +10,17 @@ import {
     gainHp,
     exitAllStates,
     processExitAscendence,
+    processExitSelenian,
+    getEntityDef,
+    getEntityStr,
+    isElementActive,
 } from "./entities.js";
 import {
     actionKeys,
     dmgTypes,
     effectKeys,
-    eyeKeys,
-    moonKeys,
     elementalKeys,
+    eyeKeys,
 } from "./enums.js";
 
 export const simulators = {
@@ -48,6 +51,7 @@ export const simulators = {
 
     [actionKeys.CHART]: simulateChart,
 
+    // Paladin
     [actionKeys.AEGIS]: simulateAegis,
     [actionKeys.ASCEND]: simulateAscend,
 
@@ -62,8 +66,19 @@ export const simulators = {
     [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
 
     [actionKeys.JUDGEMENT]: simulateJudgement,
-    [actionKeys.ALIGN]: simulateAlign,
+
+    // Lunatic
+    [actionKeys.REFRACT]: simulateRefract,
     [actionKeys.MIRROR]: simulateMirror,
+    [actionKeys.SHATTER]: simulateShatter,
+    [actionKeys.CHALK]: simulateChalk,
+
+    [actionKeys.LUNAR_STRIKE]: simulateLunarStrike,
+    [actionKeys.LUNAR_SMITE]: simulateLunarSmite,
+    [actionKeys.LUNAR_GROWTH]: simulateLunarGrowth,
+    [actionKeys.LUNAR_SHROUD]: simulateLunarShroud,
+    [actionKeys.LUNAR_VEIL]: simulateLunarVeil,
+    [actionKeys.LUNAR_TIDE]: simulateLunarTide,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -92,7 +107,7 @@ function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newHalo =
         agent.resources.halo +
-        Math.ceil(agent.attributes.def.value * constants.HALO_GEN_MULT);
+        Math.ceil(getEntityDef(agent) * constants.HALO_GEN_MULT);
 
     return {
         ...prev,
@@ -152,7 +167,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent.attributes.str.value + agent.resources.radiance,
+        getEntityStr(agent) + agent.resources.radiance,
         dmgTypes.PHYSICAL,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
@@ -198,7 +213,7 @@ function simulateSpecialAttack({
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        manaDiff + agent.attributes.str.value,
+        manaDiff + getEntityStr(agent),
         dmgTypes.PIERCING,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
@@ -225,10 +240,15 @@ function simulateHeal({ prev, agent, agentKey }) {
         ...agent,
     };
 
-    const base_heal = Math.min(
-        agent.maxHp - agent.currHp,
-        agent.currMana + agent.resources.manaOverflow,
-    );
+    const totalMana =
+        agent[effectKeys.MANA] + agent.resources[effectKeys.MANA_OVERFLOW];
+        
+    const base_heal = isElementActive(agent, elementalKeys.OCEAN)
+        ? totalMana
+        : Math.min(
+              agent[effectKeys.MAX_HEALTH] - agent[effectKeys.HEALTH],
+              totalMana,
+          );
 
     draftAgent = gainHp(draftAgent, base_heal);
     draftAgent = loseMana(draftAgent, base_heal);
@@ -382,7 +402,9 @@ function simulateShadowMantle({
 }
 
 function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const newLE = agent.resources.shadowflame + agent.resources.lingeringEmber;
+    const newLE =
+        agent.resources[effectKeys.SHADOWFLAME] +
+        agent.resources[effectKeys.LINGERING_EMBER];
     return {
         ...prev,
         entities: {
@@ -592,8 +614,6 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     );
     const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
 
-    console.log(newOverheat);
-
     return {
         ...prev,
         entities: {
@@ -706,7 +726,7 @@ function simulateAscend({ prev, agent, agentKey }) {
                 [effectKeys.ENLIGHTENMENT]: 100,
                 [effectKeys.MAX_ENLIGHTENMENT]: 100,
                 [effectKeys.MAX_INSIGHT]: 100,
-                [effectKeys.REVELATION]: newRev * 10,
+                [effectKeys.REVELATION]: newRev,
                 [effectKeys.DIVINE_SPARK]: 0,
                 states: {
                     ...draftAgent.states,
@@ -1013,15 +1033,13 @@ function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     };
 }
 
-function simulateAlign({ prev, agent, agentKey }) {
+function simulateRefract({ prev, agent, agentKey }) {
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
-                [effectKeys.ELEMENTAL_CRYSTALS]: elementalKeys.DULLED,
                 states: {
                     ...agent.states,
                     [effectKeys.SELENIAN]: true,
@@ -1038,10 +1056,182 @@ function simulateMirror({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                states: {
-                    ...agent.states,
-                    [effectKeys.REFLECTED_FIRMAMENT]: true,
-                },
+                [effectKeys.MOONLIGHT]:
+                    agent[effectKeys.MOONLIGHT] + constants.MIRROR_ML_GAIN,
+            },
+        },
+    };
+}
+
+function simulateShatter({ prev, agent, agentKey }) {
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+                [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
+            },
+        },
+    };
+}
+
+function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const { attacker, defender } = dealDamage(
+        agent,
+        nonAgent,
+        agent[effectKeys.MOONLIGHT],
+        dmgTypes.TRUE,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
+    );
+
+    const draftAttacker = processExitSelenian(attacker);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAttacker,
+            },
+            [nonAgentKey]: {
+                ...defender,
+            },
+        },
+    };
+}
+
+function simulateLunarTide({ prev, agent, agentKey }) {
+    const { draftEntity, resourcesConsumed } = consumeResources(
+        agent,
+        Infinity,
+        actionKeys.LUNAR_TIDE,
+    );
+
+    const draftAgent = restoreResources(
+        draftEntity,
+        resourcesConsumed.totalConsumption,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+            },
+        },
+    };
+}
+
+function simulateLunarGrowth({ prev, agent, agentKey }) {
+    const draftAgent = restoreResources(
+        agent,
+        agent[effectKeys.MOONLIGHT] * constants.LUNAR_GROWTH_MULT,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+            },
+        },
+    };
+}
+
+function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const { defender } = dealDamage(
+        agent,
+        nonAgent,
+        getEntityStr(agent) + agent.resources[effectKeys.LUNACY],
+        dmgTypes.PHYSICAL,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...agent,
+            },
+            [nonAgentKey]: {
+                ...defender,
+            },
+        },
+    };
+}
+
+function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const manaConsumed =
+        agent[effectKeys.MANA] + agent.resources[effectKeys.MANA_OVERFLOW];
+
+    const { attacker, defender } = dealDamage(
+        agent,
+        nonAgent,
+        agent[effectKeys.MOONLIGHT] + manaConsumed,
+        dmgTypes.PIERCING,
+        prev[effectKeys.RUNIC_ARRAY] > 0,
+    );
+
+    const draftAgent = loseMana(attacker, manaConsumed);
+    const draftNonAgent = gainMana(defender, manaConsumed);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+            },
+            [nonAgentKey]: {
+                ...draftNonAgent,
+            },
+        },
+    };
+}
+
+function simulateLunarShroud({ prev, agent, agentKey }) {
+    const draftAgent = {
+        ...agent,
+        states: {
+            ...agent.states,
+            [effectKeys.PRISMATIC]: true,
+        },
+        resources: {
+            ...agent.resources,
+            [effectKeys.REFRACTED_DIVINITY]: getEntityDef(agent),
+        },
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+            },
+        },
+    };
+}
+
+function simulateLunarVeil({ prev, agent, agentKey }) {
+    const draftAgent = {
+        ...agent,
+        states: {
+            ...agent.states,
+            [effectKeys.VEILED]: true,
+        },
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
             },
         },
     };

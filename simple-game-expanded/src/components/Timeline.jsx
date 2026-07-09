@@ -7,8 +7,6 @@ export default function Timeline({ status, phases, currIndex }) {
         return null;
     }
 
-    console.log(`phases: ${phases}`)
-
     return (
         <div className="timeline-container">
             {phases.map((p, i) => {
@@ -18,8 +16,6 @@ export default function Timeline({ status, phases, currIndex }) {
                         : i > currIndex
                           ? "timeline-future-phase"
                           : "timeline-curr-phase";
-
-                console.log(`${p} ${i} ${roundPhasesNameMap[p]}`)
 
                 return (
                     <div className={`timeline-item-container ${specialClass}`}>

@@ -983,20 +983,20 @@ export const ACTION_CATEGORY_DESCRIPTIONS = {
         name: "OFFENSIVE ACTIONS",
         type: entryTypes.MECHANIC,
         description:
-            "Includes ATTACK, SPECIAL ATTACK, LASER, MELTDOWN, and SELF-SACRIFICE.",
+            "Includes ATTACK, SPECIAL ATTACK, LASER, MELTDOWN, LUNAR STRIKE and LUNAR SMITE.",
     },
 
     [mechanicKeys.DEFENSIVE_ACTIONS]: {
         name: "DEFENSIVE ACTIONS",
         type: entryTypes.MECHANIC,
-        description: "Includes HEAL, GUARD, and AEGIS.",
+        description: "Includes HEAL, GUARD, AEGIS, LUNAR GROWTH, LUNAR VEIL and LUNAR SHROUD.",
     },
 
     [mechanicKeys.TRANSFORMATIVE_ACTIONS]: {
         name: "TRANSFORMATIVE ACTIONS",
         type: entryTypes.MECHANIC,
         description:
-            "Includes ARRAY, SHADOW PACT, DARK PROMISE, ATTUNE, DA CAPO, DEPLOY, CURSE, RITUAL OF ASH, SOUND OF SILENCE, BABEL, SHADOW MANTLE, BLACK MAYHEM, ALIGN, and CHART.",
+            "Includes ARRAY, CURSE, ATTUNE, DA CAPO, SOUND OF SILENCE, BABEL, SHADOW PACT, DARK PROMISE, RITUAL OF ASH, SHADOW MANTLE, BLACK MAYHEM, DEPLOY, CHART, SACRIFICE, LUNAR TIDE, REFRACT, MIRROR, SHATTER and CHALK.",
     },
 };
 
@@ -1026,7 +1026,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, CRYOGENESIS, BLOOD SACRIFICE, DOME, STARDUST, RADIANCE, HALO, INSPIRATION and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, LINGERING EMBER, CINDERS, POISON, MANA OVERFLOW, SHACKLED MANA, BLOOD SACRIFICE, DOME, STARDUST, RADIANCE, HALO, INSPIRATION and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
@@ -1047,7 +1047,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken. Includes HALO, CRYOGENESIS, DOME and LINGERING EMBER. When consuming this type of resource due to damage taken, consume them in this order.",
+            "A subset of FREE RESOURCES. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RESOURCES of this type to decrease damage taken. Includes HALO, DOME and LINGERING EMBER. When consuming this type of resource due to damage taken, consume them in this order.",
     },
 
     [entryTypes.BATTLE_PHASE]: {
@@ -1064,118 +1064,6 @@ export const CATEGORY_DESCRIPTIONS = {
     },
 };
 
-export const ELEMENTALIST_DESCRIPTIONS = {
-    [actionKeys.ALIGN]: {
-        name: "ALIGN",
-        type: entryTypes.ACTION,
-        description:
-            "Enters SELENIAN state. Sets MIRRORED MOON to HIDDEN and ELEMENTAL CRYSTALS to DULLED.",
-    },
-
-    [effectKeys.SELENIAN]: {
-        name: "SELENIAN",
-        type: entryTypes.STATE,
-        description:
-            "Replaces ALIGN with MIRROR. Enables MIRRORED MOON and ELEMENTAL CRYSTALS on self. Upon exiting this state, sets MIRRORED MOON to HIDDEN and ELEMENTAL CRYSTALS to DULLED, then lose all MOONLIGHT.",
-    },
-
-    [effectKeys.ELEMENTAL_CRYSTALS]: {
-        name: "ELEMENTAL CRYSTALS",
-        type: entryTypes.STATE,
-        description:
-            "Can be interacted with during the PLAN phase of a TURN to choose one of three elements: NATURE, FROST and SCORCH.",
-    },
-
-    [effectKeys.NATURE]: {
-        name: "NATURE",
-        type: entryTypes.STATE,
-        description:
-            "While active, at MOON PHASE, gain 1 additional MOONLIGHT. At MOON PHASE, if MIRRORED MOON is on WAXING, restore RESOURCES on target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, consume RESOURCES on target equal to MOONLIGHT on self, then grants MYCELIUM to target equal to the amount consumed.",
-    },
-
-    [effectKeys.MYCELIUM]: {
-        name: "MYCELIUM",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When using DEFENSIVE ACTIONS, loses all MYCELIUM on self and restores RESOURCES equal to the amount consumed.",
-    },
-
-    [effectKeys.FROST]: {
-        name: "FROST",
-        type: entryTypes.STATE,
-        description:
-            "While active, takes and deals -50% PHYSICAL DAMAGE and PIERCING DAMAGE. At MOON PHASE, if MIRRORED MOON is on WAXING, grants CRYOGENESIS to target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, grants RIME to target equal to MOONLIGHT on self.",
-    },
-
-    [effectKeys.CRYOGENESIS]: {
-        name: "CRYOGENESIS",
-        type: entryTypes.MITIGATION_RESOURCE,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CRYOGENESIS to decrease the damage taken. When using OFFENSIVE ACTIONS, thaws all CRYOGENESIS on self into RIME.",
-    },
-
-    [effectKeys.RIME]: {
-        name: "RIME",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When dealing PHYSICAL DAMAGE or PIERCING DAMAGE, consumes RIME to decrease the damage dealt. When using DEFENSIVE ACTIONS, condenses all RIME on self into CRYOGENESIS.",
-    },
-
-    [effectKeys.SCORCH]: {
-        name: "SCORCH",
-        type: entryTypes.STATE,
-        description:
-            "While active, takes and deals +50% PHYSICAL DAMAGE and PIERCING DAMAGE. At MOON PHASE, if MIRRORED MOON is on WAXING, grants INCANDESCENCE to target equal to MOONLIGHT on self; if MIRRORED MOON is on WANING, grants KINDLING to target equal to MOONLIGHT on self.",
-    },
-
-    [effectKeys.KINDLING]: {
-        name: "KINDLING",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When dealing PHYSICAL DAMAGE or PIERCING DAMAGE, consumes KINDLING to increase the damage dealt. At turn end, takes PHYSICAL DAMAGE equal to KINDLING on self.",
-    },
-
-    [effectKeys.INCANDESCENCE]: {
-        name: "INCANDESCENCE",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When using OFFENSIVE ACTIONS, deals TRUE DAMAGE to the opponent equal to INCANDESCENCE on self. When using DEFENSIVE ACTIONS, take TRUE DAMAGE equal to INCANDESCENCE on self.",
-    },
-
-    [effectKeys.MIRRORED_MOON]: {
-        name: "MIRRORED MOON",
-        type: entryTypes.STATE,
-        description:
-            "Enables MOON PHASE while not HIDDEN. At MOON PHASE, activates all entities elemental abilities on the corresponding target. Additionally, if on WAXING, change to WANING. If on WANING, change to WAXING. Then grants 1 MOONLIGHT for all players on SELENIAN state.",
-    },
-
-    [actionKeys.MIRROR]: {
-        name: "MIRROR",
-        type: entryTypes.ACTION,
-        description: "Casts REFLECTED FIRMAMENT upon self.",
-    },
-
-    [effectKeys.REFLECTED_FIRMAMENT]: {
-        name: "REFLECTED FIRMAMENT",
-        type: entryTypes.STATE,
-        description:
-            "At MOON PHASE, clears this effect and sets the target for an entity's active elemental effects as their opponent.",
-    },
-
-    [mechanicKeys.MOON_PHASE]: {
-        name: "MOON PHASE",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "Triggers at round end. By default, sets the target for an entity's active elemental effects as the entity itself.",
-    },
-
-    [effectKeys.MOONLIGHT]: {
-        name: "MOONLIGHT",
-        type: entryTypes.STAT,
-        description: "Alternate STAT. Used by certain MIRRORED MOON effects.",
-    },
-};
-
 export const DESCRIPTIONS = {
     ...ACTION_DESCRIPTIONS,
     ...DAMAGE_TYPE_DESCRIPTIONS,
@@ -1189,5 +1077,4 @@ export const DESCRIPTIONS = {
     ...ACTION_CATEGORY_DESCRIPTIONS,
     ...CATEGORY_DESCRIPTIONS,
     ...BATTLE_PHASE_DESCRIPTIONS,
-    ...ELEMENTALIST_DESCRIPTIONS,
 };
