@@ -24,14 +24,14 @@ export const ACTION_DESCRIPTIONS = {
         name: "SPECIAL ATTACK",
         type: entryTypes.ACTION,
         description:
-            "Consumes 6 MANA to deal PIERCING DAMAGE equal to the user's STR plus MANA IMBALANCE. The target restores MANA equal to the MANA IMBALANCE value. MANA IMBALANCE is calculated before the cost deduction.",
+            "Deals PIERCING DAMAGE equal to the user's STR. If MANA IMBALANCE is positive, restore MANA to the target and increase the damage dealt by its value. If MANA IMBALANCE is negative, restore MANA on self and decreases the damage dealt by its value. Then, consume 6 MANA. Cannot be used at less than 6 MANA.",
     },
 
     [actionKeys.SACRIFICE]: {
-        name: "SELF-SACRIFICE",
+        name: "SACRIFICE",
         type: entryTypes.ACTION,
         description:
-            "Loses half of current HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the HEALTH lost this way, then enters SACRIFICIAL state until next turn start.",
+            "Halves current HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the HEALTH lost this way, raises MANA BLEED level equal to half the HEALTH lost this way, then enters SACRIFICIAL state until next turn start.",
     },
 
     [actionKeys.ARRAY]: {
@@ -252,7 +252,7 @@ export const RESOURCE_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self. Causes MANA BLEED at turn start.",
+            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self.",
     },
 
     [effectKeys.UNRELENTING_SHADOWS]: {
@@ -857,14 +857,14 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "MANA IMBALANCE",
         type: entryTypes.MECHANIC,
         description:
-            "The difference between the user's and target's current MANA. If the target has equal or greater MANA, this value is 0.",
+            "The difference between the user's and target's current MANA.",
     },
 
-    [mechanicKeys.MANA_BLEED]: {
+    [effectKeys.MANA_BLEED]: {
         name: "MANA BLEED",
         type: entryTypes.MECHANIC,
         description:
-            "At turn start, loses MANA equal to half of current BLOOD SACRIFICE and restores an equal amount of HEALTH.",
+            "At turn start, loses MANA equal to MANA BLEED current level and restores an equal amount of HEALTH.",
     },
 
     [effectKeys.RESOURCES]: {

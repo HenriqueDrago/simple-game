@@ -1,5 +1,5 @@
-import { getEntityMaxHealth } from "../utils/entities";
-import { effectKeys } from "../utils/enums";
+import { getEntityMaxHealth, isElementActive } from "../utils/entities";
+import { effectKeys, elementalKeys } from "../utils/enums";
 import "./HpBar.css";
 
 function HpBar({ entity }) {
@@ -8,36 +8,43 @@ function HpBar({ entity }) {
     const silverHp = entity.resources[effectKeys.SILVER_BLOOD];
     const baseHp = entity.currHp;
 
-    const visualMax = Math.max(maxHealth, baseHp + silverHp);
+    const hasSilver = silverHp > 0;
 
-    const hpPercentage = visualMax > 0 ? (baseHp / visualMax) * 100 : 0;
-    const silverHpPercentage = visualMax > 0 ? (silverHp / visualMax) * 100 : 0;
+    const silverPercentage = Math.min(100, (silverHp / maxHealth) * 100);
+    const remainingSpace = 100 - silverPercentage;
+    const hpPercentage = Math.min(remainingSpace, (baseHp / maxHealth) * 100);
+
+    const silverTimes = Math.floor(silverHp / maxHealth);
 
     return (
         <div className="hp-bar-container">
             <div className="hp-text-wrapper">
-                <span>Health</span>
+                <span>{`Health${silverTimes > 0 ? ` x${silverTimes}` : ""}`}</span>
                 <span>
-                    {silverHp > 0 ? (
-                        <span className="extra-silver-hp">{baseHp+silverHp}</span>
-                    ) : <span>{baseHp}</span>}
+                    {hasSilver ? (
+                        <span className="extra-silver-hp">{baseHp + silverHp}</span>
+                    ) : (
+                        <span>{baseHp}</span>
+                    )}
                     {" / "}
-                    <span>
+                    <span className={`${isElementActive(entity, elementalKeys.NATURE) ? "label-nature" : ""}`}>
                         {maxHealth}
                     </span>
                 </span>
             </div>
             <div className="hp-track">
+                {hasSilver && (
+                    <div
+                        className="overgrowth-hp-fill"
+                        style={{
+                            width: `${silverPercentage}%`,
+                        }}
+                    />
+                )}
                 <div
                     className="hp-fill"
                     style={{
                         width: `${hpPercentage}%`,
-                    }}
-                />
-                <div
-                    className="overgrowth-hp-fill"
-                    style={{
-                        width: `${silverHpPercentage}%`,
                     }}
                 />
             </div>

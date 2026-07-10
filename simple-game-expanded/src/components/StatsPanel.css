@@ -142,7 +142,7 @@
     align-items: center;
     padding: 6px 0;
     border-bottom: 2px solid transparent;
-    border-image: linear-gradient(to right, lime, yellow) 1;
+    border-image: linear-gradient(to right, cyan, lime, yellow) 1;
 }
 
 .energy-line-label {
@@ -158,19 +158,3 @@
     color: #ffff00;
 }
 
-.burden-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 28px;
-    background: rgba(139, 0, 0, 0.15);
-    border-radius: 4px;
-    border: 1px solid rgba(139, 0, 0, 0.4);
-    margin: 4px 0;
-}
-
-.burden-container span {
-    font-weight: bold;
-    color: #ff4d4d;
-    letter-spacing: 1px;
-}

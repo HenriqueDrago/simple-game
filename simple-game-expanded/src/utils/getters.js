@@ -183,7 +183,7 @@ export const getNormalActions = (
               }
             : {
                   key: actionKeys.SACRIFICE,
-                  label: "Self Sacrifice",
+                  label: "Sacrifice",
                   disabled:
                       progMode &&
                       !(

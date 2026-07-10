@@ -51,7 +51,7 @@ export const sdmKeys = Object.freeze({
 
 export const elementalKeys = Object.freeze({
     DULLED: 0,
-    
+
     NATURE: 1,
     FROST: 2,
     SCORCH: 3,
@@ -128,10 +128,10 @@ export const actionKeys = Object.freeze({
 
 export const effectKeys = Object.freeze({
     GUARDING_STATE: "guarding",
+    MANA_BLEED: "manaBleed",
 
     MANA_OVERFLOW: "manaOverflow",
     SACRIFICIAL_STATE: "sacrificial",
-
 
     SHACKLED_MANA: "shackledMana",
     POISON: "poison",
@@ -255,8 +255,9 @@ export const effectKeys = Object.freeze({
     LUNACY: "lunacy",
     REFRACTED_DIVINITY: "refractedDivinity",
     PRISMATIC: "prismatic",
-    VEILED: "veiled",
-
+    GIBBOUS: "gibbous",
+    MOONDUST: "moondust",
+    MOONLIT_TEARS: "moonlitTears",
     SILVER_BLOOD: "silverBlood",
 });
 
@@ -312,7 +313,7 @@ export const playerTurnPhases = Object.freeze({
     UPKEEP: 0,
     PLAN: 1,
     COMMIT: 2,
-})
+});
 
 export const progKeys = Object.freeze({
     ALWAYS_OPEN: 0,
@@ -329,7 +330,7 @@ export const mechanicKeys = Object.freeze({
     PLAN: "plan",
     COMMIT: "commit",
     MANA_IMBALANCE: "manaImbalance",
-    MANA_BLEED: "manaBleed",
+
     RUNIC_PULSE: "runicPulse",
     MANA_SIPHON: "manaSiphon",
 
@@ -343,5 +344,4 @@ export const mechanicKeys = Object.freeze({
     MOON_PHASE: "moonPhase",
 
     ANOINTMENT: "anointment",
-    
 });

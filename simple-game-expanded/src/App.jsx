@@ -28,6 +28,8 @@ import {
     resetPlayerEntity,
     processActionTypeUsed,
     processDeathCheck,
+    isElementActive,
+    getEntityMaxHealth,
 } from "./utils/entities.js";
 import { simulators } from "./utils/simulators.js";
 import {
@@ -439,10 +441,16 @@ function App() {
                 prev.entities[entityKey][effectKeys.ELEMENTAL_CRYSTALS];
 
             let newElements = [...currElements];
-            if (newElements.includes(elementalKeys.SHATTERED)) {
+            let draftEntity = {
+                ...prev.entities[entityKey],
+            };
+
+            // Early return on shattered
+            if (isElementActive(draftEntity, elementalKeys.SHATTERED)) {
                 return prev;
             }
 
+            // Process element change
             if (!newElements.includes(element)) {
                 newElements.push(element);
             } else {
@@ -451,13 +459,82 @@ function App() {
                 });
             }
 
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
+            };
+
+            // Converts excess Health into Silver Blood if leaving Nature
+            if (
+                isElementActive(
+                    prev.entities[entityKey],
+                    elementalKeys.NATURE,
+                ) &&
+                !isElementActive(draftEntity, elementalKeys.NATURE)
+            ) {
+                const excessHealth = Math.max(
+                    0,
+                    draftEntity[effectKeys.HEALTH] -
+                        getEntityMaxHealth(draftEntity),
+                );
+                const newHp = Math.min(
+                    draftEntity[effectKeys.HEALTH],
+                    getEntityMaxHealth(draftEntity),
+                );
+                const silverBlood =
+                    draftEntity.resources[effectKeys.SILVER_BLOOD] +
+                    excessHealth;
+
+                draftEntity = {
+                    ...draftEntity,
+                    [effectKeys.HEALTH]: newHp,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.SILVER_BLOOD]: silverBlood,
+                    },
+                };
+            }
+
+            // Convert Silver Blood into Health if entering Nature
+            if (
+                !isElementActive(
+                    prev.entities[entityKey],
+                    elementalKeys.NATURE,
+                ) &&
+                isElementActive(draftEntity, elementalKeys.NATURE)
+            ) {
+                const missingHp = Math.max(
+                    0,
+                    getEntityMaxHealth(draftEntity) -
+                        draftEntity[effectKeys.HEALTH],
+                );
+
+                const silverConsumed = Math.min(
+                    missingHp,
+                    draftEntity.resources[effectKeys.SILVER_BLOOD],
+                );
+
+                const newHp = draftEntity[effectKeys.HEALTH] + silverConsumed;
+                const silverBlood =
+                    draftEntity.resources[effectKeys.SILVER_BLOOD] -
+                    silverConsumed;
+
+                draftEntity = {
+                    ...draftEntity,
+                    [effectKeys.HEALTH]: newHp,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.SILVER_BLOOD]: silverBlood,
+                    },
+                };
+            }
+
             return {
                 ...prev,
                 entities: {
                     ...prev.entities,
                     [entityKey]: {
-                        ...prev.entities[entityKey],
-                        [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
+                        ...draftEntity,
                     },
                 },
             };
@@ -676,7 +753,12 @@ function App() {
                 }
             };
         }
-    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue]);
+    }, [
+        game.status,
+        game.roundIndex,
+        game.playerQueue,
+        game.starQueue,
+    ]);
 
     // AI turn
     useEffect(() => {
@@ -725,7 +807,7 @@ function App() {
 
             return () => clearTimeout(aiTimer);
         }
-    }, [game.status, game.roundIndex, game.playerQueue]);
+    }, [game.status, game.roundIndex, game.playerQueue, handleAction]);
 
     // Round Transition
     useEffect(() => {

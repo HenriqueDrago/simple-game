@@ -1,13 +1,15 @@
 import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
-    consumeResources,
     getEntityMaxHealth,
     getEntityStr,
+    getEntityTotalHealth,
+    getEntityTotalMana,
     isEntityDead,
     restoreResources,
 } from "./entities.js";
 import { actionKeys, effectKeys } from "./enums.js";
+import { processUpkeep } from "./turnManagement.js";
 
 // Auxiliary Functions
 function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
@@ -22,22 +24,41 @@ function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
         });
 }
 
-function isEntityEffectivellyDead(entity) {
-    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        return (
-            entity[effectKeys.ENLIGHTENMENT] <= 0 ||
-            entity[effectKeys.TARNISHED_SIN] >= 100
-        );
-    }
+function isEntityLikelyDead(prev, inquiredKey, nonInquiredKey) {
+    const currTargetEntity = prev.entities[inquiredKey];
+    const futureTargetEntity = processUpkeep(prev, inquiredKey, nonInquiredKey)
+        .entities[inquiredKey];
 
     return (
-        (entity[effectKeys.HEALTH] <= 0 &&
-            entity[effectKeys.BURDEN_OF_STIGMA] <= 0) ||
-        entity[effectKeys.TARNISHED_SIN] >= 100
+        isEntityEffectivellyDead(currTargetEntity) ||
+        isEntityEffectivellyDead(futureTargetEntity)
     );
 }
 
-function isEntityTrulyDead(entity) {
+function isEntityEffectivellyDead(entity) {
+    if (entity[effectKeys.BURDEN_OF_STIGMA] > 0) {
+        return false;
+    }
+
+    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        if (entity[effectKeys.ENLIGHTENMENT] <= 0) {
+            return true;
+        }
+        if (entity[effectKeys.TARNISHED_SIN] >= 100) {
+            return true;
+        }
+
+        return false;
+    }
+
+    if (getEntityTotalHealth(entity) <= 0) {
+        return true;
+    }
+
+    return false;
+}
+
+function isEntityImmediatelyDead(entity) {
     return isEntityDead(entity);
 }
 
@@ -47,9 +68,6 @@ export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
     const agent = prev.entities[agentKey];
     const nonAgent = prev.entities[nonAgentKey];
 
-    const totalAgentMana =
-        agent[effectKeys.MANA] + agent.resources[effectKeys.MANA_OVERFLOW];
-
     const context = {
         prev,
         agent,
@@ -57,8 +75,8 @@ export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
         nonAgent,
         nonAgentKey,
         isArrayActive: prev[effectKeys.RUNIC_ARRAY] > 0,
-        totalMana: totalAgentMana,
-        hasManaForSpecial: totalAgentMana >= constants.SP_ATTACK_COST,
+        hasManaForSpecial:
+            getEntityTotalMana(agent) >= constants.SP_ATTACK_COST,
         handleAction,
     };
 
@@ -100,11 +118,11 @@ export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
 
 // AIs
 export function simpleAI(context) {
-    const { agent, agentKey, nonAgentKey, totalMana, handleAction } = context;
+    const { agent, agentKey, nonAgentKey, handleAction } = context;
 
     // In low hp: heal if enough mana, otherwise guard
-    if (agent.currHp <= agent.maxHp * 0.5) {
-        if (totalMana >= 4) {
+    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
+        if (getEntityTotalMana(agent) >= 4) {
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
         } else {
             handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
@@ -114,6 +132,66 @@ export function simpleAI(context) {
 
     // standard attack
     handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
+}
+
+export function warlockAI(context) {
+    const {
+        agent,
+        agentKey,
+        nonAgentKey,
+        isArrayActive,
+        hasManaForSpecial,
+        handleAction,
+    } = context;
+
+    const simulate = createSimulator(context);
+
+    // Attacks if simulation returns a kill
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (isEntityLikelyDead(simSpecial, nonAgentKey, agentKey)) {
+            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+            return;
+        }
+    }
+
+    // Use curse if it kills the opponent
+    if (isArrayActive) {
+        const simCurse = simulate(actionKeys.CURSE);
+        if (isEntityLikelyDead(simCurse, nonAgentKey, agentKey)) {
+            handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
+            return;
+        }
+        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+        return;
+    }
+
+    // Clears Poison/Overflow
+    const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
+
+    if (
+        agent.resources.manaOverflow > 0 ||
+        getEntityTotalHealth(agent) - lethalThreat <=
+            getEntityMaxHealth(agent) * 0.5
+    ) {
+        if (hasManaForSpecial) {
+            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+            return;
+        } else if (
+            getEntityTotalMana(agent) >= 3 &&
+            getEntityTotalHealth(agent) < getEntityMaxHealth(agent)
+        ) {
+            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
+            return;
+        }
+    }
+
+    // Attack/Guard
+    if (hasManaForSpecial) {
+        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
+    } else {
+        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
+    }
 }
 
 export function bloodknightAI(context) {
@@ -126,7 +204,7 @@ export function bloodknightAI(context) {
         handleAction,
     } = context;
 
-    const missingHp = agent.maxHp - agent.currHp;
+    const missingHp = getEntityMaxHealth(agent) - getEntityTotalHealth(agent);
     const missingMana = agent.maxMana - agent.currMana;
     const nextTurnHeal = Math.min(
         agent.currMana,
@@ -137,7 +215,7 @@ export function bloodknightAI(context) {
     if (
         !isArrayActive &&
         nextTurnHeal < missingHp &&
-        agent.resources.bloodSacrifice > 0 &&
+        agent[effectKeys.MANA_BLEED] > 0 &&
         missingMana >= agent.maxMana * constants.GUARD_MANA_REGEN
     ) {
         handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
@@ -146,27 +224,24 @@ export function bloodknightAI(context) {
 
     // Use Sacrifice if not enough accumulated dmg
     if (
-        agent.currHp >= agent.maxHp * 0.6 &&
+        getEntityTotalHealth(agent) >= getEntityMaxHealth(agent) * 0.6 &&
         agent.resources.bloodSacrifice + getEntityStr(agent) <
-            agent.maxHp
+            getEntityMaxHealth(agent)
     ) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
         return;
     }
 
     // No attack if Array or Halo
-    if (
-        isArrayActive ||
-        nonAgent.resources[effectKeys.HALO] > 0
-    ) {
+    if (isArrayActive || nonAgent.resources[effectKeys.HALO] > 0) {
         handleAction(actionKeys.SACRIFICE, agentKey, nonAgentKey);
         return;
     }
 
     // If no bloodsacrifice and low hp
     if (
-        agent.currHp < agent.maxHp * 0.6 &&
-        agent.resources[effectKeys.BLOOD_SACRIFICE] <= 0
+        getEntityTotalHealth(agent) < getEntityMaxHealth(agent) * 0.6 &&
+        agent[effectKeys.MANA_BLEED] <= 0 
     ) {
         if (agent[effectKeys.MANA] >= 5) {
             handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
@@ -186,7 +261,7 @@ export function paladinAI(context) {
     const simAtk = simulate(actionKeys.ATTACK);
 
     // Use ATTACK if it kills
-    if (isEntityEffectivellyDead(simAtk.entities[nonAgentKey])) {
+    if (isEntityLikelyDead(simAtk, nonAgentKey, agentKey)) {
         handleAction(actionKeys.ATTACK, agentKey, nonAgentKey);
         return;
     }
@@ -242,7 +317,7 @@ export function hexerAI(context) {
         return;
     }
 
-    if (agent.resources.poison >= agent.currHp) {
+    if (agent.resources.poison >= getEntityTotalHealth(agent)) {
         handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
         return;
     }
@@ -251,68 +326,9 @@ export function hexerAI(context) {
     handleAction(actionKeys.ARRAY, agentKey, nonAgentKey);
 }
 
-export function warlockAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgentKey,
-        isArrayActive,
-        totalMana,
-        hasManaForSpecial,
-        handleAction,
-    } = context;
-
-    const simulate = createSimulator(context);
-
-    // Attacks if simulation returns a kill
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (isEntityEffectivellyDead(simSpecial.entities[nonAgentKey])) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        }
-    }
-
-    // Use curse if it kills the opponent
-    if (isArrayActive) {
-        const simCurse = simulate(actionKeys.CURSE);
-        if (
-            simCurse.entities[nonAgentKey].resources.poison >=
-            simCurse.entities[nonAgentKey].currHp
-        ) {
-            handleAction(actionKeys.CURSE, agentKey, nonAgentKey);
-            return;
-        }
-        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-        return;
-    }
-
-    // Clears Poison/Overflow
-    const lethalThreat = agent.resources.poison + agent.resources.manaOverflow;
-
-    if (
-        agent.resources.manaOverflow > 0 ||
-        agent.currHp - lethalThreat <= agent.maxHp * 0.5
-    ) {
-        if (hasManaForSpecial) {
-            handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-            return;
-        } else if (totalMana >= 3 && agent.currHp < agent.maxHp) {
-            handleAction(actionKeys.HEAL, agentKey, nonAgentKey);
-            return;
-        }
-    }
-
-    // Attack/Guard
-    if (hasManaForSpecial) {
-        handleAction(actionKeys.SPECIAL_ATTACK, agentKey, nonAgentKey);
-    } else {
-        handleAction(actionKeys.GUARD, agentKey, nonAgentKey);
-    }
-}
-
 export function shadowSorcererAI(context) {
     const {
+        prev,
         agent,
         agentKey,
         nonAgent,
@@ -357,13 +373,13 @@ export function shadowSorcererAI(context) {
     // Kill check
     // Always do Black Mayhem if lethal
     const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
-    if (isEntityTrulyDead(simMayhem.entities[nonAgentKey])) {
+    if (isEntityImmediatelyDead(simMayhem.entities[nonAgentKey])) {
         handleAction(actionKeys.BLACK_MAYHEM, agentKey, nonAgentKey);
         return;
     }
 
     // Uses Dark Promise to escape overflow death
-    if (agent.resources.manaOverflow >= agent.currHp) {
+    if (agent.resources.manaOverflow >= getEntityTotalHealth(agent) && !isArrayActive) {
         handleAction(actionKeys.DARK_PROMISE, agentKey, nonAgentKey);
         return;
     }
@@ -386,14 +402,8 @@ export function shadowSorcererAI(context) {
     }
 
     // Burn Management
-    const { draftEntity: draftTarget } = consumeResources(
-        agent,
-        agent.resources.shadowflame,
-        effectKeys.SHADOWFLAME,
-    );
-
     // If low hp, use SM if beneficial
-    if (agent.currHp <= agent.maxHp * 0.5) {
+    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
         const simMantle = simulate(actionKeys.SHADOW_MANTLE);
         const postMantle = simMantle.entities[agentKey];
 
@@ -403,7 +413,7 @@ export function shadowSorcererAI(context) {
         const netHpGain =
             agentAfterRestore.currHp -
             agentAfterRestore.resources.manaOverflow -
-            agent.currHp;
+            getEntityTotalHealth(agent);
 
         if (netHpGain > 0) {
             handleAction(actionKeys.SHADOW_MANTLE, agentKey, nonAgentKey);
@@ -412,7 +422,7 @@ export function shadowSorcererAI(context) {
     }
 
     // Avoid lethal burn
-    if (isEntityEffectivellyDead(draftTarget)) {
+    if (isEntityLikelyDead(prev, agentKey, nonAgentKey)) {
         handleAction(actionKeys.RITUAL_OF_ASH, agentKey, nonAgentKey);
         return;
     }
@@ -425,9 +435,9 @@ export function cyborgAI(context) {
     const { agent, agentKey, nonAgentKey, handleAction } = context;
     const simulate = createSimulator(context);
 
-    // Extract stats and states using strict enum key references
-    const dynamo = agent[effectKeys.DYNAMO] || 0;
-    const overheat = agent[effectKeys.OVERHEAT] || 0;
+    // Extract stats and states
+    const dynamo = agent[effectKeys.DYNAMO];
+    const overheat = agent[effectKeys.OVERHEAT];
 
     // Pre-calculated HEAL evaluation
     const healWorth =
@@ -466,7 +476,7 @@ export function cyborgAI(context) {
     const simLaser = simulate(actionKeys.LASER);
 
     // 4. check if laser kills -> laser
-    if (isEntityEffectivellyDead(simLaser.entities[nonAgentKey])) {
+    if (isEntityLikelyDead(simLaser, nonAgentKey, agentKey)) {
         handleAction(actionKeys.LASER, agentKey, nonAgentKey);
         return;
     }
@@ -480,7 +490,7 @@ export function cyborgAI(context) {
             nonAgent: simLaser.entities[nonAgentKey],
         });
 
-        if (isEntityEffectivellyDead(simMeltdown.entities[nonAgentKey])) {
+        if (isEntityLikelyDead(simMeltdown, nonAgentKey, agentKey)) {
             handleAction(actionKeys.LASER, agentKey, nonAgentKey);
             return;
         } else {

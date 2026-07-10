@@ -6,6 +6,7 @@ import {
     gainInsight,
     gainMana,
     getEntityMaxHealth,
+    getEntityTotalMana,
     isElementActive,
     loseMana,
     processDeathCheck,
@@ -171,22 +172,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             );
         }
 
-        // Divinity
-        if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
-            const newLunacy =
-                draftTarget.resources[effectKeys.LUNACY] +
-                draftTarget.resources[effectKeys.REFRACTED_DIVINITY];
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.REFRACTED_DIVINITY]: 0,
-                    [effectKeys.LUNACY]: newLunacy,
-                },
-            };
-        }
-
         // Poison
         if (
             draftTarget.resources.poison > 0 &&
@@ -199,23 +184,15 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             );
         }
 
-        // Blood Sacrifice
-        if (draftTarget.resources.bloodSacrifice > 0) {
+        // Mana Bleed
+        if (draftTarget[effectKeys.MANA_BLEED] > 0) {
             const manaBleed = Math.min(
-                draftTarget.currMana + draftTarget.resources.manaOverflow,
-                Math.ceil(
-                    draftTarget.resources.bloodSacrifice *
-                        constants.MANA_BLEED_MULT,
-                ),
+                getEntityTotalMana(draftTarget),
+                draftTarget[effectKeys.MANA_BLEED],
             );
 
-            draftTarget = {
-                ...loseMana(draftTarget, manaBleed),
-            };
-
-            draftTarget = {
-                ...gainHp(draftTarget, manaBleed),
-            };
+            draftTarget = loseMana(draftTarget, manaBleed);
+            draftTarget = gainHp(draftTarget, manaBleed);
         }
 
         // Deployment
@@ -328,6 +305,24 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             };
         }
 
+        // Refracted Divinity
+        if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
+            const newLunacy= Math.min(
+                draftTarget.resources[effectKeys.REFRACTED_DIVINITY] +
+                    draftTarget[effectKeys.LUNACY],
+                constants.MAX_LUNACY,
+            );
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.LUNACY]: newLunacy,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.REFRACTED_DIVINITY]: 0,
+                },
+            };
+        }
+
         // Halo
         if (draftTarget.resources.halo > 0) {
             const newSpark = Math.min(
@@ -382,6 +377,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 radiant: false,
                 darkEmbrace: false,
                 dimmingDarkness: false,
+                [effectKeys.PRISMATIC]: false,
             },
         };
     }
@@ -1139,8 +1135,12 @@ export function processMoonPhase(prev) {
 
         let newMoonlight = draftEntity[effectKeys.MOONLIGHT];
 
+        // Moonlight gain
         if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.CORONAL) {
             newMoonlight += constants.BLOOD_CORONA_ML_GAIN;
+        }
+        if (moon === moonKeys.HIDDEN) {
+            newMoonlight += constants.HIDDEN_MOON_ML_GAIN;
         }
         if (isElementActive(draftEntity, elementalKeys.ALBEDO)) {
             newMoonlight += constants.ALBEDO_ML_GAIN;
@@ -1151,6 +1151,16 @@ export function processMoonPhase(prev) {
             [effectKeys.MOONLIGHT]: newMoonlight,
             [effectKeys.MIRRORED_MOON]: newMoon,
         };
+
+        // Tears converison
+        if (draftEntity[effectKeys.MOONLIT_TEARS] > 0) {
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.MOONLIGHT]: draftEntity[effectKeys.MOONLIGHT] + 1,
+                [effectKeys.MOONLIT_TEARS]:
+                    draftEntity[effectKeys.MOONLIT_TEARS] - 1,
+            };
+        }
 
         newGameState = {
             ...newGameState,

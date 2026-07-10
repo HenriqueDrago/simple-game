@@ -5,7 +5,7 @@ import StackCounter from "./StackCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
-import { constants, stackCounters } from "../utils/constants.js";
+import { constants, freeResources, stackCounters } from "../utils/constants.js";
 import {
     sdmKeys,
     eyeKeys,
@@ -21,15 +21,7 @@ import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
 import { isElementActive } from "../utils/entities.js";
-
-// Roman numerals helper
-const romanFormatter = new Intl.NumberFormat("en", {
-  numberingSystem: "roman",
-});
-
-function toRoman(num) {
-  return romanFormatter.format(num);
-}
+import SpecialCounter from "./SpecialCounter.jsx";
 
 function StatsPanel({
     game,
@@ -46,16 +38,23 @@ function StatsPanel({
 
     const isAngelView = states.ascendenceOfSpirit;
 
-    const currPhase = game.roundQueue && game.roundQueue.length > 0 ? game.roundQueue[game.roundIndex] : null;
+    const currPhase =
+        game.roundQueue && game.roundQueue.length > 0
+            ? game.roundQueue[game.roundIndex]
+            : null;
 
     const currPlayerPhase =
-            game.playerQueue && game.playerQueue.length > 0
-                ? game.playerQueue[0]
-                : null;
+        game.playerQueue && game.playerQueue.length > 0
+            ? game.playerQueue[0]
+            : null;
 
     const isEntityTurn =
-        (entityKey === entityKeys.PLAYER_ONE && currPhase === roundPhases.PLAYER_ONE_TURN && currPlayerPhase === playerTurnPhases.PLAN) ||
-        (entityKey === entityKeys.PLAYER_TWO && currPhase === roundPhases.PLAYER_TWO_TURN && currPlayerPhase === playerTurnPhases.PLAN);
+        (entityKey === entityKeys.PLAYER_ONE &&
+            currPhase === roundPhases.PLAYER_ONE_TURN &&
+            currPlayerPhase === playerTurnPhases.PLAN) ||
+        (entityKey === entityKeys.PLAYER_TWO &&
+            currPhase === roundPhases.PLAYER_TWO_TURN &&
+            currPlayerPhase === playerTurnPhases.PLAN);
 
     const stateClassMap = {
         ascendenceOfSpirit: "state-ascendence",
@@ -116,10 +115,12 @@ function StatsPanel({
                 <SelenianTracker
                     entity={entity}
                     changeElement={(element) => {
-                        handleElementChange(entityKey, element)
+                        handleElementChange(entityKey, element);
+                    }}
+                    clickable={
+                        isEntityTurn &&
+                        !isElementActive(entity, elementalKeys.SHATTERED)
                     }
-                    }
-                    clickable={isEntityTurn && !isElementActive(entity, elementalKeys.SHATTERED)}
                 />
             )}
             <StateBadges states={states} />
@@ -140,6 +141,25 @@ function StatsPanel({
                                         #500000 85%,
                                         #2a0000 100%
                                     )`,
+                    }}
+                    showPercent={true}
+                />
+            )}
+
+            {entity[effectKeys.LUNACY] > 0 && (
+                <GradientBar
+                    label={"Lunacy"}
+                    currResource={entity[effectKeys.LUNACY]}
+                    maxResource={constants.MAX_LUNACY}
+                    trackStyle={{
+                        backgroundImage: `linear-gradient(
+                                            90deg,
+                                            #9aa4b0 0%,
+                                            #c2c9d2 35%,
+                                            #e6eaf0 50%,
+                                            #c2c9d2 65%,
+                                            #9aa4b0 100%
+                                        )`,
                     }}
                     showPercent={true}
                 />
@@ -201,19 +221,15 @@ function StatsPanel({
             )}
 
             {isAngelView ? (
-                <>
-                    <div
-                        className="revelation-container"
-                        style={{
-                            borderColor: dynamicStyles["--ascendence-color"],
-                            color: dynamicStyles["--ascendence-color"],
-                        }}
-                    >
-                        <span style={{ color: "inherit" }}>
-                            REVELATION: {entity.revelation}
-                        </span>
-                    </div>
-                </>
+                <SpecialCounter
+                    roman={true}
+                    label={"REVELATION"}
+                    value={entity[effectKeys.REVELATION]}
+                    style={{
+                        borderColor: dynamicStyles["--ascendence-color"],
+                        color: dynamicStyles["--ascendence-color"],
+                    }}
+                />
             ) : (
                 <>
                     <HpBar entity={entity} />
@@ -246,7 +262,7 @@ function StatsPanel({
                                 currResource={entity[effectKeys.DYNAMO]}
                                 maxResource={constants.MAX_DYNAMO}
                                 trackStyle={{
-                                    backgroundImage: `linear-gradient(to right, lime, yellow)`,
+                                    backgroundImage: `linear-gradient(to right, cyan, lime, yellow)`,
                                 }}
                                 showAnimation={false}
                                 showPercent={true}
@@ -256,21 +272,56 @@ function StatsPanel({
                 </>
             )}
 
-            {entity[effectKeys.BURDEN_OF_STIGMA] > 0 && <>
-                    <div
-                        className="burden-container"
-                    >
-                        <span>
-                            BURDEN OF STIGMA: {toRoman(entity[effectKeys.BURDEN_OF_STIGMA])}
-                        </span>
-                    </div>
-                </>}
+            {(entity[effectKeys.MOONLIT_TEARS] > 0 ||
+                entity.states[effectKeys.GIBBOUS]) && (
+                <SpecialCounter
+                    roman={true}
+                    label={"MOONLIT TEARS"}
+                    value={entity[effectKeys.MOONLIT_TEARS]}
+                    style={{
+                        color: "#6ec6ff",
+                        borderColor: "#80d8ff",
+                        backgroundColor: "rgba(110, 198, 255, 0.2)",
+                        boxShadow: "inset 0 0 8px rgba(128, 216, 255, 0.3)",
+                    }}
+                />
+            )}
+
+            {entity[effectKeys.BURDEN_OF_STIGMA] > 0 && (
+                <SpecialCounter
+                    roman={true}
+                    label={"BURDEN OF STIGMA"}
+                    value={entity[effectKeys.BURDEN_OF_STIGMA]}
+                    style={{
+                        color: "#DAA520",
+                        borderColor: "#3b3528",
+                        backgroundColor: "rgba(59, 53, 40, 0.5)",
+                        boxShadow: "inset 0 0 8px rgba(0, 0, 0, 0.7)",
+                    }}
+                />
+            )}
+
+            {entity[effectKeys.MANA_BLEED] > 0 && (
+                <SpecialCounter
+                    roman={true}
+                    label={"MANA BLEED"}
+                    value={entity[effectKeys.MANA_BLEED]}
+                    style={{
+                        color: "#e6195e",
+                        borderColor: "#ff3333",
+                        backgroundColor: "rgba(220, 20, 60, 0.15)",
+                        boxShadow: "inset 0 0 8px rgba(41, 121, 255, 0.25)",
+                    }}
+                />
+            )}
 
             <div className="stacks-wrapper">
-                {[...constants.freeResources].reverse().map((key) => {
+                {[...freeResources].reverse().map((key) => {
                     const counter = stackCounters[key];
 
-                    if (!counter) return null;
+                    if (!counter) {
+                        return null;
+                    }
 
                     return (
                         <StackCounter

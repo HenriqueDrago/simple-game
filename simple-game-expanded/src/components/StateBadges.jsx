@@ -23,6 +23,8 @@ const STATE_MAPPINGS = [
     { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
 
     { key: effectKeys.SELENIAN, label: "Selenian" },
+    { key: effectKeys.GIBBOUS, label: "Gibbous" },
+    { key: effectKeys.PRISMATIC, label: "Prismatic" },
 ];
 
 function StateBadges({ states }) {

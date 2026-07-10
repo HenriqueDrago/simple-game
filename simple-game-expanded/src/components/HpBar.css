@@ -61,3 +61,7 @@
         background-position: 0% 0;
     }
 }
+
+.hp-text-wrapper.label-nature span {
+    color: var(--nature-color);
+}

@@ -91,49 +91,16 @@ const ALBEDO_ML_GAIN = 2;
 const BLOOD_CORONA_ML_GAIN = 1;
 const MIRROR_ML_GAIN = 2;
 const LUNAR_GROWTH_MULT = 1;
-const HIDDEN_MOON_ML_GAIN = 0;
+const HIDDEN_MOON_ML_GAIN = 3;
+const LUNAR_VEIL_TEARS_GAIN = 1;
+const GIBBOUS_TEARS_GAIN = 1;
 
-const DISTRIBUTION_MODES = [
-    "Random",
-    "Randomize Enemy",
-    "Randomize Player",
-    "Custom",
-];
-
-export const freeResources = [
-    effectKeys.SHADOWFLAME,
-    effectKeys.UNRELENTING_SHADOWS,
-    effectKeys.LINGERING_EMBER,
-    effectKeys.CINDERS,
-
-    effectKeys.POISON,
-    effectKeys.MANA_OVERFLOW,
-    effectKeys.SHACKLED_MANA,
-
-    effectKeys.BLOOD_SACRIFICE,
-
-    effectKeys.DOME,
-    effectKeys.STARDUST,
-
-    effectKeys.RADIANCE,
-    effectKeys.HALO,
-    effectKeys.INSPIRATION,
-
-    effectKeys.REFRACTED_DIVINITY,
-    effectKeys.LUNACY,
-    effectKeys.SILVER_BLOOD,
-
-    effectKeys.SACRED_FLAMES,
-];
-
-export const limitedResources = [
-    effectKeys.MANA,
-    effectKeys.HEALTH,
-    effectKeys.INSIGHT,
-    effectKeys.ENLIGHTENMENT,
-];
+const MAX_LUNACY = 100;
 
 export const constants = {
+    MAX_LUNACY,
+    GIBBOUS_TEARS_GAIN,
+    LUNAR_VEIL_TEARS_GAIN,
     INITIAL_POINTS_AVAILABLE,
     ATTRIBUTE_NAMES,
     BASE_STATS,
@@ -144,14 +111,11 @@ export const constants = {
     ARRAY_DURATION,
     MANA_SHACKLE_TURN_GAIN,
     MAX_OVERHEAT,
-    DISTRIBUTION_MODES,
     STANDARD_DR_INCREASE,
     STANDARD_DEF_EFFECT_INCREASE,
     GUARD_MANA_REGEN,
-    freeResources,
     HALO_GEN_MULT,
     SAC_HP_CONSUMPTION,
-    limitedResources,
     SHADOW_PACT_BURN,
     RADIANT_DEF_EFFECT_MULTIPLIER,
     STARTING_SONORITY,
@@ -180,6 +144,38 @@ export const constants = {
 
     HIDDEN_MOON_ML_GAIN,
 };
+
+export const freeResources = [
+    effectKeys.SHADOWFLAME,
+    effectKeys.UNRELENTING_SHADOWS,
+    effectKeys.LINGERING_EMBER,
+    effectKeys.CINDERS,
+
+    effectKeys.POISON,
+    effectKeys.MANA_OVERFLOW,
+    effectKeys.SHACKLED_MANA,
+
+    effectKeys.BLOOD_SACRIFICE,
+
+    effectKeys.DOME,
+    effectKeys.STARDUST,
+
+    effectKeys.RADIANCE,
+    effectKeys.HALO,
+    effectKeys.INSPIRATION,
+
+    effectKeys.REFRACTED_DIVINITY,
+    effectKeys.MOONDUST,
+
+    effectKeys.SACRED_FLAMES,
+];
+
+export const limitedResources = [
+    effectKeys.MANA,
+    effectKeys.HEALTH,
+    effectKeys.INSIGHT,
+    effectKeys.ENLIGHTENMENT,
+];
 
 export const presetAi = {
     [aiKeys.HUMAN]: {
@@ -633,8 +629,8 @@ export const stackCounters = {
         },
     },
 
-    [effectKeys.LUNACY]: {
-        label: "Lunacy",
+    [effectKeys.MOONDUST]: {
+        label: "Moondust",
         style: {
             color: "white",
             borderColor: "white",
