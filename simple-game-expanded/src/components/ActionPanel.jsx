@@ -170,7 +170,7 @@ function ActionPanel({
                 <div className="actions-buttons-text-container">
                     {showHelperText && (
                         <span className="actions-mouse-wheel-explainer">
-                            Mouse wheel click to see action details...
+                            Tip: You can mouse-wheel click on most things to see their tooltips...
                         </span>
                     )}
                     <div className={containerClass}>

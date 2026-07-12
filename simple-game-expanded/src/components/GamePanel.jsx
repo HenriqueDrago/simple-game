@@ -14,6 +14,7 @@ function GamePanel({
     handleStarChange,
     handleRandomizeStats,
     handleElementChange,
+    handleSetTooltip
 }) {
     const isSetupPhase = game.status === turnStatus.SETUP;
 
@@ -59,6 +60,7 @@ function GamePanel({
                                 entityKey={entityKeys.PLAYER_ONE}
                                 handleStarChange={handleStarChange}
                                 reversed={true}
+                                handleSetTooltip={handleSetTooltip}
                             />
                         )}
                     </div>
@@ -71,12 +73,14 @@ function GamePanel({
                             updateStatsPoints={updateStatsPoints}
                             entityKey={entityKeys.PLAYER_ONE}
                             handleElementChange={handleElementChange}
+                            handleSetTooltip={handleSetTooltip}
                         />
                         <StatsPanel
                             game={game}
                             updateStatsPoints={updateStatsPoints}
                             entityKey={entityKeys.PLAYER_TWO}
                             handleElementChange={handleElementChange}
+                            handleSetTooltip={handleSetTooltip}
                         />
                     </div>
 
@@ -89,6 +93,7 @@ function GamePanel({
                                 entityKey={entityKeys.PLAYER_TWO}
                                 handleStarChange={handleStarChange}
                                 reversed={false}
+                                handleSetTooltip={handleSetTooltip}
                             />
                         )}
                     </div>

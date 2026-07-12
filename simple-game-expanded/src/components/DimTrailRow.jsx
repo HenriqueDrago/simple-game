@@ -1,6 +1,7 @@
 import StarIcon from "./StarIcon";
 import StarTrail from "./StarTrail";
 import "./DimTrailRow.css";
+import { spawnTooltip } from "../utils/dictionary";
 
 function DimTrailRow({
     entity,
@@ -9,15 +10,24 @@ function DimTrailRow({
     trailKey,
     trailPhase,
     currentPhase,
-    reversed
+    reversed,
+    handleSetTooltip,
 }) {
     const isTrailGlowing = currentPhase === trailPhase;
 
     return (
-        <div className="dim-trail-row" style={{
-            flexDirection: reversed ? "row-reverse" : "row"
-        }}>
-            <div className="dim-trail-group">
+        <div
+            className="dim-trail-row"
+            style={{
+                flexDirection: reversed ? "row-reverse" : "row",
+            }}
+        >
+            <div
+                className="dim-trail-group"
+                onMouseDown={(e) =>
+                    spawnTooltip(e, handleSetTooltip, dimmedKey)
+                }
+            >
                 <span>{entity.stars[dimmedKey]}</span>
                 <StarIcon
                     size={24}
@@ -29,7 +39,10 @@ function DimTrailRow({
                 />
             </div>
 
-            <div className="dim-trail-group">
+            <div
+                className="dim-trail-group"
+                onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, trailKey)}
+            >
                 <span>{entity.stars[trailKey]}</span>
                 <StarTrail
                     size={24}

@@ -1,26 +1,26 @@
 export const turnStatus = Object.freeze({
-    SETUP: 0,
-    VICTORY: 1,
-    DEFEAT: 2,
-    DRAW: 3,
-    ONGOING: 4,
-    ROUND_TRANSITION: 5,
-    STARFALL_TRANSITION: 6,
+    SETUP: "setup",
+    VICTORY: "victory",
+    DEFEAT: "defeat",
+    DRAW: "draw",
+    ONGOING: "ongoing",
+    ROUND_TRANSITION: "roundTrans",
+    STARFALL_TRANSITION: "starfallTrans",
 });
 
 export const roundPhases = Object.freeze({
-    ROUND_START: 0,
-    PLAYER_ONE_TURN: 1,
-    PLAYER_TWO_TURN: 2,
-    ARRAY_TURN: 11,
-    EMINENCE_TURN: 12,
-    P1_STARS_TURN: 13,
-    MOON_TURN: 14,
-    P2_STARS_TURN: 15,
-    SPECIAL_EMINENCE_TURN: 16,
-    MINI_ARRAY_TURN: 17,
+    ROUND_START: "roundStart",
+    PLAYER_ONE_TURN: "p1turn",
+    PLAYER_TWO_TURN: "p2turn",
+    ARRAY_TURN: "bigArrayTurn",
+    EMINENCE_TURN: "mainEminenceTurn",
+    P1_STARS_TURN: "p1starfall",
+    MOON_TURN: "moonPhaseTurn",
+    P2_STARS_TURN: "p2Starfall",
+    SPECIAL_EMINENCE_TURN: "spEminenceTurn",
+    MINI_ARRAY_TURN: "miniArrayTurn",
 
-    ROUND_END: 99,
+    ROUND_END: "roundEnd",
 });
 
 export const entityKeys = Object.freeze({
@@ -50,19 +50,19 @@ export const sdmKeys = Object.freeze({
 });
 
 export const elementalKeys = Object.freeze({
-    DULLED: 0,
+    DULLED: "dull",
 
-    NATURE: 1,
-    FROST: 2,
-    SCORCH: 3,
+    NATURE: "nature",
+    FROST: "frost",
+    SCORCH: "scorch",
 
-    OCEAN: 23,
-    ASH: 13,
-    WITHER: 12,
+    OCEAN: "ocean",
+    ASH: "ash",
+    WITHER: "wither",
 
-    ALBEDO: 123,
+    ALBEDO: "albedo",
 
-    SHATTERED: -1,
+    SHATTERED: "shattered",
 });
 
 export const whoStartsKeys = Object.freeze({
@@ -262,17 +262,17 @@ export const effectKeys = Object.freeze({
 });
 
 export const eyeKeys = Object.freeze({
-    DORMANT: 0,
-    OPEN: 1,
-    CLOSED: 2,
+    DORMANT: "dormant",
+    OPEN: "open",
+    CLOSED: "closed",
 });
 
 export const moonKeys = Object.freeze({
-    HIDDEN: 0,
-    WAXING: 1,
-    WANING: 2,
-    BLOODSTAINED: 11,
-    CORONAL: 12,
+    HIDDEN: "hidden",
+    WAXING: "waxing",
+    WANING: "waning",
+    BLOODSTAINED: "bloodstained",
+    CORONAL: "coronal",
 });
 
 export const entryTypes = Object.freeze({
@@ -292,7 +292,7 @@ export const entryTypes = Object.freeze({
 });
 
 export const starfallPhases = Object.freeze({
-    STARFALL_INIT: 0,
+    STARFALL_INIT: "starfallInit",
     RED_STAR: effectKeys.RED_STAR,
     ORANGE_STAR: effectKeys.ORANGE_STAR,
     YELLOW_STAR: effectKeys.YELLOW_STAR,
@@ -310,9 +310,9 @@ export const starfallPhases = Object.freeze({
 });
 
 export const playerTurnPhases = Object.freeze({
-    UPKEEP: 0,
-    PLAN: 1,
-    COMMIT: 2,
+    UPKEEP: "upkeep",
+    PLAN: "plan",
+    COMMIT: "commit",
 });
 
 export const progKeys = Object.freeze({

@@ -1,6 +1,7 @@
 import StarIcon from "./StarIcon";
 import "./StarRow.css";
 import { effectKeys } from "../utils/enums";
+import { spawnTooltip } from "../utils/dictionary";
 
 function StarRow({
     entityKey,
@@ -12,6 +13,7 @@ function StarRow({
     starPhase,
     currentPhase,
     reversed,
+    handleSetTooltip,
 }) {
     const isStarGlowing = currentPhase === starPhase;
 
@@ -50,14 +52,18 @@ function StarRow({
                 </button>
             </div>
 
-            <StarIcon
-                size={24}
-                fill={color}
-                stroke="none"
-                strokeWidth={0}
-                opacity={1.0}
-                glowing={isStarGlowing}
-            />
+            <div
+                onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, starKey)}
+            >
+                <StarIcon
+                    size={24}
+                    fill={color}
+                    stroke="none"
+                    strokeWidth={0}
+                    opacity={1.0}
+                    glowing={isStarGlowing}
+                />
+            </div>
         </div>
     );
 }

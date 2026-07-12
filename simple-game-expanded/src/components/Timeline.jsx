@@ -1,8 +1,9 @@
-import { roundPhasesNameMap } from "../utils/constants";
+import { roundPhasesMap } from "../utils/constants";
+import { spawnTooltip } from "../utils/dictionary";
 import { turnStatus } from "../utils/enums";
 import "./Timeline.css";
 
-export default function Timeline({ status, phases, currIndex }) {
+export default function Timeline({ status, phases, currIndex, handleSetTooltip }) {
     if (status === turnStatus.SETUP || !phases) {
         return null;
     }
@@ -18,8 +19,14 @@ export default function Timeline({ status, phases, currIndex }) {
                           : "timeline-curr-phase";
 
                 return (
-                    <div className={`timeline-item-container ${specialClass}`}>
-                        <span>{roundPhasesNameMap[p]}</span>
+                    <div key={p} className={`timeline-item-container ${specialClass}` } onMouseDown={(e) =>
+                                            spawnTooltip(
+                                                e,
+                                                handleSetTooltip,
+                                                roundPhasesMap[p].descKey,
+                                            )
+                                        }>
+                        <span>{roundPhasesMap[p].name}</span>
                     </div>
                 );
             })}

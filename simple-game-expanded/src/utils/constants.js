@@ -87,9 +87,9 @@ const STARTING_ENERGY = 1;
 
 const RESOURCES_CINDERS_MULT = 2;
 
-const ALBEDO_ML_GAIN = 2;
+const ALBEDO_ML_GAIN = 1;
 const BLOOD_CORONA_ML_GAIN = 1;
-const MIRROR_ML_GAIN = 2;
+const MIRROR_ML_GAIN = 3;
 const LUNAR_GROWTH_MULT = 1;
 const HIDDEN_MOON_ML_GAIN = 3;
 const LUNAR_VEIL_TEARS_GAIN = 1;
@@ -781,18 +781,51 @@ export const CHECKPOINT_STATES = [
     turnStatus.DRAW,
 ];
 
-export const roundPhasesNameMap = {
-    [roundPhases.ROUND_START]: "Round Start",
-    [roundPhases.PLAYER_ONE_TURN]: "Player One Turn",
-    [roundPhases.PLAYER_TWO_TURN]: "Player Two Turn",
-    [roundPhases.ARRAY_TURN]: "Runic Pulse",
-    [roundPhases.EMINENCE_TURN]: "Emanation",
-    [roundPhases.P1_STARS_TURN]: "Player One Starfall",
-    [roundPhases.MOON_TURN]: "Moon Phase",
-    [roundPhases.P2_STARS_TURN]: "Player Two Starfall",
-    [roundPhases.SPECIAL_EMINENCE_TURN]: "Anointment",
-    [roundPhases.MINI_ARRAY_TURN]: "Mana Siphon",
-    [roundPhases.ROUND_END]: "Round End",
+export const roundPhasesMap = {
+    [roundPhases.ROUND_START]: {
+        descKey: roundPhases.ROUND_START,
+        name: "Round Start",
+    },
+    [roundPhases.PLAYER_ONE_TURN]: {
+        descKey: mechanicKeys.TURN,
+        name: "Player One Turn",
+    },
+    [roundPhases.PLAYER_TWO_TURN]: {
+        descKey: mechanicKeys.TURN,
+        name: "Player Two Turn",
+    },
+    [roundPhases.ARRAY_TURN]: {
+        descKey: effectKeys.RUNIC_PULSE,
+        name: "Runic Pulse",
+    },
+    [roundPhases.EMINENCE_TURN]: {
+        descKey: mechanicKeys.EMANATION,
+        name: "Emanation",
+    },
+    [roundPhases.P1_STARS_TURN]: {
+        descKey: effectKeys.STARFALL,
+        name: "Player One Starfall",
+    },
+    [roundPhases.MOON_TURN]: {
+        descKey: mechanicKeys.MOON_PHASE,
+        name: "Moon Phase",
+    },
+    [roundPhases.P2_STARS_TURN]: {
+        descKey: effectKeys.STARFALL,
+        name: "Player Two Starfall",
+    },
+    [roundPhases.SPECIAL_EMINENCE_TURN]: {
+        descKey: mechanicKeys.ANOINTMENT,
+        name: "Anointment",
+    },
+    [roundPhases.MINI_ARRAY_TURN]: {
+        descKey: mechanicKeys.MANA_SIPHON,
+        name: "Mana Siphon",
+    },
+    [roundPhases.ROUND_END]: {
+        descKey: roundPhases.ROUND_END,
+        name: "Round End",
+    },
 };
 
 export const elementsMap = {

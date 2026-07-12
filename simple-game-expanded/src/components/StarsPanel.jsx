@@ -9,8 +9,15 @@ import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
 import DimTrailRow from "./DimTrailRow";
+import { spawnTooltip } from "../utils/dictionary";
 
-function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
+function StarsPanel({
+    game,
+    entityKey,
+    handleStarChange,
+    reversed,
+    handleSetTooltip,
+}) {
     const entity = game.entities[entityKey];
     const currPhase = game.starQueue ? game.starQueue[0] : null;
 
@@ -39,7 +46,16 @@ function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
         >
             <div className="star-panel-main-container">
                 <div className="white-and-gray-container">
-                    <div className="special-star">
+                    <div
+                        className="special-star"
+                        onMouseDown={(e) =>
+                            spawnTooltip(
+                                e,
+                                handleSetTooltip,
+                                effectKeys.GRAY_STAR,
+                            )
+                        }
+                    >
                         <span>{entity.stars[effectKeys.GRAY_STAR]}</span>
                         <StarIcon
                             size={24}
@@ -50,7 +66,16 @@ function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
                         />
                     </div>
 
-                    <div className="special-star">
+                    <div
+                        className="special-star"
+                        onMouseDown={(e) =>
+                            spawnTooltip(
+                                e,
+                                handleSetTooltip,
+                                effectKeys.WHITE_STAR,
+                            )
+                        }
+                    >
                         <span>{entity.stars[effectKeys.WHITE_STAR]}</span>
                         <StarIcon
                             size={24}
@@ -75,6 +100,7 @@ function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
                             starPhase={star.starPhase}
                             currentPhase={currPhase}
                             reversed={reversed}
+                            handleSetTooltip={handleSetTooltip}
                         />
                     ))}
                 </div>
@@ -92,6 +118,7 @@ function StarsPanel({ game, entityKey, handleStarChange, reversed }) {
                             trailPhase={star.trailPhase}
                             currentPhase={currPhase}
                             reversed={reversed}
+                            handleSetTooltip={handleSetTooltip}
                         />
                     ))}
                 </div>

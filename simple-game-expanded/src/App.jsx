@@ -903,6 +903,7 @@ function App() {
                 phases={game.roundQueue}
                 currIndex={game.roundIndex}
                 status={game.status}
+                handleSetTooltip={handleSetTooltip}
             />
 
             {tooltipStack.length > 0 && (
@@ -969,6 +970,7 @@ function App() {
                 handleStarChange={handleStarChange}
                 handleRandomizeStats={handleRandomizeStats}
                 handleElementChange={handleElementChange}
+                handleSetTooltip={handleSetTooltip}
             />
             <ActionPanel
                 handleAction={handleAction}

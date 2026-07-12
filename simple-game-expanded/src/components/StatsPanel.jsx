@@ -22,12 +22,14 @@ import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
 import { isElementActive } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
+import { spawnTooltip } from "../utils/dictionary.js";
 
 function StatsPanel({
     game,
     updateStatsPoints,
     entityKey,
     handleElementChange,
+    handleSetTooltip,
 }) {
     const entity = game.entities[entityKey];
     const battleState = game.status;
@@ -70,7 +72,6 @@ function StatsPanel({
         darkEmbrace: "state-dark-embrace",
         dimmingDarkness: "state-dimming",
         bleakDeception: "state-bleak-deception",
-
         cutoffWings: "state-cutoff-wings",
     };
 
@@ -88,15 +89,15 @@ function StatsPanel({
     }
 
     if (states.ascendenceOfSpirit) {
-        let ascColor = "#FFD700"; // Good angel - Radiant gold
+        let ascColor = "#FFD700";
         let ascShadow = "rgba(255, 215, 0, 0.4)";
         let ascInset = "rgba(255, 255, 255, 0.3)";
         let ascBg = "rgba(255, 215, 0, 0.1)";
 
         if (game.eyeOfHeavens === eyeKeys.CLOSED) {
-            ascColor = "#DAA520"; // Bad angel - Harsh, tarnished gold (Goldenrod)
+            ascColor = "#DAA520";
             ascShadow = "rgba(218, 165, 32, 0.6)";
-            ascInset = "rgba(0, 0, 0, 0.4)"; // Darker inset to feel oppressive, but border remains gold
+            ascInset = "rgba(0, 0, 0, 0.4)";
             ascBg = "rgba(218, 165, 32, 0.15)";
         }
 
@@ -121,152 +122,247 @@ function StatsPanel({
                         isEntityTurn &&
                         !isElementActive(entity, elementalKeys.SHATTERED)
                     }
+                    handleSetTooltip={handleSetTooltip}
                 />
             )}
-            <StateBadges states={states} />
+            <StateBadges states={states} handleSetTooltip={handleSetTooltip} />
 
             {entity[effectKeys.TARNISHED_SIN] > 0 && (
-                <GradientBar
-                    label={"Tarnished Sin"}
-                    currResource={entity[effectKeys.TARNISHED_SIN]}
-                    maxResource={constants.MAX_TARNISHED_SIN}
-                    trackStyle={{
-                        backgroundImage: `linear-gradient(
-                                        90deg,
-                                        #2a0000 0%,
-                                        #500000 15%,
-                                        #8b0000 35%,
-                                        #cc0000 50%,
-                                        #8b0000 65%,
-                                        #500000 85%,
-                                        #2a0000 100%
-                                    )`,
-                    }}
-                    showPercent={true}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.TARNISHED_SIN,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Tarnished Sin"}
+                        currResource={entity[effectKeys.TARNISHED_SIN]}
+                        maxResource={constants.MAX_TARNISHED_SIN}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                            90deg,
+                                            #2a0000 0%,
+                                            #500000 15%,
+                                            #8b0000 35%,
+                                            #cc0000 50%,
+                                            #8b0000 65%,
+                                            #500000 85%,
+                                            #2a0000 100%
+                                        )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.LUNACY] > 0 && (
-                <GradientBar
-                    label={"Lunacy"}
-                    currResource={entity[effectKeys.LUNACY]}
-                    maxResource={constants.MAX_LUNACY}
-                    trackStyle={{
-                        backgroundImage: `linear-gradient(
-                                            90deg,
-                                            #9aa4b0 0%,
-                                            #c2c9d2 35%,
-                                            #e6eaf0 50%,
-                                            #c2c9d2 65%,
-                                            #9aa4b0 100%
-                                        )`,
-                    }}
-                    showPercent={true}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.LUNACY)
+                    }
+                >
+                    <GradientBar
+                        label={"Lunacy"}
+                        currResource={entity[effectKeys.LUNACY]}
+                        maxResource={constants.MAX_LUNACY}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                                90deg,
+                                                #9aa4b0 0%,
+                                                #c2c9d2 35%,
+                                                #e6eaf0 50%,
+                                                #c2c9d2 65%,
+                                                #9aa4b0 100%
+                                            )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.DIVINE_SPARK] > 0 && (
-                <GradientBar
-                    label={"Divine Spark"}
-                    currResource={entity[effectKeys.DIVINE_SPARK]}
-                    maxResource={constants.MAX_DIVINE_SPARK}
-                    trackStyle={{
-                        backgroundImage: `linear-gradient(
-                                        90deg,
-                                        #fff9d4 0%,
-                                        #ffd93b 25%,
-                                        #ffe87c 50%,
-                                        #ffd93b 75%,
-                                        #fff9d4 100%
-                                    )`,
-                    }}
-                    showPercent={true}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.DIVINE_SPARK,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Divine Spark"}
+                        currResource={entity[effectKeys.DIVINE_SPARK]}
+                        maxResource={constants.MAX_DIVINE_SPARK}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                            90deg,
+                                            #fff9d4 0%,
+                                            #ffd93b 25%,
+                                            #ffe87c 50%,
+                                            #ffd93b 75%,
+                                            #fff9d4 100%
+                                        )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.MAX_ENLIGHTENMENT] > 0 && (
-                <GradientBar
-                    label={"Enlightenment"}
-                    currResource={entity[effectKeys.ENLIGHTENMENT]}
-                    maxResource={entity[effectKeys.MAX_ENLIGHTENMENT]}
-                    trackStyle={{
-                        backgroundImage: `linear-gradient(
-                                        90deg,
-                                        #fff9d4 0%,
-                                        #ffd93b 25%,
-                                        #ffe87c 50%,
-                                        #ffd93b 75%,
-                                        #fff9d4 100%
-                                        )`,
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.ENLIGHTENMENT,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Enlightenment"}
+                        currResource={entity[effectKeys.ENLIGHTENMENT]}
+                        maxResource={entity[effectKeys.MAX_ENLIGHTENMENT]}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                            90deg,
+                                            #fff9d4 0%,
+                                            #ffd93b 25%,
+                                            #ffe87c 50%,
+                                            #ffd93b 75%,
+                                            #fff9d4 100%
+                                            )`,
+                        }}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.MAX_INSIGHT] > 0 && (
-                <GradientBar
-                    label={"Insight"}
-                    currResource={entity[effectKeys.INSIGHT]}
-                    maxResource={entity[effectKeys.MAX_INSIGHT]}
-                    trackStyle={{
-                        backgroundImage: `linear-gradient(
-                                        90deg, 
-                                        #d4eafd 0%, 
-                                        #3bc7ff 25%, 
-                                        #87ceeb 50%, 
-                                        #3bc7ff 75%, 
-                                        #d4eafd 100%
-                                        )`,
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.INSIGHT)
+                    }
+                >
+                    <GradientBar
+                        label={"Insight"}
+                        currResource={entity[effectKeys.INSIGHT]}
+                        maxResource={entity[effectKeys.MAX_INSIGHT]}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                            90deg, 
+                                            #d4eafd 0%, 
+                                            #3bc7ff 25%, 
+                                            #87ceeb 50%, 
+                                            #3bc7ff 75%, 
+                                            #d4eafd 100%
+                                            )`,
+                        }}
+                    />
+                </div>
             )}
 
             {isAngelView ? (
-                <SpecialCounter
-                    roman={true}
-                    label={"REVELATION"}
-                    value={entity[effectKeys.REVELATION]}
-                    style={{
-                        borderColor: dynamicStyles["--ascendence-color"],
-                        color: dynamicStyles["--ascendence-color"],
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.REVELATION)
+                    }
+                >
+                    <SpecialCounter
+                        roman={false}
+                        label={"REVELATION"}
+                        value={entity[effectKeys.REVELATION]}
+                        style={{
+                            borderColor: dynamicStyles["--ascendence-color"],
+                            color: dynamicStyles["--ascendence-color"],
+                        }}
+                    />
+                </div>
             ) : (
                 <>
-                    <HpBar entity={entity} />
-                    <ManaBar entity={entity} />
+                    <div
+                        onMouseDown={(e) =>
+                            spawnTooltip(e, handleSetTooltip, effectKeys.HEALTH)
+                        }
+                    >
+                        <HpBar entity={entity} />
+                    </div>
+
+                    <div
+                        onMouseDown={(e) =>
+                            spawnTooltip(e, handleSetTooltip, effectKeys.MANA)
+                        }
+                    >
+                        <ManaBar entity={entity} />
+                    </div>
+
                     {(entity.states[effectKeys.DEPLOYMENT] ||
                         entity.states.weaponsDeployed ||
                         entity.states.thermalOverload ||
                         entity.states.venting) && (
                         <>
-                            <div className="energy-line-row">
-                                <span className="energy-line-label">
-                                    ENERGY LEVEL
-                                </span>
-                                <span className="energy-line-value">
-                                    {entity.energyLevel}
-                                </span>
+                            <div
+                                onMouseDown={(e) =>
+                                    spawnTooltip(
+                                        e,
+                                        handleSetTooltip,
+                                        effectKeys.ENERGY_LEVEL,
+                                    )
+                                }
+                            >
+                                <div className="energy-line-row">
+                                    <span className="energy-line-label">
+                                        ENERGY LEVEL
+                                    </span>
+                                    <span className="energy-line-value">
+                                        {entity.energyLevel}
+                                    </span>
+                                </div>
                             </div>
-                            <GradientBar
-                                label={"Overheat"}
-                                currResource={entity[effectKeys.OVERHEAT]}
-                                maxResource={constants.MAX_OVERHEAT}
-                                trackStyle={{
-                                    backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
-                                }}
-                                showAnimation={false}
-                                showPercent={true}
-                            />
-                            <GradientBar
-                                label={"Dynamo"}
-                                currResource={entity[effectKeys.DYNAMO]}
-                                maxResource={constants.MAX_DYNAMO}
-                                trackStyle={{
-                                    backgroundImage: `linear-gradient(to right, cyan, lime, yellow)`,
-                                }}
-                                showAnimation={false}
-                                showPercent={true}
-                            />
+
+                            <div
+                                onMouseDown={(e) =>
+                                    spawnTooltip(
+                                        e,
+                                        handleSetTooltip,
+                                        effectKeys.OVERHEAT,
+                                    )
+                                }
+                            >
+                                <GradientBar
+                                    label={"Overheat"}
+                                    currResource={entity[effectKeys.OVERHEAT]}
+                                    maxResource={constants.MAX_OVERHEAT}
+                                    trackStyle={{
+                                        backgroundImage: `linear-gradient(to right, white, yellow, orange, orangered, red)`,
+                                    }}
+                                    showAnimation={false}
+                                    showPercent={true}
+                                />
+                            </div>
+
+                            <div
+                                onMouseDown={(e) =>
+                                    spawnTooltip(
+                                        e,
+                                        handleSetTooltip,
+                                        effectKeys.DYNAMO,
+                                    )
+                                }
+                            >
+                                <GradientBar
+                                    label={"Dynamo"}
+                                    currResource={entity[effectKeys.DYNAMO]}
+                                    maxResource={constants.MAX_DYNAMO}
+                                    trackStyle={{
+                                        backgroundImage: `linear-gradient(to right, cyan, lime, yellow)`,
+                                    }}
+                                    showAnimation={false}
+                                    showPercent={true}
+                                />
+                            </div>
                         </>
                     )}
                 </>
@@ -274,45 +370,71 @@ function StatsPanel({
 
             {(entity[effectKeys.MOONLIT_TEARS] > 0 ||
                 entity.states[effectKeys.GIBBOUS]) && (
-                <SpecialCounter
-                    roman={true}
-                    label={"MOONLIT TEARS"}
-                    value={entity[effectKeys.MOONLIT_TEARS]}
-                    style={{
-                        color: "#6ec6ff",
-                        borderColor: "#80d8ff",
-                        backgroundColor: "rgba(110, 198, 255, 0.2)",
-                        boxShadow: "inset 0 0 8px rgba(128, 216, 255, 0.3)",
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.MOONLIT_TEARS,
+                        )
+                    }
+                >
+                    <SpecialCounter
+                        roman={true}
+                        label={"MOONLIT TEARS"}
+                        value={entity[effectKeys.MOONLIT_TEARS]}
+                        style={{
+                            color: "#6ec6ff",
+                            borderColor: "#80d8ff",
+                            backgroundColor: "rgba(110, 198, 255, 0.2)",
+                            boxShadow: "inset 0 0 8px rgba(128, 216, 255, 0.3)",
+                        }}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.BURDEN_OF_STIGMA] > 0 && (
-                <SpecialCounter
-                    roman={true}
-                    label={"BURDEN OF STIGMA"}
-                    value={entity[effectKeys.BURDEN_OF_STIGMA]}
-                    style={{
-                        color: "#DAA520",
-                        borderColor: "#3b3528",
-                        backgroundColor: "rgba(59, 53, 40, 0.5)",
-                        boxShadow: "inset 0 0 8px rgba(0, 0, 0, 0.7)",
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.BURDEN_OF_STIGMA,
+                        )
+                    }
+                >
+                    <SpecialCounter
+                        roman={true}
+                        label={"BURDEN OF STIGMA"}
+                        value={entity[effectKeys.BURDEN_OF_STIGMA]}
+                        style={{
+                            color: "#DAA520",
+                            borderColor: "#3b3528",
+                            backgroundColor: "rgba(59, 53, 40, 0.5)",
+                            boxShadow: "inset 0 0 8px rgba(0, 0, 0, 0.7)",
+                        }}
+                    />
+                </div>
             )}
 
             {entity[effectKeys.MANA_BLEED] > 0 && (
-                <SpecialCounter
-                    roman={true}
-                    label={"MANA BLEED"}
-                    value={entity[effectKeys.MANA_BLEED]}
-                    style={{
-                        color: "#e6195e",
-                        borderColor: "#ff3333",
-                        backgroundColor: "rgba(220, 20, 60, 0.15)",
-                        boxShadow: "inset 0 0 8px rgba(41, 121, 255, 0.25)",
-                    }}
-                />
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.MANA_BLEED)
+                    }
+                >
+                    <SpecialCounter
+                        roman={true}
+                        label={"MANA BLEED"}
+                        value={entity[effectKeys.MANA_BLEED]}
+                        style={{
+                            color: "#e6195e",
+                            borderColor: "#ff3333",
+                            backgroundColor: "rgba(220, 20, 60, 0.15)",
+                            boxShadow: "inset 0 0 8px rgba(41, 121, 255, 0.25)",
+                        }}
+                    />
+                </div>
             )}
 
             <div className="stacks-wrapper">
@@ -324,12 +446,18 @@ function StatsPanel({
                     }
 
                     return (
-                        <StackCounter
+                        <div
                             key={key}
-                            label={counter.label}
-                            value={resources[key]}
-                            style={counter.style}
-                        />
+                            onMouseDown={(e) =>
+                                spawnTooltip(e, handleSetTooltip, key)
+                            }
+                        >
+                            <StackCounter
+                                label={counter.label}
+                                value={resources[key]}
+                                style={counter.style}
+                            />
+                        </div>
                     );
                 })}
             </div>
@@ -350,7 +478,15 @@ function StatsPanel({
                 </div>
             )}
 
-            {states.resonant && <SonorityCounter sonority={entity.sonority} />}
+            {states.resonant && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.SONORITY)
+                    }
+                >
+                    <SonorityCounter sonority={entity.sonority} />
+                </div>
+            )}
         </div>
     );
 }
