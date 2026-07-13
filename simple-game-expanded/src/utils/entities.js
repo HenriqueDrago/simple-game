@@ -1,8 +1,8 @@
 import {
     actionsClass,
     constants,
-    freeResources,
-    limitedResources,
+    FREE_RESOURCES,
+    MITIGATION_RESOURCES,
     presetAi,
 } from "./constants.js";
 import {
@@ -16,103 +16,6 @@ import {
     entityKeys,
     turnStatus,
 } from "./enums.js";
-
-export function consumeResources(entity, amount, cause) {
-    let draftEntity = {
-        ...entity,
-        resources: { ...entity.resources },
-    };
-
-    let resourcesConsumed = {};
-    let resourceIndex = 0;
-    let totalConsumption = 0;
-
-    // Free resources consumption
-    while (amount > 0 && resourceIndex < freeResources.length) {
-        const currResourceKey = freeResources[resourceIndex];
-
-        // Avoid shadowflame (and related actions) burning unintended resources
-        // Also avoid Sacred Flames burning themselves
-        if (
-            !(
-                (cause === effectKeys.SHADOWFLAME ||
-                    cause === actionKeys.SHADOW_PACT ||
-                    cause === actionKeys.BLACK_MAYHEM) &&
-                (currResourceKey === effectKeys.SHADOWFLAME ||
-                    currResourceKey === effectKeys.LINGERING_EMBER ||
-                    currResourceKey === effectKeys.UNRELENTING_SHADOWS)
-            ) &&
-            !(
-                cause === effectKeys.SACRED_FLAMES &&
-                currResourceKey === effectKeys.SACRED_FLAMES
-            )
-        ) {
-            const currentAmount = draftEntity.resources[currResourceKey];
-            const consumption = Math.min(currentAmount, amount);
-
-            draftEntity = {
-                ...draftEntity,
-                resources: {
-                    ...draftEntity.resources,
-                    [currResourceKey]: currentAmount - consumption,
-                },
-            };
-
-            resourcesConsumed = {
-                ...resourcesConsumed,
-                [currResourceKey]: consumption,
-            };
-
-            totalConsumption += consumption;
-            amount -= consumption;
-        }
-
-        resourceIndex++;
-    }
-
-    resourceIndex = 0;
-
-    // Limited resource consumption, skips if cause is Orange Star/Trail
-    if (cause !== effectKeys.ORANGE_STAR && cause !== effectKeys.ORANGE_TRAIL) {
-        while (
-            amount > 0 &&
-            resourceIndex < limitedResources.length &&
-            (draftEntity.currHp > 0 ||
-                (draftEntity.states.ascendenceOfSpirit &&
-                    draftEntity.currEnlit > 0))
-        ) {
-            const currResourceKey = limitedResources[resourceIndex];
-
-            const currentAmount = draftEntity[currResourceKey];
-            const consumption = Math.min(currentAmount, amount);
-
-            draftEntity = {
-                ...draftEntity,
-                [currResourceKey]: currentAmount - consumption,
-            };
-
-            resourcesConsumed = {
-                ...resourcesConsumed,
-                [currResourceKey]: consumption,
-            };
-
-            totalConsumption += consumption;
-            amount -= consumption;
-
-            resourceIndex++;
-        }
-    }
-
-    resourcesConsumed = {
-        ...resourcesConsumed,
-        totalConsumption: totalConsumption,
-    };
-
-    return {
-        draftEntity,
-        resourcesConsumed,
-    };
-}
 
 export function restoreResources(entity, amount) {
     let draftEntity = {
@@ -416,6 +319,9 @@ export function processEntityDR(entity) {
     if (entity.states[effectKeys.GIBBOUS]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
+    if (entity.states[effectKeys.MOON_DEW]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
 
     return drMult;
 }
@@ -476,16 +382,17 @@ export function dealDamage(
         ...defender,
     };
 
-    // dmg types elemental overrides
-    const isAtkAsh = isElementActive(draftAttacker, elementalKeys.ASH);
-    const isDefWither = isElementActive(draftDefender, elementalKeys.WITHER);
-
-    if (isAtkAsh && dmgType === dmgTypes.PHYSICAL) {
-        if (!isDefWither) {
-            dmgType = dmgTypes.PIERCING;
-        }
-    } else if (isDefWither && dmgType === dmgTypes.PIERCING) {
-        dmgType = dmgTypes.PHYSICAL;
+    // Lunic override
+    if (dmgType === dmgTypes.LUNIC) {
+        draftDefender = loseHp(draftDefender, baseDmg, true);
+        return {
+            attacker: {
+                ...draftAttacker,
+            },
+            defender: {
+                ...draftDefender,
+            },
+        };
     }
 
     const additionalDmg =
@@ -535,7 +442,6 @@ export function dealDamage(
 
     const dmgPostMults = (baseDmg + additionalDmg) * bonusMult * weakMult;
 
-    
     const dmgPostReduction = Math.max(
         1,
         Math.floor((dmgPostMults - flatDr) * drMult * frailMult),
@@ -636,11 +542,8 @@ export function dealDamage(
         },
     };
 
-    // Gibbous Moonlit Gain
-    if (
-        (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) &&
-        draftDefender.states[effectKeys.GIBBOUS]
-    ) {
+    // Wither Moonlit Gain
+    if (isElementActive(draftDefender, elementalKeys.WITHER)) {
         draftDefender = {
             ...draftDefender,
             [effectKeys.MOONLIT_TEARS]:
@@ -664,12 +567,10 @@ export function takeDamage(entity, baseDmg, dmgType) {
         ...entity,
     };
 
-    // Wither override
-    if (
-        dmgType === dmgTypes.PIERCING &&
-        isElementActive(draftEntity, elementalKeys.WITHER)
-    ) {
-        dmgType = dmgTypes.PHYSICAL;
+    // Lunic override
+    if (dmgType === dmgTypes.LUNIC) {
+        draftEntity = loseHp(draftEntity, baseDmg, true);
+        return draftEntity;
     }
 
     // Flat reduction
@@ -763,11 +664,8 @@ export function takeDamage(entity, baseDmg, dmgType) {
     const newMoondust =
         entity.resources[effectKeys.MOONDUST] + divinityConsumed;
 
-    // Gibbous Moonlit Gain
-    if (
-        (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) &&
-        draftEntity.states[effectKeys.GIBBOUS]
-    ) {
+    // Wither Moonlit Gain
+    if (isElementActive(draftEntity, elementalKeys.WITHER)) {
         draftEntity = {
             ...draftEntity,
             [effectKeys.MOONLIT_TEARS]:
@@ -862,6 +760,15 @@ export function gainInsight(entity, amount) {
     };
 }
 
+export function loseInsight(entity, amount) {
+    const newInsight = Math.max(0, entity[effectKeys.INSIGHT] - amount);
+
+    return {
+        ...entity,
+        [effectKeys.INSIGHT]: newInsight,
+    };
+}
+
 export function gainHp(entity, amount) {
     // If on ascendence, restore inspiration and returns early
     if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
@@ -904,23 +811,65 @@ export function gainHp(entity, amount) {
     return draftEntity;
 }
 
-export function loseHp(entity, amount) {
+export function loseHp(entity, amount, lunic = false) {
+    const initialAmount = amount;
+    let draftEntity = {
+        ...entity,
+    };
+
+    // Silver Blood
     const silverBloodConsumed = Math.min(
         entity.resources[effectKeys.SILVER_BLOOD],
         amount,
     );
 
     amount -= silverBloodConsumed;
-    const newHp = Math.max(0, entity[effectKeys.HEALTH] - amount);
 
-    return {
-        ...entity,
-        [effectKeys.HEALTH]: newHp,
+    draftEntity = {
+        ...draftEntity,
         resources: {
             ...entity.resources,
             [effectKeys.SILVER_BLOOD]:
                 entity.resources[effectKeys.SILVER_BLOOD] - silverBloodConsumed,
         },
+    };
+
+    // Health
+    const hpConsumed = Math.min(entity[effectKeys.HEALTH], amount);
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.HEALTH]: Math.max(
+            0,
+            entity[effectKeys.HEALTH] - hpConsumed,
+        ),
+    };
+
+    amount -= hpConsumed;
+
+    // Max Health
+    if (lunic) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.MAX_HEALTH]:
+                draftEntity[effectKeys.MAX_HEALTH] - hpConsumed,
+        };
+    }
+
+    // Wither
+    if (isElementActive(entity, elementalKeys.WITHER)) {
+        const newLunacy = Math.min(
+            draftEntity[effectKeys.LUNACY] +
+                (initialAmount - amount) * constants.WITHER_LUNACY_MULT,
+            constants.MAX_LUNACY,
+        );
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.LUNACY]: newLunacy,
+        };
+    }
+
+    return {
+        ...draftEntity,
     };
 }
 
@@ -1026,7 +975,7 @@ export function processExitSelenian(entity) {
     draftEntity = takeDamage(
         draftEntity,
         draftEntity[effectKeys.MOONLIGHT],
-        dmgTypes.TRUE,
+        dmgTypes.LUNIC,
     );
 
     draftEntity = {
@@ -1034,6 +983,8 @@ export function processExitSelenian(entity) {
         [effectKeys.MOONLIGHT]: 0,
         [effectKeys.ELEMENTAL_CRYSTALS]: [],
         [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
+        [effectKeys.LUNACY]: 0,
+        [effectKeys.MOONLIT_TEARS]: 0,
     };
 
     return draftEntity;
@@ -1156,6 +1107,15 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                 ...draftAgent,
                 [effectKeys.MIRRORED_MOON]: moonKeys.BLOODSTAINED,
             };
+        }
+
+        // Ash
+        if (isElementActive(draftAgent, elementalKeys.ASH)) {
+            draftAgent = consumeLimitedResources(
+                draftAgent,
+                draftAgent[effectKeys.MOONLIGHT],
+                elementalKeys.ASH,
+            ).draftEntity;
         }
     }
 
@@ -1379,4 +1339,311 @@ export function getEntityTotalHealth(entity) {
     return (
         entity[effectKeys.HEALTH] + entity.resources[effectKeys.SILVER_BLOOD]
     );
+}
+
+export function getEntityTotalInsight(entity) {
+    return entity[effectKeys.INSIGHT];
+}
+
+export function getEntityTotalEnlightenment(entity) {
+    return entity[effectKeys.ENLIGHTENMENT];
+}
+
+export function consumeMitigationResources(entity, amount, cause = null) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    let mitigationResourcesConsumed = {};
+    let i = 0;
+    let totalMitigationResourcesConsumption = 0;
+
+    const isCauseDamage =
+        cause === dmgTypes.PHYSICAL || cause === dmgTypes.PIERCING;
+
+    while (amount > 0 && i < MITIGATION_RESOURCES.length) {
+        const currResourceKey = MITIGATION_RESOURCES[i];
+
+        // Avoid shadowflames and related actions from consuming LE
+        if (
+            !(
+                (cause === effectKeys.SHADOWFLAME ||
+                    cause === actionKeys.SHADOW_PACT ||
+                    cause === actionKeys.BLACK_MAYHEM) &&
+                currResourceKey === effectKeys.LINGERING_EMBER
+            )
+        ) {
+            const currAmount = draftEntity.resources[currResourceKey];
+            const consumption = Math.min(currAmount, amount);
+
+            amount -= consumption;
+            totalMitigationResourcesConsumption += consumption;
+
+            mitigationResourcesConsumed = {
+                ...mitigationResourcesConsumed,
+                [currResourceKey]: consumption,
+            };
+
+            draftEntity = {
+                ...draftEntity,
+                resources: {
+                    ...draftEntity.resources,
+                    [currResourceKey]: currAmount - consumption,
+                },
+            };
+
+            // Lingering Ember
+            if (
+                isCauseDamage &&
+                currResourceKey === effectKeys.LINGERING_EMBER
+            ) {
+                draftEntity = {
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.CINDERS]:
+                            draftEntity[effectKeys.CINDERS] + consumption,
+                    },
+                };
+            }
+
+            // Halo
+            if (isCauseDamage && currResourceKey === effectKeys.HALO) {
+                draftEntity = {
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.RADIANCE]:
+                            draftEntity[effectKeys.RADIANCE] + consumption,
+                    },
+                };
+            }
+
+            // Refracted Divinity
+            if (
+                isCauseDamage &&
+                currResourceKey === effectKeys.REFRACTED_DIVINITY
+            ) {
+                draftEntity = {
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.MOONDUST]:
+                            draftEntity[effectKeys.MOONDUST] + consumption,
+                    },
+                };
+            }
+        }
+
+        i++;
+    }
+
+    mitigationResourcesConsumed = {
+        ...mitigationResourcesConsumed,
+        totalMitigationResourcesConsumption:
+            totalMitigationResourcesConsumption,
+        mitigationNotConsumed: amount,
+    };
+
+    return {
+        draftEntity,
+        mitigationResourcesConsumed,
+    };
+}
+
+export function consumeFreeResources(entity, amount, cause = null) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    let freeResourcesConsumed = {};
+    let i = 0;
+    let totalFreeResourcesConsumption = 0;
+
+    while (amount > 0 && i < FREE_RESOURCES.length) {
+        const currResourceKey = FREE_RESOURCES[i];
+
+        // Avoid shadowflame and related actions from consuming Shadowflame and unrelenting shadows
+        // Avoid glimpse consumingthe flames itself
+        if (
+            !(
+                (cause === effectKeys.SHADOWFLAME ||
+                    cause === actionKeys.SHADOW_PACT ||
+                    cause === actionKeys.BLACK_MAYHEM) &&
+                (currResourceKey === effectKeys.SHADOWFLAME ||
+                    currResourceKey === effectKeys.UNRELENTING_SHADOWS)
+            ) &&
+            !(
+                cause === actionKeys.GLIMPSE_OF_PANDEMONIUM &&
+                currResourceKey === effectKeys.SACRED_FLAMES
+            )
+        ) {
+            const currAmount = draftEntity.resources[currResourceKey];
+            const consumption = Math.min(currAmount, amount);
+
+            amount -= consumption;
+            totalFreeResourcesConsumption += consumption;
+
+            freeResourcesConsumed = {
+                ...freeResourcesConsumed,
+                [currResourceKey]: consumption,
+            };
+
+            draftEntity = {
+                ...draftEntity,
+                resources: {
+                    ...draftEntity.resources,
+                    [currResourceKey]: currAmount - consumption,
+                },
+            };
+        }
+
+        i++;
+    }
+
+    freeResourcesConsumed = {
+        ...freeResourcesConsumed,
+        totalFreeResourcesConsumption: totalFreeResourcesConsumption,
+        freeNotConsumed: amount,
+    };
+
+    return {
+        draftEntity,
+        freeResourcesConsumed,
+    };
+}
+
+export function consumeLimitedResources(entity, amount) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    let limitedResourcesConsumed = {};
+    let totalLimitedResourcesConsumption = 0;
+
+    // Mana
+    const manaConsumed = Math.min(getEntityTotalMana(draftEntity), amount);
+    draftEntity = loseMana(draftEntity, manaConsumed);
+    amount -= manaConsumed;
+
+    totalLimitedResourcesConsumption += manaConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.MANA]: manaConsumed,
+    };
+
+    // Health
+    const healthConsumed = Math.min(getEntityTotalHealth(draftEntity), amount);
+    draftEntity = loseHp(draftEntity, healthConsumed);
+    amount -= healthConsumed;
+
+    totalLimitedResourcesConsumption += healthConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.HEALTH]: healthConsumed,
+    };
+
+    // Insight
+    const insightConsumed = Math.min(
+        getEntityTotalInsight(draftEntity),
+        amount,
+    );
+    draftEntity = loseInsight(draftEntity, insightConsumed);
+    amount -= insightConsumed;
+
+    totalLimitedResourcesConsumption += insightConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.INSIGHT]: insightConsumed,
+    };
+
+    // Enlightenment
+    const enlitConsumed = Math.min(
+        getEntityTotalEnlightenment(draftEntity),
+        amount,
+    );
+    draftEntity = loseEnlit(draftEntity, enlitConsumed);
+    amount -= enlitConsumed;
+
+    totalLimitedResourcesConsumption += enlitConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.ENLIGHTENMENT]: enlitConsumed,
+    };
+
+    // total
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        totalLimitedResourcesConsumption: totalLimitedResourcesConsumption,
+        limitedNotConsumed: amount,
+    };
+
+    return {
+        draftEntity,
+        limitedResourcesConsumed,
+    };
+}
+
+export function consumeResources(entity, amount, cause = null) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    let totalConsumption = 0;
+    let resourcesConsumed = {};
+
+    // Mitigation
+    const mitResult = consumeMitigationResources(draftEntity, amount, cause);
+
+    draftEntity = mitResult.draftEntity;
+    resourcesConsumed = {
+        ...resourcesConsumed,
+        ...mitResult.mitigationResourcesConsumed,
+    };
+
+    totalConsumption +=
+        mitResult.mitigationResourcesConsumed
+            .totalMitigationResourcesConsumption;
+    amount -=
+        mitResult.mitigationResourcesConsumed
+            .totalMitigationResourcesConsumption;
+
+    // Free
+    const freeResult = consumeFreeResources(draftEntity, amount, cause);
+
+    draftEntity = freeResult.draftEntity;
+    resourcesConsumed = {
+        ...resourcesConsumed,
+        ...freeResult.freeResourcesConsumed,
+    };
+
+    totalConsumption +=
+        freeResult.freeResourcesConsumed.totalFreeResourcesConsumption;
+    amount -= freeResult.freeResourcesConsumed.totalFreeResourcesConsumption;
+
+    // Limited
+    const limResult = consumeLimitedResources(draftEntity, amount, cause);
+
+    draftEntity = limResult.draftEntity;
+    resourcesConsumed = {
+        ...resourcesConsumed,
+        ...limResult.limitedResourcesConsumed,
+    };
+
+    totalConsumption +=
+        limResult.limitedResourcesConsumed.totalLimitedResourcesConsumption;
+    amount -=
+        limResult.limitedResourcesConsumed.totalLimitedResourcesConsumption;
+
+    // total
+    resourcesConsumed = {
+        ...resourcesConsumed,
+        totalConsumption: totalConsumption,
+        notConsumed: amount,
+    };
+
+    return {
+        draftEntity,
+        resourcesConsumed,
+    };
 }

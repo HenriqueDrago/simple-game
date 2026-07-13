@@ -1,4 +1,4 @@
-import { presetAi } from "../utils/constants";
+import { entryTypesMap, presetAi } from "../utils/constants";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { aiKeys, progKeys } from "../utils/enums";
 import "./Glossary.css";
@@ -43,7 +43,7 @@ function Glossary({ handleGlossary, game }) {
                                             {descData.name}
                                         </span>
                                         <span className="glossary-item-type">
-                                            {descData.type}
+                                            {entryTypesMap[descData.type]}
                                         </span>
                                     </div>
                                     <div className="glossary-item-body">

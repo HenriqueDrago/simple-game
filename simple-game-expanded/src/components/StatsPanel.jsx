@@ -5,7 +5,12 @@ import StackCounter from "./StackCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
-import { constants, freeResources, stackCounters } from "../utils/constants.js";
+import {
+    constants,
+    FREE_RESOURCES,
+    MITIGATION_RESOURCES,
+    stackCounters,
+} from "../utils/constants.js";
 import {
     sdmKeys,
     eyeKeys,
@@ -39,6 +44,8 @@ function StatsPanel({
     const resources = entity.resources;
 
     const isAngelView = states.ascendenceOfSpirit;
+
+    const totalResources = [...MITIGATION_RESOURCES, ...FREE_RESOURCES];
 
     const currPhase =
         game.roundQueue && game.roundQueue.length > 0
@@ -438,7 +445,7 @@ function StatsPanel({
             )}
 
             <div className="stacks-wrapper">
-                {[...freeResources].reverse().map((key) => {
+                {totalResources.reverse().map((key) => {
                     const counter = stackCounters[key];
 
                     if (!counter) {

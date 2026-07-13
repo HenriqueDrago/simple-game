@@ -10,13 +10,11 @@ import {
     gainHp,
     exitAllStates,
     processExitAscendence,
-    processExitSelenian,
     getEntityDef,
     getEntityStr,
     isElementActive,
     getEntityTotalHealth,
     loseHp,
-    getEntityTotalMana,
 } from "./entities.js";
 import {
     actionKeys,
@@ -80,8 +78,8 @@ export const simulators = {
     [actionKeys.LUNAR_SMITE]: simulateLunarSmite,
     [actionKeys.LUNAR_GROWTH]: simulateLunarGrowth,
     [actionKeys.LUNAR_SHROUD]: simulateLunarShroud,
-    [actionKeys.LUNAR_VEIL]: simulateLunarVeil,
     [actionKeys.LUNAR_TIDE]: simulateLunarTide,
+    [actionKeys.LUNAR_SHED]: simulateLunarShed,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -134,8 +132,8 @@ function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 
 function simulateSacrifice({ prev, agent, agentKey }) {
     let draftAgent = {
-        ...agent
-    }
+        ...agent,
+    };
 
     const realHealth = getEntityTotalHealth(draftAgent);
     const dmgTaken = Math.ceil(realHealth * constants.SAC_HP_CONSUMPTION);
@@ -895,7 +893,7 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         const { draftEntity, resourcesConsumed } = consumeResources(
             draftAgent,
             draftAgent.resources[effectKeys.SACRED_FLAMES],
-            effectKeys.SACRED_FLAMES,
+            actionKeys.GLIMPSE_OF_PANDEMONIUM,
         );
 
         draftAgent = {
@@ -1103,18 +1101,16 @@ function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         agent,
         nonAgent,
         agent[effectKeys.MOONLIGHT],
-        dmgTypes.TRUE,
+        dmgTypes.LUNIC,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
-
-    const draftAttacker = processExitSelenian(attacker);
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...draftAttacker,
+                ...attacker,
             },
             [nonAgentKey]: {
                 ...defender,
@@ -1126,7 +1122,7 @@ function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 function simulateLunarTide({ prev, agent, agentKey }) {
     const { draftEntity, resourcesConsumed } = consumeResources(
         agent,
-        agent[effectKeys.MOONLIGHT],
+        agent[effectKeys.MOONLIGHT] * constants.LUNAR_TIDE_MULT,
         actionKeys.LUNAR_TIDE,
     );
 
@@ -1158,6 +1154,10 @@ function simulateLunarGrowth({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
+                states: {
+                    ...draftAgent.states,
+                    [effectKeys.MOON_DEW]: true,
+                },
             },
         },
     };
@@ -1167,8 +1167,9 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        getEntityStr(agent) + agent.resources[effectKeys.MOONDUST],
-        dmgTypes.PHYSICAL,
+        Math.floor(getEntityStr(agent) / 2) +
+            agent.resources[effectKeys.MOONDUST],
+        dmgTypes.PIERCING,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
@@ -1177,8 +1178,8 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         resources: {
             ...attacker.resources,
             [effectKeys.MOONDUST]: 0,
-        }
-    }
+        },
+    };
 
     return {
         ...prev,
@@ -1195,30 +1196,30 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const manaConsumed = getEntityTotalMana(agent);
+    const extraDmg =
+        agent[effectKeys.MAX_HEALTH] -
+        agent[effectKeys.HEALTH] +
+        (agent[effectKeys.MAX_MANA] - agent[effectKeys.MANA]) +
+        (agent[effectKeys.MAX_INSIGHT] - agent[effectKeys.INSIGHT]) +
+        (agent[effectKeys.MAX_ENLIGHTENMENT] - agent[effectKeys.ENLIGHTENMENT]);
 
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent[effectKeys.MOONLIGHT] + manaConsumed,
-        dmgTypes.PIERCING,
+        agent[effectKeys.MOONLIGHT] * (extraDmg * constants.SMITE_MULT/100),
+        dmgTypes.PHYSICAL,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
-
-    const draftAgent = loseMana(attacker, manaConsumed);
-    const draftNonAgent = {
-        ...defender,
-    };
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...draftAgent,
+                ...attacker,
             },
             [nonAgentKey]: {
-                ...draftNonAgent,
+                ...defender,
             },
         },
     };
@@ -1248,16 +1249,16 @@ function simulateLunarShroud({ prev, agent, agentKey }) {
     };
 }
 
-function simulateLunarVeil({ prev, agent, agentKey }) {
-    const draftAgent = {
+function simulateLunarShed({ prev, agent, agentKey }) {
+    let draftAgent = {
         ...agent,
-        [effectKeys.MOONLIT_TEARS]:
-            agent[effectKeys.MOONLIT_TEARS] + constants.LUNAR_VEIL_TEARS_GAIN,
         states: {
             ...agent.states,
             [effectKeys.GIBBOUS]: true,
         },
     };
+
+    draftAgent = takeDamage(draftAgent, draftAgent[effectKeys.MOONLIGHT], dmgTypes.TRUE)
 
     return {
         ...prev,

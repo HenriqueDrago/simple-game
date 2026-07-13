@@ -53,7 +53,9 @@ function ActionPanel({
         (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
 
     const showButtons =
-        isHumanTurn && battleState === turnStatus.ONGOING && currPlayerPhase === playerTurnPhases.PLAN;
+        isHumanTurn &&
+        battleState === turnStatus.ONGOING &&
+        currPlayerPhase === playerTurnPhases.PLAN;
     const showUmbralButtons = showButtons && currEntity.states.umbralCore;
     const showAngelButtons =
         showButtons && currEntity.states.ascendenceOfSpirit;
@@ -85,7 +87,9 @@ function ActionPanel({
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
-    if (battleState !== turnStatus.ONGOING) {
+    if (battleState === turnStatus.STARFALL_TRANSITION) {
+        waitLabel = "Starfall";
+    } else if (battleState !== turnStatus.ONGOING) {
         waitLabel = null;
     } else if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
@@ -107,8 +111,6 @@ function ActionPanel({
     } else if (currPhase === roundPhases.SPECIAL_EMINENCE_TURN) {
         waitLabel = "Anointment";
     }
-
-    const showWait = waitLabel !== null;
 
     // Action Handler
     const handleActionButton = (actionKey) => {
@@ -170,7 +172,8 @@ function ActionPanel({
                 <div className="actions-buttons-text-container">
                     {showHelperText && (
                         <span className="actions-mouse-wheel-explainer">
-                            Tip: You can mouse-wheel click on most things to see their tooltips...
+                            Tip: You can mouse-wheel click on most things to see
+                            their tooltips...
                         </span>
                     )}
                     <div className={containerClass}>
@@ -207,7 +210,7 @@ function ActionPanel({
                 </div>
             )}
 
-            {showWait && <span className="enemy-wait">{waitLabel}</span>}
+            {waitLabel && <span className="enemy-wait">{waitLabel}</span>}
         </div>
     );
 }

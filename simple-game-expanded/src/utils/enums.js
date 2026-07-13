@@ -75,6 +75,7 @@ export const dmgTypes = Object.freeze({
     PHYSICAL: "phys",
     PIERCING: "pierce",
     TRUE: "true",
+    LUNIC: "lunic",
 });
 
 export const actionKeys = Object.freeze({
@@ -117,7 +118,7 @@ export const actionKeys = Object.freeze({
     REFRACT: "refract",
     MIRROR: "mirror",
     LUNAR_STRIKE: "lunarStrike",
-    LUNAR_VEIL: "lunarVeil",
+    LUNAR_SHED: "lunarShed",
     LUNAR_GROWTH: "lunarGrowth",
     LUNAR_SMITE: "lunarSmite",
     LUNAR_TIDE: "lunarTide",
@@ -129,10 +130,8 @@ export const actionKeys = Object.freeze({
 export const effectKeys = Object.freeze({
     GUARDING_STATE: "guarding",
     MANA_BLEED: "manaBleed",
-
     MANA_OVERFLOW: "manaOverflow",
     SACRIFICIAL_STATE: "sacrificial",
-
     SHACKLED_MANA: "shackledMana",
     POISON: "poison",
     RADIANCE: "radiance",
@@ -146,11 +145,6 @@ export const effectKeys = Object.freeze({
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
     UNRELENTING_SHADOWS: "unrelentingShadows",
-
-    FROST: "frost",
-    NATURE: "nature",
-    SCORCH: "scorch",
-
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
@@ -158,9 +152,6 @@ export const effectKeys = Object.freeze({
     MAX_ENLIGHTENMENT: "maxEnlit",
     ASCENDENCE_OF_SPIRIT: "ascendenceOfSpirit",
     EYE_OF_HEAVENS: "eyeOfHeavens",
-    PHYSICAL_DAMAGE: dmgTypes.PHYSICAL,
-    PIERCING_DAMAGE: dmgTypes.PIERCING,
-    TRUE_DAMAGE: dmgTypes.TRUE,
     DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
     OVERHEAT: "currOverheat",
@@ -171,7 +162,6 @@ export const effectKeys = Object.freeze({
     MAX_INSIGHT: "maxInsight",
     BLEAK_DECEPTION: "bleakDeception",
     SACRED_FLAMES: "sacredFlames",
-
     BURDEN_OF_STIGMA: "burdenOfStigma",
     REVELATION: "revelation",
     RUNIC_ARRAY: "runicArray",
@@ -185,7 +175,6 @@ export const effectKeys = Object.freeze({
     DAMAGE_REDUCTION: "dr",
     DEF_EFFECTIVENESS: "defEffect",
     ZENITH_OF_MORTALITY: "zenithOfMortality",
-
     WHITE_STAR: "white",
     GRAY_STAR: "gray",
     RED_STAR: "red",
@@ -195,7 +184,6 @@ export const effectKeys = Object.freeze({
     BLUE_STAR: "blue",
     INDIGO_STAR: "indigo",
     VIOLET_STAR: "violet",
-
     DIMMED_RED_STAR: "dimRed",
     DIMMED_ORANGE_STAR: "dimOrange",
     DIMMED_YELLOW_STAR: "dimYellow",
@@ -203,7 +191,6 @@ export const effectKeys = Object.freeze({
     DIMMED_BLUE_STAR: "dimBlue",
     DIMMED_INDIGO_STAR: "dimIndigo",
     DIMMED_VIOLET_STAR: "dimViolet",
-
     RED_TRAIL: "trailRed",
     ORANGE_TRAIL: "trailOrange",
     YELLOW_TRAIL: "trailYellow",
@@ -211,13 +198,10 @@ export const effectKeys = Object.freeze({
     BLUE_TRAIL: "trailBlue",
     INDIGO_TRAIL: "trailIndigo",
     VIOLET_TRAIL: "trailViolet",
-
     STARDUST: "stardust",
-
     STARGAZER: "stargazer",
     STARFALL: "starfall",
     DOME: "dome",
-
     RED_STARFALL: "redStarfall",
     ORANGE_STARFALL: "orangeStarfall",
     YELLOW_STARFALL: "yellowStarfall",
@@ -232,26 +216,17 @@ export const effectKeys = Object.freeze({
     BLUE_TRAILFALL: "blueTrailfall",
     INDIGO_TRAILFALL: "indigoTrailfall",
     VIOLET_TRAILFALL: "violetTrailfall",
-
     INSPIRATION: "inspiration",
-
     SEVERED_TIME: "severedTime",
-
     DIVINE_SPARK: "currDivineSpark",
-
     ABANDONED_BY_GRACE: "abandonedByGrace",
     ANOINTED_PROXY: "anointedProxy",
-
-    AUGMENTED_ORANGE_STAR: "augOrange",
-
     DYNAMO: "dynamo",
     ENERGY_LEVEL: "energyLevel",
-
     MIRRORED_MOON: "mirrorMoon",
     MOONLIGHT: "moonlight",
     ELEMENTAL_CRYSTALS: "elementalCrystals",
     SELENIAN: "selenian",
-
     LUNACY: "lunacy",
     REFRACTED_DIVINITY: "refractedDivinity",
     PRISMATIC: "prismatic",
@@ -259,6 +234,28 @@ export const effectKeys = Object.freeze({
     MOONDUST: "moondust",
     MOONLIT_TEARS: "moonlitTears",
     SILVER_BLOOD: "silverBlood",
+    MOON_DEW: "moonDew",
+    TURN: "turn",
+    ROUND: "round",
+    ACTIONS: "actions",
+    UPKEEP: "upkeep",
+    PLAN: "plan",
+    COMMIT: "commit",
+    MANA_IMBALANCE: "manaImbalance",
+    RUNIC_PULSE: "runicPulse",
+    MANA_SIPHON: "manaSiphon",
+    EMANATION: "emanation",
+    OFFENSIVE_ACTIONS: "offensiveActions",
+    DEFENSIVE_ACTIONS: "defensiveActions",
+    TRANSFORMATIVE_ACTIONS: "transformativeActions",
+    ACTS_OF_BENEDICTION: "actsOfBenediction",
+    ACTS_OF_MALEDICTION: "actsOfMalediction",
+    MOON_PHASE: "moonPhase",
+    ANOINTMENT: "anointment",
+    FRAGILITY: "fragility",
+    DAMAGE_BONUS: "dmgBonus",
+    WEAKNESS: "weakness",
+    EFFECTIVE_DEF: "effectiveDef"
 });
 
 export const eyeKeys = Object.freeze({
@@ -276,19 +273,22 @@ export const moonKeys = Object.freeze({
 });
 
 export const entryTypes = Object.freeze({
-    ACTION: "ACTION",
-    STATE: "STATE",
-    DAMAGE_TYPE: "DAMAGE TYPE",
-    FIELD_EFFECT: "FIELD EFFECT",
-    MECHANIC: "MECHANIC",
-    STAT: "STAT",
-    MITIGATION_RESOURCE: "MITIGATION RESOURCE",
-    FREE_RESOURCE: "FREE RESOURCE",
-    LIMITED_RESOURCE: "LIMITED RESOURCE",
-    CATEGORY: "CATEGORY",
-    BATTLE_PHASE: "BATTLE PHASE",
-    FIXED_RESOURCE: "FIXED RESOURCE",
-    STAR: "STAR",
+    ACTION: "action",
+    STATE: "state",
+    DAMAGE_TYPE: "damageType",
+    FIELD_EFFECT: "fieldEffect",
+    MECHANIC: "mechanic",
+    STAT: "stat",
+    MITIGATION_RESOURCE: "mitigationResource",
+    FREE_RESOURCE: "freeResource",
+    LIMITED_RESOURCE: "limitedResource",
+    CATEGORY: "category",
+    BATTLE_PHASE: "battlePhase",
+    FIXED_RESOURCE: "fixedResource",
+    STAR: "star",
+    RANKED_RESOURCE: "rankedResource",
+    OVERFLOWN_RESOURCE: "overflownResource",
+    DAMAGE_MODIFIERS: "damageModifiers",
 });
 
 export const starfallPhases = Object.freeze({
@@ -320,28 +320,4 @@ export const progKeys = Object.freeze({
     DEFEATED: 1,
     OPEN_UNDEFEATED: 2,
     LOCKED: 3,
-});
-
-export const mechanicKeys = Object.freeze({
-    TURN: "turn",
-    ROUND: "round",
-    ACTIONS: "actions",
-    UPKEEP: "upkeep",
-    PLAN: "plan",
-    COMMIT: "commit",
-    MANA_IMBALANCE: "manaImbalance",
-
-    RUNIC_PULSE: "runicPulse",
-    MANA_SIPHON: "manaSiphon",
-
-    EMANATION: "emanation",
-    OFFENSIVE_ACTIONS: "offensiveActions",
-    DEFENSIVE_ACTIONS: "defensiveActions",
-    TRANSFORMATIVE_ACTIONS: "transformativeActions",
-    ACTS_OF_BENEDICTION: "actsOfBenediction",
-    ACTS_OF_MALEDICTION: "actsOfMalediction",
-
-    MOON_PHASE: "moonPhase",
-
-    ANOINTMENT: "anointment",
 });

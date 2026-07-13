@@ -21,7 +21,6 @@ import {
     progKeys,
     sdmKeys,
     entityKeys,
-    mechanicKeys,
     entryTypes,
     roundPhases,
     elementalKeys,
@@ -97,7 +96,13 @@ const GIBBOUS_TEARS_GAIN = 1;
 
 const MAX_LUNACY = 100;
 
+const LUNAR_TIDE_MULT = 2;
+const SMITE_MULT = 5;
+const WITHER_LUNACY_MULT = 2;
+
 export const constants = {
+    WITHER_LUNACY_MULT,
+    LUNAR_TIDE_MULT,
     MAX_LUNACY,
     GIBBOUS_TEARS_GAIN,
     LUNAR_VEIL_TEARS_GAIN,
@@ -143,38 +148,27 @@ export const constants = {
     LUNAR_GROWTH_MULT,
 
     HIDDEN_MOON_ML_GAIN,
+    SMITE_MULT,
 };
 
-export const freeResources = [
-    effectKeys.SHADOWFLAME,
-    effectKeys.UNRELENTING_SHADOWS,
-    effectKeys.LINGERING_EMBER,
-    effectKeys.CINDERS,
-
-    effectKeys.POISON,
-    effectKeys.MANA_OVERFLOW,
-    effectKeys.SHACKLED_MANA,
-
-    effectKeys.BLOOD_SACRIFICE,
-
-    effectKeys.DOME,
-    effectKeys.STARDUST,
-
-    effectKeys.RADIANCE,
-    effectKeys.HALO,
-    effectKeys.INSPIRATION,
-
+export const MITIGATION_RESOURCES = [
     effectKeys.REFRACTED_DIVINITY,
-    effectKeys.MOONDUST,
-
-    effectKeys.SACRED_FLAMES,
+    effectKeys.HALO,
+    effectKeys.LINGERING_EMBER,
+    effectKeys.DOME,
 ];
 
-export const limitedResources = [
-    effectKeys.MANA,
-    effectKeys.HEALTH,
-    effectKeys.INSIGHT,
-    effectKeys.ENLIGHTENMENT,
+export const FREE_RESOURCES = [
+    effectKeys.SHADOWFLAME,
+    effectKeys.UNRELENTING_SHADOWS,
+    effectKeys.CINDERS,
+    effectKeys.POISON,
+    effectKeys.SHACKLED_MANA,
+    effectKeys.BLOOD_SACRIFICE,
+    effectKeys.STARDUST,
+    effectKeys.RADIANCE,
+    effectKeys.MOONDUST,
+    effectKeys.SACRED_FLAMES,
 ];
 
 export const presetAi = {
@@ -186,12 +180,12 @@ export const presetAi = {
         },
         caller: simpleAI,
         desc: [
-            mechanicKeys.ROUND,
-            mechanicKeys.TURN,
-            mechanicKeys.UPKEEP,
-            mechanicKeys.PLAN,
-            mechanicKeys.COMMIT,
-            mechanicKeys.ACTIONS,
+            effectKeys.ROUND,
+            effectKeys.TURN,
+            effectKeys.UPKEEP,
+            effectKeys.PLAN,
+            effectKeys.COMMIT,
+            effectKeys.ACTIONS,
             effectKeys.HEALTH,
             effectKeys.MAX_HEALTH,
             effectKeys.MANA,
@@ -214,9 +208,9 @@ export const presetAi = {
             entryTypes.MITIGATION_RESOURCE,
             entryTypes.BATTLE_PHASE,
             entryTypes.STAR,
-            mechanicKeys.OFFENSIVE_ACTIONS,
-            mechanicKeys.DEFENSIVE_ACTIONS,
-            mechanicKeys.TRANSFORMATIVE_ACTIONS,
+            effectKeys.OFFENSIVE_ACTIONS,
+            effectKeys.DEFENSIVE_ACTIONS,
+            effectKeys.TRANSFORMATIVE_ACTIONS,
         ],
     },
     [aiKeys.SIMPLE]: {
@@ -242,7 +236,7 @@ export const presetAi = {
         caller: warlockAI,
         desc: [
             actionKeys.SPECIAL_ATTACK,
-            mechanicKeys.MANA_IMBALANCE,
+            effectKeys.MANA_IMBALANCE,
             effectKeys.MANA_OVERFLOW,
         ],
     },
@@ -257,7 +251,7 @@ export const presetAi = {
             actionKeys.SACRIFICE,
             effectKeys.SACRIFICIAL_STATE,
             effectKeys.BLOOD_SACRIFICE,
-            mechanicKeys.MANA_BLEED,
+            effectKeys.MANA_BLEED,
         ],
     },
     [aiKeys.HEXER]: {
@@ -271,8 +265,8 @@ export const presetAi = {
             actionKeys.ARRAY,
             actionKeys.CURSE,
             effectKeys.RUNIC_ARRAY,
-            mechanicKeys.RUNIC_PULSE,
-            mechanicKeys.MANA_SIPHON,
+            effectKeys.RUNIC_PULSE,
+            effectKeys.MANA_SIPHON,
             effectKeys.SHACKLED_MANA,
             effectKeys.POISON,
         ],
@@ -419,8 +413,8 @@ export const presetAi = {
             effectKeys.ZENITH_OF_MORTALITY,
             actionKeys.ASCEND,
             effectKeys.ASCENDENCE_OF_SPIRIT,
-            mechanicKeys.ACTS_OF_BENEDICTION,
-            mechanicKeys.ACTS_OF_MALEDICTION,
+            effectKeys.ACTS_OF_BENEDICTION,
+            effectKeys.ACTS_OF_MALEDICTION,
             effectKeys.TARNISHED_SIN,
             effectKeys.EYE_OF_HEAVENS,
             effectKeys.INSIGHT,
@@ -444,7 +438,7 @@ export const presetAi = {
             actionKeys.JUDGEMENT,
             effectKeys.ABANDONED_BY_GRACE,
             effectKeys.ANOINTED_PROXY,
-            mechanicKeys.EMANATION,
+            effectKeys.EMANATION,
         ],
     },
 };
@@ -452,11 +446,14 @@ export const presetAi = {
 const offensiveActions = [
     actionKeys.ATTACK,
     actionKeys.SPECIAL_ATTACK,
+    actionKeys.SACRIFICE,
     actionKeys.LASER,
     actionKeys.MELTDOWN,
 
     actionKeys.LUNAR_STRIKE,
     actionKeys.LUNAR_SMITE,
+    actionKeys.LUNAR_TIDE,
+    actionKeys.CHALK,
 ];
 
 const defensiveActions = [
@@ -465,7 +462,6 @@ const defensiveActions = [
     actionKeys.AEGIS,
 
     actionKeys.LUNAR_GROWTH,
-    actionKeys.LUNAR_VEIL,
     actionKeys.LUNAR_SHROUD,
 ];
 
@@ -787,11 +783,11 @@ export const roundPhasesMap = {
         name: "Round Start",
     },
     [roundPhases.PLAYER_ONE_TURN]: {
-        descKey: mechanicKeys.TURN,
+        descKey: effectKeys.TURN,
         name: "Player One Turn",
     },
     [roundPhases.PLAYER_TWO_TURN]: {
-        descKey: mechanicKeys.TURN,
+        descKey: effectKeys.TURN,
         name: "Player Two Turn",
     },
     [roundPhases.ARRAY_TURN]: {
@@ -799,7 +795,7 @@ export const roundPhasesMap = {
         name: "Runic Pulse",
     },
     [roundPhases.EMINENCE_TURN]: {
-        descKey: mechanicKeys.EMANATION,
+        descKey: effectKeys.EMANATION,
         name: "Emanation",
     },
     [roundPhases.P1_STARS_TURN]: {
@@ -807,7 +803,7 @@ export const roundPhasesMap = {
         name: "Player One Starfall",
     },
     [roundPhases.MOON_TURN]: {
-        descKey: mechanicKeys.MOON_PHASE,
+        descKey: effectKeys.MOON_PHASE,
         name: "Moon Phase",
     },
     [roundPhases.P2_STARS_TURN]: {
@@ -815,11 +811,11 @@ export const roundPhasesMap = {
         name: "Player Two Starfall",
     },
     [roundPhases.SPECIAL_EMINENCE_TURN]: {
-        descKey: mechanicKeys.ANOINTMENT,
+        descKey: effectKeys.ANOINTMENT,
         name: "Anointment",
     },
     [roundPhases.MINI_ARRAY_TURN]: {
-        descKey: mechanicKeys.MANA_SIPHON,
+        descKey: effectKeys.MANA_SIPHON,
         name: "Mana Siphon",
     },
     [roundPhases.ROUND_END]: {
@@ -852,4 +848,23 @@ export const moonMap = {
 
     [moonKeys.WANING]: "WANING",
     [moonKeys.CORONAL]: "CORONAL",
+};
+
+export const entryTypesMap = {
+    [entryTypes.ACTION]: "ACTION",
+    [entryTypes.STATE]: "STATE",
+    [entryTypes.DAMAGE_TYPE]: "DAMAGE TYPE",
+    [entryTypes.FIELD_EFFECT]: "FIELD EFFECT",
+    [entryTypes.MECHANIC]: "MECHANIC",
+    [entryTypes.STAT]: "STAT",
+    [entryTypes.MITIGATION_RESOURCE]: "MITIGATION RESOURCE",
+    [entryTypes.FREE_RESOURCE]: "FREE RESOURCE",
+    [entryTypes.LIMITED_RESOURCE]: "LIMITED RESOURCE",
+    [entryTypes.CATEGORY]: "CATEGORY",
+    [entryTypes.BATTLE_PHASE]: "BATTLE PHASE",
+    [entryTypes.FIXED_RESOURCE]: "FIXED RESOURCE",
+    [entryTypes.STAR]: "STAR",
+    [entryTypes.RANKED_RESOURCE]: "RANKED RESOURCE",
+    [entryTypes.OVERFLOWN_RESOURCE]: "OVERFLOWN RESOURCE",
+    [entryTypes.DAMAGE_MODIFIERS]: "DAMAGE MODIFIER",
 };

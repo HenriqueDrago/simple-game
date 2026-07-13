@@ -41,11 +41,7 @@ export function processROYGBStar(
     };
 
     // Blue/Orange special logic
-    if (
-        (starKey === effectKeys.BLUE_STAR ||
-            starKey === effectKeys.ORANGE_STAR) &&
-        fracturedStars > 0
-    ) {
+    if (starKey === effectKeys.BLUE_STAR && fracturedStars > 0) {
         draftMaster = {
             ...draftMaster,
             stars: {
@@ -168,7 +164,7 @@ export function processTrail({ master, nonMaster }, trailKey) {
             break;
         }
         case effectKeys.ORANGE_TRAIL: {
-            const newEntities = processOrangeTrail(newContext, trails);
+            const newEntities = processOrangeStar(newContext, trails, 0);
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
             break;
@@ -227,11 +223,7 @@ export function processTrail({ master, nonMaster }, trailKey) {
     };
 }
 
-function processRedStar(
-    { master, nonMaster },
-    normalStars,
-    augmentedStars,
-) {
+function processRedStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -271,28 +263,19 @@ function processOrangeStar({ master, nonMaster }, normalStars, augmentedStars) {
         ...nonMaster,
     };
 
-    // Consume resoruce with normal stars
-    draftNonMaster = consumeResources(
-        draftNonMaster,
+    // Consume resources on self
+    draftMaster = consumeResources(
+        draftMaster,
         normalStars,
         effectKeys.ORANGE_STAR,
     ).draftEntity;
 
-    // Consume resources with augmented stars
+    // Consume resources on opponent
     draftNonMaster = consumeResources(
         draftNonMaster,
-        augmentedStars,
-        effectKeys.AUGMENTED_ORANGE_STAR,
+        normalStars + augmentedStars,
+        effectKeys.ORANGE_STAR,
     ).draftEntity;
-
-    // Removes stars on self
-    draftMaster = {
-        ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.ORANGE_STAR]: 0,
-        },
-    };
 
     return {
         draftMaster,
@@ -329,11 +312,7 @@ function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processGreenStar(
-    { master, nonMaster },
-    normalStars,
-    augmentedStars,
-) {
+function processGreenStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -437,50 +416,6 @@ function processBlueTrail({ master, nonMaster }, trails) {
             [effectKeys.DOME]:
                 draftMaster.resources[effectKeys.DOME] +
                 dimBlueConsumed +
-                dimIndigoConsumed,
-        },
-    };
-
-    return {
-        draftMaster,
-        draftNonMaster,
-    };
-}
-
-function processOrangeTrail({ master, nonMaster }, trails) {
-    let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
-    };
-
-    draftNonMaster = consumeResources(
-        draftNonMaster,
-        trails,
-        effectKeys.ORANGE_TRAIL,
-    ).draftEntity;
-
-    const dimOrangeConsumed = Math.min(
-        draftMaster.stars[effectKeys.DIMMED_ORANGE_STAR],
-        trails,
-    );
-
-    const dimIndigoConsumed = Math.min(
-        draftMaster.stars[effectKeys.DIMMED_INDIGO_STAR],
-        trails - dimOrangeConsumed,
-    );
-
-    draftMaster = {
-        ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.DIMMED_ORANGE_STAR]:
-                draftMaster.stars[effectKeys.DIMMED_ORANGE_STAR] -
-                dimOrangeConsumed,
-            [effectKeys.DIMMED_INDIGO_STAR]:
-                draftMaster.stars[effectKeys.DIMMED_INDIGO_STAR] -
                 dimIndigoConsumed,
         },
     };

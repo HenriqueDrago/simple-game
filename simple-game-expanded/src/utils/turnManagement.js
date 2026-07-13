@@ -38,6 +38,22 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     let newEye = prev[effectKeys.EYE_OF_HEAVENS];
     if (!prev[effectKeys.SEVERED_TIME]) {
+        // Dome
+        if (draftTarget.resources[effectKeys.DOME] > 0) {
+            const newStardust =
+                draftTarget.resources[effectKeys.STARDUST] +
+                draftTarget.resources[effectKeys.DOME];
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.DOME]: 0,
+                    [effectKeys.STARDUST]: newStardust,
+                }
+            }
+        }
+
         // Stardust
         if (draftTarget.resources[effectKeys.STARDUST] > 0) {
             const newStardust =
@@ -168,7 +184,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             draftTarget = takeDamage(
                 draftTarget,
                 draftTarget[effectKeys.MOONLIGHT],
-                dmgTypes.TRUE,
+                dmgTypes.LUNIC,
             );
         }
 
@@ -307,7 +323,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
         // Refracted Divinity
         if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
-            const newLunacy= Math.min(
+            const newLunacy = Math.min(
                 draftTarget.resources[effectKeys.REFRACTED_DIVINITY] +
                     draftTarget[effectKeys.LUNACY],
                 constants.MAX_LUNACY,
@@ -378,11 +394,11 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 darkEmbrace: false,
                 dimmingDarkness: false,
                 [effectKeys.PRISMATIC]: false,
+                [effectKeys.GIBBOUS]: false,
+                [effectKeys.MOON_DEW]: false,
             },
         };
     }
-
-    // Add death check later
 
     const newQueue = prev.playerQueue.slice(1);
 
@@ -1086,6 +1102,8 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
             },
         });
     }
+
+    console.log(master);
 
     // else, continue to next starfall
     return processDeathCheck({

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import Parser from "./Parser";
 import "./TooltipDisplay.css";
 import { DESCRIPTIONS } from "../utils/descriptions";
+import { entryTypesMap } from "../utils/constants";
 
 function TooltipDisplay({ tooltipStack, handleSetTooltip }) {
     const scrollRef = useRef(null);
@@ -68,7 +69,7 @@ function TooltipDisplay({ tooltipStack, handleSetTooltip }) {
                                 className="tooltip-type"
                                 onMouseDown={handleTypeMouseDown}
                             >
-                                {activeTooltip.type}
+                                {entryTypesMap[activeTooltip.type]}
                             </span>
                         </div>
 

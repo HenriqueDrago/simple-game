@@ -122,27 +122,15 @@ export const getNormalActions = (
     }
 
     return [
-        isElementActive(currEntity, elementalKeys.SCORCH)
+        isElementActive(currEntity, elementalKeys.ASH)
             ? {
-                  key: actionKeys.LUNAR_STRIKE,
-                  label: "Lunar Strike",
+                  key: actionKeys.LUNAR_SMITE,
+                  label: "Lunar Smite",
                   disabled: false,
               }
             : {
                   key: actionKeys.ATTACK,
                   label: "Attack",
-                  disabled: false,
-              },
-              
-        isElementActive(currEntity, elementalKeys.WITHER)
-            ? {
-                  key: actionKeys.LUNAR_VEIL,
-                  label: "Lunar Veil",
-                  disabled: false,
-              }
-            : {
-                  key: actionKeys.GUARD,
-                  label: "Guard",
                   disabled: false,
               },
               
@@ -153,15 +141,27 @@ export const getNormalActions = (
                   disabled: false,
               }
             : {
+                  key: actionKeys.GUARD,
+                  label: "Guard",
+                  disabled: false,
+              },
+              
+        isElementActive(currEntity, elementalKeys.OCEAN)
+            ? {
+                  key: actionKeys.LUNAR_TIDE,
+                  label: "Lunar Tide",
+                  disabled: false,
+              }
+            : {
                   key: actionKeys.HEAL,
                   label: "Heal",
                   disabled: false,
               },
               
-        isElementActive(currEntity, elementalKeys.ASH)
+        isElementActive(currEntity, elementalKeys.SCORCH)
             ? {
-                  key: actionKeys.LUNAR_SMITE,
-                  label: "Lunar Smite",
+                  key: actionKeys.LUNAR_STRIKE,
+                  label: "Lunar Strike",
                   disabled: false,
               }
             : {
@@ -170,10 +170,10 @@ export const getNormalActions = (
                   disabled: !canUseSpAtk,
               },
               
-        isElementActive(currEntity, elementalKeys.OCEAN)
+        isElementActive(currEntity, elementalKeys.WITHER)
             ? {
-                  key: actionKeys.LUNAR_TIDE,
-                  label: "Lunar Tide",
+                  key: actionKeys.LUNAR_SHED,
+                  label: "Lunar Shed",
                   disabled:
                       progMode &&
                       !(
