@@ -12,9 +12,10 @@ import {
     processExitAscendence,
     getEntityDef,
     getEntityStr,
-    isElementActive,
     getEntityTotalHealth,
     loseHp,
+    getEntityMaxHealth,
+    getEntityTotalMana,
 } from "./entities.js";
 import {
     actionKeys,
@@ -233,13 +234,13 @@ function simulateSpecialAttack({
         ...attacker,
     };
 
-    draftAttacker = loseMana(draftAttacker, constants.SP_ATTACK_COST);
-
     if (manaDiff > 0) {
         draftDefender = gainMana(defender, manaDiff);
     } else if (manaDiff < 0) {
         draftAttacker = gainMana(attacker, -manaDiff);
     }
+
+    draftAttacker = loseMana(draftAttacker, constants.SP_ATTACK_COST);
 
     return {
         ...prev,
@@ -260,15 +261,10 @@ function simulateHeal({ prev, agent, agentKey }) {
         ...agent,
     };
 
-    const totalMana =
-        agent[effectKeys.MANA] + agent.resources[effectKeys.MANA_OVERFLOW];
-
-    const base_heal = isElementActive(agent, elementalKeys.OCEAN)
-        ? totalMana
-        : Math.min(
-              agent[effectKeys.MAX_HEALTH] - agent[effectKeys.HEALTH],
-              totalMana,
-          );
+    const base_heal = Math.min(
+        getEntityMaxHealth(agent) - agent[effectKeys.HEALTH],
+        getEntityTotalMana(agent),
+    );
 
     draftAgent = gainHp(draftAgent, base_heal);
     draftAgent = loseMana(draftAgent, base_heal);
@@ -1203,11 +1199,18 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         (agent[effectKeys.MAX_INSIGHT] - agent[effectKeys.INSIGHT]) +
         (agent[effectKeys.MAX_ENLIGHTENMENT] - agent[effectKeys.ENLIGHTENMENT]);
 
+    console.log(extraDmg)
+    console.log((extraDmg * constants.SMITE_MULT))
+    console.log(1 + (extraDmg * constants.SMITE_MULT) / 100)
+
+    const baseDmg = Math.floor(agent[effectKeys.MOONLIGHT] * (1 + (extraDmg * constants.SMITE_MULT) / 100));
+    console.log(baseDmg)
+
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent[effectKeys.MOONLIGHT] * (extraDmg * constants.SMITE_MULT/100),
-        dmgTypes.PHYSICAL,
+        baseDmg,
+        dmgTypes.PIERCING,
         prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
@@ -1258,7 +1261,11 @@ function simulateLunarShed({ prev, agent, agentKey }) {
         },
     };
 
-    draftAgent = takeDamage(draftAgent, draftAgent[effectKeys.MOONLIGHT], dmgTypes.TRUE)
+    draftAgent = takeDamage(
+        draftAgent,
+        draftAgent[effectKeys.MOONLIGHT],
+        dmgTypes.TRUE,
+    );
 
     return {
         ...prev,

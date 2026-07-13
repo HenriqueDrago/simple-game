@@ -8,7 +8,6 @@ import SonorityCounter from "./SonorityCounter.jsx";
 import {
     constants,
     FREE_RESOURCES,
-    MITIGATION_RESOURCES,
     stackCounters,
 } from "../utils/constants.js";
 import {
@@ -28,6 +27,7 @@ import SelenianTracker from "./SelenianTracker.jsx";
 import { isElementActive } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
+import MitigationTracker from "./MitigationTracker.jsx";
 
 function StatsPanel({
     game,
@@ -44,8 +44,6 @@ function StatsPanel({
     const resources = entity.resources;
 
     const isAngelView = states.ascendenceOfSpirit;
-
-    const totalResources = [...MITIGATION_RESOURCES, ...FREE_RESOURCES];
 
     const currPhase =
         game.roundQueue && game.roundQueue.length > 0
@@ -375,8 +373,7 @@ function StatsPanel({
                 </>
             )}
 
-            {(entity[effectKeys.MOONLIT_TEARS] > 0 ||
-                entity.states[effectKeys.GIBBOUS]) && (
+            {entity[effectKeys.MOONLIT_TEARS] > 0 && (
                 <div
                     onMouseDown={(e) =>
                         spawnTooltip(
@@ -445,7 +442,7 @@ function StatsPanel({
             )}
 
             <div className="stacks-wrapper">
-                {totalResources.reverse().map((key) => {
+                {FREE_RESOURCES.reverse().map((key) => {
                     const counter = stackCounters[key];
 
                     if (!counter) {
@@ -469,6 +466,13 @@ function StatsPanel({
                 })}
             </div>
 
+            <div>
+                <MitigationTracker
+                    entity={entity}
+                    handleSetTooltip={handleSetTooltip}
+                />
+            </div>
+
             {!isAngelView && (
                 <div className="attributes-wrapper">
                     {constants.ATTRIBUTE_NAMES.map((attr) => (
@@ -480,6 +484,7 @@ function StatsPanel({
                             entityKey={entityKey}
                             attr={attr}
                             modifiable={distributionMode === sdmKeys.CUSTOM}
+                            handleSetTooltip={handleSetTooltip}
                         />
                     ))}
                 </div>

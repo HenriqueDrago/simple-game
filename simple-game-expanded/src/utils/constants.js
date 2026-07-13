@@ -86,7 +86,7 @@ const STARTING_ENERGY = 1;
 
 const RESOURCES_CINDERS_MULT = 2;
 
-const ALBEDO_ML_GAIN = 1;
+const ALBEDO_ML_GAIN = 2;
 const BLOOD_CORONA_ML_GAIN = 1;
 const MIRROR_ML_GAIN = 3;
 const LUNAR_GROWTH_MULT = 1;
@@ -452,7 +452,7 @@ const offensiveActions = [
 
     actionKeys.LUNAR_STRIKE,
     actionKeys.LUNAR_SMITE,
-    actionKeys.LUNAR_TIDE,
+    actionKeys.LUNAR_SHED,
     actionKeys.CHALK,
 ];
 
@@ -463,6 +463,7 @@ const defensiveActions = [
 
     actionKeys.LUNAR_GROWTH,
     actionKeys.LUNAR_SHROUD,
+    actionKeys.LUNAR_TIDE,
 ];
 
 const transformativeActions = [
@@ -627,15 +628,6 @@ export const stackCounters = {
 
     [effectKeys.MOONDUST]: {
         label: "Moondust",
-        style: {
-            color: "white",
-            borderColor: "white",
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
-        },
-    },
-
-    [effectKeys.REFRACTED_DIVINITY]: {
-        label: "Refracted Divinity",
         style: {
             color: "white",
             borderColor: "white",

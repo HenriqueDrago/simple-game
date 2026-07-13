@@ -50,8 +50,8 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                     ...draftTarget.resources,
                     [effectKeys.DOME]: 0,
                     [effectKeys.STARDUST]: newStardust,
-                }
-            }
+                },
+            };
         }
 
         // Stardust
@@ -571,9 +571,17 @@ export function buildRoundQueue(prev) {
             newQueue.push(value[0]);
         }
 
+        const hasStars = coloredStars.some(
+            (curr) => value[2].stars[curr.star] > 0,
+        );
+        const hasTrails = coloredStars.some(
+            (curr) => value[2].stars[curr.trail] > 0,
+        );
+
         if (
             !newQueue.includes(value[1]) &&
-            value[2].states[effectKeys.STARGAZER]
+            value[2].states[effectKeys.STARGAZER] &&
+            (hasStars || hasTrails)
         ) {
             newQueue.push(value[1]);
         }
@@ -871,26 +879,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
     let nonMaster = { ...prev.entities[nonMasterKey] };
 
     const currentPhase = prev.starQueue[0];
-
-    // exit condition: queue reached its end (empty), or there's no star and trails (and it's the initial phase)
-    const hasStars = coloredStars.some((curr) => master.stars[curr.star] > 0);
-    const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
-
-    if (
-        !prev.starQueue ||
-        prev.starQueue.length === 0 ||
-        (!hasStars &&
-            !hasTrails &&
-            currentPhase === starfallPhases.STARFALL_INIT)
-    ) {
-        return processDeathCheck({
-            ...prev,
-            starQueue: null,
-            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
-        });
-    }
-
-    // else, process current queue item
     const newQueue = prev.starQueue.slice(1);
 
     const context = {
@@ -1087,9 +1075,12 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         }
     }
 
-    // Add death check later
+    
+    // exit condition: If there's no trails at violet starfall, skip trails
+    const hasTrails = coloredStars.some(
+        (curr) => master.stars[curr.trail] > 0,
+    );
 
-    // exit condition 2: If there's no trails at violet starfall, skip trails
     if (!hasTrails && currentPhase === starfallPhases.VIOLET_STAR) {
         return processDeathCheck({
             ...prev,
@@ -1102,8 +1093,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
             },
         });
     }
-
-    console.log(master);
 
     // else, continue to next starfall
     return processDeathCheck({

@@ -384,7 +384,14 @@ export function dealDamage(
 
     // Lunic override
     if (dmgType === dmgTypes.LUNIC) {
-        draftDefender = loseHp(draftDefender, baseDmg, true);
+        draftDefender = {
+            ...draftDefender,
+            [effectKeys.MAX_HEALTH]:
+                draftDefender[effectKeys.MAX_HEALTH] - baseDmg,
+        };
+
+        draftDefender = loseHp(draftDefender, baseDmg);
+
         return {
             attacker: {
                 ...draftAttacker,
@@ -449,54 +456,17 @@ export function dealDamage(
 
     // Mitigation
     let damagePostMitigation = dmgPostReduction;
+    if (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) {
+        const consumptionResult = consumeMitigationResources(
+            draftDefender,
+            damagePostMitigation,
+            dmgType,
+        );
 
-    const domeConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  draftDefender.resources[effectKeys.DOME],
-              )
-            : 0;
-    damagePostMitigation -= domeConsumed;
-
-    const haloConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(damagePostMitigation, draftDefender.resources.halo)
-            : 0;
-    damagePostMitigation -= haloConsumed;
-
-    const divinityConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  draftDefender.resources[effectKeys.REFRACTED_DIVINITY],
-              )
-            : 0;
-    damagePostMitigation -= divinityConsumed;
-
-    const emberConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  draftDefender.resources.lingeringEmber,
-              )
-            : 0;
-    damagePostMitigation -= emberConsumed;
-
-    const defenderNewHalo = draftDefender.resources.halo - haloConsumed;
-    const defenderNewEmbers =
-        draftDefender.resources.lingeringEmber - emberConsumed;
-    const defenderNewDome =
-        draftDefender.resources[effectKeys.DOME] - domeConsumed;
-
-    const defenderNewRadiance = draftDefender.resources.radiance + haloConsumed;
-    const newCinders = draftDefender.resources.cinders + emberConsumed;
-
-    const newDivinity =
-        draftDefender.resources[effectKeys.REFRACTED_DIVINITY] -
-        divinityConsumed;
-    const newMoondust =
-        draftDefender.resources[effectKeys.MOONDUST] + divinityConsumed;
+        draftDefender = consumptionResult.draftEntity;
+        damagePostMitigation =
+            consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
+    }
 
     // Shackled Mana thorns
     const thornsDmg =
@@ -528,20 +498,6 @@ export function dealDamage(
         draftDefender = loseHp(draftDefender, damagePostMitigation);
     }
 
-    draftDefender = {
-        ...draftDefender,
-        resources: {
-            ...draftDefender.resources,
-            [effectKeys.HALO]: defenderNewHalo,
-            [effectKeys.LINGERING_EMBER]: defenderNewEmbers,
-            [effectKeys.RADIANCE]: defenderNewRadiance,
-            [effectKeys.CINDERS]: newCinders,
-            [effectKeys.DOME]: defenderNewDome,
-            [effectKeys.REFRACTED_DIVINITY]: newDivinity,
-            [effectKeys.MOONDUST]: newMoondust,
-        },
-    };
-
     // Wither Moonlit Gain
     if (isElementActive(draftDefender, elementalKeys.WITHER)) {
         draftDefender = {
@@ -569,7 +525,12 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     // Lunic override
     if (dmgType === dmgTypes.LUNIC) {
-        draftEntity = loseHp(draftEntity, baseDmg, true);
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.MAX_HEALTH]:
+                draftEntity[effectKeys.MAX_HEALTH] - baseDmg,
+        };
+        draftEntity = loseHp(draftEntity, baseDmg);
         return draftEntity;
     }
 
@@ -603,35 +564,18 @@ export function takeDamage(entity, baseDmg, dmgType) {
         Math.floor((baseDmg - flatDr) * drMult * frailMult),
     );
 
-    // Mitigation
     let damagePostMitigation = finalDmg;
+    if (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) {
+        const consumptionResult = consumeMitigationResources(
+            draftEntity,
+            finalDmg,
+            dmgType,
+        );
 
-    const domeConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(damagePostMitigation, entity.resources[effectKeys.DOME])
-            : 0;
-    damagePostMitigation -= domeConsumed;
-
-    const haloConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(damagePostMitigation, entity.resources.halo)
-            : 0;
-    damagePostMitigation -= haloConsumed;
-
-    const divinityConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(
-                  damagePostMitigation,
-                  draftEntity.resources[effectKeys.REFRACTED_DIVINITY],
-              )
-            : 0;
-    damagePostMitigation -= divinityConsumed;
-
-    const emberConsumed =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? Math.min(damagePostMitigation, entity.resources.lingeringEmber)
-            : 0;
-    damagePostMitigation -= emberConsumed;
+        draftEntity = consumptionResult.draftEntity;
+        damagePostMitigation =
+            consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
+    }
 
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         if (dmgType === dmgTypes.TRUE) {
@@ -653,17 +597,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
         draftEntity = loseHp(draftEntity, damagePostMitigation);
     }
 
-    const newHalo = entity.resources.halo - haloConsumed;
-    const newEmbers = entity.resources.lingeringEmber - emberConsumed;
-    const newRadiance = entity.resources.radiance + haloConsumed;
-    const newCinders = entity.resources.cinders + emberConsumed;
-    const newDome = entity.resources[effectKeys.DOME] - domeConsumed;
-
-    const newDivinity =
-        entity.resources[effectKeys.REFRACTED_DIVINITY] - divinityConsumed;
-    const newMoondust =
-        entity.resources[effectKeys.MOONDUST] + divinityConsumed;
-
     // Wither Moonlit Gain
     if (isElementActive(draftEntity, elementalKeys.WITHER)) {
         draftEntity = {
@@ -676,16 +609,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     return {
         ...draftEntity,
-        resources: {
-            ...draftEntity.resources,
-            [effectKeys.HALO]: newHalo,
-            [effectKeys.LINGERING_EMBER]: newEmbers,
-            [effectKeys.RADIANCE]: newRadiance,
-            [effectKeys.CINDERS]: newCinders,
-            [effectKeys.DOME]: newDome,
-            [effectKeys.REFRACTED_DIVINITY]: newDivinity,
-            [effectKeys.MOONDUST]: newMoondust,
-        },
     };
 }
 
@@ -811,7 +734,7 @@ export function gainHp(entity, amount) {
     return draftEntity;
 }
 
-export function loseHp(entity, amount, lunic = false) {
+export function loseHp(entity, amount) {
     const initialAmount = amount;
     let draftEntity = {
         ...entity,
@@ -845,15 +768,6 @@ export function loseHp(entity, amount, lunic = false) {
     };
 
     amount -= hpConsumed;
-
-    // Max Health
-    if (lunic) {
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.MAX_HEALTH]:
-                draftEntity[effectKeys.MAX_HEALTH] - hpConsumed,
-        };
-    }
 
     // Wither
     if (isElementActive(entity, elementalKeys.WITHER)) {
@@ -1026,6 +940,8 @@ export function exitAllStates(entity) {
         ...draftEntity,
         states: {
             ...createBaseEntity().states,
+            [effectKeys.CUTOFF_WINGS]:
+                draftEntity.states[effectKeys.CUTOFF_WINGS],
         },
     };
 
@@ -1192,32 +1108,6 @@ export function processDeathCheck(prev) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    // Convert Silver Blood into Health
-    if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
-        const missingHp = Math.max(
-            0,
-            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
-        );
-
-        const silverConsumed = Math.min(
-            missingHp,
-            draftEntity.resources[effectKeys.SILVER_BLOOD],
-        );
-
-        const newHp = draftEntity[effectKeys.HEALTH] + silverConsumed;
-        const silverBlood =
-            draftEntity.resources[effectKeys.SILVER_BLOOD] - silverConsumed;
-
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.HEALTH]: newHp,
-            resources: {
-                ...draftEntity.resources,
-                [effectKeys.SILVER_BLOOD]: silverBlood,
-            },
-        };
-    }
-
     if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
         draftEntity = {
             ...draftEntity,
@@ -1240,7 +1130,8 @@ export function processEntityDeathStates(entity) {
 
 export function isEntityDead(entity) {
     return (
-        getEntityTotalHealth(entity) <= 0 &&
+        (getEntityTotalHealth(entity) <= 0 ||
+            getEntityMaxHealth(entity) <= 0) &&
         !entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
         entity[effectKeys.BURDEN_OF_STIGMA] <= 0
     );
@@ -1373,7 +1264,7 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 currResourceKey === effectKeys.LINGERING_EMBER
             )
         ) {
-            const currAmount = draftEntity.resources[currResourceKey];
+            const currAmount = draftEntity.resources[currResourceKey] || 0;
             const consumption = Math.min(currAmount, amount);
 
             amount -= consumption;
@@ -1397,24 +1288,26 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 isCauseDamage &&
                 currResourceKey === effectKeys.LINGERING_EMBER
             ) {
+                const currentCinders =
+                    draftEntity.resources[effectKeys.CINDERS];
                 draftEntity = {
                     ...draftEntity,
                     resources: {
                         ...draftEntity.resources,
-                        [effectKeys.CINDERS]:
-                            draftEntity[effectKeys.CINDERS] + consumption,
+                        [effectKeys.CINDERS]: currentCinders + consumption,
                     },
                 };
             }
 
             // Halo
             if (isCauseDamage && currResourceKey === effectKeys.HALO) {
+                const currentRadiance =
+                    draftEntity.resources[effectKeys.RADIANCE];
                 draftEntity = {
                     ...draftEntity,
                     resources: {
                         ...draftEntity.resources,
-                        [effectKeys.RADIANCE]:
-                            draftEntity[effectKeys.RADIANCE] + consumption,
+                        [effectKeys.RADIANCE]: currentRadiance + consumption,
                     },
                 };
             }
@@ -1424,12 +1317,13 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 isCauseDamage &&
                 currResourceKey === effectKeys.REFRACTED_DIVINITY
             ) {
+                const currentMoondust =
+                    draftEntity.resources[effectKeys.MOONDUST];
                 draftEntity = {
                     ...draftEntity,
                     resources: {
                         ...draftEntity.resources,
-                        [effectKeys.MOONDUST]:
-                            draftEntity[effectKeys.MOONDUST] + consumption,
+                        [effectKeys.MOONDUST]: currentMoondust + consumption,
                     },
                 };
             }
@@ -1646,4 +1540,61 @@ export function consumeResources(entity, amount, cause = null) {
         draftEntity,
         resourcesConsumed,
     };
+}
+
+export function processSilverBlood(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    // Converts excess Health into Silver Blood
+    if (draftEntity[effectKeys.HEALTH] > draftEntity[effectKeys.MAX_HEALTH]) {
+        const excessHealth = Math.max(
+            0,
+            draftEntity[effectKeys.HEALTH] - getEntityMaxHealth(draftEntity),
+        );
+        const newHp = Math.min(
+            draftEntity[effectKeys.HEALTH],
+            getEntityMaxHealth(draftEntity),
+        );
+        const silverBlood =
+            draftEntity.resources[effectKeys.SILVER_BLOOD] + excessHealth;
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.HEALTH]: newHp,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.SILVER_BLOOD]: silverBlood,
+            },
+        };
+    }
+
+    // Convert Silver Blood into Health
+    if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
+        const missingHp = Math.max(
+            0,
+            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
+        );
+
+        const silverConsumed = Math.min(
+            missingHp,
+            draftEntity.resources[effectKeys.SILVER_BLOOD],
+        );
+
+        const newHp = draftEntity[effectKeys.HEALTH] + silverConsumed;
+        const silverBlood =
+            draftEntity.resources[effectKeys.SILVER_BLOOD] - silverConsumed;
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.HEALTH]: newHp,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.SILVER_BLOOD]: silverBlood,
+            },
+        };
+    }
+
+    return draftEntity;
 }

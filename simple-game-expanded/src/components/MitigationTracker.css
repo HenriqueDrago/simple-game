@@ -1,0 +1,87 @@
+.mitigation-tracker-container {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    width: 100%;
+    justify-content: space-between;
+}
+
+/* Shared structural styling mimicking tight setting frames */
+.ember-container,
+.halo-container,
+.refracted-divinity-container,
+.dome-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    flex: 1; /* Maintains strict uniform box ratios across the row */
+    background-color: #000000; /* Deep black flat color match */
+    border: 2px solid transparent;
+    border-radius: 0; /* Enforces strict geometric UI */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+}
+
+/* Compact scale configuration for icons inside rows */
+.svg-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    display: inline-flex;
+}
+
+/* Typography matching standard compact dashboard numbers */
+.mitigation-tracker-container span {
+    font-size: 0.9rem;
+    font-weight: 900;
+    font-family: inherit;
+}
+
+/* Lingering Ember (Vivid Red/Pink) */
+.ember-container {
+    color: #f50057; /* Matches Lingering Ember palette constant */
+    border-color: rgba(245, 0, 87, 0.25);
+}
+.ember-container:not(.zero-resource):hover {
+    border-color: #f50057;
+    box-shadow: 0 0 8px rgba(245, 0, 87, 0.4);
+}
+
+/* Halo (Pale Holy Yellow) */
+.halo-container {
+    color: #fff59d; /* Matches Halo palette constant */
+    border-color: rgba(255, 245, 157, 0.25);
+}
+.halo-container:not(.zero-resource):hover {
+    border-color: #fff59d;
+    box-shadow: 0 0 8px rgba(255, 245, 157, 0.4);
+}
+
+/* Refracted Divinity (Frost Cyan) */
+.refracted-divinity-container {
+    color: #00f0ff; /* Shifted to Frost elemental root */
+    border-color: rgba(0, 240, 255, 0.25);
+}
+.refracted-divinity-container:not(.zero-resource):hover {
+    border-color: #00f0ff;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+
+/* Dome (Deep Cosmic Star Blue) */
+.dome-container {
+    color: #3d5afe; /* Shifted deep to prevent cyan overlap */
+    border-color: rgba(61, 90, 254, 0.25);
+}
+.dome-container:not(.zero-resource):hover {
+    border-color: #3d5afe;
+    box-shadow: 0 0 8px rgba(61, 90, 254, 0.4);
+}
+
+.mitigation-tracker-container .zero-resource {
+    color: #757575; /* Completely desaturates text and icon lines */
+    border-color: rgba(255, 255, 255, 0.08); /* Fades border down to base container outline style */
+    filter: grayscale(100%); /* Drains localized theme values */
+    opacity: 0.35; /* Blends context directly into dark background matching system configs */
+    pointer-events: none; /* Prevents cursor pointer triggers on dead resource cells */
+}

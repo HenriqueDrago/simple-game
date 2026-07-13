@@ -2,11 +2,12 @@ import "./AttrLine.css";
 
 import { elementalKeys, turnStatus } from "../utils/enums";
 import { getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
+import { spawnTooltip } from "../utils/dictionary";
 
 const gettersMap = {
     str: getEntityStr,
     def: getEntityDef,
-}
+};
 
 function AttrLine({
     battleState,
@@ -15,17 +16,22 @@ function AttrLine({
     attr,
     entity,
     entityKey,
+    handleSetTooltip
 }) {
-    if(entity.attributes[attr].value == null) {
+    if (entity.attributes[attr].value == null) {
         return null;
     }
 
     let specialClass = "";
-    if(attr === "str") {
-        specialClass = isElementActive(entity, elementalKeys.SCORCH) ? "stat-value-str" : "";
+    if (attr === "str") {
+        specialClass = isElementActive(entity, elementalKeys.SCORCH)
+            ? "stat-value-str"
+            : "";
     }
-    if(attr === "def") {
-        specialClass = isElementActive(entity, elementalKeys.FROST) ? "stat-value-def" : "";
+    if (attr === "def") {
+        specialClass = isElementActive(entity, elementalKeys.FROST)
+            ? "stat-value-def"
+            : "";
     }
 
     const showControls = modifiable && battleState === turnStatus.SETUP;
@@ -33,11 +39,17 @@ function AttrLine({
     return (
         <div className="status-line-container">
             {showControls ? (
-                <p className="changeable-status">
+                <p
+                    className="changeable-status"
+                    onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, attr)}
+                >
                     {attr.toUpperCase() + ": " + gettersMap[attr](entity)}
                 </p>
             ) : (
-                <p className="non-changeable-status">
+                <p
+                    className="non-changeable-status"
+                    onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, attr)}
+                >
                     {attr.toUpperCase() + ": "}
                     <span className={specialClass}>
                         {gettersMap[attr](entity)}

@@ -327,7 +327,7 @@ export const DAMAGE_TYPE_DESCRIPTIONS = {
         name: "LUNIC DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES. When decreasing HEALTH, decreases MAX HEALTH as well. MAX HEALTH can become negative as a consequence of this effect.",
+            "Reduces the target's HEALTH and MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES.",
     },
 };
 
@@ -895,14 +895,14 @@ export const MECHANIC_DESCRIPTIONS = {
 
     [effectKeys.MAX_MANA]: {
         name: "MAX MANA",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.MECHANIC, 
         description: "Starts at 10. Limits how much MANA you can hold.",
     },
 
     [effectKeys.MAX_HEALTH]: {
         name: "MAX HEALTH",
         type: entryTypes.MECHANIC,
-        description: "Starts at 20. Limits how much HEALTH you can hold.",
+        description: "Starts at 20. Limits how much HEALTH you can hold. If MAX HEALTH is 0 or lower, lose the battle.",
     },
 
     
