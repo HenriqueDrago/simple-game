@@ -19,15 +19,15 @@ import {
     playerTurnPhases,
     elementalKeys,
 } from "../utils/enums.js";
-import { getSonorityColor } from "../utils/getters.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
-import { isElementActive } from "../utils/entities.js";
+import { getEntityMaxHealth, isElementActive } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
 import MitigationTracker from "./MitigationTracker.jsx";
+import { getSonorityColor } from "../utils/getters.js";
 
 function StatsPanel({
     game,
@@ -43,7 +43,7 @@ function StatsPanel({
     const states = entity.states;
     const resources = entity.resources;
 
-    const isAngelView = states.ascendenceOfSpirit;
+    const isAngelView = states[effectKeys.ASCENDENCE_OF_SPIRIT];
 
     const currPhase =
         game.roundQueue && game.roundQueue.length > 0
@@ -63,21 +63,31 @@ function StatsPanel({
             currPhase === roundPhases.PLAYER_TWO_TURN &&
             currPlayerPhase === playerTurnPhases.PLAN);
 
+    const showWarning = isEntityTurn && getEntityMaxHealth(entity) <= 0;
+
     const stateClassMap = {
-        ascendenceOfSpirit: "state-ascendence",
-        umbralCore: "state-umbral",
-        resonant: "state-resonant",
-        weaponsDeployed: "state-weapons-deployed",
-        thermalOverload: "state-thermal-overload",
-        venting: "state-venting",
-        guarding: "state-guarding",
-        sacrificial: "state-sacrificial",
-        radiant: "state-radiant",
-        deployment: "state-deployment",
-        darkEmbrace: "state-dark-embrace",
-        dimmingDarkness: "state-dimming",
-        bleakDeception: "state-bleak-deception",
-        cutoffWings: "state-cutoff-wings",
+        [effectKeys.ASCENDENCE_OF_SPIRIT]: "state-ascendence",
+        [effectKeys.UMBRAL_CORE]: "state-umbral",
+        [effectKeys.RESONANT]: "state-resonant",
+        [effectKeys.WEAPONS_DEPLOYED]: "state-weapons-deployed",
+        [effectKeys.THERMAL_OVERLOAD]: "state-thermal-overload",
+        [effectKeys.VENTING]: "state-venting",
+        [effectKeys.GUARDING_STATE]: "state-guarding",
+        [effectKeys.SACRIFICIAL_STATE]: "state-sacrificial",
+        [effectKeys.RADIANT]: "state-radiant",
+        [effectKeys.DEPLOYMENT]: "state-deployment",
+        [effectKeys.DARK_EMBRACE]: "state-dark-embrace",
+        [effectKeys.DIMMING_DARKNESS]: "state-dimming",
+        [effectKeys.BLEAK_DECEPTION]: "state-bleak-deception",
+        [effectKeys.CUTOFF_WINGS]: "state-cutoff-wings",
+        [effectKeys.STARGAZER]: "state-stargazer",
+        [effectKeys.ZENITH_OF_MORTALITY]: "state-zenith",
+        [effectKeys.ABANDONED_BY_GRACE]: "state-abandoned",
+        [effectKeys.ANOINTED_PROXY]: "state-anointed-proxy",
+        [effectKeys.SELENIAN]: "state-selenian",
+        [effectKeys.PRISMATIC]: "state-prismatic",
+        [effectKeys.GIBBOUS]: "state-gibbous",
+        [effectKeys.MOON_DEW]: "state-moon-dew",
     };
 
     const activeStates = Object.keys(stateClassMap)
@@ -86,14 +96,13 @@ function StatsPanel({
 
     const statesClass = activeStates.join(" ");
 
-    // Dynamic Style Generation
     const dynamicStyles = {};
 
-    if (states.resonant) {
+    if (states[effectKeys.RESONANT]) {
         dynamicStyles["--resonant-color"] = getSonorityColor(entity.sonority);
     }
 
-    if (states.ascendenceOfSpirit) {
+    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         let ascColor = "#FFD700";
         let ascShadow = "rgba(255, 215, 0, 0.4)";
         let ascInset = "rgba(255, 255, 255, 0.3)";
@@ -304,9 +313,9 @@ function StatsPanel({
                     </div>
 
                     {(entity.states[effectKeys.DEPLOYMENT] ||
-                        entity.states.weaponsDeployed ||
-                        entity.states.thermalOverload ||
-                        entity.states.venting) && (
+                        entity.states[effectKeys.WEAPONS_DEPLOYED] ||
+                        entity.states[effectKeys.THERMAL_OVERLOAD] ||
+                        entity.states[effectKeys.VENTING]) && (
                         <>
                             <div
                                 onMouseDown={(e) =>
@@ -490,13 +499,19 @@ function StatsPanel({
                 </div>
             )}
 
-            {states.resonant && (
+            {states[effectKeys.RESONANT] && (
                 <div
                     onMouseDown={(e) =>
                         spawnTooltip(e, handleSetTooltip, effectKeys.SONORITY)
                     }
                 >
                     <SonorityCounter sonority={entity.sonority} />
+                </div>
+            )}
+
+            {showWarning && (
+                <div className="stats-panel-warning">
+                    Warning: You will die upon selecting an action!
                 </div>
             )}
         </div>

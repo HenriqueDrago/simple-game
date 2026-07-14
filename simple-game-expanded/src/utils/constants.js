@@ -762,11 +762,10 @@ export const INITIAL_GAME_STATE = {
 
 export const CHECKPOINT_STATES = [
     turnStatus.SETUP,
-    turnStatus.TRANSITION,
-    turnStatus.SHORT_TRANSITION,
     turnStatus.VICTORY,
     turnStatus.DEFEAT,
     turnStatus.DRAW,
+    turnStatus.ROUND_TRANSITION,
 ];
 
 export const roundPhasesMap = {

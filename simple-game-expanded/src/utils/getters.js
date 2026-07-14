@@ -68,17 +68,27 @@ export const getAngelActions = () => [
 
 export const getSonorityColor = (sonority) => {
     const colors = {
+        "-10": "#ff0000",
+        "-9": "#ff0d00",
+        "-8": "#ff1b00",
+        "-7": "#ff2900",
+        "-6": "#ff3700",
         "-5": "#ff4500",
         "-4": "#ff6a33",
         "-3": "#ff8f66",
         "-2": "#ffb499",
         "-1": "#ffdacc",
-        0: "#ffffff",
-        1: "#ccf2ff",
-        2: "#99e5ff",
-        3: "#66d9ff",
-        4: "#33ccff",
-        5: "#00bfff",
+        "0": "#ffffff",
+        "1": "#ccf2ff",
+        "2": "#99e5ff",
+        "3": "#66d9ff",
+        "4": "#33ccff",
+        "5": "#00bfff",
+        "6": "#00a6ff",
+        "7": "#008cff",
+        "8": "#0073ff",
+        "9": "#0059ff",
+        "10": "#0040ff",
     };
     return colors[sonority] || "#ffffff";
 };

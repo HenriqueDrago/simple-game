@@ -5,6 +5,7 @@ import {
     elementalKeys,
     entryTypes,
     moonKeys,
+    roundPhases,
 } from "./enums";
 
 export const ACTION_DESCRIPTIONS = {
@@ -366,7 +367,7 @@ export const STAR_DESCRIPTIONS = {
         name: "STARFALL",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. Starfall phases are skipped if the user has no colored stars on self. Trailfall phases are skipped if the user has no trails on self.",
+            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. This phase is skipped if the corresponding entity hasn't assigned any stars. Trailfall subphases are skipped if the corresponding entity has no trails on self by end of the VIOLET STARFALL.",
     },
 
     [effectKeys.RED_STARFALL]: {
@@ -967,7 +968,21 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         name: "ROUND",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A full game cycle. A basic ROUND consists of a single TURN from each player, but can be extended via additional phases. A full ROUND can be subdivided as follows: FIRST PLAYER TURN, FIRST PLAYER STARFALL, RUNIC INSCRIPTION, SECOND PLAYER TURN, SECOND PLAYER STARFALL, RUNIC INSCRIPTION, MOON PHASE and EMANATION.",
+            "A full game cycle. A basic ROUND consists of: ROUND START, PLAYER ONE TURN, PLAYER TWO TURN and ROUND END, but can be extended via additional phases. A complete game round may consist of: ROUND START, PLAYER ONE TURN, PLAYER ONE STARFALL, RUNIC PULSE, PLAYER TWO TURN, PLAYER TWO STARFALL, RUNIC PULSE, MOON PHASE, EMANATION and ROUND END, disregarding MANA SHIPHON and ANOINTMENT, which can be triggered at any given time between ROUND START and ROUND END.",
+    },
+
+    [roundPhases.ROUND_START]: {
+        name: "ROUND START",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A transitional phase at the start of a ROUND.",
+    },
+
+    [roundPhases.ROUND_END]: {
+        name: "ROUND END",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A transitional phase at the end of a ROUND.",
     },
 
     [effectKeys.TURN]: {
@@ -1339,7 +1354,7 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "GIBBOUS",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. At turn start, restores HEALTH equal to MOONLIGHT on self, then, loses this state.",
+            "Raises DAMAGE REDUCTION by 50%.",
     },
 
     [elementalKeys.ASH]: {

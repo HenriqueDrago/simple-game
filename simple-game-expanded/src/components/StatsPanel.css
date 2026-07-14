@@ -99,18 +99,84 @@
     box-shadow: 0 0 15px rgba(75, 0, 130, 0.5), inset 0 0 20px rgba(40, 0, 40, 0.5);
 }
 
-/* Cutoff Wings */
-.stats-panel-container.state-cutoff-wings {
-    border-color: #ffd700; 
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 25px rgba(255, 255, 255, 0.4);
+/* Stargazer: Cosmic cosmic shimmer */
+.stats-panel-container.state-stargazer {
+    border-color: #ffb347;
+    background: linear-gradient(to bottom, rgba(26, 18, 48, 0.9), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 15px rgba(255, 179, 71, 0.45), inset 0 0 20px rgba(123, 104, 238, 0.25);
 }
 
-/* =========================================
-   UTILITIES
-========================================= */
+.stats-panel-container.state-zenith {
+    border-color: #f0f4f8; /* Soft platinum white */
+    background: linear-gradient(to bottom, rgba(240, 244, 248, 0.08), rgba(15, 15, 20, 0.9));
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.45), inset 0 0 20px rgba(173, 216, 230, 0.35); /* Celestial blue inner glow */
+}
+
+/* Abandoned by Grace: Dark, bloody crimson overlay */
+.stats-panel-container.state-abandoned {
+    border-color: #8b0000;
+    background: linear-gradient(to bottom, rgba(42, 0, 0, 0.9), rgba(10, 10, 12, 0.95));
+    box-shadow: 0 0 18px rgba(139, 0, 0, 0.6), inset 0 0 25px rgba(0, 0, 0, 0.85);
+}
+
+/* Anointed Proxy: Bright golden-white holy aura */
+.stats-panel-container.state-anointed-proxy {
+    border-color: #fff9d4;
+    background: linear-gradient(to bottom, rgba(255, 249, 212, 0.15), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 22px rgba(255, 249, 212, 0.55), inset 0 0 15px rgba(255, 255, 255, 0.25);
+}
+
+/* Selenian: Ethereal silver-blue lunar aura */
+.stats-panel-container.state-selenian {
+    border-color: #80d8ff;
+    background: linear-gradient(to bottom, rgba(128, 216, 255, 0.12), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 15px rgba(128, 216, 255, 0.45), inset 0 0 15px rgba(128, 216, 255, 0.2);
+}
+
+/* Prismatic: Shifting pastel crystal highlights */
+.stats-panel-container.state-prismatic {
+    border-color: #ff8a80;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 18px rgba(255, 138, 128, 0.4), inset 0 0 20px rgba(128, 216, 255, 0.3);
+    animation: prismatic-glow 3s infinite alternate ease-in-out;
+}
+
+/* Gibbous: Heavy stonelike deep slate/silver armor */
+.stats-panel-container.state-gibbous {
+    border-color: #b0bec5;
+    background: rgba(38, 50, 56, 0.9);
+    box-shadow: 0 0 12px rgba(176, 190, 197, 0.5), inset 0 0 15px rgba(176, 190, 197, 0.25);
+}
+
+/* Moon Dew: Vibrant aquamarine mist */
+.stats-panel-container.state-moon-dew {
+    border-color: #4fc3f7;
+    background: linear-gradient(to bottom, rgba(79, 195, 247, 0.15), rgba(15, 15, 20, 0.85));
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.4), inset 0 0 12px rgba(79, 195, 247, 0.2);
+}
+
+.stats-panel-warning {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 8px;
+}
+
 @keyframes overload-pulse {
     from { box-shadow: 0 0 15px rgba(255, 51, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.2); }
     to { box-shadow: 0 0 25px rgba(255, 51, 0, 0.8), inset 0 0 20px rgba(255, 0, 0, 0.6); }
+}
+
+@keyframes zenith-glow {
+    from { box-shadow: 0 0 12px rgba(255, 215, 0, 0.35), inset 0 0 10px rgba(255, 215, 0, 0.15); }
+    to { box-shadow: 0 0 24px rgba(255, 215, 0, 0.7), inset 0 0 20px rgba(255, 215, 0, 0.4); }
+}
+
+@keyframes prismatic-glow {
+    0% { border-color: #ff8a80; box-shadow: 0 0 15px rgba(255, 138, 128, 0.4); }
+    50% { border-color: #b9f6ca; box-shadow: 0 0 15px rgba(185, 246, 202, 0.4); }
+    100% { border-color: #82b1ff; box-shadow: 0 0 15px rgba(130, 177, 255, 0.4); }
 }
 
 .stacks-wrapper {
@@ -124,7 +190,7 @@
     align-items: center;
     padding: 6px 0;
     border-bottom: 2px solid transparent;
-    border-image: linear-gradient(to right, cyan, lime, yellow) 1;
+    border-image: linear-gradient(to right, cyan, lime, yellow);
 }
 
 .energy-line-label {
@@ -139,4 +205,3 @@
     font-weight: 900;
     color: #ffff00;
 }
-

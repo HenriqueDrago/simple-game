@@ -518,9 +518,10 @@ function App() {
     }
 
     // Efeitos
-
     // Turn Management
     useEffect(() => {
+        if (continueModal) return;
+
         if (game.status === turnStatus.ONGOING) {
             // Rebuilds the queue
             let gameState = {
@@ -690,11 +691,17 @@ function App() {
                 }
             };
         }
-    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue]);
+    }, [
+        game.status,
+        game.roundIndex,
+        game.playerQueue,
+        game.starQueue,
+        continueModal,
+    ]);
 
     // AI turn
     useEffect(() => {
-        if (game.status !== turnStatus.ONGOING) {
+        if (continueModal || game.status !== turnStatus.ONGOING) {
             return;
         }
 
@@ -739,10 +746,18 @@ function App() {
 
             return () => clearTimeout(aiTimer);
         }
-    }, [game.status, game.roundIndex, game.playerQueue, handleAction]);
+    }, [
+        game.status,
+        game.roundIndex,
+        game.playerQueue,
+        handleAction,
+        continueModal,
+    ]);
 
     // Round Transition
     useEffect(() => {
+        if (continueModal) return;
+
         if (game.status === turnStatus.ROUND_TRANSITION) {
             const timer = setTimeout(() => {
                 setGame((prev) => ({
@@ -754,10 +769,12 @@ function App() {
 
             return () => clearTimeout(timer);
         }
-    }, [game.status]);
+    }, [game.status, continueModal]);
 
     // Starfall Transition
     useEffect(() => {
+        if (continueModal) return;
+
         if (game.status === turnStatus.STARFALL_TRANSITION) {
             const timer = setTimeout(() => {
                 setGame((prev) => ({
@@ -768,11 +785,16 @@ function App() {
 
             return () => clearTimeout(timer);
         }
-    }, [game.status]);
+    }, [game.status, continueModal]);
 
     // Progression Tracker
     useEffect(() => {
-        if (game.status !== turnStatus.VICTORY || !game.progressMode) return;
+        if (
+            continueModal ||
+            game.status !== turnStatus.VICTORY ||
+            !game.progressMode
+        )
+            return;
 
         setGame((prev) => {
             const currController =
@@ -805,10 +827,12 @@ function App() {
                 },
             };
         });
-    }, [game.status, game.progressMode]);
+    }, [game.status, game.progressMode, continueModal]);
 
     // Save game
     useEffect(() => {
+        if (continueModal) return;
+
         // Saves only if it's a "checkpoint" state
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
@@ -817,8 +841,9 @@ function App() {
                 console.error("Failed to save game checkpoint:", error);
             }
         }
-    }, [game]);
+    }, [game, continueModal]);
 
+    // Early Return
     if (continueModal) {
         return (
             <ContinueModal
