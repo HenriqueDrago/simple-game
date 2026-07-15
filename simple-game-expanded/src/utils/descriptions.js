@@ -1295,14 +1295,14 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "LUNAR GROWTH",
         type: entryTypes.ACTION,
         description:
-            "Restores RESOURCES equal to MOONLIGHT on self. Then, enters MOON DEW state.",
+            "Enters MOON DEW state.",
     },
 
     [effectKeys.MOON_DEW]: {
         name: "MOON DEW",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. At turn start, remove this effect.",
+            "Raises DAMAGE REDUCTION by 50%. At turn start, restores RESOURCES equal to MOONLIGHT on self, then remove this effect.",
     },
 
     [elementalKeys.SCORCH]: {
@@ -1358,14 +1358,14 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "MYCELIUM",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes MYCELIUM to reduce the damage taken. At turn start, restores RESOURCES equal to MYCELIUM on self. Then, lose all MYCELIUM.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes MYCELIUM to reduce the damage taken. At MOON PHASE, restores RESOURCES equal to MYCELIUM on self. Then, lose all MYCELIUM.",
     },
 
     [elementalKeys.ASH]: {
         name: "ASH",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of NATURE and SCORCH. While active, when using OFFENSIVE ACTIONS, consume LIMITED RESOURCES on self equal to MOONLIGHT. Replaces ATTACK with LUNAR SMITE.",
+            "Combination of NATURE and SCORCH. While active, ???. Replaces ATTACK with LUNAR SMITE.",
     },
 
     [actionKeys.LUNAR_SMITE]: {

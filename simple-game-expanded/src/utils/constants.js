@@ -8,6 +8,7 @@ import {
     cyborgAI,
     maestroAI,
     starfarerAI,
+    lunaticAI,
 } from "./aiControllers.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
@@ -390,12 +391,12 @@ export const presetAi = {
     },
 
     [aiKeys.ELEMENTALIST]: {
-        name: "Lunatic (Missing AI)",
+        name: "Lunatic",
         best: {
             str: 0,
             def: 10,
         },
-        caller: simpleAI,
+        caller: lunaticAI,
         desc: [],
     },
 

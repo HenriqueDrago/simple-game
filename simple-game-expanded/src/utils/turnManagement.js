@@ -101,19 +101,19 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             }
         }
 
-        // Mycelium
-        if (draftTarget.resources[effectKeys.MYCELIUM] > 0) {
+        // Moon Dew
+        if (draftTarget.states[effectKeys.MOON_DEW]) {
             draftTarget = restoreResources(
                 draftTarget,
-                draftTarget.resources[effectKeys.MYCELIUM],
+                draftTarget[effectKeys.MOONLIGHT],
             );
 
             draftTarget = {
                 ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.MYCELIUM]: 0,
-                },
+                states: {
+                    ...draftTarget.states,
+                    [effectKeys.MOON_DEW]: false,
+                }
             };
         }
 
@@ -432,7 +432,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 darkEmbrace: false,
                 dimmingDarkness: false,
                 [effectKeys.PRISMATIC]: false,
-                [effectKeys.MOON_DEW]: false,
             },
         };
     }
@@ -1214,6 +1213,23 @@ export function processMoonPhase(prev) {
                 [effectKeys.MOONLIGHT]: draftEntity[effectKeys.MOONLIGHT] + 1,
                 [effectKeys.MOONLIT_TEARS]:
                     draftEntity[effectKeys.MOONLIT_TEARS] - 1,
+            };
+        }
+
+        // Mycelium restore
+        // Mycelium
+        if (draftEntity.resources[effectKeys.MYCELIUM] > 0) {
+            draftEntity = restoreResources(
+                draftEntity,
+                draftEntity.resources[effectKeys.MYCELIUM],
+            );
+
+            draftEntity = {
+                ...draftEntity,
+                resources: {
+                    ...draftEntity.resources,
+                    [effectKeys.MYCELIUM]: 0,
+                },
             };
         }
 

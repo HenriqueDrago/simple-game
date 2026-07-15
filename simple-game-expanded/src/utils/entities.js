@@ -258,7 +258,7 @@ export function createBaseEntity() {
             [effectKeys.WEAPONS_DEPLOYED]: false,
             [effectKeys.THERMAL_OVERLOAD]: false,
             [effectKeys.VENTING]: false,
-            
+
             // Aegis
             [effectKeys.RADIANT]: false,
             [effectKeys.CUTOFF_WINGS]: false,
@@ -384,8 +384,6 @@ export function dealDamage(
             [effectKeys.MAX_HEALTH]:
                 draftDefender[effectKeys.MAX_HEALTH] - baseDmg,
         };
-
-        draftDefender = loseHp(draftDefender, baseDmg);
 
         return {
             attacker: {
@@ -525,7 +523,7 @@ export function takeDamage(entity, baseDmg, dmgType) {
             [effectKeys.MAX_HEALTH]:
                 draftEntity[effectKeys.MAX_HEALTH] - baseDmg,
         };
-        draftEntity = loseHp(draftEntity, baseDmg);
+
         return draftEntity;
     }
 
@@ -1020,14 +1018,14 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             };
         }
 
-        // Ash
-        if (isElementActive(draftAgent, elementalKeys.ASH)) {
-            draftAgent = consumeLimitedResources(
-                draftAgent,
-                draftAgent[effectKeys.MOONLIGHT],
-                elementalKeys.ASH,
-            ).draftEntity;
-        }
+        // // Ash
+        // if (isElementActive(draftAgent, elementalKeys.ASH)) {
+        //     draftAgent = consumeLimitedResources(
+        //         draftAgent,
+        //         draftAgent[effectKeys.MOONLIGHT],
+        //         elementalKeys.ASH,
+        //     ).draftEntity;
+        // }
     }
 
     if (isBenediction) {
@@ -1120,7 +1118,7 @@ export function processEntityDeathStates(entity) {
         draftEntity = processExitAscendence(draftEntity);
     }
 
-    return draftEntity;
+    return processHealth(draftEntity);
 }
 
 export function isEntityDead(entity) {
@@ -1589,6 +1587,74 @@ export function processSilverBlood(entity) {
                 [effectKeys.SILVER_BLOOD]: silverBlood,
             },
         };
+    }
+
+    return draftEntity;
+}
+
+export function translateElementIntoCrystals(element) {
+    let crystals;
+    switch (element) {
+        case elementalKeys.ALBEDO:
+            crystals = [
+                elementalKeys.FROST,
+                elementalKeys.NATURE,
+                elementalKeys.SCORCH,
+            ];
+            break;
+        case elementalKeys.WITHER:
+            crystals = [elementalKeys.FROST, elementalKeys.NATURE];
+            break;
+        case elementalKeys.OCEAN:
+            crystals = [elementalKeys.FROST, elementalKeys.SCORCH];
+            break;
+        case elementalKeys.ASH:
+            crystals = [elementalKeys.NATURE, elementalKeys.SCORCH];
+            break;
+        case elementalKeys.FROST:
+            crystals = [elementalKeys.FROST];
+            break;
+        case elementalKeys.NATURE:
+            crystals = [elementalKeys.NATURE];
+            break;
+        case elementalKeys.SCORCH:
+            crystals = [elementalKeys.SCORCH];
+            break;
+        case elementalKeys.DULLED:
+        default:
+            crystals = [];
+            break;
+    }
+
+    return crystals;
+}
+
+export function processHealth(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    if (getEntityMaxHealth(entity) < entity[effectKeys.HEALTH]) {
+        if (entity.states[effectKeys.SELENIAN]) {
+            const extraBlood =
+                entity[effectKeys.HEALTH] - getEntityMaxHealth(entity);
+
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.HEALTH]: getEntityMaxHealth(entity),
+                resources: {
+                    ...draftEntity.resources,
+                    [effectKeys.SILVER_BLOOD]:
+                        draftEntity.resources[effectKeys.SILVER_BLOOD] +
+                        extraBlood,
+                },
+            };
+        } else {
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.HEALTH]: getEntityMaxHealth(entity),
+            };
+        }
     }
 
     return draftEntity;

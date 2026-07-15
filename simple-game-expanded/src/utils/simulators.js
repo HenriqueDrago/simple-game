@@ -1131,19 +1131,14 @@ function simulateLunarTide({ prev, agent, agentKey }) {
 }
 
 function simulateLunarGrowth({ prev, agent, agentKey }) {
-    const draftAgent = restoreResources(
-        agent,
-        agent[effectKeys.MOONLIGHT] * constants.LUNAR_GROWTH_MULT,
-    );
-
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...draftAgent,
+                ...agent,
                 states: {
-                    ...draftAgent.states,
+                    ...agent.states,
                     [effectKeys.MOON_DEW]: true,
                 },
             },

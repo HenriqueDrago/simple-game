@@ -1,14 +1,23 @@
 import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
-    createBaseEntity,
+    consumeResources,
+    getEntityDef,
     getEntityMaxHealth,
     getEntityTotalHealth,
     getEntityTotalMana,
     isEntityDead,
     processActionTypeUsed,
+    restoreResources,
+    translateElementIntoCrystals,
 } from "./entities.js";
-import { actionKeys, effectKeys, eyeKeys } from "./enums.js";
+import {
+    actionKeys,
+    effectKeys,
+    elementalKeys,
+    eyeKeys,
+    moonKeys,
+} from "./enums.js";
 import { commitTurn, processUpkeep } from "./turnManagement.js";
 import {
     processGreenStar,
@@ -66,7 +75,10 @@ function willEntityImmediatelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
     const futureTargetEntity = processUpkeep(sim, queriedKey, nonQueriedKey)
         .entities[queriedKey];
 
-    return willEntityDieImmediately(currTargetEntity) || willEntityDieImmediately(futureTargetEntity);
+    return (
+        willEntityDieImmediately(currTargetEntity) ||
+        willEntityDieImmediately(futureTargetEntity)
+    );
 }
 
 function willEntityEffectivelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
@@ -290,6 +302,49 @@ export function assignStarsAI(context) {
         }
     }
 
+    // E: Normal Orange Star
+    if (remainingWhite > 0) {
+        // use consume resources to identify how many resources are available
+        const maxConsumption = consumeResources(
+            agent,
+            Infinity,
+            effectKeys.ORANGE_STAR,
+        ).resourcesConsumed.totalConsumption;
+        const orangeAlloc = Math.min(remainingWhite, maxConsumption - 1); // Since hp is last on the ladder, set max as everything but 1
+        const violetAlloc = Math.floor((remainingWhite - orangeAlloc) / 2);
+
+        const { draftMaster, draftNonMaster } = processOrangeStar(
+            { master: agent, nonMaster: nonAgent },
+            orangeAlloc,
+            violetAlloc,
+        );
+
+        const simState = {
+            ...prev,
+            entities: {
+                [agentKey]: draftMaster,
+                [nonAgentKey]: draftNonMaster,
+            },
+        };
+
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simState,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.ORANGE_STAR]: orangeAlloc + violetAlloc,
+                [effectKeys.VIOLET_STAR]: violetAlloc,
+            };
+
+            remainingWhite -= orangeAlloc;
+            remainingWhite -= violetAlloc * 2;
+        }
+    }
+
     // === Default Logic ===
 
     // Restore up to max hp with green
@@ -303,6 +358,25 @@ export function assignStarsAI(context) {
             [effectKeys.GREEN_STAR]: spentGreen,
         };
         remainingWhite -= spentGreen;
+    }
+
+    // Clean up bas resources with orange
+    const undesirableResources =
+        agent.resources[effectKeys.POISON] +
+        agent.resources[effectKeys.SHACKLED_MANA];
+    if (remainingWhite > 0) {
+        const spentOrange = Math.min(
+            remainingWhite,
+            undesirableResources - allocations[effectKeys.ORANGE_STAR],
+        );
+
+        allocations = {
+            ...allocations,
+            [effectKeys.ORANGE_STAR]:
+                allocations[effectKeys.ORANGE_STAR] + spentOrange,
+        };
+
+        remainingWhite -= spentOrange;
     }
 
     // Use yellow/augmented yellow for resource generation
@@ -321,9 +395,149 @@ export function assignStarsAI(context) {
     return allocations;
 }
 
-// Element
+// Element AI
 export function selectElementAI(context) {
-    return [];
+    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
+
+    const maxHealthNature = getEntityMaxHealth({
+        ...agent,
+        [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
+            elementalKeys.NATURE,
+        ),
+    });
+
+    // If shattered, remain shattered
+    if (
+        agent[effectKeys.ELEMENTAL_CRYSTALS].includes(elementalKeys.SHATTERED)
+    ) {
+        return elementalKeys.SHATTERED;
+    }
+
+    // If not on Selenian, if forced on dulled
+    if (!agent.states[effectKeys.SELENIAN]) {
+        return elementalKeys.DULLED;
+    }
+
+    // Healper function for using the simulations with te correct element
+    const simWithElement = (element, actionKey) => {
+        const tempAgent = {
+            ...agent,
+            [effectKeys.ELEMENTAL_CRYSTALS]:
+                translateElementIntoCrystals(element),
+        };
+        return createSimulator({
+            agent: tempAgent,
+            agentKey,
+            nonAgent,
+            nonAgentKey,
+            prev,
+        })(actionKey);
+    };
+
+    // Simulate lethal attacks with Scorch
+    const strikeSim = simWithElement(
+        elementalKeys.SCORCH,
+        actionKeys.LUNAR_STRIKE,
+    );
+    const attackSim = simWithElement(elementalKeys.SCORCH, actionKeys.ATTACK);
+
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            strikeSim,
+            nonAgentKey,
+            agentKey,
+        ) ||
+        willEntityEffectivelyDieByNextUpkeep(attackSim, nonAgentKey, agentKey)
+    ) {
+        return elementalKeys.SCORCH;
+    }
+
+    // Simulate lethal attacks with Ash
+    const smiteSim = simWithElement(elementalKeys.ASH, actionKeys.LUNAR_SMITE);
+
+    if (willEntityEffectivelyDieByNextUpkeep(smiteSim, nonAgentKey, agentKey)) {
+        return elementalKeys.ASH;
+    }
+
+    const tideSim = simWithElement(elementalKeys.OCEAN, actionKeys.LUNAR_TIDE);
+    const hasBadResources =
+        agent.resources[effectKeys.POISON] > 0 ||
+        agent.resources[effectKeys.SHACKLED_MANA] > 0 ||
+        agent.resources[effectKeys.MANA_OVERFLOW] > 0;
+
+    if (hasBadResources) {
+        if (tideSim.entities[agentKey].resources[effectKeys.POISON] > 0) {
+            return elementalKeys.NATURE;
+        }
+
+        return elementalKeys.OCEAN;
+    }
+
+    // If low on health, compare our options
+    if (agent[effectKeys.HEALTH] <= maxHealthNature * 0.5) {
+        const growthSim = simWithElement(
+            elementalKeys.NATURE,
+            actionKeys.LUNAR_GROWTH,
+        );
+        const healSim = simWithElement(elementalKeys.NATURE, actionKeys.HEAL);
+
+        const moon = growthSim.entities[agentKey][effectKeys.MIRRORED_MOON];
+        const extraMoonlight = moon === moonKeys.CORONAL ? 1 : 0;
+
+        const hpTide = getEntityTotalHealth(tideSim.entities[agentKey]);
+        const hpGrowth = getEntityTotalHealth(
+            restoreResources(
+                growthSim.entities[agentKey],
+                growthSim.entities[agentKey][effectKeys.MOONLIGHT] +
+                    extraMoonlight,
+            ),
+        );
+
+        const hpHeal = getEntityTotalHealth(healSim.entities[agentKey]);
+
+        let bestElement = elementalKeys.NATURE;
+        let maxHp = hpHeal;
+
+        if (hpGrowth > maxHp) {
+            maxHp = hpGrowth;
+            bestElement = elementalKeys.NATURE;
+        }
+        if (hpTide >= maxHp) {
+            // maxHp = hpTide;
+            bestElement = elementalKeys.OCEAN;
+        }
+        return bestElement;
+    }
+
+    // Simulate chalk
+    // If our Chalk is strong enough, proceed to enter shattered
+    const chalkSim = simWithElement(elementalKeys.SHATTERED, actionKeys.CHALK);
+    const chalkDamage =
+        getEntityMaxHealth(nonAgent) -
+        getEntityMaxHealth(chalkSim.entities[nonAgentKey]);
+
+    if (chalkDamage >= getEntityMaxHealth(nonAgent) * 0.5) {
+        return elementalKeys.ALBEDO;
+    }
+
+    // Default elements
+    const moon = agent[effectKeys.MIRRORED_MOON];
+    const isWaxing = moon === moonKeys.WAXING;
+
+    // If Waxing, use Wither when it won't leave us too low
+    // otherwise frost
+    if (isWaxing) {
+        const simWither = simWithElement(elementalKeys.WITHER, actionKeys.LUNAR_SHED);
+
+        if (getEntityTotalHealth(simWither.entities[agentKey]) >= getEntityMaxHealth(agent) * 0.3) {
+            return elementalKeys.WITHER;
+        } else {
+            return elementalKeys.FROST;
+        }
+    }
+
+    // If on Waning, use Frost
+    return elementalKeys.FROST;
 }
 
 // Central router
@@ -332,7 +546,7 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     const agent = prev.entities[agentKey];
     const nonAgent = prev.entities[nonAgentKey];
 
-    const context = {
+    let context = {
         prev,
         agent,
         agentKey,
@@ -356,6 +570,23 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         caller = angelAI;
     }
 
+    // Process Stars
+    const assignedStars = assignStarsAI(context);
+
+    // Process Element
+    const selectedElement = selectElementAI(context);
+
+    context = {
+        ...context,
+        assignedStars,
+        selectedElement,
+        agent: {
+            ...agent,
+            [effectKeys.ELEMENTAL_CRYSTALS]:
+                translateElementIntoCrystals(selectedElement),
+        },
+    };
+
     // Calculate action
     let action = caller(context);
 
@@ -374,12 +605,6 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         action = actionKeys.MELTDOWN;
     }
-
-    // Process Stars
-    const assignedStars = assignStarsAI(context);
-
-    // Process Element
-    const selectedElement = selectElementAI(context);
 
     return {
         assignedStars,
@@ -1152,6 +1377,94 @@ export function angelAI(context) {
 - Use Attack or Special Attack if it can finish the enemy
 - Use Chart otherwise
 */
-export function starfarerAI(context) {
+export function starfarerAI() {
     return actionKeys.CHART;
+}
+
+/* Lunatic AI
+- Enter Selenian if not already
+- decides which action to use according to the element received
+*/
+export function lunaticAI(context) {
+    const { agent, nonAgent, agentKey, nonAgentKey, selectedElement } = context;
+
+    // Enter Selenian if not already on it
+    if (!agent.states[effectKeys.SELENIAN]) {
+        return actionKeys.REFRACT;
+    }
+
+    const simulate = createSimulator(context);
+
+    switch (selectedElement) {
+        case elementalKeys.FROST: {
+            if (getEntityDef(agent) >= 15) {
+                return actionKeys.LUNAR_SHROUD;
+            }
+
+            return actionKeys.MIRROR;
+        }
+        case elementalKeys.NATURE: {
+            const simGrowth = simulate(actionKeys.LUNAR_GROWTH);
+            const simHeal = simulate(actionKeys.HEAL);
+
+            const hpGrowth = getEntityTotalHealth(simGrowth.entities[agentKey]);
+            const hpHeal = getEntityTotalHealth(simHeal.entities[agentKey]);
+
+            if (hpGrowth >= hpHeal && agent.resources[effectKeys.POISON] <= 0) {
+                return actionKeys.LUNAR_GROWTH;
+            } else {
+                return actionKeys.HEAL;
+            }
+        }
+        case elementalKeys.SCORCH: {
+            const simStrike = simulate(actionKeys.LUNAR_STRIKE);
+            const simAttack = simulate(actionKeys.ATTACK);
+
+            const enemyHpStrike = getEntityTotalHealth(
+                simStrike.entities[nonAgentKey],
+            );
+            const enemyHpAttack = getEntityTotalHealth(
+                simAttack.entities[nonAgentKey],
+            );
+
+            const enemyEnlitStrike =
+                simStrike.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
+
+            const enemyEnlitAttack =
+                simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
+
+            if (nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+                if (enemyEnlitStrike <= enemyEnlitAttack) {
+                    return actionKeys.LUNAR_STRIKE;
+                } else {
+                    return actionKeys.ATTACK;
+                }
+            }
+
+            if (enemyHpStrike <= enemyHpAttack) {
+                return actionKeys.LUNAR_STRIKE;
+            } else {
+                return actionKeys.ATTACK;
+            }
+        }
+        case elementalKeys.OCEAN: {
+            return actionKeys.LUNAR_TIDE;
+        }
+        case elementalKeys.WITHER: {
+            return actionKeys.LUNAR_SHED;
+        }
+        case elementalKeys.ASH: {
+            return actionKeys.LUNAR_SMITE;
+        }
+        case elementalKeys.ALBEDO: {
+            return actionKeys.SHATTER;
+        }
+        case elementalKeys.SHATTERED: {
+            return actionKeys.CHALK;
+        }
+        case elementalKeys.DULLED:
+        default: {
+            return actionKeys.MIRROR;
+        }
+    }
 }

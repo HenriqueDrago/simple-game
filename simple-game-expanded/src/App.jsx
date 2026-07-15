@@ -30,6 +30,7 @@ import {
     resetPlayerEntity,
     isElementActive,
     processSilverBlood,
+    translateElementIntoCrystals,
 } from "./utils/entities.js";
 import {
     entityKeys,
@@ -701,47 +702,8 @@ function App() {
                         draftTarget.states[effectKeys.SELENIAN]
                     ) {
                         // Translate combined elements into their base crystal components
-                        let crystals;
-                        switch (selectedElement) {
-                            case elementalKeys.ALBEDO:
-                                crystals = [
-                                    elementalKeys.FROST,
-                                    elementalKeys.NATURE,
-                                    elementalKeys.SCORCH,
-                                ];
-                                break;
-                            case elementalKeys.WITHER:
-                                crystals = [
-                                    elementalKeys.FROST,
-                                    elementalKeys.NATURE,
-                                ];
-                                break;
-                            case elementalKeys.OCEAN:
-                                crystals = [
-                                    elementalKeys.FROST,
-                                    elementalKeys.SCORCH,
-                                ];
-                                break;
-                            case elementalKeys.ASH:
-                                crystals = [
-                                    elementalKeys.NATURE,
-                                    elementalKeys.SCORCH,
-                                ];
-                                break;
-                            case elementalKeys.FROST:
-                                crystals = [elementalKeys.FROST];
-                                break;
-                            case elementalKeys.NATURE:
-                                crystals = [elementalKeys.NATURE];
-                                break;
-                            case elementalKeys.SCORCH:
-                                crystals = [elementalKeys.SCORCH];
-                                break;
-                            case elementalKeys.DULLED:
-                            default:
-                                crystals = [];
-                                break;
-                        }
+                        const crystals =
+                            translateElementIntoCrystals(selectedElement);
 
                         const wasNature = isElementActive(
                             draftTarget,
@@ -788,8 +750,7 @@ function App() {
                     });
 
                     let newWhite =
-                        currentStars[effectKeys.WHITE_STAR] +
-                        returnedToWhite;
+                        currentStars[effectKeys.WHITE_STAR] + returnedToWhite;
 
                     // Create reset stars state
                     let newStars = {
@@ -801,7 +762,7 @@ function App() {
                         newStars = {
                             ...newStars,
                             [color]: 0,
-                        }
+                        };
                     });
 
                     colors.forEach((color) => {
@@ -814,12 +775,12 @@ function App() {
 
                         newStars = {
                             ...newStars,
-                            [effectKeys.WHITE_STAR]: newStars[effectKeys.WHITE_STAR] - actualAllocated,
+                            [effectKeys.WHITE_STAR]:
+                                newStars[effectKeys.WHITE_STAR] -
+                                actualAllocated,
                             [color]: newStars[color] + actualAllocated,
-                        }
+                        };
                     });
-
-                    
 
                     newGame = {
                         ...newGame,
@@ -832,7 +793,12 @@ function App() {
                         },
                     };
 
-                    return processPlan(newGame, targetKey, nonTargetKey, action);
+                    return processPlan(
+                        newGame,
+                        targetKey,
+                        nonTargetKey,
+                        action,
+                    );
                 });
             }, 1200);
 
