@@ -7,6 +7,7 @@ import ActionPanel from "./components/ActionPanel.jsx";
 import { centralAIManagement } from "./utils/aiControllers.js";
 import {
     CHECKPOINT_STATES,
+    coloredStars,
     constants,
     INITIAL_GAME_STATE,
     presetAi,
@@ -21,17 +22,15 @@ import {
     processRunicPulse,
     processAnnoitement,
     processEmanation,
+    processPlan,
 } from "./utils/turnManagement.js";
 import {
     distributePoints,
     createBaseEntity,
     resetPlayerEntity,
-    processActionTypeUsed,
-    processDeathCheck,
     isElementActive,
     processSilverBlood,
 } from "./utils/entities.js";
-import { simulators } from "./utils/simulators.js";
 import {
     entityKeys,
     turnStatus,
@@ -44,7 +43,6 @@ import {
     progKeys,
     elementalKeys,
     playerTurnPhases,
-    actionKeys,
     roundPhases,
 } from "./utils/enums.js";
 
@@ -128,61 +126,7 @@ function App() {
     function handleAction(action, agentKey, nonAgentKey) {
         console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
-            // Safeguard
-            const currPhase =
-                prev.roundQueue && prev.roundQueue[prev.roundIndex];
-            const currSubPhase = prev.playerQueue && prev.playerQueue[0];
-
-            if (
-                (currPhase !== roundPhases.PLAYER_ONE_TURN &&
-                    currPhase !== roundPhases.PLAYER_TWO_TURN) ||
-                currSubPhase !== playerTurnPhases.PLAN
-            ) {
-                return prev;
-            }
-
-            // Run the action
-            const agent = prev.entities[agentKey];
-            const nonAgent = prev.entities[nonAgentKey];
-
-            const context = {
-                agent,
-                agentKey,
-                nonAgent,
-                nonAgentKey,
-                prev,
-            };
-
-            const sim = simulators[action];
-
-            const simulationResult = sim(context);
-
-            // process effects that depend on action type (offensive, defensive, etc)
-            let newGameState = processActionTypeUsed(
-                simulationResult,
-                agentKey,
-                nonAgentKey,
-                action,
-            );
-
-            // Death check
-            newGameState = processDeathCheck(newGameState);
-
-            // Determine if PLAN subphase ends or not
-            const newQueue =
-                (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
-                newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
-                    ? prev.playerQueue
-                    : prev.playerQueue.slice(1);
-
-            return buildRoundQueue({
-                ...newGameState,
-                status:
-                    newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
-                        ? turnStatus.ONGOING
-                        : newGameState.status,
-                playerQueue: newQueue,
-            });
+            return processPlan(prev, agentKey, nonAgentKey, action);
         });
     }
 
@@ -736,12 +680,160 @@ function App() {
             activePlayer.controller !== aiKeys.HUMAN
         ) {
             const aiTimer = setTimeout(() => {
-                centralAIManagement(
-                    game,
-                    targetKey,
-                    nonTargetKey,
-                    handleAction,
-                );
+                setGame((prev) => {
+                    let newGame = {
+                        ...prev,
+                    };
+
+                    let draftTarget = {
+                        ...prev.entities[targetKey],
+                    };
+
+                    const { assignedStars, selectedElement, action } =
+                        centralAIManagement(prev, targetKey, nonTargetKey);
+
+                    // Process Element
+                    if (
+                        !isElementActive(
+                            draftTarget,
+                            elementalKeys.SHATTERED,
+                        ) &&
+                        draftTarget.states[effectKeys.SELENIAN]
+                    ) {
+                        // Translate combined elements into their base crystal components
+                        let crystals;
+                        switch (selectedElement) {
+                            case elementalKeys.ALBEDO:
+                                crystals = [
+                                    elementalKeys.FROST,
+                                    elementalKeys.NATURE,
+                                    elementalKeys.SCORCH,
+                                ];
+                                break;
+                            case elementalKeys.WITHER:
+                                crystals = [
+                                    elementalKeys.FROST,
+                                    elementalKeys.NATURE,
+                                ];
+                                break;
+                            case elementalKeys.OCEAN:
+                                crystals = [
+                                    elementalKeys.FROST,
+                                    elementalKeys.SCORCH,
+                                ];
+                                break;
+                            case elementalKeys.ASH:
+                                crystals = [
+                                    elementalKeys.NATURE,
+                                    elementalKeys.SCORCH,
+                                ];
+                                break;
+                            case elementalKeys.FROST:
+                                crystals = [elementalKeys.FROST];
+                                break;
+                            case elementalKeys.NATURE:
+                                crystals = [elementalKeys.NATURE];
+                                break;
+                            case elementalKeys.SCORCH:
+                                crystals = [elementalKeys.SCORCH];
+                                break;
+                            case elementalKeys.DULLED:
+                            default:
+                                crystals = [];
+                                break;
+                        }
+
+                        const wasNature = isElementActive(
+                            draftTarget,
+                            elementalKeys.NATURE,
+                        );
+
+                        draftTarget = {
+                            ...draftTarget,
+                            [effectKeys.ELEMENTAL_CRYSTALS]: crystals,
+                        };
+
+                        const isNature = isElementActive(
+                            draftTarget,
+                            elementalKeys.NATURE,
+                        );
+
+                        // Run processSilverBlood on exit or entry of Nature
+                        if (wasNature || isNature) {
+                            draftTarget = processSilverBlood(draftTarget);
+                        }
+
+                        newGame = {
+                            ...newGame,
+                            entities: {
+                                ...prev.entities,
+                                [targetKey]: draftTarget,
+                            },
+                        };
+                    }
+
+                    // Process Stars
+                    const colors = Object.values(coloredStars).map(
+                        (starType) => {
+                            return starType.star;
+                        },
+                    );
+
+                    const currentStars = draftTarget.stars;
+
+                    // Convert all active colored stars back to the white star pool
+                    let returnedToWhite = 0;
+                    colors.forEach((color) => {
+                        returnedToWhite += currentStars[color];
+                    });
+
+                    let newWhite =
+                        currentStars[effectKeys.WHITE_STAR] +
+                        returnedToWhite;
+
+                    // Create reset stars state
+                    let newStars = {
+                        ...currentStars,
+                        [effectKeys.WHITE_STAR]: newWhite,
+                    };
+
+                    colors.forEach((color) => {
+                        newStars = {
+                            ...newStars,
+                            [color]: 0,
+                        }
+                    });
+
+                    colors.forEach((color) => {
+                        const amount = assignedStars[color];
+
+                        const actualAllocated = Math.min(
+                            newStars[effectKeys.WHITE_STAR],
+                            amount,
+                        );
+
+                        newStars = {
+                            ...newStars,
+                            [effectKeys.WHITE_STAR]: newStars[effectKeys.WHITE_STAR] - actualAllocated,
+                            [color]: newStars[color] + actualAllocated,
+                        }
+                    });
+
+                    
+
+                    newGame = {
+                        ...newGame,
+                        entities: {
+                            ...prev.entities,
+                            [targetKey]: {
+                                ...draftTarget,
+                                stars: newStars,
+                            },
+                        },
+                    };
+
+                    return processPlan(newGame, targetKey, nonTargetKey, action);
+                });
             }, 1200);
 
             return () => clearTimeout(aiTimer);
@@ -750,8 +842,8 @@ function App() {
         game.status,
         game.roundIndex,
         game.playerQueue,
-        handleAction,
         continueModal,
+        game.entities,
     ]);
 
     // Round Transition

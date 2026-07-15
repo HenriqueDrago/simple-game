@@ -7,6 +7,7 @@ import {
     shadowSorcererAI,
     cyborgAI,
     maestroAI,
+    starfarerAI,
 } from "./aiControllers.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
@@ -156,6 +157,7 @@ export const MITIGATION_RESOURCES = [
     effectKeys.HALO,
     effectKeys.LINGERING_EMBER,
     effectKeys.DOME,
+    effectKeys.MYCELIUM,
 ];
 
 export const FREE_RESOURCES = [
@@ -163,6 +165,7 @@ export const FREE_RESOURCES = [
     effectKeys.UNRELENTING_SHADOWS,
     effectKeys.CINDERS,
     effectKeys.POISON,
+    effectKeys.DISTILLED_TOXIN,
     effectKeys.SHACKLED_MANA,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
@@ -334,12 +337,12 @@ export const presetAi = {
     },
 
     [aiKeys.STARFARER]: {
-        name: "Starfarer (Unimplemented)",
+        name: "Starfarer",
         best: {
             str: 0,
             def: 10,
         },
-        caller: simpleAI,
+        caller: starfarerAI,
         desc: [
             actionKeys.CHART,
             effectKeys.STARGAZER,
@@ -387,7 +390,7 @@ export const presetAi = {
     },
 
     [aiKeys.ELEMENTALIST]: {
-        name: "Elementalist (Unimplemented)",
+        name: "Lunatic (Missing AI)",
         best: {
             str: 0,
             def: 10,
@@ -397,7 +400,7 @@ export const presetAi = {
     },
 
     [aiKeys.PALADIN]: {
-        name: "Paladin (Incomplete)",
+        name: "Paladin",
         best: {
             str: 0,
             def: 10,
@@ -617,12 +620,12 @@ export const stackCounters = {
         },
     },
 
-    [effectKeys.INSPIRATION]: {
-        label: "Inspiration",
+    [effectKeys.DISTILLED_TOXIN]: {
+        label: "Distilled Toxin",
         style: {
-            color: "white",
-            borderColor: "white",
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            color: "#1de9b6",
+            borderColor: "#1de9b6",
+            backgroundColor: "rgba(29, 233, 182, 0.2)",
         },
     },
 

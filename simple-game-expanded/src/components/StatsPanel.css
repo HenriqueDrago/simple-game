@@ -141,12 +141,7 @@
     animation: prismatic-glow 3s infinite alternate ease-in-out;
 }
 
-/* Gibbous: Heavy stonelike deep slate/silver armor */
-.stats-panel-container.state-gibbous {
-    border-color: #b0bec5;
-    background: rgba(38, 50, 56, 0.9);
-    box-shadow: 0 0 12px rgba(176, 190, 197, 0.5), inset 0 0 15px rgba(176, 190, 197, 0.25);
-}
+
 
 /* Moon Dew: Vibrant aquamarine mist */
 .stats-panel-container.state-moon-dew {
@@ -190,7 +185,7 @@
     align-items: center;
     padding: 6px 0;
     border-bottom: 2px solid transparent;
-    border-image: linear-gradient(to right, cyan, lime, yellow);
+    border-image: linear-gradient(to right, cyan, lime, yellow) 1;
 }
 
 .energy-line-label {

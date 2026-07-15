@@ -223,7 +223,7 @@ export function processTrail({ master, nonMaster }, trailKey) {
     };
 }
 
-function processRedStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processRedStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -254,7 +254,7 @@ function processRedStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processOrangeStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processOrangeStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -283,7 +283,7 @@ function processOrangeStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -296,8 +296,8 @@ function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
         ...draftMaster,
         stars: {
             ...draftMaster.stars,
-            [effectKeys.WHITE_STAR]:
-                draftMaster.stars[effectKeys.WHITE_STAR] + augmentedStars,
+            [effectKeys.GRAY_STAR]:
+                draftMaster.stars[effectKeys.GRAY_STAR] + augmentedStars,
         },
         resources: {
             ...draftMaster.resources,
@@ -312,7 +312,7 @@ function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processGreenStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processGreenStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -330,7 +330,7 @@ function processGreenStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processBlueStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processBlueStar({ master, nonMaster }, normalStars, augmentedStars) {
     let draftMaster = {
         ...master,
     };
@@ -377,7 +377,7 @@ function processBlueStar({ master, nonMaster }, normalStars, augmentedStars) {
     };
 }
 
-function processBlueTrail({ master, nonMaster }, trails) {
+export function processBlueTrail({ master, nonMaster }, trails) {
     let draftMaster = {
         ...master,
     };

@@ -9,6 +9,7 @@ import {
     getEntityTotalMana,
     isElementActive,
     loseMana,
+    processActionTypeUsed,
     processDeathCheck,
     restoreResources,
     takeDamage,
@@ -24,7 +25,9 @@ import {
     moonKeys,
     elementalKeys,
     roundPhases,
+    playerTurnPhases,
 } from "./enums.js";
+import { simulators } from "./simulators.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
 
 export function processUpkeep(prev, targetKey, nonTargetKey) {
@@ -98,6 +101,22 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             }
         }
 
+        // Mycelium
+        if (draftTarget.resources[effectKeys.MYCELIUM] > 0) {
+            draftTarget = restoreResources(
+                draftTarget,
+                draftTarget.resources[effectKeys.MYCELIUM],
+            );
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.MYCELIUM]: 0,
+                },
+            };
+        }
+
         // Unrelenting Shadows
         if (draftTarget.resources.unrelentingShadows > 0) {
             draftTarget = restoreResources(
@@ -110,6 +129,25 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 resources: {
                     ...draftTarget.resources,
                     unrelentingShadows: 0,
+                },
+            };
+        }
+
+        // Distilled Toxin
+        if (draftTarget.resources[effectKeys.DISTILLED_TOXIN] > 0) {
+            const toxinConsumed = Math.ceil(
+                draftTarget.resources[effectKeys.DISTILLED_TOXIN] / 2,
+            );
+
+            draftTarget = gainMana(draftTarget, toxinConsumed);
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.DISTILLED_TOXIN]:
+                        draftTarget.resources[effectKeys.DISTILLED_TOXIN] -
+                        toxinConsumed,
                 },
             };
         }
@@ -394,7 +432,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 darkEmbrace: false,
                 dimmingDarkness: false,
                 [effectKeys.PRISMATIC]: false,
-                [effectKeys.GIBBOUS]: false,
                 [effectKeys.MOON_DEW]: false,
             },
         };
@@ -1075,13 +1112,24 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         }
     }
 
-    
     // exit condition: If there's no trails at violet starfall, skip trails
-    const hasTrails = coloredStars.some(
-        (curr) => master.stars[curr.trail] > 0,
-    );
+    const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
 
     if (!hasTrails && currentPhase === starfallPhases.VIOLET_STAR) {
+        return processDeathCheck({
+            ...prev,
+            starQueue: null,
+            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
+            entities: {
+                ...prev.entities,
+                [masterKey]: master,
+                [nonMasterKey]: nonMaster,
+            },
+        });
+    }
+
+    // exit condition 2: is violet trailfall
+    if (currentPhase === starfallPhases.VIOLET_TRAIL) {
         return processDeathCheck({
             ...prev,
             starQueue: null,
@@ -1181,5 +1229,62 @@ export function processMoonPhase(prev) {
     return processDeathCheck({
         ...newGameState,
         status: turnStatus.ROUND_TRANSITION,
+    });
+}
+
+export function processPlan(prev, agentKey, nonAgentKey, action) {
+    // Safeguard
+    const currPhase = prev.roundQueue && prev.roundQueue[prev.roundIndex];
+    const currSubPhase = prev.playerQueue && prev.playerQueue[0];
+
+    if (
+        (currPhase !== roundPhases.PLAYER_ONE_TURN &&
+            currPhase !== roundPhases.PLAYER_TWO_TURN) ||
+        currSubPhase !== playerTurnPhases.PLAN
+    ) {
+        return prev;
+    }
+
+    // Run the action
+    const agent = prev.entities[agentKey];
+    const nonAgent = prev.entities[nonAgentKey];
+
+    const context = {
+        agent,
+        agentKey,
+        nonAgent,
+        nonAgentKey,
+        prev,
+    };
+
+    const sim = simulators[action];
+
+    const simulationResult = sim ? sim(context) : prev;
+
+    // process effects that depend on action type (offensive, defensive, etc)
+    let newGameState = processActionTypeUsed(
+        simulationResult,
+        agentKey,
+        nonAgentKey,
+        action,
+    );
+
+    // Death check
+    newGameState = processDeathCheck(newGameState);
+
+    // Determine if PLAN subphase ends or not
+    const newQueue =
+        (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
+        newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
+            ? prev.playerQueue
+            : prev.playerQueue.slice(1);
+
+    return buildRoundQueue({
+        ...newGameState,
+        status:
+            newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
+                ? turnStatus.ONGOING
+                : newGameState.status,
+        playerQueue: newQueue,
     });
 }

@@ -231,22 +231,21 @@ export function createBaseEntity() {
             [effectKeys.INSPIRATION]: 0,
             [effectKeys.STARDUST]: 0,
             [effectKeys.DOME]: 0,
-
+            [effectKeys.MYCELIUM]: 0,
             [effectKeys.SILVER_BLOOD]: 0,
             [effectKeys.REFRACTED_DIVINITY]: 0,
             [effectKeys.MOONDUST]: 0,
+            [effectKeys.DISTILLED_TOXIN]: 0,
         },
         states: {
             // standalones
             [effectKeys.GUARDING_STATE]: false,
             [effectKeys.SACRIFICIAL_STATE]: false,
-
             [effectKeys.STARGAZER]: false,
-
-            // Selenian
             [effectKeys.SELENIAN]: false,
+            [effectKeys.RESONANT]: false,
             [effectKeys.PRISMATIC]: false,
-            [effectKeys.GIBBOUS]: false,
+            [effectKeys.MOON_DEW]: false,
 
             // Shadowflame
             [effectKeys.DARK_EMBRACE]: false,
@@ -254,13 +253,12 @@ export function createBaseEntity() {
             [effectKeys.UMBRAL_CORE]: false,
             [effectKeys.BLEAK_DECEPTION]: false,
 
-            // Deploy and sonority
+            // Deploy
             [effectKeys.DEPLOYMENT]: false,
             [effectKeys.WEAPONS_DEPLOYED]: false,
             [effectKeys.THERMAL_OVERLOAD]: false,
             [effectKeys.VENTING]: false,
-            [effectKeys.RESONANT]: false,
-
+            
             // Aegis
             [effectKeys.RADIANT]: false,
             [effectKeys.CUTOFF_WINGS]: false,
@@ -314,9 +312,6 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states[effectKeys.VENTING]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-    if (entity.states[effectKeys.GIBBOUS]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states[effectKeys.MOON_DEW]) {

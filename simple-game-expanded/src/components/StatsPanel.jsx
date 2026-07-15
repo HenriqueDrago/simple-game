@@ -86,7 +86,6 @@ function StatsPanel({
         [effectKeys.ANOINTED_PROXY]: "state-anointed-proxy",
         [effectKeys.SELENIAN]: "state-selenian",
         [effectKeys.PRISMATIC]: "state-prismatic",
-        [effectKeys.GIBBOUS]: "state-gibbous",
         [effectKeys.MOON_DEW]: "state-moon-dew",
     };
 

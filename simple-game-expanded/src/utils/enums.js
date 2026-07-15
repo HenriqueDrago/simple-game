@@ -230,7 +230,7 @@ export const effectKeys = Object.freeze({
     LUNACY: "lunacy",
     REFRACTED_DIVINITY: "refractedDivinity",
     PRISMATIC: "prismatic",
-    GIBBOUS: "gibbous",
+    MYCELIUM: "mycelium",
     MOONDUST: "moondust",
     MOONLIT_TEARS: "moonlitTears",
     SILVER_BLOOD: "silverBlood",
@@ -255,7 +255,8 @@ export const effectKeys = Object.freeze({
     FRAGILITY: "fragility",
     DAMAGE_BONUS: "dmgBonus",
     WEAKNESS: "weakness",
-    EFFECTIVE_DEF: "effectiveDef"
+    EFFECTIVE_DEF: "effectiveDef",
+    DISTILLED_TOXIN: "distilledToxin",
 });
 
 export const eyeKeys = Object.freeze({

@@ -18,7 +18,8 @@ export const ACTION_DESCRIPTIONS = {
     [actionKeys.HEAL]: {
         name: "HEAL",
         type: entryTypes.ACTION,
-        description: "Consumes MANA to replenish HEALTH. Cleanses POISON.",
+        description:
+            "Consumes MANA to replenish missing HEALTH. Cleanses POISON, then gain DISTILLED TOXIN equal to the amount cleansed.",
     },
 
     [actionKeys.GUARD]: {
@@ -235,6 +236,13 @@ export const RESOURCE_DESCRIPTIONS = {
         type: entryTypes.FREE_RESOURCE,
         description:
             "At turn start, takes TRUE DAMAGE equal to current POISON stacks.",
+    },
+
+    [effectKeys.DISTILLED_TOXIN]: {
+        name: "DISTILLED TOXIN",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, loses half stack, rounded up, and replenishes MANA equal to the amount lost.",
     },
 
     [effectKeys.SHADOWFLAME]: {
@@ -828,7 +836,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "GLIMPSE OF PANDEMONIUM",
         type: entryTypes.ACTION,
         description:
-            "Burns RESOURCES on every entity equal to SACRED FLAMES on each, then restores RESOURCES equal to the amount consumed on each. Afterwards, all entities lose all SACRED FLAMES on them. Cannot burn SACRED FLAMES this way.",
+            "Burns RESOURCES on every entity equal to SACRED FLAMES on each, then restores RESOURCES equal to the amount consumed on each. Cannot burn SACRED FLAMES this way.",
     },
 
     [actionKeys.EDICT_OF_SEVERANCE]: {
@@ -884,7 +892,7 @@ export const MECHANIC_DESCRIPTIONS = {
         name: "RESOURCES",
         type: entryTypes.MECHANIC,
         description:
-            "Can be subdivided into MITIGATION RESOURCES, FREE RESOURCES, OVERFLOWN RESOURCES, LIMITED RESOURCES, RANKED RESOURCES and FIXED RESOURCES. When consuming RESOURCES, consume MITIGATION RESOURCES, FREE RESOURCES and LIMITED RESOURCES in this order. When restoring RESOURCES, follows reverse order. When consuming or restoring LIMITED RESOURCES, also consume or restore OVERFLOWN RESOURCES according to special rules. Cannot restore or consume RANKED RESOURCES and FIXED RESOURCES through these means.",
+            "Can be subdivided into MITIGATION RESOURCES, FREE RESOURCES, OVERFLOWN RESOURCES, LIMITED RESOURCES, RANKED RESOURCES and FIXED RESOURCES. When consuming RESOURCES, consume only MITIGATION RESOURCES, FREE RESOURCES and LIMITED RESOURCES in this order. When restoring RESOURCES, follows the order in reverse. OVERFLOWN RESOURCES may be consumed or restored alongside LIMITED RESOURCES according to special rules.",
     },
 
     [effectKeys.SONORITY]: {
@@ -896,36 +904,35 @@ export const MECHANIC_DESCRIPTIONS = {
 
     [effectKeys.MAX_MANA]: {
         name: "MAX MANA",
-        type: entryTypes.MECHANIC, 
+        type: entryTypes.MECHANIC,
         description: "Starts at 10. Limits how much MANA you can hold.",
     },
 
     [effectKeys.MAX_HEALTH]: {
         name: "MAX HEALTH",
         type: entryTypes.MECHANIC,
-        description: "Starts at 20. Limits how much HEALTH you can hold. If MAX HEALTH is 0 or lower, lose the battle.",
+        description:
+            "Starts at 20. Limits how much HEALTH you can hold. If MAX HEALTH is 0 or lower, lose the battle.",
     },
 
-    
     [effectKeys.DEF_EFFECTIVENESS]: {
         name: "DEF EFFECTIVENESS",
         type: entryTypes.MECHANIC,
         description:
-        "Used to calculate EFFECTIVE DEFENSE. Defines how much PHYSICAL DAMAGE a point of DEF can block.",
+            "Used to calculate EFFECTIVE DEFENSE. Defines how much PHYSICAL DAMAGE a point of DEF can block.",
     },
 
     [effectKeys.EFFECTIVE_DEF]: {
         name: "EFFECTIVE DEFENSE",
         type: entryTypes.MECHANIC,
-        description:
-        "Decreases PHYSICAL DAMAGE taken.",
+        description: "Decreases PHYSICAL DAMAGE taken.",
     },
-    
+
     [effectKeys.DYNAMO]: {
         name: "DYNAMO",
         type: entryTypes.FIXED_RESOURCE,
         description:
-        "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD and VENTING states. Capped at 100%. At turn start, if at 100%, resets to 0% and increases ENERGY LEVEL by 1.",
+            "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD and VENTING states. Capped at 100%. At turn start, if at 100%, resets to 0% and increases ENERGY LEVEL by 1.",
     },
 
     [effectKeys.ENERGY_LEVEL]: {
@@ -933,7 +940,7 @@ export const MECHANIC_DESCRIPTIONS = {
         type: entryTypes.STAT,
         description: "Alternative STAT. Increases LASER and MELTDOWN damage.",
     },
-    
+
     [effectKeys.DAMAGE_REDUCTION]: {
         name: "DAMAGE REDUCTION",
         type: entryTypes.DAMAGE_MODIFIERS,
@@ -974,15 +981,13 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
     [roundPhases.ROUND_START]: {
         name: "ROUND START",
         type: entryTypes.BATTLE_PHASE,
-        description:
-            "A transitional phase at the start of a ROUND.",
+        description: "A transitional phase at the start of a ROUND.",
     },
 
     [roundPhases.ROUND_END]: {
         name: "ROUND END",
         type: entryTypes.BATTLE_PHASE,
-        description:
-            "A transitional phase at the end of a ROUND.",
+        description: "A transitional phase at the end of a ROUND.",
     },
 
     [effectKeys.TURN]: {
@@ -1104,7 +1109,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes REFRACTED DIVINITY, HALO, DOME and LINGERING EMBER. When consuming this type of resource, consume them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes REFRACTED DIVINITY, HALO, LINGERING EMBER, DOME and MYCELIUM. When consuming this type of resource, consume them in this order.",
     },
 
     [entryTypes.OVERFLOWN_RESOURCE]: {
@@ -1130,15 +1135,14 @@ export const CATEGORY_DESCRIPTIONS = {
     [entryTypes.MECHANIC]: {
         name: "MECHANIC",
         type: entryTypes.CATEGORY,
-        description:
-            "A core gameplay system.",
+        description: "A core gameplay system.",
     },
 
     [entryTypes.ACTION]: {
         name: "ACTIONS",
         type: entryTypes.CATEGORY,
         description:
-        "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, TRANSFORMATIVE ACTIONS, ACTS OF BENEDICTION and ACTS OF MALEDICTION. Most actions automatically advance the turn phase to COMMIT.",
+            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, TRANSFORMATIVE ACTIONS, ACTS OF BENEDICTION and ACTS OF MALEDICTION. Most actions automatically advance the turn phase to COMMIT.",
     },
 
     [entryTypes.DAMAGE_MODIFIERS]: {
@@ -1333,28 +1337,28 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "WITHER",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 2% for every 1 HEALTH or SILVER BLOOD lost. Additionally, when taking any damage, increases MOONLIT TEARS rank by 1. Replaces SACRIFICE with LUNAR SHED.",
+            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 2% for every 1 HEALTH or SILVER BLOOD lost. Additionally, when taking any damage, raises MOONLIT TEARS rank by 1. Replaces SACRIFICE with LUNAR SHED.",
     },
 
     [effectKeys.MOONLIT_TEARS]: {
         name: "MOONLIT TEARS",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "At MOON PHASE, decrease MOONLIT TEARS rank by 1 and gain 1 MOONLIGHT.",
+            "At MOON PHASE, lowers MOONLIT TEARS rank by 1 and gain 1 MOONLIGHT.",
     },
 
     [actionKeys.LUNAR_SHED]: {
         name: "LUNAR SHED",
         type: entryTypes.ACTION,
         description:
-            "Takes TRUE DAMAGE equal to MOONLIGHT on self. Then, enters GIBBOUS state.",
+            "Takes TRUE DAMAGE and gains MYCELIUM equal to MOONLIGHT on self.",
     },
 
-    [effectKeys.GIBBOUS]: {
-        name: "GIBBOUS",
-        type: entryTypes.STATE,
+    [effectKeys.MYCELIUM]: {
+        name: "MYCELIUM",
+        type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "Raises DAMAGE REDUCTION by 50%.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes MYCELIUM to reduce the damage taken. At turn start, restores RESOURCES equal to MYCELIUM on self. Then, lose all MYCELIUM.",
     },
 
     [elementalKeys.ASH]: {

@@ -21,7 +21,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.ABANDONED_BY_GRACE, label: "Abandoned by Grace" },
     { key: effectKeys.ANOINTED_PROXY, label: "Anointed Proxy" },
     { key: effectKeys.SELENIAN, label: "Selenian" },
-    { key: effectKeys.GIBBOUS, label: "Gibbous" },
+
     { key: effectKeys.PRISMATIC, label: "Prismatic" },
     { key: effectKeys.BLEAK_DECEPTION, label: "Bleak Deception" },
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },

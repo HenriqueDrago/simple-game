@@ -1,6 +1,7 @@
 import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
+    createBaseEntity,
     getEntityMaxHealth,
     getEntityTotalHealth,
     getEntityTotalMana,
@@ -9,6 +10,11 @@ import {
 } from "./entities.js";
 import { actionKeys, effectKeys, eyeKeys } from "./enums.js";
 import { commitTurn, processUpkeep } from "./turnManagement.js";
+import {
+    processGreenStar,
+    processOrangeStar,
+    processRedStar,
+} from "./starfall.js";
 
 // Auxiliary Functions
 function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
@@ -28,23 +34,23 @@ function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
         );
 }
 
-// function willEntityDieImmediately(entity) {
-//     return isEntityDead(entity);
-// }
+function willEntityDieImmediately(entity) {
+    return isEntityDead(entity);
+}
 
 function willEntityEffectivelyDie(entity) {
     if (entity[effectKeys.BURDEN_OF_STIGMA] > 0) {
         return false;
     }
 
+    if (entity[effectKeys.TARNISHED_SIN] >= 100) {
+        return true;
+    }
+
     if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         if (entity[effectKeys.ENLIGHTENMENT] <= 0) {
             return true;
         }
-        if (entity[effectKeys.TARNISHED_SIN] >= 100) {
-            return true;
-        }
-
         return false;
     }
 
@@ -60,7 +66,7 @@ function willEntityImmediatelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
     const futureTargetEntity = processUpkeep(sim, queriedKey, nonQueriedKey)
         .entities[queriedKey];
 
-    return isEntityDead(currTargetEntity) || isEntityDead(futureTargetEntity);
+    return willEntityDieImmediately(currTargetEntity) || willEntityDieImmediately(futureTargetEntity);
 }
 
 function willEntityEffectivelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
@@ -107,8 +113,221 @@ function willEntityEffectivelyDieByNextCommitPostUpkeep(
     );
 }
 
+// Star Assignment
+export function assignStarsAI(context) {
+    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
+
+    // Initial allocations
+    let allocations = {
+        [effectKeys.RED_STAR]: 0,
+        [effectKeys.ORANGE_STAR]: 0,
+        [effectKeys.YELLOW_STAR]: 0,
+        [effectKeys.GREEN_STAR]: 0,
+        [effectKeys.BLUE_STAR]: 0,
+        [effectKeys.INDIGO_STAR]: 0,
+        [effectKeys.VIOLET_STAR]: 0,
+    };
+
+    // Calculate the complete star pool
+    const colors = [
+        effectKeys.RED_STAR,
+        effectKeys.ORANGE_STAR,
+        effectKeys.YELLOW_STAR,
+        effectKeys.GREEN_STAR,
+        effectKeys.BLUE_STAR,
+        effectKeys.INDIGO_STAR,
+        effectKeys.VIOLET_STAR,
+    ];
+
+    let totalStars = agent.stars[effectKeys.WHITE_STAR] || 0;
+    colors.forEach((color) => {
+        totalStars += agent.stars[color] || 0;
+    });
+
+    let remainingWhite = totalStars;
+
+    // Early return if no stars
+    if (totalStars <= 0) {
+        return allocations;
+    }
+
+    // === Lethal Checks ===
+
+    // A: Normal Red Star
+    if (remainingWhite > 0) {
+        const { draftMaster, draftNonMaster } = processRedStar(
+            { master: agent, nonMaster: nonAgent },
+            remainingWhite,
+            0,
+        );
+
+        const simState = {
+            ...prev,
+            entities: {
+                [agentKey]: draftMaster,
+                [nonAgentKey]: draftNonMaster,
+            },
+        };
+
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simState,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.RED_STAR]: remainingWhite,
+            };
+            remainingWhite = 0;
+        }
+    }
+
+    // B: Augmented Red Star
+    if (remainingWhite > 0) {
+        const violetAlloc = Math.floor(remainingWhite / 2);
+        const redAlloc = remainingWhite - violetAlloc;
+
+        const { draftMaster, draftNonMaster } = processRedStar(
+            { master: agent, nonMaster: nonAgent },
+            redAlloc,
+            violetAlloc,
+        );
+
+        const simState = {
+            ...prev,
+            entities: {
+                [agentKey]: draftMaster,
+                [nonAgentKey]: draftNonMaster,
+            },
+        };
+
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simState,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.RED_STAR]: redAlloc,
+                [effectKeys.VIOLET_STAR]: violetAlloc,
+            };
+
+            remainingWhite = 0;
+        }
+    }
+
+    // C: Augmented Orange Star
+    if (remainingWhite > 0) {
+        const violetAlloc = Math.floor(remainingWhite / 2);
+
+        const { draftMaster, draftNonMaster } = processOrangeStar(
+            { master: agent, nonMaster: nonAgent },
+            0,
+            violetAlloc,
+        );
+
+        const simState = {
+            ...prev,
+            entities: {
+                [agentKey]: draftMaster,
+                [nonAgentKey]: draftNonMaster,
+            },
+        };
+
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simState,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.ORANGE_STAR]: violetAlloc,
+                [effectKeys.VIOLET_STAR]: violetAlloc,
+            };
+            remainingWhite -= violetAlloc * 2;
+        }
+    }
+
+    // D: Augmented Green Star
+    if (remainingWhite > 0) {
+        const violetAlloc = Math.floor(remainingWhite / 2);
+        const greenAlloc = remainingWhite - violetAlloc;
+
+        const { draftMaster, draftNonMaster } = processGreenStar(
+            { master: agent, nonMaster: nonAgent },
+            0,
+            violetAlloc,
+        );
+
+        const simState = {
+            ...prev,
+            entities: {
+                [agentKey]: draftMaster,
+                [nonAgentKey]: draftNonMaster,
+            },
+        };
+
+        // Check if the opponent dies from the delayed True Damage after commit
+        if (
+            willEntityEffectivelyDieByNextCommitPostUpkeep(
+                simState,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.GREEN_STAR]: greenAlloc,
+                [effectKeys.VIOLET_STAR]: violetAlloc,
+            };
+            remainingWhite = 0;
+        }
+    }
+
+    // === Default Logic ===
+
+    // Restore up to max hp with green
+    if (remainingWhite > 0) {
+        const missingHealth =
+            getEntityMaxHealth(agent) - agent[effectKeys.HEALTH];
+        const spentGreen = Math.min(missingHealth, remainingWhite);
+
+        allocations = {
+            ...allocations,
+            [effectKeys.GREEN_STAR]: spentGreen,
+        };
+        remainingWhite -= spentGreen;
+    }
+
+    // Use yellow/augmented yellow for resource generation
+    if (remainingWhite > 0) {
+        const spentYellow = Math.ceil(remainingWhite / 2);
+        const spentViolet = Math.floor(remainingWhite / 2);
+
+        allocations = {
+            ...allocations,
+            [effectKeys.YELLOW_STAR]: spentYellow,
+            [effectKeys.VIOLET_STAR]: spentViolet,
+        };
+        // remainingWhite = 0;
+    }
+
+    return allocations;
+}
+
+// Element
+export function selectElementAI(context) {
+    return [];
+}
+
 // Central router
-export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
+export function centralAIManagement(prev, agentKey, nonAgentKey) {
     // Build context
     const agent = prev.entities[agentKey];
     const nonAgent = prev.entities[nonAgentKey];
@@ -156,14 +375,17 @@ export function centralAIManagement(prev, agentKey, nonAgentKey, handleAction) {
         action = actionKeys.MELTDOWN;
     }
 
-    if (Object.values(actionKeys).includes(action)) {
-        handleAction(action, agentKey, nonAgentKey);
-        return;
-    }
+    // Process Stars
+    const assignedStars = assignStarsAI(context);
 
-    handleAction(null, agentKey, nonAgentKey); // skip turn
-    console.error(`Reached End of AI function: ${action}`);
-    return;
+    // Process Element
+    const selectedElement = selectElementAI(context);
+
+    return {
+        assignedStars,
+        selectedElement,
+        action,
+    };
 }
 
 // AIs
@@ -315,7 +537,8 @@ export function bloodknightAI(context) {
         !isArrayActive &&
         nextTurnHeal < missingHp &&
         agent[effectKeys.MANA_BLEED] > getEntityTotalMana(agent) &&
-        missingMana >= agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN &&
+        missingMana >=
+            agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN &&
         missingHp >= getEntityMaxHealth(agent) * 0.25
     ) {
         return actionKeys.GUARD;
@@ -333,7 +556,7 @@ export function bloodknightAI(context) {
             simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
 
         if (
-            enemyEnlitLost >= nonAgent[effectKeys.MAX_ENLIGHTENMENT] * 0.1 ||
+            enemyEnlitLost >= nonAgent[effectKeys.MAX_ENLIGHTENMENT] * 0.25 ||
             simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT] <= 0
         ) {
             return actionKeys.ATTACK;
@@ -344,7 +567,7 @@ export function bloodknightAI(context) {
             getEntityTotalHealth(simAttack.entities[nonAgentKey]);
 
         if (
-            enemyHealthLost >= getEntityMaxHealth(nonAgent) * 0.3 ||
+            enemyHealthLost >= getEntityMaxHealth(nonAgent) * 0.5 ||
             simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0
         ) {
             return actionKeys.ATTACK;
@@ -571,18 +794,16 @@ export function shadowSorcererAI(context) {
         const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
         if (
             willEntityImmediatelyDieByNextUpkeep(
-                simMayhem.entities[nonAgentKey],
+                simMayhem,
                 nonAgentKey,
-                agentKey
+                agentKey,
             )
         ) {
             return actionKeys.BLACK_MAYHEM;
         }
 
         // If we are dying on turn end, exit UMBRAL CORE
-        if (
-            willEntityEffectivelyDieByNextCommit(prev, agentKey, nonAgentKey)
-        ) {
+        if (willEntityEffectivelyDieByNextCommit(prev, agentKey, nonAgentKey)) {
             return actionKeys.DARK_PROMISE;
         }
 
@@ -833,9 +1054,8 @@ export function angelAI(context) {
     }
 
     // 3. Hymmns
-    const simHymmnsAgent = simulate(actionKeys.HYMNS_OF_SANCTIFICATION).entities[
-        agentKey
-    ];
+    const simHymmnsAgent = simulate(actionKeys.HYMNS_OF_SANCTIFICATION)
+        .entities[agentKey];
 
     // Case 1: we have poison
     if (agent.resources[effectKeys.POISON] > 0) {
@@ -909,13 +1129,15 @@ export function angelAI(context) {
         return actionKeys.BAPTISM_OF_THE_FLAMES;
     }
 
-    // Case 2: Enemy has a resource we want to consume
-    // if (
-    //     !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-    //     undesirableResources >= 10
-    // ) {
-    //     return actionKeys.BAPTISM_OF_THE_FLAMES;
-    // }
+    // Case 2: Enemy has a resource we want to consume and not enough flame
+    if (
+        !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        undesirableResources >= 10 &&
+        nonAgent.resources[effectKeys.SACRED_FLAMES] <
+            undesirableResources * 0.4
+    ) {
+        return actionKeys.BAPTISM_OF_THE_FLAMES;
+    }
 
     // 7. Seraph if malediction is safe
     if (maledictionSafe) {
@@ -924,4 +1146,12 @@ export function angelAI(context) {
 
     // 8. flames fall back
     return actionKeys.BAPTISM_OF_THE_FLAMES;
+}
+
+/* Starfarer AI
+- Use Attack or Special Attack if it can finish the enemy
+- Use Chart otherwise
+*/
+export function starfarerAI(context) {
+    return actionKeys.CHART;
 }

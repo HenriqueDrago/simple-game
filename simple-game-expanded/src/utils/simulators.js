@@ -260,6 +260,17 @@ function simulateHeal({ prev, agent, agentKey }) {
     let draftAgent = {
         ...agent,
     };
+    // cleanse poison
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.POISON]: 0,
+            [effectKeys.DISTILLED_TOXIN]:
+                draftAgent.resources[effectKeys.DISTILLED_TOXIN] +
+                draftAgent.resources[effectKeys.POISON],
+        },
+    };
 
     const base_heal = Math.min(
         getEntityMaxHealth(agent) - agent[effectKeys.HEALTH],
@@ -275,10 +286,6 @@ function simulateHeal({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
-                resources: {
-                    ...draftAgent.resources,
-                    [effectKeys.POISON]: 0,
-                },
             },
         },
     };
@@ -892,16 +899,8 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             actionKeys.GLIMPSE_OF_PANDEMONIUM,
         );
 
-        draftAgent = {
-            ...draftEntity,
-            resources: {
-                ...draftEntity.resources,
-                [effectKeys.SACRED_FLAMES]: 0,
-            },
-        };
-
         draftAgent = restoreResources(
-            draftAgent,
+            draftEntity,
             resourcesConsumed.totalConsumption,
         );
     }
@@ -910,18 +909,11 @@ function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         const { draftEntity, resourcesConsumed } = consumeResources(
             draftNonAgent,
             draftNonAgent.resources[effectKeys.SACRED_FLAMES],
-            effectKeys.SACRED_FLAMES,
+            effectKeys.GLIMPSE_OF_PANDEMONIUM,
         );
-        draftNonAgent = {
-            ...draftEntity,
-            resources: {
-                ...draftEntity.resources,
-                [effectKeys.SACRED_FLAMES]: 0,
-            },
-        };
 
         draftNonAgent = restoreResources(
-            draftNonAgent,
+            draftEntity,
             resourcesConsumed.totalConsumption,
         );
     }
@@ -1199,12 +1191,15 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         (agent[effectKeys.MAX_INSIGHT] - agent[effectKeys.INSIGHT]) +
         (agent[effectKeys.MAX_ENLIGHTENMENT] - agent[effectKeys.ENLIGHTENMENT]);
 
-    console.log(extraDmg)
-    console.log((extraDmg * constants.SMITE_MULT))
-    console.log(1 + (extraDmg * constants.SMITE_MULT) / 100)
+    console.log(extraDmg);
+    console.log(extraDmg * constants.SMITE_MULT);
+    console.log(1 + (extraDmg * constants.SMITE_MULT) / 100);
 
-    const baseDmg = Math.floor(agent[effectKeys.MOONLIGHT] * (1 + (extraDmg * constants.SMITE_MULT) / 100));
-    console.log(baseDmg)
+    const baseDmg = Math.floor(
+        agent[effectKeys.MOONLIGHT] *
+            (1 + (extraDmg * constants.SMITE_MULT) / 100),
+    );
+    console.log(baseDmg);
 
     const { attacker, defender } = dealDamage(
         agent,
@@ -1255,10 +1250,6 @@ function simulateLunarShroud({ prev, agent, agentKey }) {
 function simulateLunarShed({ prev, agent, agentKey }) {
     let draftAgent = {
         ...agent,
-        states: {
-            ...agent.states,
-            [effectKeys.GIBBOUS]: true,
-        },
     };
 
     draftAgent = takeDamage(
@@ -1266,6 +1257,14 @@ function simulateLunarShed({ prev, agent, agentKey }) {
         draftAgent[effectKeys.MOONLIGHT],
         dmgTypes.TRUE,
     );
+
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.MYCELIUM]: draftAgent[effectKeys.MOONLIGHT],
+        },
+    };
 
     return {
         ...prev,
