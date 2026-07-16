@@ -10,11 +10,11 @@ function HpBar({ entity }) {
 
     const hasSilver = silverHp > 0;
 
-    const silverPercentage = Math.min(100, (silverHp / maxHealth) * 100);
+    const silverPercentage = maxHealth > 0 ? Math.min(100, (silverHp / maxHealth) * 100) : 0;
     const remainingSpace = 100 - silverPercentage;
-    const hpPercentage = Math.min(remainingSpace, (baseHp / maxHealth) * 100);
+    const hpPercentage = maxHealth > 0 ? Math.min(remainingSpace, (baseHp / maxHealth) * 100) : 0;
 
-    const silverTimes = Math.floor(silverHp / maxHealth);
+    const silverTimes = maxHealth > 0 ? Math.floor(silverHp / maxHealth) : 0;
 
     return (
         <div className="hp-bar-container">

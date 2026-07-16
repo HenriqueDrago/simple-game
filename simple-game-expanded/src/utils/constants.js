@@ -159,6 +159,7 @@ export const MITIGATION_RESOURCES = [
     effectKeys.LINGERING_EMBER,
     effectKeys.DOME,
     effectKeys.MYCELIUM,
+    effectKeys.FUNERARY_URN,
 ];
 
 export const FREE_RESOURCES = [
@@ -170,8 +171,8 @@ export const FREE_RESOURCES = [
     effectKeys.SHACKLED_MANA,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
-    effectKeys.RADIANCE,
     effectKeys.MOONDUST,
+    effectKeys.RADIANCE,
     effectKeys.SACRED_FLAMES,
 ];
 
@@ -220,8 +221,8 @@ export const presetAi = {
     [aiKeys.SIMPLE]: {
         name: "Mundane",
         best: {
-            str: 10,
-            def: 0,
+            str: 5,
+            def: 5,
         },
         caller: simpleAI,
         desc: [
@@ -390,11 +391,11 @@ export const presetAi = {
         ],
     },
 
-    [aiKeys.ELEMENTALIST]: {
+    [aiKeys.LUNATIC]: {
         name: "Lunatic",
         best: {
-            str: 0,
-            def: 10,
+            str: 5,
+            def: 5,
         },
         caller: lunaticAI,
         desc: [],
@@ -735,7 +736,7 @@ export const INITIAL_GAME_STATE = {
         [aiKeys.HEXER]: progKeys.LOCKED,
         [aiKeys.CYBORG]: progKeys.LOCKED,
         [aiKeys.MAESTRO]: progKeys.LOCKED,
-        [aiKeys.ELEMENTALIST]: progKeys.LOCKED,
+        [aiKeys.LUNATIC]: progKeys.LOCKED,
         [aiKeys.STARFARER]: progKeys.LOCKED,
         [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
         [aiKeys.PALADIN]: progKeys.LOCKED,

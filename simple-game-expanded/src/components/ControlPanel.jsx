@@ -41,6 +41,7 @@ function ControlPanel({
                         </option>
                         <option value={sdmKeys.FULL_DEF}>Full Def</option>
                         <option value={sdmKeys.FULL_STR}>Full Str</option>
+                        <option value={sdmKeys.BALANCED}>Balanced</option>
                     </select>
                     <button
                         className="sharp-btn-icon"

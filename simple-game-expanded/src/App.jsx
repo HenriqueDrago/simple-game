@@ -584,7 +584,6 @@ function App() {
                 (currPhase === roundPhases.PLAYER_ONE_TURN ||
                     currPhase === roundPhases.PLAYER_TWO_TURN)
             ) {
-                // console.log(gameState.playerQueue);
 
                 if (
                     !gameState.playerQueue ||
@@ -603,6 +602,7 @@ function App() {
                             targetKey,
                             nonTargetKey,
                         );
+                        delayAmount = 0;
                     }
 
                     if (currPlayerPhase === playerTurnPhases.COMMIT) {
@@ -611,6 +611,7 @@ function App() {
                             targetKey,
                             nonTargetKey,
                         );
+                        delayAmount = 0;
                     }
                 }
             }
@@ -692,6 +693,8 @@ function App() {
 
                     const { assignedStars, selectedElement, action } =
                         centralAIManagement(prev, targetKey, nonTargetKey);
+
+                    console.log(`${targetKey} has used ${action}`)
 
                     // Process Element
                     if (

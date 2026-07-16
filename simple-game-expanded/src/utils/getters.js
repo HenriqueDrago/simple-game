@@ -302,9 +302,9 @@ export const getNormalActions = (
                   disabled:
                       progMode &&
                       !(
-                          progStatus[aiKeys.ELEMENTALIST] ===
+                          progStatus[aiKeys.LUNATIC] ===
                               progKeys.DEFEATED ||
-                          progStatus[aiKeys.ELEMENTALIST] ===
+                          progStatus[aiKeys.LUNATIC] ===
                               progKeys.ALWAYS_OPEN
                       ),
               }
@@ -315,9 +315,9 @@ export const getNormalActions = (
                     disabled:
                         progMode &&
                         !(
-                            progStatus[aiKeys.ELEMENTALIST] ===
+                            progStatus[aiKeys.LUNATIC] ===
                                 progKeys.DEFEATED ||
-                            progStatus[aiKeys.ELEMENTALIST] ===
+                            progStatus[aiKeys.LUNATIC] ===
                                 progKeys.ALWAYS_OPEN
                         ),
                 }
@@ -328,9 +328,9 @@ export const getNormalActions = (
                       disabled:
                           progMode &&
                           !(
-                              progStatus[aiKeys.ELEMENTALIST] ===
+                              progStatus[aiKeys.LUNATIC] ===
                                   progKeys.DEFEATED ||
-                              progStatus[aiKeys.ELEMENTALIST] ===
+                              progStatus[aiKeys.LUNATIC] ===
                                   progKeys.ALWAYS_OPEN
                           ),
                   }
@@ -340,9 +340,9 @@ export const getNormalActions = (
                       disabled:
                           progMode &&
                           !(
-                              progStatus[aiKeys.ELEMENTALIST] ===
+                              progStatus[aiKeys.LUNATIC] ===
                                   progKeys.DEFEATED ||
-                              progStatus[aiKeys.ELEMENTALIST] ===
+                              progStatus[aiKeys.LUNATIC] ===
                                   progKeys.ALWAYS_OPEN
                           ),
                   },

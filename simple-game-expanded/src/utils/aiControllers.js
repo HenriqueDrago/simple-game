@@ -418,7 +418,7 @@ export function selectElementAI(context) {
         return elementalKeys.DULLED;
     }
 
-    // Healper function for using the simulations with te correct element
+    // Helper function for using the simulations with the correct element
     const simWithElement = (element, actionKey) => {
         const tempAgent = {
             ...agent,
@@ -527,9 +527,15 @@ export function selectElementAI(context) {
     // If Waxing, use Wither when it won't leave us too low
     // otherwise frost
     if (isWaxing) {
-        const simWither = simWithElement(elementalKeys.WITHER, actionKeys.LUNAR_SHED);
+        const simWither = simWithElement(
+            elementalKeys.WITHER,
+            actionKeys.LUNAR_SHED,
+        );
 
-        if (getEntityTotalHealth(simWither.entities[agentKey]) >= getEntityMaxHealth(agent) * 0.3) {
+        if (
+            getEntityTotalHealth(simWither.entities[agentKey]) >=
+            getEntityMaxHealth(agent) * 0.5
+        ) {
             return elementalKeys.WITHER;
         } else {
             return elementalKeys.FROST;
@@ -1460,6 +1466,30 @@ export function lunaticAI(context) {
             return actionKeys.SHATTER;
         }
         case elementalKeys.SHATTERED: {
+
+
+            // Simulate lethal attacks 
+            const chalkSim = simulate(
+                actionKeys.CHALK,
+            );
+            if(willEntityEffectivelyDieByNextUpkeep(chalkSim, nonAgentKey, agentKey)) {
+                return actionKeys.CHALK;
+            }
+
+            const strikeSim = simulate(
+                actionKeys.LUNAR_STRIKE,
+            );
+            if(willEntityEffectivelyDieByNextUpkeep(strikeSim, nonAgentKey, agentKey)) {
+                return actionKeys.LUNAR_STRIKE;
+            }
+
+            const smiteSim = simulate(
+                actionKeys.LUNAR_SMITE,
+            );
+            if(willEntityEffectivelyDieByNextUpkeep(smiteSim, nonAgentKey, agentKey)) {
+                return actionKeys.LUNAR_SMITE;
+            }
+
             return actionKeys.CHALK;
         }
         case elementalKeys.DULLED:

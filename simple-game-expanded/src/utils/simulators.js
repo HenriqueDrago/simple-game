@@ -1186,15 +1186,10 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         (agent[effectKeys.MAX_INSIGHT] - agent[effectKeys.INSIGHT]) +
         (agent[effectKeys.MAX_ENLIGHTENMENT] - agent[effectKeys.ENLIGHTENMENT]);
 
-    console.log(extraDmg);
-    console.log(extraDmg * constants.SMITE_MULT);
-    console.log(1 + (extraDmg * constants.SMITE_MULT) / 100);
-
     const baseDmg = Math.floor(
         agent[effectKeys.MOONLIGHT] *
             (1 + (extraDmg * constants.SMITE_MULT) / 100),
     );
-    console.log(baseDmg);
 
     const { attacker, defender } = dealDamage(
         agent,

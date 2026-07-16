@@ -336,7 +336,7 @@ export const DAMAGE_TYPE_DESCRIPTIONS = {
         name: "LUNIC DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's HEALTH and MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES.",
+            "Reduces the target's MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES. When decreasing MAX HEALTH below 0, decrease MOONLIGHT instead.",
     },
 };
 
@@ -1274,7 +1274,7 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "LUNACY",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Raises DAMAGE BONUS and FRAGILITY equal to the percentage.",
+            "Raises DAMAGE BONUS and FRAGILITY equal to the percentage. At turn start, if at 100% LUNACY, set ELEMENTAL CRYSTALS to SHATTERED.",
     },
 
     [elementalKeys.NATURE]: {
@@ -1365,7 +1365,14 @@ export const SELENIAN_DESCRIPTIONS = {
         name: "ASH",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of NATURE and SCORCH. While active, ???. Replaces ATTACK with LUNAR SMITE.",
+            "Combination of NATURE and SCORCH. While active, when using an OFFENSIVE ACTION, consume LIMITED RESOURCES equal to half the sum of all LIMITED RESOURCES on self, rounded down. Then, gain FUNERARY URN equal to the amount consumed. Replaces ATTACK with LUNAR SMITE.",
+    },
+
+    [effectKeys.FUNERARY_URN]: {
+        name: "FUNERARY URN",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FUNERARY URN to reduce the damage taken.",
     },
 
     [actionKeys.LUNAR_SMITE]: {

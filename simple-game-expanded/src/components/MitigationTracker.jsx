@@ -1,4 +1,4 @@
-import { Flame, Hexagon, Moon, Pyramid, Sun } from "lucide-react";
+import { Amphora, Flame, Hexagon, Moon, Pyramid, Sun } from "lucide-react";
 import { effectKeys } from "../utils/enums";
 import "./MitigationTracker.css";
 import { spawnTooltip } from "../utils/dictionary";
@@ -9,19 +9,10 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
     const divinityAmt = entity.resources[effectKeys.REFRACTED_DIVINITY];
     const domeAmt = entity.resources[effectKeys.DOME];
     const myceliumAmt = entity.resources[effectKeys.MYCELIUM];
+    const funeraryAmt = entity.resources[effectKeys.FUNERARY_URN];
 
     return (
         <div className="mitigation-tracker-container">
-            <div
-                className={`refracted-divinity-container ${divinityAmt <= 0 ? "zero-resource" : ""}`}
-                onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.REFRACTED_DIVINITY)
-                }
-            >
-                <Pyramid className="svg-icon" strokeWidth={2.5} />
-                <span>{divinityAmt}</span>
-            </div>
-
             <div
                 className={`halo-container ${haloAmt <= 0 ? "zero-resource" : ""}`}
                 onMouseDown={(e) =>
@@ -30,6 +21,16 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
             >
                 <Sun className="svg-icon" strokeWidth={2.5} />
                 <span>{haloAmt}</span>
+            </div>
+
+            <div
+                className={`refracted-divinity-container ${divinityAmt <= 0 ? "zero-resource" : ""}`}
+                onMouseDown={(e) =>
+                    spawnTooltip(e, handleSetTooltip, effectKeys.REFRACTED_DIVINITY)
+                }
+            >
+                <Pyramid className="svg-icon" strokeWidth={2.5} />
+                <span>{divinityAmt}</span>
             </div>
 
             <div
@@ -60,6 +61,16 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
             >
                 <Moon className="svg-icon" strokeWidth={2.5} />
                 <span>{myceliumAmt}</span>
+            </div>
+
+            <div
+                className={`funerary-container ${funeraryAmt <= 0 ? "zero-resource" : ""}`}
+                onMouseDown={(e) =>
+                    spawnTooltip(e, handleSetTooltip, effectKeys.FUNERARY_URN)
+                }
+            >
+                <Amphora className="svg-icon" strokeWidth={2.5} />
+                <span>{funeraryAmt}</span>
             </div>
 
         </div>

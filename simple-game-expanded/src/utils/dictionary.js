@@ -22,7 +22,7 @@ export function spawnTooltip(e, handleSetTooltip, itemKey) {
     // Mouse wheel opens tooltip
     if (e.button === 1) {
         e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
-        console.log(itemKey);
+
         const entry = DESCRIPTIONS[itemKey];
         if (itemKey && entry) {
             handleSetTooltip({
@@ -33,7 +33,7 @@ export function spawnTooltip(e, handleSetTooltip, itemKey) {
                 y: e.clientY - 30,
             });
         } else {
-            console.log(`Entry [${itemKey}] not found.`)
+            console.error(`Entry [${itemKey}] not found.`)
         }
     }
 }

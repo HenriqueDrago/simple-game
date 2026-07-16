@@ -38,7 +38,7 @@ export const aiKeys = Object.freeze({
     SHADOW_SORCERER: "shadowSorcerer",
     CYBORG: "cyborg",
     MAESTRO: "maestro",
-    ELEMENTALIST: "elementalist",
+    LUNATIC: "lunatic",
     STARFARER: "starfarer",
 });
 
@@ -47,6 +47,7 @@ export const sdmKeys = Object.freeze({
     BEST: "best",
     FULL_DEF: "fullDef",
     FULL_STR: "fullStr",
+    BALANCED: "balanced"
 });
 
 export const elementalKeys = Object.freeze({
@@ -257,6 +258,7 @@ export const effectKeys = Object.freeze({
     WEAKNESS: "weakness",
     EFFECTIVE_DEF: "effectiveDef",
     DISTILLED_TOXIN: "distilledToxin",
+    FUNERARY_URN: "funeraryUrn",
 });
 
 export const eyeKeys = Object.freeze({

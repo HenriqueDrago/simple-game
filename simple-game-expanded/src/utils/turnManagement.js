@@ -113,7 +113,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 states: {
                     ...draftTarget.states,
                     [effectKeys.MOON_DEW]: false,
-                }
+                },
             };
         }
 
@@ -374,6 +374,14 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                     ...draftTarget.resources,
                     [effectKeys.REFRACTED_DIVINITY]: 0,
                 },
+            };
+        }
+
+        // Lunacy
+        if (draftTarget[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
             };
         }
 

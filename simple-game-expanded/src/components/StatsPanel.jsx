@@ -18,6 +18,7 @@ import {
     roundPhases,
     playerTurnPhases,
     elementalKeys,
+    turnStatus,
 } from "../utils/enums.js";
 
 import "./StatsPanel.css";
@@ -63,7 +64,7 @@ function StatsPanel({
             currPhase === roundPhases.PLAYER_TWO_TURN &&
             currPlayerPhase === playerTurnPhases.PLAN);
 
-    const showWarning = isEntityTurn && getEntityMaxHealth(entity) <= 0;
+    const showWarning = isEntityTurn && getEntityMaxHealth(entity) <= 0 && battleState === turnStatus.ONGOING && !isAngelView;
 
     const stateClassMap = {
         [effectKeys.ASCENDENCE_OF_SPIRIT]: "state-ascendence",
@@ -450,7 +451,7 @@ function StatsPanel({
             )}
 
             <div className="stacks-wrapper">
-                {FREE_RESOURCES.reverse().map((key) => {
+                {[...FREE_RESOURCES].reverse().map((key) => {
                     const counter = stackCounters[key];
 
                     if (!counter) {

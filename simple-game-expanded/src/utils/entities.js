@@ -156,6 +156,23 @@ export function distributePoints(
             newEntity.unspentPoints = 0;
             break;
 
+        case sdmKeys.BALANCED:
+            newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
+            for (let attr of constants.ATTRIBUTE_NAMES) {
+                newEntity.attributes[attr] = {
+                    ...newEntity.attributes[attr],
+                    points: 0,
+                };
+            }
+            newEntity.attributes.str.points = Math.floor(
+                newEntity.unspentPoints / 2,
+            );
+            newEntity.attributes.def.points = Math.ceil(
+                newEntity.unspentPoints / 2,
+            );
+            newEntity.unspentPoints = 0;
+            break;
+
         default:
             break;
     }
@@ -224,18 +241,21 @@ export function createBaseEntity() {
             [effectKeys.POISON]: 0,
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
-            [effectKeys.LINGERING_EMBER]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
-            [effectKeys.HALO]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
             [effectKeys.INSPIRATION]: 0,
             [effectKeys.STARDUST]: 0,
-            [effectKeys.DOME]: 0,
-            [effectKeys.MYCELIUM]: 0,
             [effectKeys.SILVER_BLOOD]: 0,
-            [effectKeys.REFRACTED_DIVINITY]: 0,
             [effectKeys.MOONDUST]: 0,
             [effectKeys.DISTILLED_TOXIN]: 0,
+
+            // Mitigation
+            [effectKeys.HALO]: 0,
+            [effectKeys.LINGERING_EMBER]: 0,
+            [effectKeys.FUNERARY_URN]: 0,
+            [effectKeys.DOME]: 0,
+            [effectKeys.MYCELIUM]: 0,
+            [effectKeys.REFRACTED_DIVINITY]: 0,
         },
         states: {
             // standalones
@@ -379,11 +399,7 @@ export function dealDamage(
 
     // Lunic override
     if (dmgType === dmgTypes.LUNIC) {
-        draftDefender = {
-            ...draftDefender,
-            [effectKeys.MAX_HEALTH]:
-                draftDefender[effectKeys.MAX_HEALTH] - baseDmg,
-        };
+        draftDefender = takeLunicDamage(draftDefender, baseDmg);
 
         return {
             attacker: {
@@ -518,13 +534,7 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     // Lunic override
     if (dmgType === dmgTypes.LUNIC) {
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.MAX_HEALTH]:
-                draftEntity[effectKeys.MAX_HEALTH] - baseDmg,
-        };
-
-        return draftEntity;
+        return takeLunicDamage(draftEntity, baseDmg);
     }
 
     // Flat reduction
@@ -1018,14 +1028,28 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             };
         }
 
-        // // Ash
-        // if (isElementActive(draftAgent, elementalKeys.ASH)) {
-        //     draftAgent = consumeLimitedResources(
-        //         draftAgent,
-        //         draftAgent[effectKeys.MOONLIGHT],
-        //         elementalKeys.ASH,
-        //     ).draftEntity;
-        // }
+        // Ash
+        if (isElementActive(draftAgent, elementalKeys.ASH)) {
+            const toBeConsumed = Math.floor(
+                consumeLimitedResources(draftAgent, Infinity, elementalKeys.ASH)
+                    .limitedResourcesConsumed.totalLimitedResourcesConsumption /
+                    2,
+            );
+
+            draftAgent = consumeLimitedResources(
+                draftAgent,
+                toBeConsumed,
+                elementalKeys.ASH,
+            ).draftEntity;
+
+            draftAgent = {
+                ...draftAgent,
+                resources: {
+                    ...draftAgent.resources,
+                    [effectKeys.FUNERARY_URN]: toBeConsumed,
+                },
+            };
+        }
     }
 
     if (isBenediction) {
@@ -1658,4 +1682,19 @@ export function processHealth(entity) {
     }
 
     return draftEntity;
+}
+
+export function takeLunicDamage(entity, amount) {
+    const maxHpConsumed = Math.min(amount, entity[effectKeys.MAX_HEALTH]);
+    const moonlightConsumed = Math.min(
+        amount - maxHpConsumed,
+        entity[effectKeys.MOONLIGHT],
+    );
+
+    return {
+        ...entity,
+        [effectKeys.MAX_HEALTH]: entity[effectKeys.MAX_HEALTH] - maxHpConsumed,
+        [effectKeys.MOONLIGHT]:
+            entity[effectKeys.MOONLIGHT] - moonlightConsumed,
+    };
 }

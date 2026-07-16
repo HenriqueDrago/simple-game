@@ -1,9 +1,9 @@
 .mitigation-tracker-container {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, auto);
     gap: 4px;
     width: 100%;
-    justify-content: space-between;
 }
 
 /* Shared structural styling mimicking tight setting frames */
@@ -11,7 +11,8 @@
 .halo-container,
 .refracted-divinity-container,
 .dome-container,
-.mycelium-container {
+.mycelium-container,
+.funerary-container {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,6 +88,16 @@
 .mycelium-container:not(.zero-resource):hover {
     border-color: #2e7d32;
     box-shadow: 0 0 8px rgba(46, 125, 50, 0.4);
+}
+
+/* Funerary Urn (Ash Grey) */
+.funerary-container {
+    color: #b0bec5; 
+    border-color: rgba(176, 190, 197, 0.25);
+}
+.funerary-container:not(.zero-resource):hover {
+    border-color: #b0bec5;
+    box-shadow: 0 0 8px rgba(176, 190, 197, 0.4);
 }
 
 .mitigation-tracker-container .zero-resource {
