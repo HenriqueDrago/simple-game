@@ -717,6 +717,7 @@ export const INITIAL_GAME_STATE = {
     playerQueue: null,
     roundQueue: null,
     roundIndex: 0,
+    history: [],
 
     // game logic
     [effectKeys.RUNIC_ARRAY]: 0,

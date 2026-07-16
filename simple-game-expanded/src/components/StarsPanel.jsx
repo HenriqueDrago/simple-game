@@ -1,9 +1,11 @@
 import "./StarsPanel.css";
 import {
+    aiKeys,
     effectKeys,
     entityKeys,
     playerTurnPhases,
     roundPhases,
+    turnStatus,
 } from "../utils/enums";
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
@@ -33,9 +35,13 @@ function StarsPanel({
     const showButton =
         entityKey === entityKeys.PLAYER_ONE
             ? currRoundPhase === roundPhases.PLAYER_ONE_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN
+              currPlayerPhase === playerTurnPhases.PLAN &&
+              entity.controller === aiKeys.HUMAN &&
+              game.status === turnStatus.ONGOING
             : currRoundPhase === roundPhases.PLAYER_TWO_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN;
+              currPlayerPhase === playerTurnPhases.PLAN &&
+              entity.controller === aiKeys.HUMAN &&
+              game.status === turnStatus.ONGOING;
 
     return (
         <div

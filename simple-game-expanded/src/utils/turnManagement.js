@@ -1,10 +1,12 @@
-import { constants, coloredStars } from "./constants.js";
+import { constants, coloredStars, elementsMap } from "./constants.js";
+import { DESCRIPTIONS } from "./descriptions.js";
 import {
     consumeResources,
     exitAllStates,
     gainHp,
     gainInsight,
     gainMana,
+    getEntityElement,
     getEntityMaxHealth,
     getEntityTotalMana,
     isElementActive,
@@ -26,6 +28,7 @@ import {
     elementalKeys,
     roundPhases,
     playerTurnPhases,
+    eventKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
@@ -1311,4 +1314,86 @@ export function processPlan(prev, agentKey, nonAgentKey, action) {
                 : newGameState.status,
         playerQueue: newQueue,
     });
+}
+
+export function buildHistory(prev, event, info = {}) {
+    const history = [...prev.history];
+    const { player, action } = info;
+
+    const playerName = player
+        ? player === entityKeys.PLAYER_ONE
+            ? "Player One"
+            : "Player Two"
+        : "";
+
+    let string;
+    switch (event) {
+        case eventKeys.BATTLE_START:
+            string = "Battle Start";
+            break;
+
+        case eventKeys.ROUND_START:
+            string = `Round ${prev.roundCount} Start`;
+            break;
+
+        case eventKeys.PLAYER_TURN_START:
+            string = `${playerName}'s Turn Start`;
+            break;
+
+        case eventKeys.USE_ACTION: {
+            const actionName = DESCRIPTIONS[action].name;
+            string = `${playerName} used ${actionName}`;
+            break;
+        }
+
+        case eventKeys.SET_ELEMENT: {
+            const elementName =
+                elementsMap[getEntityElement(prev.entities[player])];
+            string = `${playerName} set element to ${elementName}`;
+            break;
+        }
+
+        case eventKeys.MANA_SIPHON:
+            string = "Mana Siphon";
+            break;
+
+        case eventKeys.RUNIC_PULSE:
+            string = "Runic Pulse";
+            break;
+
+        case eventKeys.MOON_PHASE:
+            string = "Moon Phase";
+            break;
+
+        case eventKeys.EMANATION:
+            string = "Emanation";
+            break;
+
+        case eventKeys.ANOINTMENT:
+            string = "Anointment";
+            break;
+
+        default:
+            string = "";
+            break;
+    }
+
+    if (string) {
+        history.push(string);
+    }
+
+    if(prev.status === turnStatus.DEFEAT) {
+        history.push("Player Two Win");
+    }
+    if(prev.status === turnStatus.VICTORY) {
+        history.push("Player One Win");
+    }
+    if(prev.status === turnStatus.DRAW) {
+        history.push("Draw");
+    }
+
+    return {
+        ...prev,
+        history: history,
+    };
 }

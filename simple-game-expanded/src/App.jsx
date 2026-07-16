@@ -23,6 +23,7 @@ import {
     processAnnoitement,
     processEmanation,
     processPlan,
+    buildHistory,
 } from "./utils/turnManagement.js";
 import {
     distributePoints,
@@ -31,6 +32,7 @@ import {
     isElementActive,
     processSilverBlood,
     translateElementIntoCrystals,
+    getEntityElement,
 } from "./utils/entities.js";
 import {
     entityKeys,
@@ -45,6 +47,7 @@ import {
     elementalKeys,
     playerTurnPhases,
     roundPhases,
+    eventKeys,
 } from "./utils/enums.js";
 
 import "./App.css";
@@ -53,6 +56,7 @@ import Glossary from "./components/Glossary.jsx";
 import Modal from "./components/Modal.jsx";
 import ContinueModal from "./components/ContinueModal.jsx";
 import Timeline from "./components/Timeline.jsx";
+import History from "./components/History.jsx";
 
 // Auxiliary Functions
 function resetGameState(prev) {
@@ -70,10 +74,11 @@ function resetGameState(prev) {
         playerQueue: null,
         roundQueue: null,
         roundIndex: 0,
+        history: [],
 
         // game logic
         [effectKeys.RUNIC_ARRAY]: 0,
-        eyeOfHeavens: eyeKeys.DORMANT,
+        [effectKeys.EYE_OF_HEAVENS]: eyeKeys.DORMANT,
         [effectKeys.SEVERED_TIME]: false,
 
         entities: {
@@ -123,11 +128,20 @@ function App() {
     const [glossaryActive, setGlossaryActive] = useState(false);
     const [resetModal, setResetModal] = useState(false);
 
+    const [visibleHistory, setVisibleHistory] = useState(false);
+
     // Handles
     function handleAction(action, agentKey, nonAgentKey) {
         console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
-            return processPlan(prev, agentKey, nonAgentKey, action);
+            return buildHistory(
+                processPlan(prev, agentKey, nonAgentKey, action),
+                eventKeys.USE_ACTION,
+                {
+                    player: agentKey,
+                    action: action,
+                },
+            );
         });
     }
 
@@ -192,13 +206,16 @@ function App() {
     };
 
     function handleReset() {
+        setVisibleHistory(false);
+        setContinueModal(false);
         setGame((prev) => {
-            setContinueModal(false);
             return resetGameState(prev);
         });
     }
 
+    // Hard reset handler
     function handleHardReset() {
+        setVisibleHistory(false);
         setContinueModal(false);
         setGame({ ...INITIAL_GAME_STATE });
     }
@@ -211,11 +228,14 @@ function App() {
                     ? entityKeys.PLAYER_ONE
                     : entityKeys.PLAYER_TWO;
 
-            return {
-                ...prev,
-                status: turnStatus.ONGOING,
-                startingPlayer: startingPlayer,
-            };
+            return buildHistory(
+                {
+                    ...prev,
+                    status: turnStatus.ONGOING,
+                    startingPlayer: startingPlayer,
+                },
+                eventKeys.BATTLE_START,
+            );
         });
     }
 
@@ -411,15 +431,19 @@ function App() {
                 [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
             });
 
-            return {
-                ...prev,
-                entities: {
-                    ...prev.entities,
-                    [entityKey]: {
-                        ...draftEntity,
+            return buildHistory(
+                {
+                    ...prev,
+                    entities: {
+                        ...prev.entities,
+                        [entityKey]: {
+                            ...draftEntity,
+                        },
                     },
                 },
-            };
+                eventKeys.SET_ELEMENT,
+                { player: entityKey },
+            );
         });
     }
 
@@ -462,6 +486,12 @@ function App() {
         });
     }
 
+    function handleHistoryButton() {
+        setVisibleHistory((prev) => {
+            return !prev;
+        });
+    }
+
     // Efeitos
     // Turn Management
     useEffect(() => {
@@ -481,6 +511,7 @@ function App() {
             let nonTargetKey = null;
             let nextState = null;
             let delayAmount = 0;
+            let historyKey = null;
 
             switch (currPhase) {
                 case roundPhases.ROUND_START: {
@@ -490,60 +521,70 @@ function App() {
                         roundIndex: gameState.roundIndex + 1,
                     };
                     delayAmount = gameState.roundCount > 0 ? 600 : 0;
+                    historyKey = eventKeys.ROUND_START;
                     break;
                 }
 
                 case roundPhases.MINI_ARRAY_TURN: {
                     nextState = processManaSiphon(gameState);
                     delayAmount = 1200;
+                    historyKey = eventKeys.MANA_SIPHON;
                     break;
                 }
 
                 case roundPhases.ARRAY_TURN: {
                     nextState = processRunicPulse(gameState);
                     delayAmount = 1200;
+                    historyKey = eventKeys.RUNIC_PULSE;
                     break;
                 }
 
                 case roundPhases.SPECIAL_EMINENCE_TURN: {
                     nextState = processAnnoitement(gameState);
                     delayAmount = 1200;
+                    historyKey = eventKeys.ANOINTMENT;
                     break;
                 }
 
                 case roundPhases.EMINENCE_TURN: {
                     nextState = processEmanation(gameState);
                     delayAmount = 1200;
+                    historyKey = eventKeys.EMANATION;
                     break;
                 }
 
                 case roundPhases.MOON_TURN: {
                     nextState = processMoonPhase(gameState);
                     delayAmount = 1200;
+                    historyKey = eventKeys.MOON_PHASE;
                     break;
                 }
 
                 case roundPhases.P1_STARS_TURN: {
                     targetKey = entityKeys.PLAYER_ONE;
                     nonTargetKey = entityKeys.PLAYER_TWO;
+                    historyKey = null;
                     break;
                 }
 
                 case roundPhases.P2_STARS_TURN: {
                     targetKey = entityKeys.PLAYER_TWO;
                     nonTargetKey = entityKeys.PLAYER_ONE;
+                    historyKey = null;
                     break;
                 }
 
                 case roundPhases.PLAYER_ONE_TURN: {
                     targetKey = entityKeys.PLAYER_ONE;
                     nonTargetKey = entityKeys.PLAYER_TWO;
+                    historyKey = null;
                     break;
                 }
 
                 case roundPhases.PLAYER_TWO_TURN: {
                     targetKey = entityKeys.PLAYER_TWO;
                     nonTargetKey = entityKeys.PLAYER_ONE;
+                    historyKey = null;
                     break;
                 }
 
@@ -553,6 +594,7 @@ function App() {
                         roundIndex: 0,
                     };
                     delayAmount = 600;
+                    historyKey = null;
                     break;
                 }
             }
@@ -584,7 +626,6 @@ function App() {
                 (currPhase === roundPhases.PLAYER_ONE_TURN ||
                     currPhase === roundPhases.PLAYER_TWO_TURN)
             ) {
-
                 if (
                     !gameState.playerQueue ||
                     gameState.playerQueue.length === 0
@@ -593,6 +634,7 @@ function App() {
                         ...gameState,
                         playerQueue: Object.values(playerTurnPhases),
                     };
+                    historyKey = eventKeys.PLAYER_TURN_START;
                 } else {
                     const currPlayerPhase = gameState.playerQueue[0];
 
@@ -611,7 +653,7 @@ function App() {
                             targetKey,
                             nonTargetKey,
                         );
-                        delayAmount = 0;
+                        delayAmount = 600;
                     }
                 }
             }
@@ -621,14 +663,19 @@ function App() {
                 nextState = game;
             }
 
+            // History
+            nextState = buildHistory(buildRoundQueue(nextState), historyKey, {
+                player: targetKey,
+            });
+
             let timer = null;
 
             if (delayAmount > 0) {
                 timer = setTimeout(() => {
-                    setGame(buildRoundQueue(nextState));
+                    setGame(nextState);
                 }, delayAmount);
             } else {
-                setGame(buildRoundQueue(nextState));
+                setGame(nextState);
             }
 
             return () => {
@@ -694,7 +741,7 @@ function App() {
                     const { assignedStars, selectedElement, action } =
                         centralAIManagement(prev, targetKey, nonTargetKey);
 
-                    console.log(`${targetKey} has used ${action}`)
+                    console.log(`${targetKey} has used ${action}`);
 
                     // Process Element
                     if (
@@ -796,12 +843,22 @@ function App() {
                         },
                     };
 
-                    return processPlan(
-                        newGame,
-                        targetKey,
-                        nonTargetKey,
-                        action,
-                    );
+                    // History
+                    if (getEntityElement(activePlayer) !== selectedElement) {
+                        newGame = buildHistory(newGame, eventKeys.SET_ELEMENT, {
+                            player: targetKey,
+                        }); // Element Change
+                    }
+                    newGame = buildHistory(
+                        processPlan(newGame, targetKey, nonTargetKey, action),
+                        eventKeys.USE_ACTION,
+                        {
+                            player: targetKey,
+                            action: action,
+                        },
+                    ); // Use Action
+
+                    return newGame;
                 });
             }, 1200);
 
@@ -826,7 +883,7 @@ function App() {
                     status: turnStatus.ONGOING,
                     roundIndex: prev.roundIndex + 1,
                 }));
-            }, 1200);
+            }, 900);
 
             return () => clearTimeout(timer);
         }
@@ -922,6 +979,12 @@ function App() {
                 currIndex={game.roundIndex}
                 status={game.status}
                 handleSetTooltip={handleSetTooltip}
+            />
+
+            <History
+                game={game}
+                handleHistoryButton={handleHistoryButton}
+                visibleHistory={visibleHistory}
             />
 
             {tooltipStack.length > 0 && (

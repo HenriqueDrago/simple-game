@@ -324,3 +324,27 @@ export const progKeys = Object.freeze({
     OPEN_UNDEFEATED: 2,
     LOCKED: 3,
 });
+
+export const eventKeys = Object.freeze({
+    BATTLE_START: "battleStart",
+    BATTLE_END: "battleEnd",
+    ROUND_START: "roundStart",
+    ROUND_END: "roundEnd",
+    PLAYER_TURN_START: "playerTurnStart",
+    USE_ACTION: "useAction",
+    SET_ELEMENT: "setElement",
+    SET_STAR: "setStar",
+    SET_MASS_STARS: "setMassStars",
+    TURN_UPKEEP: "turnUpkeep",
+    TURN_COMMIT: "turnCommit",
+    STAR_ACTIVATION: "starActivation",
+    TRAIL_ACTIVATION: "trailActivation",
+    MANA_SIPHON: "manaSiphon",
+    RUNIC_PULSE: "runicPulse",
+    MOON_PHASE: "moonPhase",
+    EMANATION: "emanation",
+    ANOINTMENT: "anointment",
+    VICTORY: "victory",
+    DEFEAT: "defeat",
+    DRAW: "draw"
+});
