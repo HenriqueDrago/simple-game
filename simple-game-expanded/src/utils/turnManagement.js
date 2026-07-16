@@ -85,25 +85,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             };
         }
 
-        // Dimmed Stars
-        const hasDim = coloredStars.some(
-            (curr) => draftTarget.stars[curr.dimmed] > 0,
-        );
-        if (hasDim) {
-            for (let value of Object.values(coloredStars)) {
-                draftTarget = {
-                    ...draftTarget,
-                    stars: {
-                        ...draftTarget.stars,
-                        [value.star]:
-                            draftTarget.stars[value.star] +
-                            draftTarget.stars[value.dimmed],
-                        [value.dimmed]: 0,
-                    },
-                };
-            }
-        }
-
         // Moon Dew
         if (draftTarget.states[effectKeys.MOON_DEW]) {
             draftTarget = restoreResources(
@@ -943,7 +924,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.RED_STAR,
-                    effectKeys.DIMMED_RED_STAR,
                     effectKeys.RED_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -957,7 +937,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.ORANGE_STAR,
-                    effectKeys.DIMMED_ORANGE_STAR,
                     effectKeys.ORANGE_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -971,7 +950,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.YELLOW_STAR,
-                    effectKeys.DIMMED_YELLOW_STAR,
                     effectKeys.YELLOW_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -985,7 +963,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.GREEN_STAR,
-                    effectKeys.DIMMED_GREEN_STAR,
                     effectKeys.GREEN_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -999,7 +976,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processROYGBStar(
                     context,
                     effectKeys.BLUE_STAR,
-                    effectKeys.DIMMED_BLUE_STAR,
                     effectKeys.BLUE_TRAIL,
                 );
                 master = newEntities.draftMaster;
@@ -1014,7 +990,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processIVStar(
                     context,
                     effectKeys.INDIGO_STAR,
-                    effectKeys.DIMMED_INDIGO_STAR,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.nonMaster;
@@ -1027,7 +1002,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                 const newEntities = processIVStar(
                     context,
                     effectKeys.VIOLET_STAR,
-                    effectKeys.DIMMED_VIOLET_STAR,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.nonMaster;
@@ -1152,8 +1126,7 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         });
     }
 
-    // else, continue to next starfall
-    return processDeathCheck({
+    let newGameState = processDeathCheck({
         ...prev,
         starQueue: newQueue,
         status: turnStatus.STARFALL_TRANSITION,
@@ -1163,6 +1136,16 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
             [nonMasterKey]: nonMaster,
         },
     });
+
+    if(newGameState.status != turnStatus.STARFALL_TRANSITION) {
+        newGameState = {
+            ...newGameState,
+            starQueue: prev.starQueue,
+        }
+    }
+
+    // else, continue to next starfall
+    return newGameState;
 }
 
 export function processMoonPhase(prev) {
@@ -1353,6 +1336,11 @@ export function buildHistory(prev, event, info = {}) {
             break;
         }
 
+        case eventKeys.STARFALL_START: {
+            string = `${playerName}'s Starfall Start`;
+            break;
+        }
+
         case eventKeys.MANA_SIPHON:
             string = "Mana Siphon";
             break;
@@ -1373,6 +1361,7 @@ export function buildHistory(prev, event, info = {}) {
             string = "Anointment";
             break;
 
+        
         default:
             string = "";
             break;

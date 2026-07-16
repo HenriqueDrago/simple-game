@@ -611,6 +611,7 @@ function App() {
                         ...gameState,
                         starQueue: newQueue,
                     };
+                    historyKey = eventKeys.STARFALL_START;
                 } else {
                     nextState = processStarfallTurn(
                         gameState,

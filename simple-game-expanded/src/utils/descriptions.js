@@ -469,63 +469,63 @@ export const STAR_DESCRIPTIONS = {
         name: "WHITE STAR",
         type: entryTypes.STAR,
         description:
-            "No effect. Can be assigned colors to become RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, or VIOLET STAR.",
+            "Can be assigned colors to become RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, or VIOLET STAR.",
     },
 
     [effectKeys.RED_STAR]: {
         name: "RED STAR",
         type: entryTypes.STAR,
         description:
-            "At RED STARFALL, deals PHYSICAL DAMAGE equal to RED STAR. When augmented, deals PIERCING DAMAGE instead. When fractured, gains RED TRAIL equal to twice the amount fractured instead.",
+            "At RED STARFALL, converts all RED STAR into WHITE STAR. Deals PHYSICAL DAMAGE equal to the amount of normal RED STAR consumed. Deals PIERCING DAMAGE equal to the amount of augmented RED STAR consumed. Gains RED TRAIL equal to twice the amount of fractured RED STAR consumed.",
     },
 
     [effectKeys.ORANGE_STAR]: {
         name: "ORANGE STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, burns RESOURCES on both the opponent and self equal to ORANGE STAR on self. When augmented, instead, burn RESOURCES on the opponent only. When fractured, gain ORANGE TRAIL equal to twice the amount fractured instead.",
+            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on both opponent and self equal to the amount of ORANGE STAR consumed. Burns RESOURCES on the opponent only equal to the amount of augmented ORANGE STAR consumed. Gains ORANGE TRAIL equal to twice the amount of fractured ORANGE STAR consumed.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
         type: entryTypes.STAR,
         description:
-            "At YELLOW STARFALL, gains STARDUST equal to YELLOW STAR. When augmented, gains WHITE STAR instead. When fractured, gains YELLOW TRAIL equal to twice the amount fractured instead.",
+            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Gains STARDUST equal to the amount of YELLOW STAR consumed. Gains GRAY STAR equal to the amount of augmented YELLOW STAR consumed. Gains YELLOW TRAIL equal to twice the amount of fractured YELLOW STAR consumed.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, restores RESOURCES on self equal to GREEN STAR. When augmented, restores RESOURCES to the opponent instead. When fractured, gains GREEN TRAIL equal to twice the amount fractured instead.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Restores RESOURCES on self equal to the amount of GREEN STAR consumed. Restores RESOURCES on the opponent equal to the amount of augmented GREEN STAR consumed. Gains GREEN TRAIL equal to twice the amount of fractured GREEN STAR consumed.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, loses all BLUE STAR on self, then gains DOME and GRAY STAR equal to the amount lost. When augmented, gains WHITE STAR instead of GRAY STAR, and doubles the amount of DOME gained. When fractured, gains DIMMED BLUE STAR equal to the amount fractured and BLUE TRAIL equal to twice the amount fractured instead.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME and convert WHITE STAR into GRAY STAR equal to the amount of normal BLUE STAR consumed. Gains DOME equal to twice the amount of augmented BLUE STAR consumed. Gains BLUE TRAIL and convert WHITE STAR into GRAY STAR equal to twice the amount of fractured BLUE STAR consumed.",
     },
 
     [effectKeys.INDIGO_STAR]: {
         name: "INDIGO STAR",
         type: entryTypes.STAR,
         description:
-            "When a colored star takes an action, consumes INDIGO STAR to use the fractured version of that action instead. Fractured actions take priority over augmented ones. At INDIGO STARFALL, loses all INDIGO STAR and gains DIMMED INDIGO STAR equal to the amount lost. When multiple action types are used at once, each is calculated separately.",
+            "When a colored star is consumed, converts INDIGO STAR into WHITE STAR and converts that star into a fractured version of itself. This process takes priority over VIOLET STAR effects. At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. When multiple star types of a color are used within a single STARFALL subphase, each type is calculated separately.",
     },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "When a colored star takes an action, consumes VIOLET STAR to use the augmented version of that action instead. Then, gains DIMMED VIOLET STAR equal to the amount consumed. At VIOLET STARFALL, loses all VIOLET STAR and gains DIMMED VIOLET STAR equal to the amount lost. When multiple action types are used at once, each is calculated separately.",
+            "When a colored star is consumed, converts VIOLET STAR into WHITE STAR and converts that star into a fractured version of itself. Cannot convert INDIGO STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR. When multiple star types of a color are used within a single STARFALL subphase, each type is calculated separately.",
     },
 
     [effectKeys.DOME]: {
         name: "DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, convert all DOME into STARDUST.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, converts all DOME into STARDUST.",
     },
 
     [effectKeys.GRAY_STAR]: {
@@ -539,96 +539,58 @@ export const STAR_DESCRIPTIONS = {
         name: "STARDUST",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, for every 3 STARDUST on self, loses STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
-    },
-
-    [effectKeys.DIMMED_RED_STAR]: {
-        name: "DIMMED RED STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into RED STAR.",
-    },
-
-    [effectKeys.DIMMED_ORANGE_STAR]: {
-        name: "DIMMED ORANGE STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into ORANGE STAR.",
-    },
-
-    [effectKeys.DIMMED_YELLOW_STAR]: {
-        name: "DIMMED YELLOW STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into YELLOW STAR.",
-    },
-
-    [effectKeys.DIMMED_GREEN_STAR]: {
-        name: "DIMMED GREEN STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into GREEN STAR.",
-    },
-
-    [effectKeys.DIMMED_BLUE_STAR]: {
-        name: "DIMMED BLUE STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into BLUE STAR.",
-    },
-
-    [effectKeys.DIMMED_INDIGO_STAR]: {
-        name: "DIMMED INDIGO STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into INDIGO STAR.",
-    },
-
-    [effectKeys.DIMMED_VIOLET_STAR]: {
-        name: "DIMMED VIOLET STAR",
-        type: entryTypes.STAR,
-        description: "At turn start, converts into VIOLET STAR.",
+            "At turn start, for every 3 STARDUST on self, loses 3 STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
     },
 
     [effectKeys.RED_TRAIL]: {
         name: "RED TRAIL",
         type: entryTypes.STAR,
         description:
-            "At RED TRAILFALL, deals PHYSICAL DAMAGE equal to RED TRAIL. Then, loses all RED TRAIL on self.",
+            "At RED TRAILFALL, lose all RED TRAIL on self. Deals PHYSICAL DAMAGE equal to the amount lost.",
     },
 
     [effectKeys.ORANGE_TRAIL]: {
         name: "ORANGE TRAIL",
         type: entryTypes.STAR,
         description:
-            "At ORANGE TRAILFALL, burns RESOURCES on both the opponent and self equal to ORANGE TRAIL on self. Then, loses all ORANGE TRAIL on self.",
+        "At ORANGE TRAILFALL, lose all ORANGE TRAIL on self. Burns RESOURCES on both self and opponent equal to the amount lost.",
+
+
     },
 
     [effectKeys.YELLOW_TRAIL]: {
         name: "YELLOW TRAIL",
         type: entryTypes.STAR,
         description:
-            "At YELLOW TRAILFALL, gains STARDUST equal to YELLOW TRAIL. Then, loses all YELLOW TRAIL on self.",
+        "At YELLOW TRAILFALL, lose all YELLOW TRAIL on self. Gains STARDUST equal to the amount lost.",
+
     },
 
     [effectKeys.GREEN_TRAIL]: {
         name: "GREEN TRAIL",
         type: entryTypes.STAR,
         description:
-            "At GREEN TRAILFALL, restores RESOURCES on self equal to GREEN TRAIL. Then, loses all GREEN TRAIL on self.",
+                "At GREEN TRAILFALL, lose all GREEN TRAIL on self. Restores RESOURCES on self equal to the amount lost.",
     },
 
     [effectKeys.BLUE_TRAIL]: {
         name: "BLUE TRAIL",
         type: entryTypes.STAR,
         description:
-            "At BLUE TRAILFALL, loses DIMMED BLUE STAR equal to BLUE TRAIL and gains DOME and GRAY STAR equal to the amount lost. If there are not enough DIMMED BLUE STARS, consumes DIMMED INDIGO STAR instead. Then, loses all BLUE TRAIL on self.",
+        "At BLUE TRAILFALL, lose all BLUE TRAIL on self. Gains DOME equal to the amount lost.",
+
     },
 
     [effectKeys.INDIGO_TRAIL]: {
         name: "INDIGO TRAIL",
         type: entryTypes.STAR,
-        description: "At INDIGO TRAILFALL, lose all INDIGO TRAIL.",
+        description: "At INDIGO TRAILFALL, lose all INDIGO TRAIL on self.",
     },
 
     [effectKeys.VIOLET_TRAIL]: {
         name: "VIOLET TRAIL",
         type: entryTypes.STAR,
-        description: "At VIOLET TRAILFALL, lose all VIOLET TRAIL.",
+        description: "At VIOLET TRAILFALL, lose all VIOLET TRAIL on self.",
     },
 };
 
@@ -1294,8 +1256,7 @@ export const SELENIAN_DESCRIPTIONS = {
     [actionKeys.LUNAR_GROWTH]: {
         name: "LUNAR GROWTH",
         type: entryTypes.ACTION,
-        description:
-            "Enters MOON DEW state.",
+        description: "Enters MOON DEW state.",
     },
 
     [effectKeys.MOON_DEW]: {

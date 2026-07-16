@@ -43,6 +43,12 @@ function StarsPanel({
               entity.controller === aiKeys.HUMAN &&
               game.status === turnStatus.ONGOING;
 
+    const hasTrails = coloredStars.some((curr) => entity.stars[curr.trail] > 0);
+    const isPlayerStarfall =
+        entityKey === entityKeys.PLAYER_ONE
+            ? currRoundPhase === roundPhases.P1_STARS_TURN
+            : currRoundPhase === roundPhases.P2_STARS_TURN;
+
     return (
         <div
             className="star-panel-container"
@@ -107,28 +113,30 @@ function StarsPanel({
                             currentPhase={currPhase}
                             reversed={reversed}
                             handleSetTooltip={handleSetTooltip}
+                            isPlayerStarfall={isPlayerStarfall}
                         />
                     ))}
                 </div>
             </div>
 
-            <div className="star-panel-side-container">
-                <div className="trail-dim-container">
-                    {coloredStars.map((star) => (
-                        <DimTrailRow
-                            key={star.name}
-                            entity={entity}
-                            color={star.color}
-                            dimmedKey={star.dimmed}
-                            trailKey={star.trail}
-                            trailPhase={star.trailPhase}
-                            currentPhase={currPhase}
-                            reversed={reversed}
-                            handleSetTooltip={handleSetTooltip}
-                        />
-                    ))}
+            {hasTrails && (
+                <div className="star-panel-side-container">
+                    <div className="trail-dim-container">
+                        {coloredStars.map((star) => (
+                            <DimTrailRow
+                                key={star.name}
+                                entity={entity}
+                                color={star.color}
+                                trailKey={star.trail}
+                                trailPhase={star.trailPhase}
+                                currentPhase={currPhase}
+                                reversed={reversed}
+                                handleSetTooltip={handleSetTooltip}
+                            />
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

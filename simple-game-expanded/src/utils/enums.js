@@ -185,13 +185,6 @@ export const effectKeys = Object.freeze({
     BLUE_STAR: "blue",
     INDIGO_STAR: "indigo",
     VIOLET_STAR: "violet",
-    DIMMED_RED_STAR: "dimRed",
-    DIMMED_ORANGE_STAR: "dimOrange",
-    DIMMED_YELLOW_STAR: "dimYellow",
-    DIMMED_GREEN_STAR: "dimGreen",
-    DIMMED_BLUE_STAR: "dimBlue",
-    DIMMED_INDIGO_STAR: "dimIndigo",
-    DIMMED_VIOLET_STAR: "dimViolet",
     RED_TRAIL: "trailRed",
     ORANGE_TRAIL: "trailOrange",
     YELLOW_TRAIL: "trailYellow",
@@ -346,5 +339,6 @@ export const eventKeys = Object.freeze({
     ANOINTMENT: "anointment",
     VICTORY: "victory",
     DEFEAT: "defeat",
-    DRAW: "draw"
+    DRAW: "draw",
+    STARFALL_START: "starfallStart",
 });

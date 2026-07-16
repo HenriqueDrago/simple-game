@@ -290,6 +290,7 @@ export function createBaseEntity() {
         stars: {
             white: 0,
             gray: 0,
+            
             red: 0,
             orange: 0,
             yellow: 0,
@@ -297,13 +298,7 @@ export function createBaseEntity() {
             blue: 0,
             indigo: 0,
             violet: 0,
-            dimRed: 0,
-            dimOrange: 0,
-            dimYellow: 0,
-            dimGreen: 0,
-            dimBlue: 0,
-            dimIndigo: 0,
-            dimViolet: 0,
+
             trailRed: 0,
             trailOrange: 0,
             trailYellow: 0,

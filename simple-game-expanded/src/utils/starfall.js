@@ -1,12 +1,7 @@
 import { consumeResources, restoreResources, takeDamage } from "./entities";
 import { dmgTypes, effectKeys } from "./enums";
 
-export function processROYGBStar(
-    { master, nonMaster },
-    starKey,
-    dimmedKey,
-    trailKey,
-) {
+export function processROYGBStar({ master, nonMaster }, starKey, trailKey) {
     let draftMaster = {
         ...master,
     };
@@ -17,54 +12,59 @@ export function processROYGBStar(
 
     // Calculate augment/fracture amount
     const totalStars = draftMaster.stars[starKey];
-    const fracturedStars = Math.min(totalStars, draftMaster.stars.indigo);
+    const fracturedStars = Math.min(
+        totalStars,
+        draftMaster.stars[effectKeys.INDIGO_STAR],
+    );
     const augmentedStars = Math.min(
         totalStars - fracturedStars,
-        draftMaster.stars.violet,
+        draftMaster.stars[effectKeys.VIOLET_STAR],
     );
     const normalStars = totalStars - fracturedStars - augmentedStars;
 
     // Fracture logic
     const newTrails = draftMaster.stars[trailKey] + fracturedStars * 2;
-    const newIndigo = draftMaster.stars.indigo - fracturedStars;
-    const newDimIndigo =
-        draftMaster.stars[effectKeys.DIMMED_INDIGO_STAR] + fracturedStars;
+    const newIndigo =
+        draftMaster.stars[effectKeys.INDIGO_STAR] - fracturedStars;
 
+    // Augment Logic
+    const newViolet =
+        draftMaster.stars[effectKeys.VIOLET_STAR] - augmentedStars;
+
+    // Convert all into White Star
     draftMaster = {
         ...draftMaster,
         stars: {
             ...draftMaster.stars,
+            [starKey]: 0,
+            [effectKeys.WHITE_STAR]:
+                draftMaster.stars[effectKeys.WHITE_STAR] +
+                totalStars +
+                augmentedStars +
+                fracturedStars,
+            [effectKeys.VIOLET_STAR]: newViolet,
             [trailKey]: newTrails,
             [effectKeys.INDIGO_STAR]: newIndigo,
-            [effectKeys.DIMMED_INDIGO_STAR]: newDimIndigo,
         },
     };
 
-    // Blue/Orange special logic
-    if (starKey === effectKeys.BLUE_STAR && fracturedStars > 0) {
+    // Normal/Fractured Blue Special Case
+    if (starKey === effectKeys.BLUE_STAR) {
         draftMaster = {
             ...draftMaster,
             stars: {
                 ...draftMaster.stars,
-                [dimmedKey]: draftMaster.stars[dimmedKey] + fracturedStars,
-                [starKey]: draftMaster.stars[starKey] - fracturedStars,
+                [effectKeys.WHITE_STAR]:
+                    draftMaster.stars[effectKeys.WHITE_STAR] -
+                    (fracturedStars * 2) -
+                    normalStars,
+                [effectKeys.GRAY_STAR]:
+                    draftMaster.stars[effectKeys.GRAY_STAR] +
+                    (fracturedStars * 2) +
+                    normalStars,
             },
         };
     }
-
-    // Calculate new violets
-    const newViolet = draftMaster.stars.violet - augmentedStars;
-    const newDimViolet =
-        draftMaster.stars[effectKeys.DIMMED_VIOLET_STAR] + augmentedStars;
-
-    draftMaster = {
-        ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.VIOLET_STAR]: newViolet,
-            [effectKeys.DIMMED_VIOLET_STAR]: newDimViolet,
-        },
-    };
 
     // Process star action
     const newContext = { master: draftMaster, nonMaster: draftNonMaster };
@@ -128,15 +128,17 @@ export function processROYGBStar(
     };
 }
 
-export function processIVStar({ master, nonMaster }, starKey, dimStarKey) {
+export function processIVStar({ master, nonMaster }, starKey) {
     const draftMaster = {
         ...master,
         stars: {
             ...master.stars,
             [starKey]: 0,
-            [dimStarKey]: master.stars[starKey] + master.stars[dimStarKey],
+            [effectKeys.WHITE_STAR]:
+                master.stars[starKey] + master.stars[effectKeys.WHITE_STAR],
         },
     };
+
     return {
         draftMaster,
         nonMaster,
@@ -182,7 +184,7 @@ export function processTrail({ master, nonMaster }, trailKey) {
             break;
         }
         case effectKeys.BLUE_TRAIL: {
-            const newEntities = processBlueTrail(newContext, trails);
+            const newEntities = processBlueStar(newContext, trails, 0);
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
             break;
@@ -223,7 +225,11 @@ export function processTrail({ master, nonMaster }, trailKey) {
     };
 }
 
-export function processRedStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processRedStar(
+    { master, nonMaster },
+    normalStars,
+    augmentedStars,
+) {
     let draftMaster = {
         ...master,
     };
@@ -254,7 +260,11 @@ export function processRedStar({ master, nonMaster }, normalStars, augmentedStar
     };
 }
 
-export function processOrangeStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processOrangeStar(
+    { master, nonMaster },
+    normalStars,
+    augmentedStars,
+) {
     let draftMaster = {
         ...master,
     };
@@ -283,7 +293,11 @@ export function processOrangeStar({ master, nonMaster }, normalStars, augmentedS
     };
 }
 
-export function processYellowStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processYellowStar(
+    { master, nonMaster },
+    normalStars,
+    augmentedStars,
+) {
     let draftMaster = {
         ...master,
     };
@@ -294,15 +308,15 @@ export function processYellowStar({ master, nonMaster }, normalStars, augmentedS
 
     draftMaster = {
         ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.GRAY_STAR]:
-                draftMaster.stars[effectKeys.GRAY_STAR] + augmentedStars,
-        },
         resources: {
             ...draftMaster.resources,
             [effectKeys.STARDUST]:
                 draftMaster.resources[effectKeys.STARDUST] + normalStars,
+        },
+        stars: {
+            ...draftMaster.stars,
+            [effectKeys.GRAY_STAR]:
+                draftMaster.stars[effectKeys.GRAY_STAR] + augmentedStars,
         },
     };
 
@@ -312,7 +326,11 @@ export function processYellowStar({ master, nonMaster }, normalStars, augmentedS
     };
 }
 
-export function processGreenStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processGreenStar(
+    { master, nonMaster },
+    normalStars,
+    augmentedStars,
+) {
     let draftMaster = {
         ...master,
     };
@@ -330,7 +348,11 @@ export function processGreenStar({ master, nonMaster }, normalStars, augmentedSt
     };
 }
 
-export function processBlueStar({ master, nonMaster }, normalStars, augmentedStars) {
+export function processBlueStar(
+    { master, nonMaster },
+    normalStars,
+    augmentedStars,
+) {
     let draftMaster = {
         ...master,
     };
@@ -339,84 +361,14 @@ export function processBlueStar({ master, nonMaster }, normalStars, augmentedSta
         ...nonMaster,
     };
 
-    const normalBlueConsumed = Math.min(
-        draftMaster.stars[effectKeys.BLUE_STAR],
-        normalStars,
-    );
-    const augmentedBlueConsumed = Math.min(
-        draftMaster.stars[effectKeys.BLUE_STAR],
-        augmentedStars,
-    );
-
     draftMaster = {
         ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.BLUE_STAR]:
-                draftMaster.stars[effectKeys.BLUE_STAR] -
-                normalBlueConsumed -
-                augmentedBlueConsumed,
-            [effectKeys.WHITE_STAR]:
-                draftMaster.stars[effectKeys.WHITE_STAR] +
-                augmentedBlueConsumed,
-            [effectKeys.GRAY_STAR]:
-                draftMaster.stars[effectKeys.GRAY_STAR] + normalBlueConsumed,
-        },
         resources: {
             ...draftMaster.resources,
             [effectKeys.DOME]:
                 draftMaster.resources[effectKeys.DOME] +
-                normalBlueConsumed +
-                augmentedBlueConsumed * 2,
-        },
-    };
-
-    return {
-        draftMaster,
-        draftNonMaster,
-    };
-}
-
-export function processBlueTrail({ master, nonMaster }, trails) {
-    let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
-    };
-
-    const dimBlueConsumed = Math.min(
-        draftMaster.stars[effectKeys.DIMMED_BLUE_STAR],
-        trails,
-    );
-
-    const dimIndigoConsumed = Math.min(
-        draftMaster.stars[effectKeys.DIMMED_INDIGO_STAR],
-        trails - dimBlueConsumed,
-    );
-
-    draftMaster = {
-        ...draftMaster,
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.DIMMED_BLUE_STAR]:
-                draftMaster.stars[effectKeys.DIMMED_BLUE_STAR] -
-                dimBlueConsumed,
-            [effectKeys.DIMMED_INDIGO_STAR]:
-                draftMaster.stars[effectKeys.DIMMED_INDIGO_STAR] -
-                dimIndigoConsumed,
-            [effectKeys.GRAY_STAR]:
-                draftMaster.stars[effectKeys.GRAY_STAR] +
-                dimBlueConsumed +
-                dimIndigoConsumed,
-        },
-        resources: {
-            ...draftMaster.resources,
-            [effectKeys.DOME]:
-                draftMaster.resources[effectKeys.DOME] +
-                dimBlueConsumed +
-                dimIndigoConsumed,
+                normalStars +
+                augmentedStars * 2,
         },
     };
 

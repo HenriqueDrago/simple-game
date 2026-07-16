@@ -14,8 +14,9 @@ function StarRow({
     currentPhase,
     reversed,
     handleSetTooltip,
+    isPlayerStarfall,
 }) {
-    const isStarGlowing = currentPhase === starPhase;
+    const isStarGlowing = currentPhase === starPhase && isPlayerStarfall;
 
     const hasCurrentStars = entity.stars[starKey] > 0;
     const hasWhiteStars = entity.stars[effectKeys.WHITE_STAR] > 0;
