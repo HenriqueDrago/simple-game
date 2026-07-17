@@ -285,6 +285,11 @@ export const entryTypes = Object.freeze({
     RANKED_RESOURCE: "rankedResource",
     OVERFLOWN_RESOURCE: "overflownResource",
     DAMAGE_MODIFIERS: "damageModifiers",
+    OFFENSIVE_ACTION: "offensiveActions",
+    DEFENSIVE_ACTION: "defensiveActions",
+    TRANSFORMATIVE_ACTION: "transformativeActions",
+    ACT_OF_BENEDICTION: "actOfBenediction",
+    ACT_OF_MALEDICTION: "actOfMalediction",
 });
 
 export const starfallPhases = Object.freeze({

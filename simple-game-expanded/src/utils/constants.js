@@ -466,22 +466,25 @@ const defensiveActions = [
 
 const transformativeActions = [
     actionKeys.ARRAY,
-    actionKeys.SHADOW_PACT,
-    actionKeys.DARK_PROMISE,
+    actionKeys.CURSE,
+    
+    actionKeys.DEPLOY,
+
     actionKeys.ATTUNE,
     actionKeys.DA_CAPO,
-    actionKeys.DEPLOY,
-    actionKeys.CURSE,
-    actionKeys.RITUAL_OF_ASH,
     actionKeys.SOUND_OF_SILENCE,
     actionKeys.BABEL,
-    actionKeys.SHADOW_MANTLE,
-    actionKeys.BLACK_MAYHEM,
-    actionKeys.ALIGN,
-    actionKeys.CHART,
 
-    actionKeys.SACRIFICE,
-    actionKeys.LUNAR_TIDE,
+    actionKeys.SHADOW_PACT,
+    actionKeys.BLACK_MAYHEM,
+    actionKeys.SHADOW_MANTLE,
+    actionKeys.RITUAL_OF_ASH,
+    actionKeys.DARK_PROMISE,
+
+    actionKeys.CHART,
+    actionKeys.REFRACT,
+    actionKeys.MIRROR,
+    actionKeys.SHATTER,
 ];
 
 const actsOfBenediction = [
@@ -850,4 +853,9 @@ export const entryTypesMap = {
     [entryTypes.RANKED_RESOURCE]: "RANKED RESOURCE",
     [entryTypes.OVERFLOWN_RESOURCE]: "OVERFLOWN RESOURCE",
     [entryTypes.DAMAGE_MODIFIERS]: "DAMAGE MODIFIER",
+    [entryTypes.ACT_OF_BENEDICTION]: "ACT OF BENEDICTION",
+    [entryTypes.ACT_OF_MALEDICTION]: "ACT OF MALEDICTION",
+    [entryTypes.OFFENSIVE_ACTION]: "OFFENSIVE ACTION",
+    [entryTypes.DEFENSIVE_ACTION]: "DEFENSIVE ACTION",
+    [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
 };
