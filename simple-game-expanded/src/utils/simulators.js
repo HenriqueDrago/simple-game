@@ -691,7 +691,10 @@ function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateChart({ prev, agent, agentKey }) {
-    const newWhite = agent.stars.white + constants.CHART_STAR_GAIN;
+    const newWhite =
+        agent.stars[effectKeys.GRAY_STAR] +
+        agent.stars[effectKeys.WHITE_STAR] +
+        constants.CHART_STAR_GAIN;
 
     return {
         ...prev,
@@ -701,11 +704,12 @@ function simulateChart({ prev, agent, agentKey }) {
                 ...agent,
                 stars: {
                     ...agent.stars,
-                    white: newWhite,
+                    [effectKeys.WHITE_STAR]: newWhite,
+                    [effectKeys.GRAY_STAR]: 0,
                 },
                 states: {
                     ...agent.states,
-                    stargazer: true,
+                    [effectKeys.STARGAZER]: true,
                 },
             },
         },

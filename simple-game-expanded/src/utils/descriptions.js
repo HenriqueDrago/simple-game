@@ -361,7 +361,7 @@ export const STAR_DESCRIPTIONS = {
         name: "CHART",
         type: entryTypes.ACTION,
         description:
-            "Gains 3 WHITE STAR. If not in the STARGAZER state, enters the STARGAZER state.",
+            "Gains 3 WHITE STAR. If not in the STARGAZER state, enters the STARGAZER state. Converts all GRAY STAR on self into WHITE STAR.",
     },
 
     [effectKeys.STARGAZER]: {
@@ -483,21 +483,21 @@ export const STAR_DESCRIPTIONS = {
         name: "ORANGE STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on both opponent and self equal to the amount of ORANGE STAR consumed. Burns RESOURCES on the opponent only equal to the amount of augmented ORANGE STAR consumed. Gains ORANGE TRAIL equal to twice the amount of fractured ORANGE STAR consumed.",
+            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on the opponent and WHITE STAR on self equal to the amount of normal ORANGE STAR consumed. Burns RESOURCES on the opponent equal to the amount of augmented ORANGE STAR consumed. Gains ORANGE TRAIL equal to twice the amount of fractured ORANGE STAR consumed.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
         type: entryTypes.STAR,
         description:
-            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Gains STARDUST equal to the amount of YELLOW STAR consumed. Gains GRAY STAR equal to the amount of augmented YELLOW STAR consumed. Gains YELLOW TRAIL equal to twice the amount of fractured YELLOW STAR consumed.",
+            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Gains STARDUST equal to the amount of normal YELLOW STAR consumed. Gains GRAY STAR equal to the amount of augmented YELLOW STAR consumed. Gains YELLOW TRAIL equal to twice the amount of fractured YELLOW STAR consumed.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Restores RESOURCES on self equal to the amount of GREEN STAR consumed. Restores RESOURCES on the opponent equal to the amount of augmented GREEN STAR consumed. Gains GREEN TRAIL equal to twice the amount of fractured GREEN STAR consumed.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Consumes RESOURCES on self equal to the amount of normal GREEN STAR consumed on self, then restores RESOURCES equal to the amount of RESOURCES consumed. Restores RESOURCES on self equal to the amount of augmented GREEN STAR consumed. Gains GREEN TRAIL equal to twice the amount of fractured GREEN STAR consumed.",
     },
 
     [effectKeys.BLUE_STAR]: {
@@ -531,8 +531,7 @@ export const STAR_DESCRIPTIONS = {
     [effectKeys.GRAY_STAR]: {
         name: "GRAY STAR",
         type: entryTypes.STAR,
-        description:
-            "Cannot be assigned a color. At turn end, converts into WHITE STAR.",
+        description: "Cannot be assigned a color.",
     },
 
     [effectKeys.STARDUST]: {
@@ -553,32 +552,28 @@ export const STAR_DESCRIPTIONS = {
         name: "ORANGE TRAIL",
         type: entryTypes.STAR,
         description:
-        "At ORANGE TRAILFALL, lose all ORANGE TRAIL on self. Burns RESOURCES on both self and opponent equal to the amount lost.",
-
-
+            "At ORANGE TRAILFALL, lose all ORANGE TRAIL on self. Burns RESOURCES on both self and opponent equal to the amount lost.",
     },
 
     [effectKeys.YELLOW_TRAIL]: {
         name: "YELLOW TRAIL",
         type: entryTypes.STAR,
         description:
-        "At YELLOW TRAILFALL, lose all YELLOW TRAIL on self. Gains STARDUST equal to the amount lost.",
-
+            "At YELLOW TRAILFALL, lose all YELLOW TRAIL on self. Gains STARDUST equal to the amount lost.",
     },
 
     [effectKeys.GREEN_TRAIL]: {
         name: "GREEN TRAIL",
         type: entryTypes.STAR,
         description:
-                "At GREEN TRAILFALL, lose all GREEN TRAIL on self. Restores RESOURCES on self equal to the amount lost.",
+            "At GREEN TRAILFALL, lose all GREEN TRAIL on self. Consumes RESOURCES on self equal to the amount lost, then restores RESOURCES equal to the amount consumed.",
     },
 
     [effectKeys.BLUE_TRAIL]: {
         name: "BLUE TRAIL",
         type: entryTypes.STAR,
         description:
-        "At BLUE TRAILFALL, lose all BLUE TRAIL on self. Gains DOME equal to the amount lost.",
-
+            "At BLUE TRAILFALL, lose all BLUE TRAIL on self. Gains DOME equal to the amount lost.",
     },
 
     [effectKeys.INDIGO_TRAIL]: {

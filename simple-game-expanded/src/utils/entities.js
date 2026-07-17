@@ -42,7 +42,7 @@ export function restoreResources(entity, amount) {
     }
 
     // Health
-    if (entity[effectKeys.MAX_HEALTH] > 0) {
+    if (getEntityMaxHealth(draftEntity) > 0) {
         if (isElementActive(entity, elementalKeys.OCEAN)) {
             draftEntity = gainHp(draftEntity, amount);
 

@@ -19,11 +19,7 @@ import {
     moonKeys,
 } from "./enums.js";
 import { commitTurn, processUpkeep } from "./turnManagement.js";
-import {
-    processGreenStar,
-    processOrangeStar,
-    processRedStar,
-} from "./starfall.js";
+import { processOrangeStar, processRedStar } from "./starfall.js";
 
 // Auxiliary Functions
 function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
@@ -232,14 +228,14 @@ export function assignStarsAI(context) {
         }
     }
 
-    // C: Augmented Orange Star
+    // C: Orange Star
     if (remainingWhite > 0) {
-        const violetAlloc = Math.floor(remainingWhite / 2);
+        const orangeAlloc = remainingWhite;
 
         const { draftMaster, draftNonMaster } = processOrangeStar(
             { master: agent, nonMaster: nonAgent },
+            orangeAlloc,
             0,
-            violetAlloc,
         );
 
         const simState = {
@@ -259,137 +255,105 @@ export function assignStarsAI(context) {
         ) {
             allocations = {
                 ...allocations,
-                [effectKeys.ORANGE_STAR]: violetAlloc,
-                [effectKeys.VIOLET_STAR]: violetAlloc,
-            };
-            remainingWhite -= violetAlloc * 2;
-        }
-    }
-
-    // D: Augmented Green Star
-    if (remainingWhite > 0) {
-        const violetAlloc = Math.floor(remainingWhite / 2);
-        const greenAlloc = remainingWhite - violetAlloc;
-
-        const { draftMaster, draftNonMaster } = processGreenStar(
-            { master: agent, nonMaster: nonAgent },
-            0,
-            violetAlloc,
-        );
-
-        const simState = {
-            ...prev,
-            entities: {
-                [agentKey]: draftMaster,
-                [nonAgentKey]: draftNonMaster,
-            },
-        };
-
-        // Check if the opponent dies from the delayed True Damage after commit
-        if (
-            willEntityEffectivelyDieByNextCommitPostUpkeep(
-                simState,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            allocations = {
-                ...allocations,
-                [effectKeys.GREEN_STAR]: greenAlloc,
-                [effectKeys.VIOLET_STAR]: violetAlloc,
+                [effectKeys.ORANGE_STAR]: orangeAlloc,
             };
             remainingWhite = 0;
         }
     }
 
-    // E: Normal Orange Star
-    if (remainingWhite > 0) {
-        // use consume resources to identify how many resources are available
-        const maxConsumption = consumeResources(
-            agent,
-            Infinity,
-            effectKeys.ORANGE_STAR,
-        ).resourcesConsumed.totalConsumption;
-        const orangeAlloc = Math.min(remainingWhite, maxConsumption - 1); // Since hp is last on the ladder, set max as everything but 1
-        const violetAlloc = Math.floor((remainingWhite - orangeAlloc) / 2);
-
-        const { draftMaster, draftNonMaster } = processOrangeStar(
-            { master: agent, nonMaster: nonAgent },
-            orangeAlloc,
-            violetAlloc,
-        );
-
-        const simState = {
-            ...prev,
-            entities: {
-                [agentKey]: draftMaster,
-                [nonAgentKey]: draftNonMaster,
-            },
-        };
-
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simState,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            allocations = {
-                ...allocations,
-                [effectKeys.ORANGE_STAR]: orangeAlloc + violetAlloc,
-                [effectKeys.VIOLET_STAR]: violetAlloc,
-            };
-
-            remainingWhite -= orangeAlloc;
-            remainingWhite -= violetAlloc * 2;
-        }
-    }
-
     // === Default Logic ===
 
-    // Restore up to max hp with green
+    // Clean up bad resources with green
+    let currHeal = 0;
+    const missignHp = agent[effectKeys.MAX_HEALTH] - agent[effectKeys.HEALTH];
     if (remainingWhite > 0) {
-        const missingHealth =
-            getEntityMaxHealth(agent) - agent[effectKeys.HEALTH];
-        const spentGreen = Math.min(missingHealth, remainingWhite);
+        let greenAlloc = allocations[effectKeys.GREEN_STAR];
+
+        // Poison
+        if (agent.resources[effectKeys.POISON] > 0) {
+            const poisonCleansed = Math.min(
+                agent.resources[effectKeys.POISON],
+                remainingWhite,
+            );
+            greenAlloc += poisonCleansed;
+            currHeal += poisonCleansed;
+            remainingWhite -= poisonCleansed;
+        }
 
         allocations = {
             ...allocations,
-            [effectKeys.GREEN_STAR]: spentGreen,
+            [effectKeys.GREEN_STAR]: greenAlloc,
         };
-        remainingWhite -= spentGreen;
     }
 
-    // Clean up bas resources with orange
-    const undesirableResources =
-        agent.resources[effectKeys.POISON] +
-        agent.resources[effectKeys.SHACKLED_MANA];
+    // Restore up to max hp with normal green
     if (remainingWhite > 0) {
-        const spentOrange = Math.min(
+        const resourcesConsumed = consumeResources(
+            agent,
+            Infinity,
+            effectKeys.GREEN_STAR,
+        ).resourcesConsumed;
+        const nonHealthResources =
+            resourcesConsumed.totalConsumption -
+            (resourcesConsumed[effectKeys.HEALTH] || 0);
+
+        const toBeHealed = Math.min(
+            Math.min(missignHp - currHeal, nonHealthResources),
             remainingWhite,
-            undesirableResources - allocations[effectKeys.ORANGE_STAR],
+        );
+        const greenAlloc = allocations[effectKeys.GREEN_STAR] + toBeHealed;
+
+        currHeal += toBeHealed;
+        remainingWhite -= toBeHealed;
+
+        allocations = {
+            ...allocations,
+            [effectKeys.GREEN_STAR]: greenAlloc,
+        };
+    }
+
+    // Restore up to max hp with augmented green
+    if (remainingWhite > 0 && currHeal < missignHp) {
+        const spentStars = Math.min(
+            missignHp - currHeal,
+            Math.floor(remainingWhite / 2),
         );
 
         allocations = {
             ...allocations,
-            [effectKeys.ORANGE_STAR]:
-                allocations[effectKeys.ORANGE_STAR] + spentOrange,
+            [effectKeys.GREEN_STAR]:
+                spentStars + allocations[effectKeys.GREEN_STAR],
+            [effectKeys.VIOLET_STAR]:
+                spentStars + allocations[effectKeys.VIOLET_STAR],
         };
-
-        remainingWhite -= spentOrange;
+        remainingWhite -= spentStars * 2;
     }
 
-    // Use yellow/augmented yellow for resource generation
+    // Use augmented yellow for resource generation
     if (remainingWhite > 0) {
-        const spentYellow = Math.ceil(remainingWhite / 2);
-        const spentViolet = Math.floor(remainingWhite / 2);
+        const spentStars = Math.floor(remainingWhite / 2);
 
         allocations = {
             ...allocations,
-            [effectKeys.YELLOW_STAR]: spentYellow,
-            [effectKeys.VIOLET_STAR]: spentViolet,
+            [effectKeys.YELLOW_STAR]:
+                spentStars + allocations[effectKeys.YELLOW_STAR],
+            [effectKeys.VIOLET_STAR]:
+                spentStars + allocations[effectKeys.VIOLET_STAR],
         };
-        // remainingWhite = 0;
+        remainingWhite -= spentStars * 2;
+    }
+
+    // use extra yellow if no green/blue were used
+    if (
+        remainingWhite > 0 &&
+        allocations[effectKeys.GREEN_STAR] <= 0 &&
+        allocations[effectKeys.BLUE_STAR] <= 0
+    ) {
+        allocations = {
+            ...allocations,
+            [effectKeys.YELLOW_STAR]:
+                allocations[effectKeys.YELLOW_STAR] + remainingWhite,
+        };
     }
 
     return allocations;
@@ -809,8 +773,13 @@ export function bloodknightAI(context) {
     /*
     Conditions:
     - Health is high enough = more than 60% full
+    - Sacrifice won't kill us
     */
-    if (getEntityTotalHealth(agent) >= getEntityMaxHealth(agent) * 0.6) {
+    const simSac = simulate(actionKeys.SACRIFICE);
+    if (
+        getEntityTotalHealth(agent) >= getEntityMaxHealth(agent) * 0.6 &&
+        !willEntityEffectivelyDieByNextUpkeep(simSac, agentKey, nonAgentKey)
+    ) {
         return actionKeys.SACRIFICE;
     }
 
@@ -1466,27 +1435,37 @@ export function lunaticAI(context) {
             return actionKeys.SHATTER;
         }
         case elementalKeys.SHATTERED: {
-
-
-            // Simulate lethal attacks 
-            const chalkSim = simulate(
-                actionKeys.CHALK,
-            );
-            if(willEntityEffectivelyDieByNextUpkeep(chalkSim, nonAgentKey, agentKey)) {
+            // Simulate lethal attacks
+            const chalkSim = simulate(actionKeys.CHALK);
+            if (
+                willEntityEffectivelyDieByNextUpkeep(
+                    chalkSim,
+                    nonAgentKey,
+                    agentKey,
+                )
+            ) {
                 return actionKeys.CHALK;
             }
 
-            const strikeSim = simulate(
-                actionKeys.LUNAR_STRIKE,
-            );
-            if(willEntityEffectivelyDieByNextUpkeep(strikeSim, nonAgentKey, agentKey)) {
+            const strikeSim = simulate(actionKeys.LUNAR_STRIKE);
+            if (
+                willEntityEffectivelyDieByNextUpkeep(
+                    strikeSim,
+                    nonAgentKey,
+                    agentKey,
+                )
+            ) {
                 return actionKeys.LUNAR_STRIKE;
             }
 
-            const smiteSim = simulate(
-                actionKeys.LUNAR_SMITE,
-            );
-            if(willEntityEffectivelyDieByNextUpkeep(smiteSim, nonAgentKey, agentKey)) {
+            const smiteSim = simulate(actionKeys.LUNAR_SMITE);
+            if (
+                willEntityEffectivelyDieByNextUpkeep(
+                    smiteSim,
+                    nonAgentKey,
+                    agentKey,
+                )
+            ) {
                 return actionKeys.LUNAR_SMITE;
             }
 

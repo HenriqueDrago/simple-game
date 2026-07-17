@@ -475,21 +475,6 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 },
             };
         }
-
-        // Gray Stars
-        if (draftCurrActor.stars[effectKeys.GRAY_STAR] > 0) {
-            const newWhite =
-                draftCurrActor.stars[effectKeys.GRAY_STAR] +
-                draftCurrActor.stars[effectKeys.WHITE_STAR];
-            draftCurrActor = {
-                ...draftCurrActor,
-                stars: {
-                    ...draftCurrActor.stars,
-                    [effectKeys.WHITE_STAR]: newWhite,
-                    [effectKeys.GRAY_STAR]: 0,
-                },
-            };
-        }
     }
 
     // Laser used

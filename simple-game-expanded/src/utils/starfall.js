@@ -273,19 +273,21 @@ export function processOrangeStar(
         ...nonMaster,
     };
 
-    // Consume resources on self
-    draftMaster = consumeResources(
-        draftMaster,
-        normalStars,
-        effectKeys.ORANGE_STAR,
-    ).draftEntity;
-
     // Consume resources on opponent
     draftNonMaster = consumeResources(
         draftNonMaster,
         normalStars + augmentedStars,
         effectKeys.ORANGE_STAR,
     ).draftEntity;
+
+    // lose white star
+    draftMaster = {
+        ...draftMaster,
+        stars: {
+            ...draftMaster.stars,
+            [effectKeys.WHITE_STAR]: draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
+        }
+    }
 
     return {
         draftMaster,
@@ -339,8 +341,8 @@ export function processGreenStar(
         ...nonMaster,
     };
 
-    draftMaster = restoreResources(draftMaster, normalStars);
-    draftNonMaster = restoreResources(draftNonMaster, augmentedStars);
+    const {draftEntity, resourcesConsumed} = consumeResources(draftMaster, normalStars, effectKeys.GREEN_STAR);
+    draftMaster = restoreResources(draftEntity, augmentedStars + resourcesConsumed.totalConsumption);
 
     return {
         draftMaster,
