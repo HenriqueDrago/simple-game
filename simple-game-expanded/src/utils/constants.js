@@ -27,6 +27,7 @@ import {
     roundPhases,
     elementalKeys,
     moonKeys,
+    dmgTypes,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -67,8 +68,10 @@ const SHADOW_PACT_BURN = 5;
 const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
 
 const STARTING_SONORITY = 0;
-const SONORITY_LOWER_LIMIT = -10;
-const SONORITY_HIGHER_LIMIT = 10;
+const SONORITY_LOWER_LIMIT = -100;
+const SONORITY_HIGHER_LIMIT = 100;
+const SONORITY_ON_DEFENSE = 10;
+const SONORITY_ON_OFFENSE = -10;
 
 const MAX_ENLIT = 100;
 const MAX_INSIGHT = 100;
@@ -103,6 +106,8 @@ const SMITE_MULT = 5;
 const WITHER_LUNACY_MULT = 2;
 
 export const constants = {
+    SONORITY_ON_DEFENSE,
+    SONORITY_ON_OFFENSE,
     WITHER_LUNACY_MULT,
     LUNAR_TIDE_MULT,
     MAX_LUNACY,
@@ -158,6 +163,7 @@ export const MITIGATION_RESOURCES = [
     effectKeys.HALO,
     effectKeys.LINGERING_EMBER,
     effectKeys.DOME,
+    effectKeys.HARMONY,
     effectKeys.MYCELIUM,
     effectKeys.FUNERARY_URN,
 ];
@@ -166,6 +172,7 @@ export const FREE_RESOURCES = [
     effectKeys.SHADOWFLAME,
     effectKeys.UNRELENTING_SHADOWS,
     effectKeys.CINDERS,
+    effectKeys.DISSONANCE,
     effectKeys.POISON,
     effectKeys.DISTILLED_TOXIN,
     effectKeys.SHACKLED_MANA,
@@ -190,16 +197,12 @@ export const presetAi = {
             effectKeys.UPKEEP,
             effectKeys.PLAN,
             effectKeys.COMMIT,
-            effectKeys.ACTIONS,
             effectKeys.HEALTH,
             effectKeys.MAX_HEALTH,
             effectKeys.MANA,
             effectKeys.MAX_MANA,
             effectKeys.STR,
             effectKeys.DEF,
-            effectKeys.PHYSICAL_DAMAGE,
-            effectKeys.PIERCING_DAMAGE,
-            effectKeys.TRUE_DAMAGE,
             effectKeys.DEF_EFFECTIVENESS,
             effectKeys.DAMAGE_REDUCTION,
             effectKeys.RESOURCES,
@@ -213,9 +216,26 @@ export const presetAi = {
             entryTypes.MITIGATION_RESOURCE,
             entryTypes.BATTLE_PHASE,
             entryTypes.STAR,
-            effectKeys.OFFENSIVE_ACTIONS,
-            effectKeys.DEFENSIVE_ACTIONS,
-            effectKeys.TRANSFORMATIVE_ACTIONS,
+            
+            dmgTypes.PHYSICAL,
+            dmgTypes.PIERCING,
+            dmgTypes.TRUE,
+            effectKeys.EFFECTIVE_DEF,
+            effectKeys.FRAGILITY,
+            effectKeys.DAMAGE_BONUS,
+            effectKeys.WEAKNESS,
+            roundPhases.ROUND_START,
+            roundPhases.ROUND_END,
+            entryTypes.ACTION,
+            entryTypes.OFFENSIVE_ACTION,
+            entryTypes.DEFENSIVE_ACTION,
+            entryTypes.TRANSFORMATIVE_ACTION,
+            entryTypes.RANKED_RESOURCE,
+            entryTypes.OVERFLOWN_RESOURCE,
+            entryTypes.DAMAGE_MODIFIERS,
+            entryTypes.MECHANIC,
+            entryTypes.STAT,
+            entryTypes.CATEGORY,
         ],
     },
     [aiKeys.SIMPLE]: {
@@ -300,20 +320,21 @@ export const presetAi = {
     [aiKeys.MAESTRO]: {
         name: "Maestro",
         best: {
-            str: 0,
-            def: 10,
+            str: 5,
+            def: 5,
         },
         caller: maestroAI,
         desc: [
             actionKeys.ATTUNE,
-            actionKeys.DA_CAPO,
-            actionKeys.SOUND_OF_SILENCE,
-            actionKeys.BABEL,
             effectKeys.RESONANT,
             effectKeys.SONORITY,
+            actionKeys.DA_CAPO,
+            actionKeys.SOUND_OF_SILENCE,
+            effectKeys.HARMONY,
+            actionKeys.BABEL,
+            effectKeys.DISSONANCE,
         ],
     },
-
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
@@ -337,7 +358,6 @@ export const presetAi = {
             effectKeys.CINDERS,
         ],
     },
-
     [aiKeys.STARFARER]: {
         name: "Starfarer",
         best: {
@@ -383,7 +403,6 @@ export const presetAi = {
             effectKeys.DOME,
         ],
     },
-
     [aiKeys.LUNATIC]: {
         name: "Lunatic",
         best: {
@@ -391,9 +410,48 @@ export const presetAi = {
             def: 5,
         },
         caller: lunaticAI,
-        desc: [],
+        desc: [
+            actionKeys.REFRACT,
+            effectKeys.SELENIAN,
+            actionKeys.MIRROR,
+            effectKeys.MOONLIGHT,
+            effectKeys.MIRRORED_MOON,
+            moonKeys.HIDDEN,
+            moonKeys.WAXING,
+            moonKeys.WANING,
+            moonKeys.BLOODSTAINED,
+            moonKeys.CORONAL,
+            effectKeys.MOON_PHASE,
+            effectKeys.ELEMENTAL_CRYSTALS,
+            elementalKeys.DULLED,
+            elementalKeys.FROST,
+            actionKeys.LUNAR_SHROUD,
+            effectKeys.PRISMATIC,
+            effectKeys.REFRACTED_DIVINITY,
+            effectKeys.MOONDUST,
+            effectKeys.LUNACY,
+            elementalKeys.NATURE,
+            effectKeys.SILVER_BLOOD,
+            actionKeys.LUNAR_GROWTH,
+            effectKeys.MOON_DEW,
+            elementalKeys.SCORCH,
+            actionKeys.LUNAR_STRIKE,
+            elementalKeys.OCEAN,
+            actionKeys.LUNAR_TIDE,
+            elementalKeys.WITHER,
+            effectKeys.MOONLIT_TEARS,
+            actionKeys.LUNAR_SHED,
+            effectKeys.MYCELIUM,
+            elementalKeys.ASH,
+            effectKeys.FUNERARY_URN,
+            actionKeys.LUNAR_SMITE,
+            elementalKeys.ALBEDO,
+            actionKeys.SHATTER,
+            elementalKeys.SHATTERED,
+            actionKeys.CHALK,
+            dmgTypes.LUNIC,
+        ],
     },
-
     [aiKeys.PALADIN]: {
         name: "Paladin",
         best: {
@@ -411,8 +469,8 @@ export const presetAi = {
             effectKeys.ZENITH_OF_MORTALITY,
             actionKeys.ASCEND,
             effectKeys.ASCENDENCE_OF_SPIRIT,
-            effectKeys.ACTS_OF_BENEDICTION,
-            effectKeys.ACTS_OF_MALEDICTION,
+            entryTypes.ACT_OF_BENEDICTION,
+            entryTypes.ACT_OF_MALEDICTION,
             effectKeys.TARNISHED_SIN,
             effectKeys.EYE_OF_HEAVENS,
             effectKeys.INSIGHT,
@@ -437,6 +495,7 @@ export const presetAi = {
             effectKeys.ABANDONED_BY_GRACE,
             effectKeys.ANOINTED_PROXY,
             effectKeys.EMANATION,
+            effectKeys.ANOINTMENT,
         ],
     },
 };
@@ -633,6 +692,15 @@ export const stackCounters = {
             color: "white",
             borderColor: "white",
             backgroundColor: "rgba(255, 255, 255, 0.2)",
+        },
+    },
+
+    [effectKeys.DISSONANCE]: {
+        label: "Dissonance",
+        style: {
+            color: "#ff3333",
+            borderColor: "#ff3333",
+            backgroundColor: "rgba(255, 51, 51, 0.2)",
         },
     },
 };

@@ -101,6 +101,22 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             };
         }
 
+        // Harmony
+        if (draftTarget.resources[effectKeys.HARMONY] > 0) {
+            draftTarget = restoreResources(
+                draftTarget,
+                draftTarget.resources[effectKeys.HARMONY],
+            );
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.HARMONY]: 0,
+                },
+            };
+        }
+
         // Unrelenting Shadows
         if (draftTarget.resources.unrelentingShadows > 0) {
             draftTarget = restoreResources(
@@ -472,6 +488,25 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 resources: {
                     ...draftCurrActor.resources,
                     manaOverflow: 0,
+                },
+            };
+        }
+
+        // Dissonance
+        if (
+            draftCurrActor.resources[effectKeys.DISSONANCE] > 0
+        ) {
+            draftCurrActor = takeDamage(
+                draftCurrActor,
+                draftCurrActor.resources[effectKeys.DISSONANCE],
+                dmgTypes.TRUE,
+            );
+
+            draftCurrActor = {
+                ...draftCurrActor,
+                resources: {
+                    ...draftCurrActor.resources,
+                    [effectKeys.DISSONANCE]: 0,
                 },
             };
         }

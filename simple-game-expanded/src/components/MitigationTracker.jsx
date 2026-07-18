@@ -1,4 +1,4 @@
-import { Amphora, Flame, Hexagon, Moon, Pyramid, Sun } from "lucide-react";
+import { Amphora, Flame, Hexagon, Moon, Music2, Pyramid, Sun } from "lucide-react";
 import { effectKeys } from "../utils/enums";
 import "./MitigationTracker.css";
 import { spawnTooltip } from "../utils/dictionary";
@@ -10,6 +10,7 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
     const domeAmt = entity.resources[effectKeys.DOME];
     const myceliumAmt = entity.resources[effectKeys.MYCELIUM];
     const funeraryAmt = entity.resources[effectKeys.FUNERARY_URN];
+    const harmonyAmt = entity.resources[effectKeys.HARMONY];
 
     return (
         <div className="mitigation-tracker-container">
@@ -61,6 +62,16 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
             >
                 <Moon className="svg-icon" strokeWidth={2.5} />
                 <span>{myceliumAmt}</span>
+            </div>
+
+            <div
+                className={`harmony-container ${harmonyAmt <= 0 ? "zero-resource" : ""}`}
+                onMouseDown={(e) =>
+                    spawnTooltip(e, handleSetTooltip, effectKeys.HARMONY)
+                }
+            >
+                <Music2 className="svg-icon" strokeWidth={2.5} />
+                <span>{harmonyAmt}</span>
             </div>
 
             <div

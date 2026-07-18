@@ -27,7 +27,7 @@ function Header({
     return (
         <div className="header-container">
             <div className="header-announcement-container">
-                <h1 className="main-header-text">Simple RPG</h1>
+                <h1 className="main-header-text">Simple Game</h1>
                 {announcement && (
                     <h2 className="sub-announcer-text">{announcement}</h2>
                 )}

@@ -427,7 +427,8 @@ export function selectElementAI(context) {
     const hasBadResources =
         agent.resources[effectKeys.POISON] > 0 ||
         agent.resources[effectKeys.SHACKLED_MANA] > 0 ||
-        agent.resources[effectKeys.MANA_OVERFLOW] > 0;
+        agent.resources[effectKeys.MANA_OVERFLOW] > 0 ||
+        agent.resources[effectKeys.DISSONANCE] > 0;
 
     if (hasBadResources) {
         if (tideSim.entities[agentKey].resources[effectKeys.POISON] > 0) {
@@ -826,8 +827,8 @@ export function paladinAI(context) {
         return actionKeys.AEGIS;
     }
 
-    // otherwise, play sacrifice
-    return bloodknightAI(context);
+    // otherwise, play selenian
+    return lunaticAI(context);
 }
 
 export function hexerAI(context) {
@@ -1152,22 +1153,37 @@ export function cyborgAI(context) {
 }
 
 export function maestroAI(context) {
-    const { agent, agentKey } = context;
-    const simulate = createSimulator(context);
-
-    const simSound = simulate(actionKeys.SOUND_OF_SILENCE);
-
-    const willSoundKill =
-        simSound.entities[agentKey].resources[effectKeys.MANA_OVERFLOW] >=
-        simSound.entities[agentKey][effectKeys.HEALTH];
-
-    const willNextSoundKill =
-        simSound.entities[agentKey].resources[effectKeys.MANA_OVERFLOW] + 2 >=
-        simSound.entities[agentKey][effectKeys.HEALTH];
+    const { agent, hasManaForSpecial, nonAgentKey, agentKey } = context;
 
     // If on thermal, use the only action available
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         return actionKeys.MELTDOWN;
+    }
+
+    const simulate = createSimulator(context);
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
     }
 
     // if not on resonant, attune
@@ -1192,21 +1208,12 @@ export function maestroAI(context) {
 
     // if absolute negative on sonority, check safety
     if (agent[effectKeys.SONORITY] <= constants.SONORITY_LOWER_LIMIT) {
-        if (!willSoundKill) {
             return actionKeys.SOUND_OF_SILENCE;
-        } else {
-            return actionKeys.GUARD;
-        }
-    }
-
-    // if only negative, but not on the lowest low and next willKill, but not this one
-    if (agent[effectKeys.SONORITY] < 0 && willNextSoundKill && !willSoundKill) {
-        return actionKeys.SOUND_OF_SILENCE;
     }
 
     // If on venting
     if (agent.states[effectKeys.VENTING]) {
-        if (agent[effectKeys.SONORITY] < 0 && !willSoundKill) {
+        if (agent[effectKeys.SONORITY] < 0) {
             return actionKeys.SOUND_OF_SILENCE;
         }
 

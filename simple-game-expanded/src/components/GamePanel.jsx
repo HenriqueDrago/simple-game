@@ -2,6 +2,7 @@ import "./GamePanel.css";
 import ControlPanel from "./ControlPanel";
 import StatsPanel from "./StatsPanel";
 import StarsPanel from "./StarsPanel";
+import MitigationTracker from "./MitigationTracker"; // Imported tracker component
 
 import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
 import EyeOfHeavens from "./EyeOfHeavens";
@@ -68,20 +69,35 @@ function GamePanel({
                     <div
                         className={`stats-panels-container ${game[effectKeys.RUNIC_ARRAY] > 0 ? "array-active" : ""}`}
                     >
-                        <StatsPanel
-                            game={game}
-                            updateStatsPoints={updateStatsPoints}
-                            entityKey={entityKeys.PLAYER_ONE}
-                            handleElementChange={handleElementChange}
-                            handleSetTooltip={handleSetTooltip}
-                        />
-                        <StatsPanel
-                            game={game}
-                            updateStatsPoints={updateStatsPoints}
-                            entityKey={entityKeys.PLAYER_TWO}
-                            handleElementChange={handleElementChange}
-                            handleSetTooltip={handleSetTooltip}
-                        />
+
+                        <div className="player-panel-wrapper">
+                            <MitigationTracker 
+                                entity={game.entities[entityKeys.PLAYER_ONE]} 
+                                handleSetTooltip={handleSetTooltip} 
+                            />
+                            <StatsPanel
+                                game={game}
+                                updateStatsPoints={updateStatsPoints}
+                                entityKey={entityKeys.PLAYER_ONE}
+                                handleElementChange={handleElementChange}
+                                handleSetTooltip={handleSetTooltip}
+                            />
+                        </div>
+
+                        <div className="player-panel-wrapper panel-reversed">
+                            <MitigationTracker 
+                                entity={game.entities[entityKeys.PLAYER_TWO]} 
+                                handleSetTooltip={handleSetTooltip} 
+                            />
+                            <StatsPanel
+                                game={game}
+                                updateStatsPoints={updateStatsPoints}
+                                entityKey={entityKeys.PLAYER_TWO}
+                                handleElementChange={handleElementChange}
+                                handleSetTooltip={handleSetTooltip}
+                                reversed={true}
+                            />
+                        </div>
                     </div>
 
                     <div className="stars-wrapper right-stars">

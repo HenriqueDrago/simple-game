@@ -554,11 +554,18 @@ function simulateDaCapo({ prev, agent, agentKey }) {
 }
 
 function simulateSoundOfSilence({ prev, agent, agentKey }) {
-    const newSonority = -agent.sonority;
+    const newSonority = -agent[effectKeys.SONORITY];
 
     const musicalShift = Math.abs(newSonority * 2);
 
-    const draftAgent = restoreResources(agent, musicalShift);
+    const draftAgent = {
+        ...agent,
+        [effectKeys.SONORITY]: newSonority,
+        resources: {
+            ...agent.resources,
+            [effectKeys.HARMONY]: Math.floor(musicalShift / 10),
+        },
+    };
 
     return {
         ...prev,
@@ -566,35 +573,37 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...draftAgent,
-                sonority: newSonority,
             },
         },
     };
 }
 
 function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const newSonority = -agent.sonority;
+    const newSonority = -agent[effectKeys.SONORITY];
 
     const musicalShift = Math.abs(newSonority * 2);
 
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
-        musicalShift,
-        dmgTypes.TRUE,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
-    );
+    const draftAgent = {
+        ...agent,
+        [effectKeys.SONORITY]: newSonority,
+    };
+    const draftNonAgent = {
+        ...nonAgent,
+        resources: {
+            ...nonAgent.resources,
+            [effectKeys.DISSONANCE]: Math.floor(musicalShift / 10),
+        },
+    };
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
             [agentKey]: {
-                ...attacker,
-                sonority: newSonority,
+                ...draftAgent,
             },
             [nonAgentKey]: {
-                ...defender,
+                ...draftNonAgent,
             },
         },
     };

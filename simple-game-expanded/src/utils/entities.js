@@ -216,11 +216,14 @@ export function createBaseEntity() {
         [effectKeys.DYNAMO]: 0,
         [effectKeys.OVERHEAT]: 0,
         [effectKeys.LUNACY]: 0,
+        [effectKeys.STARBLIGHT]: 0,
+        [effectKeys.NEBULA]: 0,
 
         // special resources
         [effectKeys.BURDEN_OF_STIGMA]: 0,
         [effectKeys.MANA_BLEED]: 0,
         [effectKeys.MOONLIT_TEARS]: 0,
+        [effectKeys.CONSTELLATION]: 0,
 
         // alternate stats
         [effectKeys.REVELATION]: 0,
@@ -248,6 +251,7 @@ export function createBaseEntity() {
             [effectKeys.SILVER_BLOOD]: 0,
             [effectKeys.MOONDUST]: 0,
             [effectKeys.DISTILLED_TOXIN]: 0,
+            [effectKeys.DISSONANCE]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -256,12 +260,14 @@ export function createBaseEntity() {
             [effectKeys.DOME]: 0,
             [effectKeys.MYCELIUM]: 0,
             [effectKeys.REFRACTED_DIVINITY]: 0,
+            [effectKeys.HARMONY]: 0,
         },
         states: {
             // standalones
             [effectKeys.GUARDING_STATE]: false,
             [effectKeys.SACRIFICIAL_STATE]: false,
             [effectKeys.STARGAZER]: false,
+            [effectKeys.NOVA]: false,
             [effectKeys.SELENIAN]: false,
             [effectKeys.RESONANT]: false,
             [effectKeys.PRISMATIC]: false,
@@ -288,16 +294,16 @@ export function createBaseEntity() {
             [effectKeys.ANOINTED_PROXY]: false,
         },
         stars: {
-            white: 0,
-            gray: 0,
-            
-            red: 0,
-            orange: 0,
-            yellow: 0,
-            green: 0,
-            blue: 0,
-            indigo: 0,
-            violet: 0,
+            [effectKeys.WHITE_STAR]: 0,
+            [effectKeys.GRAY_STAR]: 0,
+
+            [effectKeys.RED_STAR]: 0,
+            [effectKeys.ORANGE_STAR]: 0,
+            [effectKeys.YELLOW_STAR]: 0,
+            [effectKeys.GREEN_STAR]: 0,
+            [effectKeys.BLUE_STAR]: 0,
+            [effectKeys.INDIGO_STAR]: 0,
+            [effectKeys.VIOLET_STAR]: 0,
 
             trailRed: 0,
             trailOrange: 0,
@@ -333,6 +339,10 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
 
+    if (entity[effectKeys.SONORITY] < 0) {
+        drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
+    }
+
     return drMult;
 }
 
@@ -356,6 +366,10 @@ export function processEntityDamageBonus(entity) {
 
     dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
 
+    if (entity[effectKeys.SONORITY] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
+    }
+
     return dmgBonus;
 }
 
@@ -364,14 +378,18 @@ export function processEntityFragility(entity) {
 
     frail *= 1 + entity[effectKeys.LUNACY] / 100;
 
+    if (entity[effectKeys.SONORITY] > 0) {
+        frail *= 1 + (entity[effectKeys.SONORITY] / 100);
+    }
+
     return frail;
 }
 
 export function processEntityWeakness(entity) {
     let weak = 1.0;
 
-    if (entity) {
-        return weak;
+    if (entity[effectKeys.SONORITY] < 0) {
+        weak *= 1 + (entity[effectKeys.SONORITY] / 100);
     }
 
     return weak;
@@ -408,10 +426,8 @@ export function dealDamage(
 
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? draftAttacker.resources.bloodSacrifice + draftAttacker.sonority
-            : dmgType === dmgTypes.PIERCING
-              ? draftAttacker.sonority
-              : 0;
+            ? draftAttacker.resources[effectKeys.BLOOD_SACRIFICE]
+            : 0;
 
     // Flat reduction
     const effectiveDef =
@@ -427,7 +443,7 @@ export function dealDamage(
 
     const flatDr =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? -draftDefender.sonority + effectiveDef + effectiveRevelation
+            ? effectiveDef + effectiveRevelation
             : 0;
 
     // Multiplicative effects
@@ -450,6 +466,10 @@ export function dealDamage(
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
             ? processEntityFragility(draftDefender)
             : 1.0;
+
+    console.log(
+        `base: ${baseDmg}, additional: ${additionalDmg}, bonus: ${bonusMult}, weak: ${weakMult}, dr: ${drMult}, frail: ${frailMult}`,
+    );
 
     const dmgPostMults = (baseDmg + additionalDmg) * bonusMult * weakMult;
 
@@ -543,7 +563,7 @@ export function takeDamage(entity, baseDmg, dmgType) {
 
     const flatDr =
         dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? -draftEntity.sonority + effectiveDef + effectiveRevelation
+            ? effectiveDef + effectiveRevelation
             : 0;
 
     // Multiplicative effects
@@ -964,7 +984,7 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
         if (draftAgent.states[effectKeys.RESONANT]) {
             const sonority = Math.min(
                 constants.SONORITY_HIGHER_LIMIT,
-                draftAgent.sonority + 1,
+                draftAgent[effectKeys.SONORITY] + constants.SONORITY_ON_DEFENSE,
             );
 
             draftAgent = {
@@ -1006,7 +1026,7 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
         if (draftAgent.states[effectKeys.RESONANT]) {
             const sonority = Math.max(
                 constants.SONORITY_LOWER_LIMIT,
-                draftAgent.sonority - 1,
+                draftAgent[effectKeys.SONORITY] + constants.SONORITY_ON_OFFENSE,
             );
 
             draftAgent = {

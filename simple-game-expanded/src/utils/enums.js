@@ -126,6 +126,7 @@ export const actionKeys = Object.freeze({
     LUNAR_SHROUD: "lunarShroud",
     SHATTER: "shatter",
     CHALK: "chalk",
+    SUPERNOVA: "supernova",
 });
 
 export const effectKeys = Object.freeze({
@@ -252,6 +253,14 @@ export const effectKeys = Object.freeze({
     EFFECTIVE_DEF: "effectiveDef",
     DISTILLED_TOXIN: "distilledToxin",
     FUNERARY_URN: "funeraryUrn",
+
+    HARMONY: "harmony",
+    DISSONANCE: "dissonance",
+
+    NEBULA: "nebula",
+    STARBLIGHT: "starblight",
+    CONSTELLATION: "constellation",
+    NOVA: "nova",
 });
 
 export const eyeKeys = Object.freeze({

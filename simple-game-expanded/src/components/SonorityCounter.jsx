@@ -2,16 +2,16 @@ import { constants } from "../utils/constants";
 import "./SonorityCounter.css";
 
 function SonorityCounter({ sonority }) {
-    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT) * 10);
+    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT));
     const disFill = 100 - disNonFill;
 
-    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT) * 10);
+    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT));
     const harNonFill = 100 - harFill;
 
     return (
         <div className="sonority-counter-container">
             <div className="sonority-counter-upper-labels">
-                <span>{"Sonority: " + sonority}</span>
+                <span>{`Sonority: ${sonority}%`}</span>
             </div>
             <div className="sonority-bar-container">
                 <div
@@ -40,9 +40,9 @@ function SonorityCounter({ sonority }) {
                 ></div>
             </div>
             <div className="sonority-counter-lower-labels">
-                <span>{constants.SONORITY_LOWER_LIMIT}</span>
+                <span>{constants.SONORITY_LOWER_LIMIT}%</span>
                 <span>0</span>
-                <span>{constants.SONORITY_HIGHER_LIMIT}</span>
+                <span>{constants.SONORITY_HIGHER_LIMIT}%</span>
             </div>
         </div>
     );

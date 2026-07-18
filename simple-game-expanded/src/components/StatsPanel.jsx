@@ -27,7 +27,6 @@ import SelenianTracker from "./SelenianTracker.jsx";
 import { getEntityMaxHealth, isElementActive } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
-import MitigationTracker from "./MitigationTracker.jsx";
 import { getSonorityColor } from "../utils/getters.js";
 
 function StatsPanel({
@@ -473,13 +472,6 @@ function StatsPanel({
                         </div>
                     );
                 })}
-            </div>
-
-            <div>
-                <MitigationTracker
-                    entity={entity}
-                    handleSetTooltip={handleSetTooltip}
-                />
             </div>
 
             {!isAngelView && (

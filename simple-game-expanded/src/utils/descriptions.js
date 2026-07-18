@@ -1336,35 +1336,49 @@ export const SONORITY_DESCRIPTIONS = {
         name: "DA CAPO",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Usable at 0 SONORITY. Restores the user's condition to what it was at the beginning of battle.",
+            "Resets your current condition to how it was at beginning of battle.",
     },
 
     [actionKeys.SOUND_OF_SILENCE]: {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Usable at negative SONORITY. Inverts current SONORITY and restores RESOURCES on self by the difference.",
+            "Inverts current SONORITY. Gain 1 HARMONY for every 10% shift on SONORITY.",
     },
 
     [actionKeys.BABEL]: {
         name: "BABEL",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Usable at positive SONORITY. Inverts current SONORITY and deals TRUE DAMAGE to the opponent by the difference.",
+            "Inverts current SONORITY. Inflicts 1 DISSONANCE on the opponent for every 10% shift on SONORITY.",
     },
 
     [effectKeys.RESONANT]: {
         name: "RESONANT",
         type: entryTypes.STATE,
         description:
-            "Enables SONORITY. At positive SONORITY, replaces ATTUNE with BABEL. At negative SONORITY, replaces ATTUNE with THE SOUND OF SILENCE. At 0 SONORITY, replaces ATTUNE with DA CAPO.",
+            "Enables SONORITY. When SONORITY is 0, replaces ATTUNE with DA CAPO. When SONORITY is lower than 0, replaces ATTUNE with THE SOUND OF SILENCE. When SONORITY is higher than 0, replaces ATTUNE with BABEL.",
     },
 
     [effectKeys.SONORITY]: {
         name: "SONORITY",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.FIXED_RESOURCE,
         description:
-            "Starts at 0 and ranges from -10 to 10. Increases when using DEFENSIVE ACTIONS. Decreases when using OFFENSIVE ACTIONS. Deals higher or lower PHYSICAL DAMAGE and PIERCING DAMAGE according to SONORITY. Takes higher or lower PHYSICAL DAMAGE and PIERCING DAMAGE according to SONORITY.",
+            "Ranges from -100% to +100%. When using a DEFENSIVE ACTION, raises SONORITY by 10%. When using an OFFENSIVE ACTION, lowers SONORITY by 10%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
+    },
+
+    [effectKeys.HARMONY]: {
+        name: "HARMONY",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HARMONY to reduce the damage taken. At turn start, lose all HARMONY and restores RESOURCES equal to the amount lost.",
+    },
+
+    [effectKeys.DISSONANCE]: {
+        name: "DISSONANCE",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn end, lose all DISSONANCE and take TRUE DAMAGE equal to the amount lost.",
     },
 };
 

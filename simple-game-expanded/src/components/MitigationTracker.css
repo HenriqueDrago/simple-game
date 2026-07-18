@@ -1,31 +1,38 @@
 .mitigation-tracker-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, auto);
-    gap: 4px;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Compact vertical spacing between rows */
+    width: max-content; 
+    align-self: flex-start; 
 }
 
-/* Shared structural styling mimicking tight setting frames */
+/* Shared structural styling with boxes (borders) restored */
 .ember-container,
 .halo-container,
 .refracted-divinity-container,
 .dome-container,
 .mycelium-container,
+.harmony-container,
 .funerary-container {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 6px 4px;
-    flex: 1; /* Maintains strict uniform box ratios across the row */
-    background-color: #000000; /* Deep black flat color match */
-    border: 2px solid transparent;
-    border-radius: 0; /* Enforces strict geometric UI */
+    justify-content: flex-start;
+    gap: 4px; /* Tight gap between icon and number */
+    padding: 3px 5px; 
+    background-color: #000000; 
+    border-radius: 0; 
+    border: 2px solid transparent; /* Restored base box border */
+    
+    /* 
+       Strict width layout adjusting for 2px borders:
+       14px (icon) + 4px (gap) + 15px (2 numbers) + 10px (padding) + 4px (borders) = 47px 
+    */
+    width: 47px; 
+    box-sizing: border-box;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
 }
 
-/* Compact scale configuration for icons inside rows */
+/* Compact scale configuration for icons */
 .svg-icon {
     width: 14px;
     height: 14px;
@@ -33,16 +40,20 @@
     display: inline-flex;
 }
 
-/* Typography matching standard compact dashboard numbers */
+/* Typography restricted strictly to a 2-digit footprint */
 .mitigation-tracker-container span {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 900;
     font-family: inherit;
+    width: 15px; 
+    text-align: center;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
 /* Lingering Ember (Vivid Red/Pink) */
 .ember-container {
-    color: #f50057; /* Matches Lingering Ember palette constant */
+    color: #f50057; 
     border-color: rgba(245, 0, 87, 0.25);
 }
 .ember-container:not(.zero-resource):hover {
@@ -52,7 +63,7 @@
 
 /* Halo (Pale Holy Yellow) */
 .halo-container {
-    color: #fff59d; /* Matches Halo palette constant */
+    color: #fff59d; 
     border-color: rgba(255, 245, 157, 0.25);
 }
 .halo-container:not(.zero-resource):hover {
@@ -62,7 +73,7 @@
 
 /* Refracted Divinity (Frost Cyan) */
 .refracted-divinity-container {
-    color: #00f0ff; /* Shifted to Frost elemental root */
+    color: #00f0ff; 
     border-color: rgba(0, 240, 255, 0.25);
 }
 .refracted-divinity-container:not(.zero-resource):hover {
@@ -72,7 +83,7 @@
 
 /* Dome (Deep Cosmic Star Blue) */
 .dome-container {
-    color: #3d5afe; /* Shifted deep to prevent cyan overlap */
+    color: #3d5afe; 
     border-color: rgba(61, 90, 254, 0.25);
 }
 .dome-container:not(.zero-resource):hover {
@@ -90,6 +101,16 @@
     box-shadow: 0 0 8px rgba(46, 125, 50, 0.4);
 }
 
+/* Harmony */
+.harmony-container {
+    color: #b388ff;
+    border-color: rgba(179, 136, 255, 0.25);
+}
+.harmony-container:not(.zero-resource):hover {
+    border-color: #b388ff;
+    box-shadow: 0 0 8px rgba(179, 136, 255, 0.4);
+}
+
 /* Funerary Urn (Ash Grey) */
 .funerary-container {
     color: #b0bec5; 
@@ -101,10 +122,9 @@
 }
 
 .mitigation-tracker-container .zero-resource {
-    color: #757575; /* Completely desaturates text and icon lines */
-    border-color: rgba(255, 255, 255, 0.08); /* Fades border down to base container outline style */
-    filter: grayscale(100%); /* Drains localized theme values */
-    opacity: 0.35; /* Blends context directly into dark background matching system configs */
-    pointer-events: none; /* Prevents cursor pointer triggers on dead resource cells */
+    color: #757575; 
+    border-color: rgba(255, 255, 255, 0.08); 
+    filter: grayscale(100%); 
+    opacity: 0.35; 
+    pointer-events: none; 
 }
-
