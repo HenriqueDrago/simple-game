@@ -25,6 +25,8 @@ const STATE_MAPPINGS = [
     { key: effectKeys.PRISMATIC, label: "Prismatic" },
     { key: effectKeys.BLEAK_DECEPTION, label: "Bleak Deception" },
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },
+
+    { key: effectKeys.NOVA, label: "Nova" },
 ];
 
 function StateBadges({ states, handleSetTooltip }) {

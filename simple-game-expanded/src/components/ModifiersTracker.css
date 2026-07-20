@@ -1,0 +1,16 @@
+.modifiers-tracker-container {
+    display: flex;
+    flex-direction: row; /* Aligns the items in a single horizontal line */
+    align-items: center;
+    justify-content: space-between; /* Spreads the items evenly across the row */
+    width: 100%;
+    padding: 4px 0;
+}
+
+.modifiers-tracker-container span {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* Space between the icon and the text */
+    font-size: 0.85rem;
+    color: #ffffff;
+}

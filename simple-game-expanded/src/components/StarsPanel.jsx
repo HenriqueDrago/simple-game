@@ -10,7 +10,6 @@ import {
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
-import DimTrailRow from "./DimTrailRow";
 import { spawnTooltip } from "../utils/dictionary";
 
 function StarsPanel({
@@ -43,7 +42,6 @@ function StarsPanel({
               entity.controller === aiKeys.HUMAN &&
               game.status === turnStatus.ONGOING;
 
-    const hasTrails = coloredStars.some((curr) => entity.stars[curr.trail] > 0);
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE
             ? currRoundPhase === roundPhases.P1_STARS_TURN
@@ -52,9 +50,6 @@ function StarsPanel({
     return (
         <div
             className="star-panel-container"
-            style={{
-                flexDirection: reversed ? "row-reverse" : "row",
-            }}
         >
             <div className="star-panel-main-container">
                 <div className="white-and-gray-container">
@@ -118,25 +113,6 @@ function StarsPanel({
                     ))}
                 </div>
             </div>
-
-            {hasTrails && (
-                <div className="star-panel-side-container">
-                    <div className="trail-dim-container">
-                        {coloredStars.map((star) => (
-                            <DimTrailRow
-                                key={star.name}
-                                entity={entity}
-                                color={star.color}
-                                trailKey={star.trail}
-                                trailPhase={star.trailPhase}
-                                currentPhase={currPhase}
-                                reversed={reversed}
-                                handleSetTooltip={handleSetTooltip}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -492,6 +492,94 @@ function App() {
         });
     }
 
+    function handleConstellation(entityKey, constellation) {
+        setGame((prev) => {
+            let draftEntity = {
+                ...prev.entities[entityKey],
+            };
+
+            switch (constellation) {
+                case effectKeys.AZURE_CONSTELLATION: {
+                    // If already Azure, convert all into normal
+                    if (draftEntity[effectKeys.AZURE_CONSTELLATION] > 0) {
+                        draftEntity = {
+                            ...draftEntity,
+                            [effectKeys.CONSTELLATION]:
+                                draftEntity[effectKeys.CONSTELLATION] +
+                                draftEntity[effectKeys.AZURE_CONSTELLATION] +
+                                draftEntity[effectKeys.CRIMSON_CONSTELLATION],
+                            [effectKeys.AZURE_CONSTELLATION]: 0,
+                            [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                        };
+                    }
+                    // if not, convert all into azure
+                    else {
+                        draftEntity = {
+                            ...draftEntity,
+                            [effectKeys.CONSTELLATION]: 0,
+                            [effectKeys.AZURE_CONSTELLATION]:
+                                draftEntity[effectKeys.CONSTELLATION] +
+                                draftEntity[effectKeys.AZURE_CONSTELLATION] +
+                                draftEntity[effectKeys.CRIMSON_CONSTELLATION],
+                            [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                        };
+                    }
+                    break;
+                }
+
+                case effectKeys.CRIMSON_CONSTELLATION: {
+                    // If already Crimson, convert all into normal
+                    if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
+                        draftEntity = {
+                            ...draftEntity,
+                            [effectKeys.CONSTELLATION]:
+                                draftEntity[effectKeys.CONSTELLATION] +
+                                draftEntity[effectKeys.AZURE_CONSTELLATION] +
+                                draftEntity[effectKeys.CRIMSON_CONSTELLATION],
+                            [effectKeys.AZURE_CONSTELLATION]: 0,
+                            [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                        };
+                    }
+                    // if not, convert all into crimson
+                    else {
+                        draftEntity = {
+                            ...draftEntity,
+                            [effectKeys.CONSTELLATION]: 0,
+                            [effectKeys.AZURE_CONSTELLATION]: 0,
+                            [effectKeys.CRIMSON_CONSTELLATION]:
+                                draftEntity[effectKeys.CONSTELLATION] +
+                                draftEntity[effectKeys.AZURE_CONSTELLATION] +
+                                draftEntity[effectKeys.CRIMSON_CONSTELLATION],
+                        };
+                    }
+                    break;
+                }
+                // by default, convert all into normal
+                default: {
+                    draftEntity = {
+                        ...draftEntity,
+                        [effectKeys.CONSTELLATION]:
+                            draftEntity[effectKeys.CONSTELLATION] +
+                            draftEntity[effectKeys.AZURE_CONSTELLATION] +
+                            draftEntity[effectKeys.CRIMSON_CONSTELLATION],
+                        [effectKeys.AZURE_CONSTELLATION]: 0,
+                        [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                    };
+                }
+            }
+
+            return {
+                ...prev,
+                entities: {
+                    ...prev.entities,
+                    [entityKey]: {
+                        ...draftEntity,
+                    },
+                },
+            };
+        });
+    }
+
     // Efeitos
     // Turn Management
     useEffect(() => {
@@ -1053,6 +1141,7 @@ function App() {
                 handleRandomizeStats={handleRandomizeStats}
                 handleElementChange={handleElementChange}
                 handleSetTooltip={handleSetTooltip}
+                handleConstellation={handleConstellation}
             />
             <ActionPanel
                 handleAction={handleAction}

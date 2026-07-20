@@ -309,16 +309,16 @@ export const DAMAGE_TYPE_DESCRIPTIONS = {
 export const STAT_DESCRIPTIONS = {
     [effectKeys.STR]: {
         name: "STR",
-        type: entryTypes.STAT,
+        type: entryTypes.BASE_ATTRIBUTES,
         description:
-            "The main offensive stat. Increases the damage dealt by some actions and effects.",
+            "The main offensive ATTRIBUTES. Increases the damage dealt by some actions and effects.",
     },
 
     [effectKeys.DEF]: {
         name: "DEF",
-        type: entryTypes.STAT,
+        type: entryTypes.BASE_ATTRIBUTES,
         description:
-            "The main defensive stat. Decreases the damage taken from some actions and effects.",
+            "The main defensive ATTRIBUTES. Decreases the damage taken from some actions and effects.",
     },
 };
 
@@ -327,21 +327,28 @@ export const STAR_DESCRIPTIONS = {
         name: "CHART",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Gains 3 WHITE STAR. If not in the STARGAZER state, enters the STARGAZER state. Converts all GRAY STAR on self into WHITE STAR.",
+            "Gains 3 WHITE STAR. Converts all GRAY STAR on self into WHITE STAR. If not in the STARGAZER state, enters the STARGAZER state.",
     },
 
     [effectKeys.STARGAZER]: {
         name: "STARGAZER",
         type: entryTypes.STATE,
         description:
-            "While active, enables STARFALL after turn end. During the action phase, enables a side-menu for star assignment.",
+            "While active, enables STARFALL after turn end. During the action phase, enables a side-menu for star assignment. When exiting this state, loses all STARS and sets CONTELLATION rank to 0.",
+    },
+
+    [entryTypes.STAR]: {
+        name: "STARS",
+        type: entryTypes.CATEGORY,
+        description:
+            "A unique subset of RESOURCES. Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR",
     },
 
     [effectKeys.STARFALL]: {
         name: "STARFALL",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A special phase where colored stars act. Divided into fourteen ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL, VIOLET STARFALL, RED TRAILFALL, ORANGE TRAILFALL, YELLOW TRAILFALL, GREEN TRAILFALL, BLUE TRAILFALL, INDIGO TRAILFALL and VIOLET TRAILFALL. This phase is skipped if the corresponding entity hasn't assigned any stars. Trailfall subphases are skipped if the corresponding entity has no trails on self by end of the VIOLET STARFALL.",
+            "A special phase where colored STARS act. Divided into seven ordered subphases: RED STARFALL, ORANGE STARFALL, YELLOW STARFALL, GREEN STARFALL, BLUE STARFALL, INDIGO STARFALL and VIOLET STARFALL. This phase is skipped if the corresponding entity hasn't assigned any stars.",
     },
 
     [effectKeys.RED_STARFALL]: {
@@ -383,52 +390,8 @@ export const STAR_DESCRIPTIONS = {
     [effectKeys.VIOLET_STARFALL]: {
         name: "VIOLET STARFALL",
         type: entryTypes.BATTLE_PHASE,
-        description: "The seventh subphase of STARFALL, when VIOLET STAR acts.",
-    },
-
-    [effectKeys.RED_TRAILFALL]: {
-        name: "RED TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description: "The eighth subphase of STARFALL, when RED TRAIL acts.",
-    },
-
-    [effectKeys.ORANGE_TRAILFALL]: {
-        name: "ORANGE TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description: "The ninth subphase of STARFALL, when ORANGE TRAIL acts.",
-    },
-
-    [effectKeys.YELLOW_TRAILFALL]: {
-        name: "YELLOW TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description: "The tenth subphase of STARFALL, when YELLOW TRAIL acts.",
-    },
-
-    [effectKeys.GREEN_TRAILFALL]: {
-        name: "GREEN TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
         description:
-            "The eleventh subphase of STARFALL, when GREEN TRAIL acts.",
-    },
-
-    [effectKeys.BLUE_TRAILFALL]: {
-        name: "BLUE TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description: "The twelfth subphase of STARFALL, when BLUE TRAIL acts.",
-    },
-
-    [effectKeys.INDIGO_TRAILFALL]: {
-        name: "INDIGO TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "The thirteenth subphase of STARFALL, when INDIGO TRAIL acts.",
-    },
-
-    [effectKeys.VIOLET_TRAILFALL]: {
-        name: "VIOLET TRAILFALL",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "The fourteenth subphase of STARFALL, when VIOLET TRAIL acts.",
+            "The seventh and final subphase of STARFALL, when VIOLET STAR acts.",
     },
 
     [effectKeys.WHITE_STAR]: {
@@ -442,49 +405,84 @@ export const STAR_DESCRIPTIONS = {
         name: "RED STAR",
         type: entryTypes.STAR,
         description:
-            "At RED STARFALL, converts all RED STAR into WHITE STAR. Deals PHYSICAL DAMAGE equal to the amount of normal RED STAR consumed. Deals PIERCING DAMAGE equal to the amount of augmented RED STAR consumed. Gains RED TRAIL equal to twice the amount of fractured RED STAR consumed. These are considered separate damage instances.",
+            "At RED STARFALL, converts all RED STAR into WHITE STAR. Deals PHYSICAL DAMAGE equal to the amount of normal RED STAR consumed. Deals PIERCING DAMAGE equal to the amount of augmented RED STAR consumed. These are considered two separate instances of damage. This effect does not look at the STARS owner current condition.",
     },
 
     [effectKeys.ORANGE_STAR]: {
         name: "ORANGE STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on the opponent and WHITE STAR on self equal to the amount of normal ORANGE STAR consumed. Burns RESOURCES on the opponent equal to the amount of augmented ORANGE STAR consumed. Gains ORANGE TRAIL equal to twice the amount of fractured ORANGE STAR consumed.",
+            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on self equal to the amount of normal ORANGE STAR consumed. Burns RESOURCES on both opponent and self equal to the amount of augmented ORANGE STAR consumed.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
         type: entryTypes.STAR,
         description:
-            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Gains STARDUST equal to the amount of normal YELLOW STAR consumed. Gains GRAY STAR equal to the amount of augmented YELLOW STAR consumed. Gains YELLOW TRAIL equal to twice the amount of fractured YELLOW STAR consumed.",
+            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Raises NEBULA by 5% for every normal YELLOW STAR consumed. Raises CONSTELLATION rank by the amount of augmented YELLOW STAR consumed.",
+    },
+
+    [effectKeys.NEBULA]: {
+        name: "NEBULA",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. When raising NEBULA above 100%, raises STARBLIGHT instead. Raises DAMAGE BONUS equal to NEBULA. At turn end, lose all NEBULA.",
+    },
+
+    [effectKeys.STARBLIGHT]: {
+        name: "STARBLIGHT",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Lowers MAX HEALTH equal to STARBLIGHT on self, rounded up. Raises DAMAGE BONUS equal to STARBLIGHT on self. When STARBLIGHT reaches 100%, enters NOVA state.",
+    },
+
+    [effectKeys.NOVA]: {
+        name: "NOVA",
+        type: entryTypes.STATE,
+        description:
+            "Cannot die. Replaces all actions with SUPERNOVA. At turn end, removes this state.",
+    },
+
+    [actionKeys.SUPERNOVA]: {
+        name: "SUPERNOVA",
+        type: entryTypes.OFFENSIVE_ACTION,
+        description:
+            "Consumes all STARS. Deals TRUE DAMAGE equal to half the STARS consumed, rounded up.",
+    },
+
+    [effectKeys.CONSTELLATION]: {
+        name: "CONSTELLATION",
+        type: entryTypes.RANKED_RESOURCE,
+        description:
+            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all CONSTELLATION.",
+    },
+
+    [effectKeys.AZURE_CONSTELLATION]: {
+        name: "AZURE CONSTELLATION",
+        type: entryTypes.RANKED_RESOURCE,
+        description:
+            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all AZURE CONSTELLATION.",
+    },
+
+    [effectKeys.CRIMSON_CONSTELLATION]: {
+        name: "CRIMSON CONSTELLATION",
+        type: entryTypes.RANKED_RESOURCE,
+        description:
+            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At turn end, lose all CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Consumes RESOURCES on self equal to the amount of normal GREEN STAR consumed on self, then restores RESOURCES equal to the amount of RESOURCES consumed. Restores RESOURCES on self equal to the amount of augmented GREEN STAR consumed. Gains GREEN TRAIL equal to twice the amount of fractured GREEN STAR consumed.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to the amount of normal GREEN STAR consumed. Restores RESOURCES on self equal to the amount of augmented GREEN STAR consumed.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME and converts WHITE STAR into GRAY STAR equal to the amount of normal BLUE STAR consumed. Gains DOME equal to twice the amount of augmented BLUE STAR consumed. Gains BLUE TRAIL and converts WHITE STAR into GRAY STAR equal to twice the amount of fractured BLUE STAR consumed.",
-    },
-
-    [effectKeys.INDIGO_STAR]: {
-        name: "INDIGO STAR",
-        type: entryTypes.STAR,
-        description:
-            "When a colored star is consumed, converts INDIGO STAR into WHITE STAR and converts that star into a fractured version of itself. This process takes priority over VIOLET STAR effects. At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR.",
-    },
-
-    [effectKeys.VIOLET_STAR]: {
-        name: "VIOLET STAR",
-        type: entryTypes.STAR,
-        description:
-            "When a colored star is consumed, converts VIOLET STAR into WHITE STAR and converts that star into a fractured version of itself. Cannot convert INDIGO STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME and converts WHITE STAR into GRAY STAR equal to the amount of normal BLUE STAR consumed. Gains DOME equal to twice the amount of augmented BLUE STAR consumed.",
     },
 
     [effectKeys.DOME]: {
@@ -494,64 +492,31 @@ export const STAR_DESCRIPTIONS = {
             "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, converts all DOME into STARDUST.",
     },
 
-    [effectKeys.GRAY_STAR]: {
-        name: "GRAY STAR",
-        type: entryTypes.STAR,
-        description: "Cannot be assigned a color.",
-    },
-
     [effectKeys.STARDUST]: {
         name: "STARDUST",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, for every 3 STARDUST on self, loses 3 STARDUST. Then, gains WHITE STAR equal to a third of the STARDUST lost this way.",
+            "At turn start, for every 3 STARDUST on self, loses 3 STARDUST and gains 1 WHITE STAR.",
     },
 
-    [effectKeys.RED_TRAIL]: {
-        name: "RED TRAIL",
+    [effectKeys.INDIGO_STAR]: {
+        name: "INDIGO STAR",
         type: entryTypes.STAR,
         description:
-            "At RED TRAILFALL, loses all RED TRAIL on self. Deals PHYSICAL DAMAGE equal to the amount lost.",
+            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to the amount of normal INDIGO STAR consumed. Gains GRAY STAR equal to the amount of augmented INDIGO STAR consumed.",
     },
 
-    [effectKeys.ORANGE_TRAIL]: {
-        name: "ORANGE TRAIL",
+    [effectKeys.VIOLET_STAR]: {
+        name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE TRAILFALL, loses all ORANGE TRAIL on self. Burns RESOURCES on both self and opponent equal to the amount lost.",
+            "When a colored star is consumed, converts VIOLET STAR into WHITE STAR and converts that star into an augmented version of itself. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR.",
     },
 
-    [effectKeys.YELLOW_TRAIL]: {
-        name: "YELLOW TRAIL",
+    [effectKeys.GRAY_STAR]: {
+        name: "GRAY STAR",
         type: entryTypes.STAR,
-        description:
-            "At YELLOW TRAILFALL, loses all YELLOW TRAIL on self. Gains STARDUST equal to the amount lost.",
-    },
-
-    [effectKeys.GREEN_TRAIL]: {
-        name: "GREEN TRAIL",
-        type: entryTypes.STAR,
-        description:
-            "At GREEN TRAILFALL, loses all GREEN TRAIL on self. Consumes RESOURCES on self equal to the amount lost, then restores RESOURCES equal to the amount consumed.",
-    },
-
-    [effectKeys.BLUE_TRAIL]: {
-        name: "BLUE TRAIL",
-        type: entryTypes.STAR,
-        description:
-            "At BLUE TRAILFALL, loses all BLUE TRAIL on self. Gains DOME equal to the amount lost.",
-    },
-
-    [effectKeys.INDIGO_TRAIL]: {
-        name: "INDIGO TRAIL",
-        type: entryTypes.STAR,
-        description: "At INDIGO TRAILFALL, loses all INDIGO TRAIL on self.",
-    },
-
-    [effectKeys.VIOLET_TRAIL]: {
-        name: "VIOLET TRAIL",
-        type: entryTypes.STAR,
-        description: "At VIOLET TRAILFALL, loses all VIOLET TRAIL on self.",
+        description: "Cannot be assigned a color.",
     },
 };
 
@@ -681,9 +646,8 @@ export const PALADIN_DESCRIPTIONS = {
 
     [effectKeys.REVELATION]: {
         name: "REVELATION",
-        type: entryTypes.STAT,
-        description:
-            "An alternative stat used by certain effects. Increases EFFECTIVE DEFENSE by the value.",
+        type: entryTypes.SPECIAL_ATTRIBUTES,
+        description: "Used by certain actions and effects.",
     },
 
     [effectKeys.SEVERED_TIME]: {
@@ -839,8 +803,8 @@ export const MECHANIC_DESCRIPTIONS = {
 
     [effectKeys.ENERGY_LEVEL]: {
         name: "ENERGY LEVEL",
-        type: entryTypes.STAT,
-        description: "Alternative STAT. Increases LASER and MELTDOWN damage.",
+        type: entryTypes.SPECIAL_ATTRIBUTES,
+        description: "Increases LASER and MELTDOWN damage.",
     },
 
     [effectKeys.DAMAGE_REDUCTION]: {
@@ -986,6 +950,27 @@ export const CATEGORY_DESCRIPTIONS = {
             "A persistent effect that applies only to a singular entity.",
     },
 
+    [entryTypes.ATTRIBUTES]: {
+        name: "ATTRIBUTES",
+        type: entryTypes.CATEGORY,
+        description:
+            "Can be subdivided into BASE ATTRIBUTES and SPECIAL ATTRIBUTES. When raising or lowering ATTRIBUTES via combat effects, raises or lowers only BASE ATTRIBUTES in alternating fashion.",
+    },
+
+    [entryTypes.BASE_ATTRIBUTES]: {
+        name: "BASE ATTRIBUTES",
+        type: entryTypes.CATEGORY,
+        description:
+            "A subset of ATTRIBUTES. Includes STR and DEF. When raising or lowering BASE ATTRIBUTES via combat effects, alternates between each attribute, starting with STR.",
+    },
+
+    [entryTypes.SPECIAL_ATTRIBUTES]: {
+        name: "SPECIAL ATTRIBUTES",
+        type: entryTypes.CATEGORY,
+        description:
+            "A subset of ATTRIBUTES. Includes ENERGY LEVEL, MOONLIGHT and REVELATION.",
+    },
+
     [entryTypes.DAMAGE_TYPE]: {
         name: "DAMAGE TYPE",
         type: entryTypes.CATEGORY,
@@ -1066,7 +1051,7 @@ export const CATEGORY_DESCRIPTIONS = {
         type: entryTypes.CATEGORY,
         description:
             "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, TRANSFORMATIVE ACTIONS, ACTS OF BENEDICTION and ACTS OF MALEDICTION. Most actions automatically advance the turn phase to COMMIT. A player's base actions include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, ARRAY, DEPLOY, ATTUNE, REFRACT, CHART, SHADOW PACT and AEGIS.",
-    },    
+    },
 };
 
 export const SELENIAN_DESCRIPTIONS = {
@@ -1091,8 +1076,8 @@ export const SELENIAN_DESCRIPTIONS = {
 
     [effectKeys.MOONLIGHT]: {
         name: "MOONLIGHT",
-        type: entryTypes.STAT,
-        description: "Alternative STAT. Used by some actions and effects.",
+        type: entryTypes.SPECIAL_ATTRIBUTES,
+        description: "Used by some actions and effects.",
     },
 
     [effectKeys.MIRRORED_MOON]: {

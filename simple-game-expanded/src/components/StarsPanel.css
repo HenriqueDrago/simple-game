@@ -45,11 +45,3 @@
     justify-content: center;
     gap: 8px;
 }
-
-/* Ensure the side container gap matches the main container gap perfectly */
-.trail-dim-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px; 
-}

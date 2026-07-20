@@ -1,5 +1,6 @@
 import {
     actionsClass,
+    coloredStars,
     constants,
     FREE_RESOURCES,
     MITIGATION_RESOURCES,
@@ -15,6 +16,8 @@ import {
     moonKeys,
     entityKeys,
     turnStatus,
+    progKeys,
+    aiKeys,
 } from "./enums.js";
 
 export function restoreResources(entity, amount) {
@@ -219,11 +222,13 @@ export function createBaseEntity() {
         [effectKeys.STARBLIGHT]: 0,
         [effectKeys.NEBULA]: 0,
 
-        // special resources
+        // ranked resources
         [effectKeys.BURDEN_OF_STIGMA]: 0,
         [effectKeys.MANA_BLEED]: 0,
         [effectKeys.MOONLIT_TEARS]: 0,
         [effectKeys.CONSTELLATION]: 0,
+        [effectKeys.AZURE_CONSTELLATION]: 0,
+        [effectKeys.CRIMSON_CONSTELLATION]: 0,
 
         // alternate stats
         [effectKeys.REVELATION]: 0,
@@ -304,14 +309,6 @@ export function createBaseEntity() {
             [effectKeys.BLUE_STAR]: 0,
             [effectKeys.INDIGO_STAR]: 0,
             [effectKeys.VIOLET_STAR]: 0,
-
-            trailRed: 0,
-            trailOrange: 0,
-            trailYellow: 0,
-            trailGreen: 0,
-            trailBlue: 0,
-            trailIndigo: 0,
-            trailViolet: 0,
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
@@ -364,8 +361,15 @@ export function processEntityDefEffect(entity) {
 export function processEntityDamageBonus(entity) {
     let dmgBonus = 1.0;
 
-    dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
-
+    if (entity[effectKeys.LUNACY] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
+    }
+    if (entity[effectKeys.NEBULA] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.NEBULA] / 100;
+    }
+    if (entity[effectKeys.STARBLIGHT] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.STARBLIGHT] / 100;
+    }
     if (entity[effectKeys.SONORITY] > 0) {
         dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
     }
@@ -379,7 +383,7 @@ export function processEntityFragility(entity) {
     frail *= 1 + entity[effectKeys.LUNACY] / 100;
 
     if (entity[effectKeys.SONORITY] > 0) {
-        frail *= 1 + (entity[effectKeys.SONORITY] / 100);
+        frail *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
     return frail;
@@ -389,7 +393,7 @@ export function processEntityWeakness(entity) {
     let weak = 1.0;
 
     if (entity[effectKeys.SONORITY] < 0) {
-        weak *= 1 + (entity[effectKeys.SONORITY] / 100);
+        weak *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
     return weak;
@@ -857,6 +861,11 @@ export function loseMana(entity, amount) {
 export function processExitStargazer(entity) {
     return {
         ...entity,
+        [effectKeys.CONSTELLATION]: 0,
+        [effectKeys.AZURE_CONSTELLATION]: 0,
+        [effectKeys.CRIMSON_CONSTELLATION]: 0,
+        [effectKeys.NEBULA]: 0,
+        [effectKeys.STARBLIGHT]: 0,
         states: {
             ...entity.states,
             [effectKeys.STARGAZER]: false,
@@ -1140,12 +1149,22 @@ export function processDeathCheck(prev) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    if (draftEntity[effectKeys.TARNISHED_SIN] >= 100) {
+    if (draftEntity[effectKeys.TARNISHED_SIN] >= constants.MAX_TARNISHED_SIN) {
         draftEntity = {
             ...draftEntity,
             states: {
                 ...draftEntity.states,
                 [effectKeys.ABANDONED_BY_GRACE]: true,
+            },
+        };
+    }
+
+    if (draftEntity[effectKeys.STARBLIGHT] >= constants.MAX_STARBLIGHT) {
+        draftEntity = {
+            ...draftEntity,
+            states: {
+                ...draftEntity.states,
+                [effectKeys.NOVA]: true,
             },
         };
     }
@@ -1165,7 +1184,8 @@ export function isEntityDead(entity) {
         (getEntityTotalHealth(entity) <= 0 ||
             getEntityMaxHealth(entity) <= 0) &&
         !entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        entity[effectKeys.BURDEN_OF_STIGMA] <= 0
+        entity[effectKeys.BURDEN_OF_STIGMA] <= 0 &&
+        !entity.states[effectKeys.NOVA]
     );
 }
 
@@ -1228,29 +1248,49 @@ export function isElementActive(entity, element) {
 }
 
 export function getEntityDef(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    if (entity[effectKeys.CONSTELLATION] > 0) {
+        draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
+    }
+
     return (
-        entity.attributes.def.value +
-        (isElementActive(entity, elementalKeys.FROST)
-            ? entity[effectKeys.MOONLIGHT]
-            : 0)
+        draftEntity.attributes.def.value +
+        (isElementActive(draftEntity, elementalKeys.FROST)
+            ? draftEntity[effectKeys.MOONLIGHT]
+            : 0) +
+        draftEntity[effectKeys.AZURE_CONSTELLATION]
     );
 }
 
 export function getEntityStr(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    if (entity[effectKeys.CONSTELLATION] > 0) {
+        draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
+    }
+
     return (
-        entity.attributes.str.value +
-        (isElementActive(entity, elementalKeys.SCORCH)
-            ? entity[effectKeys.MOONLIGHT]
-            : 0)
+        draftEntity.attributes.str.value +
+        (isElementActive(draftEntity, elementalKeys.SCORCH)
+            ? draftEntity[effectKeys.MOONLIGHT]
+            : 0) +
+        draftEntity[effectKeys.CRIMSON_CONSTELLATION]
     );
 }
 
 export function getEntityMaxHealth(entity) {
-    return (
-        entity[effectKeys.MAX_HEALTH] +
-        (isElementActive(entity, elementalKeys.NATURE)
-            ? entity[effectKeys.MOONLIGHT]
-            : 0)
+    const starblightMult = 1 - entity[effectKeys.STARBLIGHT] / 100;
+    return Math.ceil(
+        (entity[effectKeys.MAX_HEALTH] +
+            (isElementActive(entity, elementalKeys.NATURE)
+                ? entity[effectKeys.MOONLIGHT]
+                : 0)) *
+            starblightMult,
     );
 }
 
@@ -1296,7 +1336,7 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 currResourceKey === effectKeys.LINGERING_EMBER
             )
         ) {
-            const currAmount = draftEntity.resources[currResourceKey] || 0;
+            const currAmount = draftEntity.resources[currResourceKey];
             const consumption = Math.min(currAmount, amount);
 
             amount -= consumption;
@@ -1712,4 +1752,439 @@ export function takeLunicDamage(entity, amount) {
         [effectKeys.MOONLIGHT]:
             entity[effectKeys.MOONLIGHT] - moonlightConsumed,
     };
+}
+
+export function raiseStats(entity, amount) {
+    let attributes = {};
+
+    // Initialization
+    for (let attr of constants.ATTRIBUTE_NAMES) {
+        attributes = {
+            ...attributes,
+            [attr]: {
+                value: entity.attributes[attr].value,
+                points: entity.attributes[attr].points,
+            },
+        };
+    }
+
+    // Distribution
+    while (amount > 0) {
+        for (let attr of constants.ATTRIBUTE_NAMES) {
+            attributes = {
+                ...attributes,
+                [attr]: {
+                    value: attributes[attr].value + 1,
+                    points: attributes[attr].points,
+                },
+            };
+            amount -= 1;
+
+            if (amount <= 0) {
+                break;
+            }
+        }
+    }
+
+    return {
+        ...entity,
+        attributes: attributes,
+    };
+}
+
+export function lowerStats(entity, amount) {
+    let attributes = {};
+    let attrConsumed = {};
+
+    // Initialization
+    for (let attr of constants.ATTRIBUTE_NAMES) {
+        attributes = {
+            ...attributes,
+            [attr]: {
+                value: entity.attributes[attr].value,
+                points: entity.attributes[attr].points,
+            },
+        };
+    }
+
+    // Distribution
+    while (amount > 0) {
+        for (let attr of constants.ATTRIBUTE_NAMES) {
+            attributes = {
+                ...attributes,
+                [attr]: {
+                    value: attributes[attr].value - 1,
+                    points: attributes[attr].points,
+                },
+            };
+            attrConsumed = {
+                ...attrConsumed,
+                [attr]: attrConsumed[attr] + 1,
+            };
+            amount -= 1;
+            if (amount <= 0) {
+                break;
+            }
+        }
+    }
+
+    return {
+        ...entity,
+        attributes: attributes,
+    };
+}
+
+export function getEntityColoredStars(entity) {
+    const coloredStarsCount = Object.values(coloredStars).reduce(
+        (acc, starType) => {
+            return acc + entity.stars[starType.star];
+        },
+        0,
+    );
+
+    return coloredStarsCount;
+}
+
+export function getEntityUsableStars(entity) {
+    return getEntityColoredStars(entity) + entity.stars[effectKeys.WHITE_STAR];
+}
+
+export function getEntityTotalStars(entity) {
+    return getEntityUsableStars(entity) + entity.stars[effectKeys.GRAY_STAR];
+}
+
+export function canUse(prev, entityKey, action) {
+    const entity = prev.entities[entityKey];
+    const states = entity.states;
+
+    // Exclusive Overriding Ultimate States
+    if (states[effectKeys.ZENITH_OF_MORTALITY]) {
+        return action === actionKeys.ASCEND;
+    }
+    if (states[effectKeys.NOVA]) {
+        return action === actionKeys.SUPERNOVA;
+    }
+    if (states[effectKeys.THERMAL_OVERLOAD]) {
+        return action === actionKeys.MELTDOWN;
+    }
+    if (states[effectKeys.ANOINTED_PROXY]) {
+        return action === actionKeys.JUDGEMENT;
+    }
+
+    // Reject ultimate actions if their corresponding state overrides are not active
+    if ([actionKeys.ASCEND, actionKeys.SUPERNOVA, actionKeys.MELTDOWN, actionKeys.JUDGEMENT].includes(action)) {
+        return false;
+    }
+
+    // Umbral Core Actions
+    const umbralActions = [
+        actionKeys.BLACK_MAYHEM,
+        actionKeys.SHADOW_MANTLE,
+        actionKeys.RITUAL_OF_ASH,
+        actionKeys.DARK_PROMISE
+    ];
+    if (states[effectKeys.UMBRAL_CORE]) {
+        return umbralActions.includes(action);
+    }
+    if (umbralActions.includes(action)) {
+        return false;
+    }
+
+    // Angel Actions (Acts of Benediction & Malediction)
+    const angelActions = [
+        actionKeys.BAPTISM_OF_THE_FLAMES, actionKeys.CELESTIAL_SCALE, 
+        actionKeys.HYMNS_OF_SANCTIFICATION, actionKeys.GIFT_OF_APOTHEOSIS,
+        actionKeys.SERAPH_OF_CONDEMNATION, actionKeys.GLIMPSE_OF_PANDEMONIUM, 
+        actionKeys.EDICT_OF_SEVERANCE, actionKeys.THE_WORD_MADE_FLESH
+    ];
+    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        return angelActions.includes(action);
+    }
+    if (angelActions.includes(action)) {
+        return false;
+    }
+
+    // Helper to evaluate progression lock status for base actions only
+    const isProgLocked = (bossKey) => {
+        if (!prev.progMode) {
+            return false;
+        }
+        const status = prev.progStatus[bossKey];
+        return !(status === progKeys.DEFEATED || status === progKeys.ALWAYS_OPEN);
+    };
+
+    // Sonority Transformations (Resonant State)
+    if (action === actionKeys.BABEL) {
+        return states[effectKeys.RESONANT] && entity[effectKeys.SONORITY] > 0;
+    }
+    if (action === actionKeys.SOUND_OF_SILENCE) {
+        return states[effectKeys.RESONANT] && entity[effectKeys.SONORITY] < 0;
+    }
+    if (action === actionKeys.DA_CAPO) {
+        return states[effectKeys.RESONANT] && entity[effectKeys.SONORITY] === 0;
+    }
+    if (action === actionKeys.ATTUNE) {
+        if (states[effectKeys.RESONANT]) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.MAESTRO);
+    }
+
+    // Cyborg Mechanics & Venting Lockouts
+    if (states[effectKeys.VENTING] && [actionKeys.DEPLOY, actionKeys.LASER].includes(action)) {
+        return false;
+    }
+    if (action === actionKeys.LASER) {
+        return states[effectKeys.WEAPONS_DEPLOYED];
+    }
+    if (action === actionKeys.DEPLOY) {
+        if (states[effectKeys.WEAPONS_DEPLOYED]) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.CYBORG);
+    }
+
+    // Runic Array Mechanics
+    const arrayActive = prev[effectKeys.RUNIC_ARRAY] > 0;
+    if (action === actionKeys.CURSE) {
+        return arrayActive;
+    }
+    if (action === actionKeys.ARRAY) {
+        if (arrayActive) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.HEXER);
+    }
+
+    // Selenian Actions & Active Element Conditions
+    if (!states[effectKeys.SELENIAN]) {
+        const lunarActions = [
+            actionKeys.LUNAR_SMITE, actionKeys.LUNAR_GROWTH, actionKeys.LUNAR_TIDE,
+            actionKeys.LUNAR_STRIKE, actionKeys.LUNAR_SHED, actionKeys.LUNAR_SHROUD,
+            actionKeys.CHALK, actionKeys.SHATTER, actionKeys.MIRROR
+        ];
+        if (lunarActions.includes(action)) {
+            return false;
+        }
+    } else {
+        if (action === actionKeys.REFRACT) {
+            return false;
+        }
+        if (action === actionKeys.LUNAR_SMITE) {
+            return isElementActive(entity, elementalKeys.ASH);
+        }
+        if (action === actionKeys.LUNAR_GROWTH) {
+            return isElementActive(entity, elementalKeys.NATURE);
+        }
+        if (action === actionKeys.LUNAR_TIDE) {
+            return isElementActive(entity, elementalKeys.OCEAN);
+        }
+        if (action === actionKeys.LUNAR_STRIKE) {
+            return isElementActive(entity, elementalKeys.SCORCH);
+        }
+        if (action === actionKeys.LUNAR_SHED) {
+            return isElementActive(entity, elementalKeys.WITHER);
+        }
+        if (action === actionKeys.LUNAR_SHROUD) {
+            return isElementActive(entity, elementalKeys.FROST);
+        }
+        if (action === actionKeys.CHALK) {
+            return isElementActive(entity, elementalKeys.SHATTERED);
+        }
+        if (action === actionKeys.SHATTER) {
+            return isElementActive(entity, elementalKeys.ALBEDO) && !isElementActive(entity, elementalKeys.SHATTERED);
+        }
+        if (action === actionKeys.MIRROR) {
+            return !isElementActive(entity, elementalKeys.SHATTERED) && !isElementActive(entity, elementalKeys.ALBEDO);
+        }
+    }
+
+    // Base Core Actions (Blocked if element equivalents override them)
+    if (action === actionKeys.ATTACK) {
+        return !isElementActive(entity, elementalKeys.ASH);
+    }
+    if (action === actionKeys.GUARD) {
+        return !isElementActive(entity, elementalKeys.NATURE);
+    }
+    if (action === actionKeys.HEAL) {
+        return !isElementActive(entity, elementalKeys.OCEAN);
+    }
+    if (action === actionKeys.SPECIAL_ATTACK) {
+        if (isElementActive(entity, elementalKeys.SCORCH)) {
+            return false;
+        }
+        return getEntityTotalMana(entity) >= constants.SP_ATTACK_COST;
+    }
+    if (action === actionKeys.SACRIFICE) {
+        if (isElementActive(entity, elementalKeys.WITHER)) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.BLOODKNIGHT);
+    }
+    if (action === actionKeys.AEGIS) {
+        if (isElementActive(entity, elementalKeys.FROST)) {
+            return false;
+        }
+        if (states[effectKeys.CUTOFF_WINGS]) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.PALADIN);
+    }
+
+    // Untransformed Base Stances
+    if (action === actionKeys.REFRACT) {
+        return !isProgLocked(aiKeys.LUNATIC);
+    }
+    if (action === actionKeys.CHART) {
+        return !isProgLocked(aiKeys.STARFARER);
+    }
+    if (action === actionKeys.SHADOW_PACT) {
+        if (states[effectKeys.BLEAK_DECEPTION]) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.SHADOW_SORCERER);
+    }
+
+    return true;
+}
+
+export function getActions(prev, entityKey) {
+    const entity = prev.entities[entityKey];
+    const states = entity.states;
+
+    // Ultimate Action Overrides
+    if (states[effectKeys.ZENITH_OF_MORTALITY]) {
+        return [actionKeys.ASCEND];
+    }
+    if (states[effectKeys.NOVA]) {
+        return [actionKeys.SUPERNOVA];
+    }
+    if (states[effectKeys.THERMAL_OVERLOAD]) {
+        return [actionKeys.MELTDOWN];
+    }
+    if (states[effectKeys.ANOINTED_PROXY]) {
+        return [actionKeys.JUDGEMENT];
+    }
+
+    // Angel Actions (Acts of Benediction & Malediction)
+    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        return [
+            actionKeys.BAPTISM_OF_THE_FLAMES,
+            actionKeys.CELESTIAL_SCALE,
+            actionKeys.HYMNS_OF_SANCTIFICATION,
+            actionKeys.GIFT_OF_APOTHEOSIS,
+            actionKeys.SERAPH_OF_CONDEMNATION,
+            actionKeys.GLIMPSE_OF_PANDEMONIUM,
+            actionKeys.EDICT_OF_SEVERANCE,
+            actionKeys.THE_WORD_MADE_FLESH
+        ];
+    }
+
+    // Umbral Core Actions
+    if (states[effectKeys.UMBRAL_CORE]) {
+        return [
+            actionKeys.BLACK_MAYHEM,
+            actionKeys.SHADOW_MANTLE,
+            actionKeys.RITUAL_OF_ASH,
+            actionKeys.DARK_PROMISE
+        ];
+    }
+
+    // Base Actions + Replacements
+    const actions = [];
+
+    // Attack / Lunar Smite
+    if (isElementActive(entity, elementalKeys.ASH)) {
+        actions.push(actionKeys.LUNAR_SMITE);
+    } else {
+        actions.push(actionKeys.ATTACK);
+    }
+
+    // Guard / Lunar Growth
+    if (isElementActive(entity, elementalKeys.NATURE)) {
+        actions.push(actionKeys.LUNAR_GROWTH);
+    } else {
+        actions.push(actionKeys.GUARD);
+    }
+
+    // Heal / Lunar Tide
+    if (isElementActive(entity, elementalKeys.OCEAN)) {
+        actions.push(actionKeys.LUNAR_TIDE);
+    } else {
+        actions.push(actionKeys.HEAL);
+    }
+
+    // Special Attack / Lunar Strike
+    if (isElementActive(entity, elementalKeys.SCORCH)) {
+        actions.push(actionKeys.LUNAR_STRIKE);
+    } else {
+        actions.push(actionKeys.SPECIAL_ATTACK);
+    }
+
+    // Sacrifice / Lunar Shed
+    if (isElementActive(entity, elementalKeys.WITHER)) {
+        actions.push(actionKeys.LUNAR_SHED);
+    } else {
+        actions.push(actionKeys.SACRIFICE);
+    }
+
+    // Array / Curse
+    const arrayActive = prev[effectKeys.RUNIC_ARRAY] > 0;
+    if (arrayActive) {
+        actions.push(actionKeys.CURSE);
+    } else {
+        actions.push(actionKeys.ARRAY);
+    }
+
+    // Deploy / Laser
+    if (states[effectKeys.WEAPONS_DEPLOYED]) {
+        actions.push(actionKeys.LASER);
+    } else {
+        actions.push(actionKeys.DEPLOY);
+    }
+
+    // Attune Transformations
+    if (!states[effectKeys.RESONANT]) {
+        actions.push(actionKeys.ATTUNE);
+    } else {
+        if (entity[effectKeys.SONORITY] > 0) {
+            actions.push(actionKeys.BABEL);
+        }
+        if (entity[effectKeys.SONORITY] < 0) {
+            actions.push(actionKeys.SOUND_OF_SILENCE);
+        }
+        if (entity[effectKeys.SONORITY] === 0) {
+            actions.push(actionKeys.DA_CAPO);
+        }
+    }
+
+    // Refract Transformations
+    if (!states[effectKeys.SELENIAN]) {
+        actions.push(actionKeys.REFRACT);
+    } else {
+        if (isElementActive(entity, elementalKeys.SHATTERED)) {
+            actions.push(actionKeys.CHALK);
+        } else {
+            if (isElementActive(entity, elementalKeys.ALBEDO)) {
+                actions.push(actionKeys.SHATTER);
+            } else {
+                actions.push(actionKeys.MIRROR);
+            }
+        }
+    }
+
+    // Chart
+    actions.push(actionKeys.CHART);
+
+    // Shadow Pact
+    actions.push(actionKeys.SHADOW_PACT);
+
+    // Aegis / Lunar Shroud
+    if (isElementActive(entity, elementalKeys.FROST)) {
+        actions.push(actionKeys.LUNAR_SHROUD);
+    } else {
+        actions.push(actionKeys.AEGIS);
+    }
+
+    return actions;
 }

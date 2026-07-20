@@ -31,7 +31,7 @@ import {
     eventKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
-import { processIVStar, processROYGBStar, processTrail } from "./starfall.js";
+import { processROYGBIVStar } from "./starfall.js";
 
 export function processUpkeep(prev, targetKey, nonTargetKey) {
     let draftTarget = {
@@ -510,6 +510,57 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 },
             };
         }
+
+        // Nebula
+        if(draftCurrActor[effectKeys.NEBULA] > 0) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                [effectKeys.NEBULA]: 0,
+            }
+        }
+
+        // Starblight
+        if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                [effectKeys.STARBLIGHT]: 0,
+            }
+        }
+
+        // Constellation
+        if(draftCurrActor[effectKeys.CONSTELLATION] > 0) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                [effectKeys.CONSTELLATION]: 0,
+            }
+        }
+
+        // Crimson Constellation
+        if(draftCurrActor[effectKeys.CRIMSON_CONSTELLATION] > 0) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                [effectKeys.CRIMSON_CONSTELLATION]: 0,
+            }
+        }
+
+        // Azure Constellation
+        if(draftCurrActor[effectKeys.AZURE_CONSTELLATION] > 0) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                [effectKeys.AZURE_CONSTELLATION]: 0,
+            }
+        }
+
+        // Nova
+        if(draftCurrActor.states[effectKeys.NOVA]) {
+            draftCurrActor = {
+                ...draftCurrActor,
+                states: {
+                    ...draftCurrActor.states,
+                    [effectKeys.NOVA]: false,
+                }
+            }
+        }
     }
 
     // Laser used
@@ -622,14 +673,11 @@ export function buildRoundQueue(prev) {
         const hasStars = coloredStars.some(
             (curr) => value[2].stars[curr.star] > 0,
         );
-        const hasTrails = coloredStars.some(
-            (curr) => value[2].stars[curr.trail] > 0,
-        );
 
         if (
             !newQueue.includes(value[1]) &&
             value[2].states[effectKeys.STARGAZER] &&
-            (hasStars || hasTrails)
+            (hasStars)
         ) {
             newQueue.push(value[1]);
         }
@@ -638,14 +686,6 @@ export function buildRoundQueue(prev) {
             newQueue.push(roundPhases.ARRAY_TURN);
             futurePulsesAvailable--;
         }
-    }
-
-    // Moon Phase
-    if (
-        (p1.states[effectKeys.SELENIAN] || p2.states[effectKeys.SELENIAN]) &&
-        !newQueue.includes(roundPhases.MOON_TURN)
-    ) {
-        newQueue.push(roundPhases.MOON_TURN);
     }
 
     // Moon Phase
@@ -941,10 +981,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         // ROYGB
         case starfallPhases.RED_STAR: {
             if (master.stars[effectKeys.RED_STAR] > 0) {
-                const newEntities = processROYGBStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.RED_STAR,
-                    effectKeys.RED_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -954,10 +993,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 
         case starfallPhases.ORANGE_STAR: {
             if (master.stars[effectKeys.ORANGE_STAR] > 0) {
-                const newEntities = processROYGBStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.ORANGE_STAR,
-                    effectKeys.ORANGE_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -967,10 +1005,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 
         case starfallPhases.YELLOW_STAR: {
             if (master.stars[effectKeys.YELLOW_STAR] > 0) {
-                const newEntities = processROYGBStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.YELLOW_STAR,
-                    effectKeys.YELLOW_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -980,10 +1017,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 
         case starfallPhases.GREEN_STAR: {
             if (master.stars[effectKeys.GREEN_STAR] > 0) {
-                const newEntities = processROYGBStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.GREEN_STAR,
-                    effectKeys.GREEN_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -993,10 +1029,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 
         case starfallPhases.BLUE_STAR: {
             if (master.stars[effectKeys.BLUE_STAR] > 0) {
-                const newEntities = processROYGBStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.BLUE_STAR,
-                    effectKeys.BLUE_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -1007,103 +1042,21 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         // IV
         case starfallPhases.INDIGO_STAR: {
             if (master.stars[effectKeys.INDIGO_STAR] > 0) {
-                const newEntities = processIVStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.INDIGO_STAR,
                 );
                 master = newEntities.draftMaster;
-                nonMaster = newEntities.nonMaster;
+                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.VIOLET_STAR: {
             if (master.stars[effectKeys.VIOLET_STAR] > 0) {
-                const newEntities = processIVStar(
+                const newEntities = processROYGBIVStar(
                     context,
                     effectKeys.VIOLET_STAR,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.nonMaster;
-            }
-            break;
-        }
-
-        // trails
-        case starfallPhases.RED_TRAIL: {
-            if (master.stars[effectKeys.RED_TRAIL] > 0) {
-                const newEntities = processTrail(context, effectKeys.RED_TRAIL);
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.ORANGE_TRAIL: {
-            if (master.stars[effectKeys.ORANGE_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.ORANGE_TRAIL,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.YELLOW_TRAIL: {
-            if (master.stars[effectKeys.YELLOW_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.YELLOW_TRAIL,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.GREEN_TRAIL: {
-            if (master.stars[effectKeys.GREEN_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.GREEN_TRAIL,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.BLUE_TRAIL: {
-            if (master.stars[effectKeys.BLUE_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.BLUE_TRAIL,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.INDIGO_TRAIL: {
-            if (master.stars[effectKeys.INDIGO_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.INDIGO_TRAIL,
-                );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
-            }
-            break;
-        }
-
-        case starfallPhases.VIOLET_TRAIL: {
-            if (master.stars[effectKeys.VIOLET_TRAIL] > 0) {
-                const newEntities = processTrail(
-                    context,
-                    effectKeys.VIOLET_TRAIL,
                 );
                 master = newEntities.draftMaster;
                 nonMaster = newEntities.draftNonMaster;
@@ -1116,24 +1069,8 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         }
     }
 
-    // exit condition: If there's no trails at violet starfall, skip trails
-    const hasTrails = coloredStars.some((curr) => master.stars[curr.trail] > 0);
-
-    if (!hasTrails && currentPhase === starfallPhases.VIOLET_STAR) {
-        return processDeathCheck({
-            ...prev,
-            starQueue: null,
-            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
-            entities: {
-                ...prev.entities,
-                [masterKey]: master,
-                [nonMasterKey]: nonMaster,
-            },
-        });
-    }
-
-    // exit condition 2: is violet trailfall
-    if (currentPhase === starfallPhases.VIOLET_TRAIL) {
+    // exit condition: is violet starfall
+    if (currentPhase === starfallPhases.VIOLET_STAR) {
         return processDeathCheck({
             ...prev,
             starQueue: null,

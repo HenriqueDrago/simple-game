@@ -47,7 +47,7 @@ function TooltipDisplay({ tooltipStack, handleSetTooltip }) {
                         if (entry) {
                             handleSetTooltip(
                                 {
-                                    keyword: activeTooltip.type,
+                                    keyword: entry.name,
                                     type: entry.type,
                                     description: entry.description,
                                     x: e.clientX,

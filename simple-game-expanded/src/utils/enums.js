@@ -186,13 +186,6 @@ export const effectKeys = Object.freeze({
     BLUE_STAR: "blue",
     INDIGO_STAR: "indigo",
     VIOLET_STAR: "violet",
-    RED_TRAIL: "trailRed",
-    ORANGE_TRAIL: "trailOrange",
-    YELLOW_TRAIL: "trailYellow",
-    GREEN_TRAIL: "trailGreen",
-    BLUE_TRAIL: "trailBlue",
-    INDIGO_TRAIL: "trailIndigo",
-    VIOLET_TRAIL: "trailViolet",
     STARDUST: "stardust",
     STARGAZER: "stargazer",
     STARFALL: "starfall",
@@ -204,13 +197,6 @@ export const effectKeys = Object.freeze({
     BLUE_STARFALL: "blueStarfall",
     INDIGO_STARFALL: "indigoStarfall",
     VIOLET_STARFALL: "violetStarfall",
-    RED_TRAILFALL: "redTrailfall",
-    ORANGE_TRAILFALL: "orangeTrailfall",
-    YELLOW_TRAILFALL: "yellowTrailfall",
-    GREEN_TRAILFALL: "greenTrailfall",
-    BLUE_TRAILFALL: "blueTrailfall",
-    INDIGO_TRAILFALL: "indigoTrailfall",
-    VIOLET_TRAILFALL: "violetTrailfall",
     INSPIRATION: "inspiration",
     SEVERED_TIME: "severedTime",
     DIVINE_SPARK: "currDivineSpark",
@@ -261,6 +247,8 @@ export const effectKeys = Object.freeze({
     STARBLIGHT: "starblight",
     CONSTELLATION: "constellation",
     NOVA: "nova",
+    CRIMSON_CONSTELLATION: "crimsonConstellation",
+    AZURE_CONSTELLATION: "azureConstellation"
 });
 
 export const eyeKeys = Object.freeze({
@@ -283,7 +271,7 @@ export const entryTypes = Object.freeze({
     DAMAGE_TYPE: "damageType",
     FIELD_EFFECT: "fieldEffect",
     MECHANIC: "mechanic",
-    STAT: "stat",
+    ATTRIBUTES: "stat",
     MITIGATION_RESOURCE: "mitigationResource",
     FREE_RESOURCE: "freeResource",
     LIMITED_RESOURCE: "limitedResource",
@@ -299,6 +287,8 @@ export const entryTypes = Object.freeze({
     TRANSFORMATIVE_ACTION: "transformativeActions",
     ACT_OF_BENEDICTION: "actOfBenediction",
     ACT_OF_MALEDICTION: "actOfMalediction",
+    BASE_ATTRIBUTES: "baseStats",
+    SPECIAL_ATTRIBUTES: "alternateStats",
 });
 
 export const starfallPhases = Object.freeze({
@@ -310,13 +300,6 @@ export const starfallPhases = Object.freeze({
     BLUE_STAR: effectKeys.BLUE_STAR,
     INDIGO_STAR: effectKeys.INDIGO_STAR,
     VIOLET_STAR: effectKeys.VIOLET_STAR,
-    RED_TRAIL: effectKeys.RED_TRAIL,
-    ORANGE_TRAIL: effectKeys.ORANGE_TRAIL,
-    YELLOW_TRAIL: effectKeys.YELLOW_TRAIL,
-    GREEN_TRAIL: effectKeys.GREEN_TRAIL,
-    BLUE_TRAIL: effectKeys.BLUE_TRAIL,
-    INDIGO_TRAIL: effectKeys.INDIGO_TRAIL,
-    VIOLET_TRAIL: effectKeys.VIOLET_TRAIL,
 });
 
 export const playerTurnPhases = Object.freeze({
@@ -345,7 +328,6 @@ export const eventKeys = Object.freeze({
     TURN_UPKEEP: "turnUpkeep",
     TURN_COMMIT: "turnCommit",
     STAR_ACTIVATION: "starActivation",
-    TRAIL_ACTIVATION: "trailActivation",
     MANA_SIPHON: "manaSiphon",
     RUNIC_PULSE: "runicPulse",
     MOON_PHASE: "moonPhase",

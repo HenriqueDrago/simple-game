@@ -2,10 +2,10 @@ import { constants } from "../utils/constants";
 import "./SonorityCounter.css";
 
 function SonorityCounter({ sonority }) {
-    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT));
+    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT) * 2);
     const disFill = 100 - disNonFill;
 
-    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT));
+    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT) * 2);
     const harNonFill = 100 - harFill;
 
     return (

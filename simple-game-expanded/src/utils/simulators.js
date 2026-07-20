@@ -16,6 +16,7 @@ import {
     loseHp,
     getEntityMaxHealth,
     getEntityTotalMana,
+    getEntityTotalStars,
 } from "./entities.js";
 import {
     actionKeys,
@@ -52,6 +53,7 @@ export const simulators = {
     [actionKeys.MELTDOWN]: simulateMeltdown,
 
     [actionKeys.CHART]: simulateChart,
+    [actionKeys.SUPERNOVA]: simulateSupernova,
 
     // Paladin
     [actionKeys.AEGIS]: simulateAegis,
@@ -563,7 +565,7 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
         [effectKeys.SONORITY]: newSonority,
         resources: {
             ...agent.resources,
-            [effectKeys.HARMONY]: Math.floor(musicalShift / 10),
+            [effectKeys.HARMONY]: Math.floor(musicalShift / 5),
         },
     };
 
@@ -591,7 +593,7 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         ...nonAgent,
         resources: {
             ...nonAgent.resources,
-            [effectKeys.DISSONANCE]: Math.floor(musicalShift / 10),
+            [effectKeys.DISSONANCE]: Math.floor(musicalShift / 5),
         },
     };
 
@@ -1278,4 +1280,29 @@ function simulateLunarShed({ prev, agent, agentKey }) {
             },
         },
     };
+}
+
+function simulateSupernova({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const totalStars = getEntityTotalStars(agent);
+    const trueDmgDealt = Math.ceil(
+        totalStars * constants.SUPERNOVA_MULT,
+    );
+
+    const {attacker, defender} = dealDamage(agent, nonAgent, trueDmgDealt, dmgTypes.TRUE, prev[effectKeys.RUNIC_ARRAY] > 0);
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...attacker,
+                stars: {
+                    ...createBaseEntity().stars,
+                }
+            },
+            [nonAgentKey]: {
+                ...defender,
+            }
+        }
+    }
 }

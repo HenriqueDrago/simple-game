@@ -1,6 +1,6 @@
 import "./AttrLine.css";
 
-import { elementalKeys, turnStatus } from "../utils/enums";
+import { effectKeys, elementalKeys, turnStatus } from "../utils/enums";
 import { getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
 import { spawnTooltip } from "../utils/dictionary";
 
@@ -16,22 +16,32 @@ function AttrLine({
     attr,
     entity,
     entityKey,
-    handleSetTooltip
+    handleSetTooltip,
 }) {
     if (entity.attributes[attr].value == null) {
         return null;
     }
 
     let specialClass = "";
-    if (attr === "str") {
-        specialClass = isElementActive(entity, elementalKeys.SCORCH)
-            ? "stat-value-str"
-            : "";
+    if (
+        entity[effectKeys.CONSTELLATION] > 0 &&
+        gettersMap[attr](entity) > entity.attributes[attr].points
+    ) {
+        specialClass = "constellation-value-increase";
     }
-    if (attr === "def") {
-        specialClass = isElementActive(entity, elementalKeys.FROST)
-            ? "stat-value-def"
-            : "";
+    if (
+        attr === "str" &&
+        (isElementActive(entity, elementalKeys.SCORCH) ||
+            entity[effectKeys.CRIMSON_CONSTELLATION] > 0)
+    ) {
+        specialClass = "stat-value-str";
+    }
+    if (
+        attr === "def" &&
+        (isElementActive(entity, elementalKeys.FROST) ||
+            entity[effectKeys.AZURE_CONSTELLATION] > 0)
+    ) {
+        specialClass = "stat-value-def";
     }
 
     const showControls = modifiable && battleState === turnStatus.SETUP;

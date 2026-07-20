@@ -6,6 +6,7 @@ import {
     getEntityMaxHealth,
     getEntityTotalHealth,
     getEntityTotalMana,
+    getEntityUsableStars,
     isEntityDead,
     processActionTypeUsed,
     restoreResources,
@@ -136,22 +137,7 @@ export function assignStarsAI(context) {
         [effectKeys.VIOLET_STAR]: 0,
     };
 
-    // Calculate the complete star pool
-    const colors = [
-        effectKeys.RED_STAR,
-        effectKeys.ORANGE_STAR,
-        effectKeys.YELLOW_STAR,
-        effectKeys.GREEN_STAR,
-        effectKeys.BLUE_STAR,
-        effectKeys.INDIGO_STAR,
-        effectKeys.VIOLET_STAR,
-    ];
-
-    let totalStars = agent.stars[effectKeys.WHITE_STAR] || 0;
-    colors.forEach((color) => {
-        totalStars += agent.stars[color] || 0;
-    });
-
+    let totalStars = getEntityUsableStars(agent);
     let remainingWhite = totalStars;
 
     // Early return if no stars
@@ -199,7 +185,7 @@ export function assignStarsAI(context) {
 
         const { draftMaster, draftNonMaster } = processRedStar(
             { master: agent, nonMaster: nonAgent },
-            redAlloc,
+            0,
             violetAlloc,
         );
 
@@ -228,13 +214,15 @@ export function assignStarsAI(context) {
         }
     }
 
-    // C: Orange Star
+    // C: Augmented Orange Star
     if (remainingWhite > 0) {
-        const orangeAlloc = remainingWhite;
+        const maxConsumption = consumeResources(agent, Infinity, effectKeys.ORANGE_STAR).resourcesConsumed.totalConsumption - 1;
+
+        const starsAlloc = Math.min(maxConsumption, Math.floor(remainingWhite / 2));
 
         const { draftMaster, draftNonMaster } = processOrangeStar(
             { master: agent, nonMaster: nonAgent },
-            orangeAlloc,
+            starsAlloc,
             0,
         );
 
@@ -255,7 +243,8 @@ export function assignStarsAI(context) {
         ) {
             allocations = {
                 ...allocations,
-                [effectKeys.ORANGE_STAR]: orangeAlloc,
+                [effectKeys.ORANGE_STAR]: starsAlloc,
+                [effectKeys.VIOLET_STAR]: starsAlloc,
             };
             remainingWhite = 0;
         }
@@ -263,59 +252,24 @@ export function assignStarsAI(context) {
 
     // === Default Logic ===
 
-    // Clean up bad resources with green
-    let currHeal = 0;
-    const missignHp = agent[effectKeys.MAX_HEALTH] - agent[effectKeys.HEALTH];
-    if (remainingWhite > 0) {
-        let greenAlloc = allocations[effectKeys.GREEN_STAR];
-
-        // Poison
-        if (agent.resources[effectKeys.POISON] > 0) {
-            const poisonCleansed = Math.min(
-                agent.resources[effectKeys.POISON],
-                remainingWhite,
-            );
-            greenAlloc += poisonCleansed;
-            currHeal += poisonCleansed;
-            remainingWhite -= poisonCleansed;
-        }
-
+    // Consume undesirable resources with Orange
+    const undesirableResources = agent.resources[effectKeys.POISON] + agent.resources[effectKeys.SHACKLED_MANA];
+    if(undesirableResources > 0) {
+        const orangeAlloc = Math.min(undesirableResources, remainingWhite);
         allocations = {
             ...allocations,
-            [effectKeys.GREEN_STAR]: greenAlloc,
+            [effectKeys.ORANGE_STAR]:
+                remainingWhite + allocations[effectKeys.ORANGE_STAR],
         };
+
+        remainingWhite -= orangeAlloc;
     }
 
-    // Restore up to max hp with normal green
-    if (remainingWhite > 0) {
-        const resourcesConsumed = consumeResources(
-            agent,
-            Infinity,
-            effectKeys.GREEN_STAR,
-        ).resourcesConsumed;
-        const nonHealthResources =
-            resourcesConsumed.totalConsumption -
-            (resourcesConsumed[effectKeys.HEALTH] || 0);
-
-        const toBeHealed = Math.min(
-            Math.min(missignHp - currHeal, nonHealthResources),
-            remainingWhite,
-        );
-        const greenAlloc = allocations[effectKeys.GREEN_STAR] + toBeHealed;
-
-        currHeal += toBeHealed;
-        remainingWhite -= toBeHealed;
-
-        allocations = {
-            ...allocations,
-            [effectKeys.GREEN_STAR]: greenAlloc,
-        };
-    }
-
-    // Restore up to max hp with augmented green
-    if (remainingWhite > 0 && currHeal < missignHp) {
+    // Restore up to max hp with augmented green, only if no oranges used
+    const missingHp = getEntityMaxHealth(agent) - agent[effectKeys.HEALTH];
+    if (remainingWhite > 0 && missingHp >= getEntityMaxHealth(agent) * 0.2 && undesirableResources <= 0) {
         const spentStars = Math.min(
-            missignHp - currHeal,
+            missingHp,
             Math.floor(remainingWhite / 2),
         );
 
@@ -327,33 +281,31 @@ export function assignStarsAI(context) {
                 spentStars + allocations[effectKeys.VIOLET_STAR],
         };
         remainingWhite -= spentStars * 2;
+    }    
+
+    // Nova transformation
+    if (remainingWhite >= 40) {
+        allocations = {
+            ...allocations,
+            [effectKeys.YELLOW_STAR]:
+                remainingWhite + allocations[effectKeys.YELLOW_STAR],
+        };
+        remainingWhite = 0;
     }
 
-    // Use augmented yellow for resource generation
+    // Use augmented indigo for resource generation
     if (remainingWhite > 0) {
-        const spentStars = Math.floor(remainingWhite / 2);
+        const spentIndigo = Math.ceil(remainingWhite / 2);
+        const spentViolet = Math.floor(remainingWhite / 2);
 
         allocations = {
             ...allocations,
-            [effectKeys.YELLOW_STAR]:
-                spentStars + allocations[effectKeys.YELLOW_STAR],
+            [effectKeys.INDIGO_STAR]:
+                spentIndigo + allocations[effectKeys.INDIGO_STAR],
             [effectKeys.VIOLET_STAR]:
-                spentStars + allocations[effectKeys.VIOLET_STAR],
+                spentViolet + allocations[effectKeys.VIOLET_STAR],
         };
-        remainingWhite -= spentStars * 2;
-    }
-
-    // use extra yellow if no green/blue were used
-    if (
-        remainingWhite > 0 &&
-        allocations[effectKeys.GREEN_STAR] <= 0 &&
-        allocations[effectKeys.BLUE_STAR] <= 0
-    ) {
-        allocations = {
-            ...allocations,
-            [effectKeys.YELLOW_STAR]:
-                allocations[effectKeys.YELLOW_STAR] + remainingWhite,
-        };
+        // remainingWhite -= spentIndigo + spentViolet;
     }
 
     return allocations;
@@ -1208,7 +1160,7 @@ export function maestroAI(context) {
 
     // if absolute negative on sonority, check safety
     if (agent[effectKeys.SONORITY] <= constants.SONORITY_LOWER_LIMIT) {
-            return actionKeys.SOUND_OF_SILENCE;
+        return actionKeys.SOUND_OF_SILENCE;
     }
 
     // If on venting
@@ -1359,7 +1311,41 @@ export function angelAI(context) {
 - Use Attack or Special Attack if it can finish the enemy
 - Use Chart otherwise
 */
-export function starfarerAI() {
+export function starfarerAI(context) {
+    const { agent, hasManaForSpecial, nonAgentKey, agentKey } = context;
+
+    const simulate = createSimulator(context);
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Use Supernova on nova
+    if(agent.states[effectKeys.NOVA]) {
+        return actionKeys.SUPERNOVA
+    }
+
+    // default: CHART
     return actionKeys.CHART;
 }
 

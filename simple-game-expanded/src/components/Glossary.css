@@ -21,6 +21,12 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
+
+    /* Enable selection */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .glossary-column-container {

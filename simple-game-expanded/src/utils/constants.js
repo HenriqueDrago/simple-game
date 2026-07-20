@@ -68,10 +68,10 @@ const SHADOW_PACT_BURN = 5;
 const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
 
 const STARTING_SONORITY = 0;
-const SONORITY_LOWER_LIMIT = -100;
-const SONORITY_HIGHER_LIMIT = 100;
-const SONORITY_ON_DEFENSE = 10;
-const SONORITY_ON_OFFENSE = -10;
+const SONORITY_LOWER_LIMIT = -50;
+const SONORITY_HIGHER_LIMIT = 50;
+const SONORITY_ON_DEFENSE = 5;
+const SONORITY_ON_OFFENSE = -5;
 
 const MAX_ENLIT = 100;
 const MAX_INSIGHT = 100;
@@ -105,7 +105,17 @@ const LUNAR_TIDE_MULT = 2;
 const SMITE_MULT = 5;
 const WITHER_LUNACY_MULT = 2;
 
+const MAX_NEBULA = 100;
+const MAX_STARBLIGHT = 100;
+
+const NORMAL_YELLOW_NEBULA_GAIN = 5;
+const SUPERNOVA_MULT = 0.5;
+
 export const constants = {
+    SUPERNOVA_MULT,
+    NORMAL_YELLOW_NEBULA_GAIN,
+    MAX_NEBULA,
+    MAX_STARBLIGHT,
     SONORITY_ON_DEFENSE,
     SONORITY_ON_OFFENSE,
     WITHER_LUNACY_MULT,
@@ -216,7 +226,7 @@ export const presetAi = {
             entryTypes.MITIGATION_RESOURCE,
             entryTypes.BATTLE_PHASE,
             entryTypes.STAR,
-            
+
             dmgTypes.PHYSICAL,
             dmgTypes.PIERCING,
             dmgTypes.TRUE,
@@ -376,13 +386,6 @@ export const presetAi = {
             effectKeys.BLUE_STARFALL,
             effectKeys.INDIGO_STARFALL,
             effectKeys.VIOLET_STARFALL,
-            effectKeys.RED_TRAILFALL,
-            effectKeys.ORANGE_TRAILFALL,
-            effectKeys.YELLOW_TRAILFALL,
-            effectKeys.GREEN_TRAILFALL,
-            effectKeys.BLUE_TRAILFALL,
-            effectKeys.INDIGO_TRAILFALL,
-            effectKeys.VIOLET_TRAILFALL,
             effectKeys.WHITE_STAR,
             effectKeys.RED_STAR,
             effectKeys.ORANGE_STAR,
@@ -391,13 +394,6 @@ export const presetAi = {
             effectKeys.BLUE_STAR,
             effectKeys.INDIGO_STAR,
             effectKeys.VIOLET_STAR,
-            effectKeys.RED_TRAIL,
-            effectKeys.ORANGE_TRAIL,
-            effectKeys.YELLOW_TRAIL,
-            effectKeys.GREEN_TRAIL,
-            effectKeys.BLUE_TRAIL,
-            effectKeys.INDIGO_TRAIL,
-            effectKeys.VIOLET_TRAIL,
             effectKeys.GRAY_STAR,
             effectKeys.STARDUST,
             effectKeys.DOME,
@@ -526,7 +522,7 @@ const defensiveActions = [
 const transformativeActions = [
     actionKeys.ARRAY,
     actionKeys.CURSE,
-    
+
     actionKeys.DEPLOY,
 
     actionKeys.ATTUNE,
@@ -710,57 +706,43 @@ export const coloredStars = [
         name: "red",
         color: "#ff5a5f",
         star: effectKeys.RED_STAR,
-        trail: effectKeys.RED_TRAIL,
         starPhase: starfallPhases.RED_STAR,
-        trailPhase: starfallPhases.RED_TRAIL,
     },
     {
         name: "orange",
         color: "#ffb347",
         star: effectKeys.ORANGE_STAR,
-        trail: effectKeys.ORANGE_TRAIL,
         starPhase: starfallPhases.ORANGE_STAR,
-        trailPhase: starfallPhases.ORANGE_TRAIL,
     },
     {
         name: "yellow",
         color: "#fff275",
         star: effectKeys.YELLOW_STAR,
-        trail: effectKeys.YELLOW_TRAIL,
         starPhase: starfallPhases.YELLOW_STAR,
-        trailPhase: starfallPhases.YELLOW_TRAIL,
     },
     {
         name: "green",
         color: "#7dff8a",
         star: effectKeys.GREEN_STAR,
-        trail: effectKeys.GREEN_TRAIL,
         starPhase: starfallPhases.GREEN_STAR,
-        trailPhase: starfallPhases.GREEN_TRAIL,
     },
     {
         name: "blue",
         color: "#6ec6ff",
         star: effectKeys.BLUE_STAR,
-        trail: effectKeys.BLUE_TRAIL,
         starPhase: starfallPhases.BLUE_STAR,
-        trailPhase: starfallPhases.BLUE_TRAIL,
     },
     {
         name: "indigo",
         color: "#8b7dff",
         star: effectKeys.INDIGO_STAR,
-        trail: effectKeys.INDIGO_TRAIL,
         starPhase: starfallPhases.INDIGO_STAR,
-        trailPhase: starfallPhases.INDIGO_TRAIL,
     },
     {
         name: "violet",
         color: "#d291ff",
         star: effectKeys.VIOLET_STAR,
-        trail: effectKeys.VIOLET_TRAIL,
         starPhase: starfallPhases.VIOLET_STAR,
-        trailPhase: starfallPhases.VIOLET_TRAIL,
     },
 ];
 
@@ -910,7 +892,9 @@ export const entryTypesMap = {
     [entryTypes.DAMAGE_TYPE]: "DAMAGE TYPE",
     [entryTypes.FIELD_EFFECT]: "FIELD EFFECT",
     [entryTypes.MECHANIC]: "MECHANIC",
-    [entryTypes.STAT]: "STAT",
+    [entryTypes.ATTRIBUTES]: "ATTRIBUTES",
+    [entryTypes.BASE_ATTRIBUTES]: "BASE ATTRIBUTES",
+    [entryTypes.SPECIAL_ATTRIBUTES]: "SPECIAL ATTRIBUTES",
     [entryTypes.MITIGATION_RESOURCE]: "MITIGATION RESOURCE",
     [entryTypes.FREE_RESOURCE]: "FREE RESOURCE",
     [entryTypes.LIMITED_RESOURCE]: "LIMITED RESOURCE",
@@ -926,4 +910,85 @@ export const entryTypesMap = {
     [entryTypes.OFFENSIVE_ACTION]: "OFFENSIVE ACTION",
     [entryTypes.DEFENSIVE_ACTION]: "DEFENSIVE ACTION",
     [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
+};
+
+export const actionMap = {
+    [actionKeys.ATTACK]: { name: "Attack", specialClass: "" },
+    [actionKeys.HEAL]: { name: "Heal", specialClass: "" },
+    [actionKeys.GUARD]: { name: "Guard", specialClass: "" },
+    [actionKeys.SPECIAL_ATTACK]: { name: "Special Attack", specialClass: "" },
+    [actionKeys.SACRIFICE]: { name: "Sacrifice", specialClass: "" },
+    [actionKeys.ARRAY]: { name: "Array", specialClass: "" },
+    [actionKeys.CURSE]: { name: "Curse", specialClass: "" },
+    [actionKeys.AEGIS]: { name: "Aegis", specialClass: "" },
+    [actionKeys.SHADOW_PACT]: { name: "Shadow Pact", specialClass: "" },
+    [actionKeys.BLACK_MAYHEM]: { name: "Black Mayhem", specialClass: "" },
+    [actionKeys.SHADOW_MANTLE]: { name: "Shadow Mantle", specialClass: "" },
+    [actionKeys.RITUAL_OF_ASH]: { name: "Ritual of Ash", specialClass: "" },
+    [actionKeys.DARK_PROMISE]: { name: "Dark Promise", specialClass: "" },
+    [actionKeys.ATTUNE]: { name: "Attune", specialClass: "" },
+    [actionKeys.DA_CAPO]: { name: "Da Capo", specialClass: "" },
+    [actionKeys.SOUND_OF_SILENCE]: {
+        name: "The Sound of Silence",
+        specialClass: "",
+    },
+    [actionKeys.DEPLOY]: { name: "Deploy", specialClass: "" },
+    [actionKeys.LASER]: { name: "Laser", specialClass: "" },
+    [actionKeys.MELTDOWN]: {
+        name: "Meltdown",
+        specialClass: "meltdown-button",
+    },
+    [actionKeys.BABEL]: { name: "Babel", specialClass: "" },
+    [actionKeys.CHART]: { name: "Chart", specialClass: "" },
+    [actionKeys.ASCEND]: { name: "Ascend", specialClass: "ascend-button" },
+    [actionKeys.BAPTISM_OF_THE_FLAMES]: {
+        name: "Baptism of the Flames",
+        specialClass: "good-angel-button",
+    },
+    [actionKeys.CELESTIAL_SCALE]: {
+        name: "Celestial Scale",
+        specialClass: "good-angel-button",
+    },
+    [actionKeys.HYMNS_OF_SANCTIFICATION]: {
+        name: "Hymns of Sanctification",
+        specialClass: "good-angel-button",
+    },
+    [actionKeys.GIFT_OF_APOTHEOSIS]: {
+        name: "Gift of Apotheosis",
+        specialClass: "good-angel-button",
+    },
+    [actionKeys.SERAPH_OF_CONDEMNATION]: {
+        name: "Seraph of Condemnation",
+        specialClass: "bad-angel-button",
+    },
+    [actionKeys.GLIMPSE_OF_PANDEMONIUM]: {
+        name: "Glimpse of Pandemonium",
+        specialClass: "bad-angel-button",
+    },
+    [actionKeys.EDICT_OF_SEVERANCE]: {
+        name: "Edict of Severance",
+        specialClass: "bad-angel-button",
+    },
+    [actionKeys.THE_WORD_MADE_FLESH]: {
+        name: "The Word Made Flesh",
+        specialClass: "bad-angel-button",
+    },
+    [actionKeys.JUDGEMENT]: {
+        name: "Judgement",
+        specialClass: "judgement-button",
+    },
+    [actionKeys.REFRACT]: { name: "Refract", specialClass: "" },
+    [actionKeys.MIRROR]: { name: "Mirror", specialClass: "" },
+    [actionKeys.LUNAR_STRIKE]: { name: "Lunar Strike", specialClass: "" },
+    [actionKeys.LUNAR_SHED]: { name: "Lunar Shed", specialClass: "" },
+    [actionKeys.LUNAR_GROWTH]: { name: "Lunar Growth", specialClass: "" },
+    [actionKeys.LUNAR_SMITE]: { name: "Lunar Smite", specialClass: "" },
+    [actionKeys.LUNAR_TIDE]: { name: "Lunar Tide", specialClass: "" },
+    [actionKeys.LUNAR_SHROUD]: { name: "Lunar Shroud", specialClass: "" },
+    [actionKeys.SHATTER]: { name: "Shatter", specialClass: "" },
+    [actionKeys.CHALK]: { name: "Chalk", specialClass: "" },
+    [actionKeys.SUPERNOVA]: {
+        name: "Supernova",
+        specialClass: "nova-button",
+    },
 };

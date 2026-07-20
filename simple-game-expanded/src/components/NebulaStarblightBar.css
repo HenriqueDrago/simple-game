@@ -1,0 +1,61 @@
+.nebula-starblight-tracker-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+.nebula-starblight-label-row {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.nebula-starblight-label-row span {
+    width: 50%;
+    text-align: center;
+}
+
+.nebula-starblight-bar-track {
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-direction: row;
+    width: 100%;
+    height: 18px;
+    overflow: hidden;
+    
+    /* 
+       Left Half (0% - 50%): Yellow Star Nebula accumulation.
+       Right Half (50% - 100%): Unstable Cosmic Starblight leading to Nova.
+    */
+    background-image: linear-gradient(
+        to right, 
+        #854d0e 0%, 
+        #eab308 25%, 
+        #fef08a 49%, 
+        #fde047 50%, 
+        #4c1d95 50%, 
+        #06b6d4 75%, 
+        #e0f2fe 92%, 
+        #ffffff 100%
+    );
+}
+
+.nebula-fill-segment,
+.starblight-fill-segment {
+    background-color: transparent;
+    transition: width 0.3s ease-in-out;
+}
+
+.nebula-non-fill-segment,
+.starblight-non-fill-segment {
+    background-color: #000000;
+    transition: width 0.3s ease-in-out;
+}

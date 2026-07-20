@@ -10,6 +10,12 @@
     padding: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7); /* Deep shadow for depth */
     color: white;
+
+    /* Enable selection */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .tooltip-header {

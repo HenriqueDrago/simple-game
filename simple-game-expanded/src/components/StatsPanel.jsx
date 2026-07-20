@@ -24,10 +24,16 @@ import {
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
-import { getEntityMaxHealth, isElementActive } from "../utils/entities.js";
+import {
+    isElementActive,
+    isEntityDead,
+} from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
 import { getSonorityColor } from "../utils/getters.js";
+import ModifiersTracker from "./ModifiersTracker.jsx";
+import NebulaStarblightBar from "./NebulaStarblightBar.jsx";
+import ConstellationTracker from "./ConstellationTracker.jsx";
 
 function StatsPanel({
     game,
@@ -35,6 +41,7 @@ function StatsPanel({
     entityKey,
     handleElementChange,
     handleSetTooltip,
+    handleConstellation,
 }) {
     const entity = game.entities[entityKey];
     const battleState = game.status;
@@ -63,7 +70,10 @@ function StatsPanel({
             currPhase === roundPhases.PLAYER_TWO_TURN &&
             currPlayerPhase === playerTurnPhases.PLAN);
 
-    const showWarning = isEntityTurn && getEntityMaxHealth(entity) <= 0 && battleState === turnStatus.ONGOING && !isAngelView;
+    const showWarning =
+        isEntityTurn &&
+        battleState === turnStatus.ONGOING &&
+        isEntityDead(entity);
 
     const stateClassMap = {
         [effectKeys.ASCENDENCE_OF_SPIRIT]: "state-ascendence",
@@ -277,6 +287,12 @@ function StatsPanel({
                 </div>
             )}
 
+            <NebulaStarblightBar
+            
+                entity={entity}
+                handleSetTooltip={handleSetTooltip}
+            />
+
             {isAngelView ? (
                 <div
                     onMouseDown={(e) =>
@@ -429,6 +445,8 @@ function StatsPanel({
                 </div>
             )}
 
+            
+
             {entity[effectKeys.MANA_BLEED] > 0 && (
                 <div
                     onMouseDown={(e) =>
@@ -448,6 +466,8 @@ function StatsPanel({
                     />
                 </div>
             )}
+
+            
 
             <div className="stacks-wrapper">
                 {[...FREE_RESOURCES].reverse().map((key) => {
@@ -473,6 +493,20 @@ function StatsPanel({
                     );
                 })}
             </div>
+
+            <ModifiersTracker
+                entity={entity}
+                handleSetTooltip={handleSetTooltip}
+                
+            />
+
+            <ConstellationTracker
+                entityKey={entityKey}
+                entity={entity}
+                handleConstellation={handleConstellation}
+                handleSetTooltip={handleSetTooltip}
+                game={game}
+            />
 
             {!isAngelView && (
                 <div className="attributes-wrapper">

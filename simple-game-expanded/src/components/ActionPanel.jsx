@@ -8,14 +8,8 @@ import {
     roundPhases,
     playerTurnPhases,
 } from "../utils/enums";
-import { constants, presetAi } from "../utils/constants";
-
-import {
-    getUmbralActions,
-    getNormalActions,
-    getAngelActions,
-    getJudgement,
-} from "../utils/getters";
+import { presetAi, actionMap } from "../utils/constants";
+import { getActions, canUse } from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
 
 function ActionPanel({
@@ -27,7 +21,6 @@ function ActionPanel({
     handleClearTooltip,
 }) {
     const battleState = game.status;
-    const arrayActive = game[effectKeys.RUNIC_ARRAY] > 0;
 
     const currPhase =
         game.roundQueue && game.roundQueue.length > 0
@@ -42,12 +35,11 @@ function ActionPanel({
     const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN;
     const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN;
 
-    const playerOne = game.entities[entityKeys.PLAYER_ONE];
-    const playerTwo = game.entities[entityKeys.PLAYER_TWO];
+    const currEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO;
+    const targetEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE;
+    const currEntity = game.entities[currEntityKey];
 
-    const currEntity = isPlayerOneTurn ? playerOne : playerTwo;
-
-    // Turn and Button Visibility Logic
+    // Visibility Constraints
     const isHumanTurn =
         (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
         (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
@@ -56,14 +48,6 @@ function ActionPanel({
         isHumanTurn &&
         battleState === turnStatus.ONGOING &&
         currPlayerPhase === playerTurnPhases.PLAN;
-    const showUmbralButtons = showButtons && currEntity.states.umbralCore;
-    const showAngelButtons =
-        showButtons && currEntity.states.ascendenceOfSpirit;
-
-    const canUseSpAtk =
-        currEntity.currMana + currEntity.resources.manaOverflow >=
-        constants.SP_ATTACK_COST;
-    const canUseDeploy = !currEntity.states.venting;
 
     // Label Generation Helpers
     const getActorLabel = (controller, isPlayerOne) => {
@@ -112,52 +96,36 @@ function ActionPanel({
         waitLabel = "Anointment";
     }
 
-    // Action Handler
-    const handleActionButton = (actionKey) => {
-        handleAction(
-            actionKey,
-            isPlayerOneTurn ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO,
-            isPlayerOneTurn ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE,
-        );
-    };
-
-    // Determine Available Actions
+    // Process Action List & Classes dynamically via shared state logic
     let currentActions = [];
-
-    if (currEntity && currEntity.states[effectKeys.ANOINTED_PROXY]) {
-        currentActions = getJudgement();
-    } else if (showAngelButtons) {
-        currentActions = getAngelActions();
-    } else if (showUmbralButtons) {
-        currentActions = getUmbralActions();
-    } else if (showButtons) {
-        currentActions = getNormalActions(
-            arrayActive,
-            currEntity,
-            canUseSpAtk,
-            canUseDeploy,
-            game.progressMode,
-            game.progressStatus,
-        );
-    }
-
-    // Determine Container Class for CSS styling
     let showHelperText = false;
     let containerClass = "button-grid";
 
-    if (
-        currEntity &&
-        (currEntity.states[effectKeys.ANOINTED_PROXY] ||
+    if (showButtons) {
+        currentActions = getActions(game, currEntityKey).map((key) => {
+            const mapInfo = actionMap[key] || { name: key, specialClass: "" };
+            return {
+                key: key,
+                label: mapInfo.name,
+                specialClass: mapInfo.specialClass,
+                disabled: !canUse(game, currEntityKey, key),
+            };
+        });
+
+        if (
+            currEntity.states[effectKeys.ANOINTED_PROXY] ||
             currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
-            currEntity.states[effectKeys.ZENITH_OF_MORTALITY])
-    ) {
-        containerClass = "single-button-container";
-    } else if (showAngelButtons) {
-        containerClass = "angel-button-grid";
-    } else if (showUmbralButtons) {
-        containerClass = "shadow-button-grid";
-    } else {
-        showHelperText = showButtons;
+            currEntity.states[effectKeys.ZENITH_OF_MORTALITY] ||
+            currEntity.states[effectKeys.NOVA]
+        ) {
+            containerClass = "single-button-container";
+        } else if (currEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+            containerClass = "angel-button-grid";
+        } else if (currEntity.states[effectKeys.UMBRAL_CORE]) {
+            containerClass = "shadow-button-grid";
+        } else {
+            showHelperText = true;
+        }
     }
 
     return (
@@ -182,12 +150,11 @@ function ActionPanel({
                                 key={action.key}
                                 onClick={() => {
                                     handleClearTooltip();
-                                    handleActionButton(action.key);
+                                    handleAction(action.key, currEntityKey, targetEntityKey);
                                 }}
                                 onMouseDown={(e) => {
-                                    // Mouse wheel opens tooltip
                                     if (e.button === 1) {
-                                        e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
+                                        e.preventDefault();
                                         const entry = DESCRIPTIONS[action.key];
                                         if (entry) {
                                             handleSetTooltip({
