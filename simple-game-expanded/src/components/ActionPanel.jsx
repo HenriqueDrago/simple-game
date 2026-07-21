@@ -6,10 +6,9 @@ import {
     aiKeys,
     effectKeys,
     roundPhases,
-    playerTurnPhases,
 } from "../utils/enums";
 import { presetAi, actionMap } from "../utils/constants";
-import { getActions, canUse } from "../utils/entities";
+import { getActions, canUseAction, canUseCombatInteractions } from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
 
 function ActionPanel({
@@ -27,27 +26,15 @@ function ActionPanel({
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const currPlayerPhase =
-        game.playerQueue && game.playerQueue.length > 0
-            ? game.playerQueue[0]
-            : null;
-
-    const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN;
-    const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN;
+    const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN || currPhase === roundPhases.P1_SINGULARITY;
+    const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN || currPhase === roundPhases.P2_SINGULARITY;
 
     const currEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO;
     const targetEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE;
     const currEntity = game.entities[currEntityKey];
 
     // Visibility Constraints
-    const isHumanTurn =
-        (isPlayerOneTurn && playerController === aiKeys.HUMAN) ||
-        (isPlayerTwoTurn && enemyController === aiKeys.HUMAN);
-
-    const showButtons =
-        isHumanTurn &&
-        battleState === turnStatus.ONGOING &&
-        currPlayerPhase === playerTurnPhases.PLAN;
+    const showButtons = canUseCombatInteractions(game);
 
     // Label Generation Helpers
     const getActorLabel = (controller, isPlayerOne) => {
@@ -79,7 +66,7 @@ function ActionPanel({
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
-    } else if (currPhase === roundPhases.ARRAY_TURN) {
+    } else if (currPhase === roundPhases.POST_P1_RUNIC_PULSE || currPhase === roundPhases.POST_P2_RUNIC_PULSE) {
         waitLabel = "Runic Pulse";
     } else if (currPhase === roundPhases.EMINENCE_TURN) {
         waitLabel = "Emanation";
@@ -90,7 +77,7 @@ function ActionPanel({
         waitLabel = "Starfall";
     } else if (currPhase === roundPhases.MOON_TURN) {
         waitLabel = "Moon Phase";
-    } else if (currPhase === roundPhases.MINI_ARRAY_TURN) {
+    } else if (currPhase === roundPhases.MANA_SIPHON) {
         waitLabel = "Mana Siphon";
     } else if (currPhase === roundPhases.SPECIAL_EMINENCE_TURN) {
         waitLabel = "Anointment";
@@ -108,15 +95,14 @@ function ActionPanel({
                 key: key,
                 label: mapInfo.name,
                 specialClass: mapInfo.specialClass,
-                disabled: !canUse(game, currEntityKey, key),
+                disabled: !canUseAction(game, currEntityKey, key),
             };
         });
 
         if (
             currEntity.states[effectKeys.ANOINTED_PROXY] ||
             currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
-            currEntity.states[effectKeys.ZENITH_OF_MORTALITY] ||
-            currEntity.states[effectKeys.NOVA]
+            currEntity.states[effectKeys.ZENITH_OF_MORTALITY]
         ) {
             containerClass = "single-button-container";
         } else if (currEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {

@@ -12,13 +12,20 @@ export const roundPhases = Object.freeze({
     ROUND_START: "roundStart",
     PLAYER_ONE_TURN: "p1turn",
     PLAYER_TWO_TURN: "p2turn",
-    ARRAY_TURN: "bigArrayTurn",
+
     EMINENCE_TURN: "mainEminenceTurn",
     P1_STARS_TURN: "p1starfall",
     MOON_TURN: "moonPhaseTurn",
     P2_STARS_TURN: "p2Starfall",
     SPECIAL_EMINENCE_TURN: "spEminenceTurn",
-    MINI_ARRAY_TURN: "miniArrayTurn",
+    MANA_SIPHON: "manaSiphon",
+
+    POST_P1_RUNIC_PULSE: "p1Pulse",
+    POST_P2_RUNIC_PULSE: "p2Pulse",
+
+    P1_SINGULARITY: "p1Singularity",
+    P2_SINGULARITY: "p2Singularity",
+
 
     ROUND_END: "roundEnd",
 });
@@ -126,7 +133,6 @@ export const actionKeys = Object.freeze({
     LUNAR_SHROUD: "lunarShroud",
     SHATTER: "shatter",
     CHALK: "chalk",
-    SUPERNOVA: "supernova",
 });
 
 export const effectKeys = Object.freeze({
@@ -248,7 +254,17 @@ export const effectKeys = Object.freeze({
     CONSTELLATION: "constellation",
     NOVA: "nova",
     CRIMSON_CONSTELLATION: "crimsonConstellation",
-    AZURE_CONSTELLATION: "azureConstellation"
+    AZURE_CONSTELLATION: "azureConstellation",
+
+    STARFLARE: "starflare",
+    FIRMAMENT: "firmament",
+    STARLIT_HEAVENS: "starlitHeavens",
+
+    GRAVITATION: "gravitation",
+    SINGULARITY: "singularity",
+
+    
+
 });
 
 export const eyeKeys = Object.freeze({
@@ -300,6 +316,7 @@ export const starfallPhases = Object.freeze({
     BLUE_STAR: effectKeys.BLUE_STAR,
     INDIGO_STAR: effectKeys.INDIGO_STAR,
     VIOLET_STAR: effectKeys.VIOLET_STAR,
+    STARFALL_END: "starfallEnd",
 });
 
 export const playerTurnPhases = Object.freeze({
@@ -337,4 +354,5 @@ export const eventKeys = Object.freeze({
     DEFEAT: "defeat",
     DRAW: "draw",
     STARFALL_START: "starfallStart",
+    FAILED_ACTION: "failedAction",
 });

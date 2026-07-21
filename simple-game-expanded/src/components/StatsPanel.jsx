@@ -10,27 +10,18 @@ import {
     FREE_RESOURCES,
     stackCounters,
 } from "../utils/constants.js";
-import {
-    sdmKeys,
-    eyeKeys,
-    effectKeys,
-    entityKeys,
-    roundPhases,
-    playerTurnPhases,
-    elementalKeys,
-    turnStatus,
-} from "../utils/enums.js";
+import { sdmKeys, eyeKeys, effectKeys, elementalKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
 import {
+    canUseCombatInteractions,
     isElementActive,
     isEntityDead,
 } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
-import { getSonorityColor } from "../utils/getters.js";
 import ModifiersTracker from "./ModifiersTracker.jsx";
 import NebulaStarblightBar from "./NebulaStarblightBar.jsx";
 import ConstellationTracker from "./ConstellationTracker.jsx";
@@ -52,28 +43,7 @@ function StatsPanel({
 
     const isAngelView = states[effectKeys.ASCENDENCE_OF_SPIRIT];
 
-    const currPhase =
-        game.roundQueue && game.roundQueue.length > 0
-            ? game.roundQueue[game.roundIndex]
-            : null;
-
-    const currPlayerPhase =
-        game.playerQueue && game.playerQueue.length > 0
-            ? game.playerQueue[0]
-            : null;
-
-    const isEntityTurn =
-        (entityKey === entityKeys.PLAYER_ONE &&
-            currPhase === roundPhases.PLAYER_ONE_TURN &&
-            currPlayerPhase === playerTurnPhases.PLAN) ||
-        (entityKey === entityKeys.PLAYER_TWO &&
-            currPhase === roundPhases.PLAYER_TWO_TURN &&
-            currPlayerPhase === playerTurnPhases.PLAN);
-
-    const showWarning =
-        isEntityTurn &&
-        battleState === turnStatus.ONGOING &&
-        isEntityDead(entity);
+    const showWarning = canUseCombatInteractions(game) && isEntityDead(entity);
 
     const stateClassMap = {
         [effectKeys.ASCENDENCE_OF_SPIRIT]: "state-ascendence",
@@ -97,44 +67,21 @@ function StatsPanel({
         [effectKeys.SELENIAN]: "state-selenian",
         [effectKeys.PRISMATIC]: "state-prismatic",
         [effectKeys.MOON_DEW]: "state-moon-dew",
+        [effectKeys.NOVA]: "state-nova",
     };
 
     const activeStates = Object.keys(stateClassMap)
         .filter((key) => states[key])
         .map((key) => stateClassMap[key]);
 
-    const statesClass = activeStates.join(" ");
-
-    const dynamicStyles = {};
-
-    if (states[effectKeys.RESONANT]) {
-        dynamicStyles["--resonant-color"] = getSonorityColor(entity.sonority);
-    }
-
-    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        let ascColor = "#FFD700";
-        let ascShadow = "rgba(255, 215, 0, 0.4)";
-        let ascInset = "rgba(255, 255, 255, 0.3)";
-        let ascBg = "rgba(255, 215, 0, 0.1)";
-
-        if (game.eyeOfHeavens === eyeKeys.CLOSED) {
-            ascColor = "#DAA520";
-            ascShadow = "rgba(218, 165, 32, 0.6)";
-            ascInset = "rgba(0, 0, 0, 0.4)";
-            ascBg = "rgba(218, 165, 32, 0.15)";
-        }
-
-        dynamicStyles["--ascendence-color"] = ascColor;
-        dynamicStyles["--ascendence-shadow"] = ascShadow;
-        dynamicStyles["--ascendence-inset"] = ascInset;
-        dynamicStyles["--ascendence-bg"] = ascBg;
-    }
+    const eyeClass =
+        game[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED
+            ? "eye-closed"
+            : "eye-open";
+    const statesClass = [...activeStates, eyeClass].join(" ");
 
     return (
-        <div
-            className={`stats-panel-container ${statesClass}`}
-            style={dynamicStyles}
-        >
+        <div className={`stats-panel-container ${statesClass}`}>
             {entity.states[effectKeys.SELENIAN] && (
                 <SelenianTracker
                     entity={entity}
@@ -142,7 +89,7 @@ function StatsPanel({
                         handleElementChange(entityKey, element);
                     }}
                     clickable={
-                        isEntityTurn &&
+                        canUseCombatInteractions(game) &&
                         !isElementActive(entity, elementalKeys.SHATTERED)
                     }
                     handleSetTooltip={handleSetTooltip}
@@ -235,6 +182,60 @@ function StatsPanel({
                 </div>
             )}
 
+            {entity[effectKeys.STARFLARE] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.STARFLARE)
+                    }
+                >
+                    <GradientBar
+                        label={"Starflare"}
+                        currResource={entity[effectKeys.STARFLARE]}
+                        maxResource={constants.MAX_STARFLARE}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                    90deg,
+                    #7b1fa2 0%,
+                    #9c27b0 35%,
+                    #ab47bc 50%,
+                    #9c27b0 65%,
+                    #7b1fa2 100%
+                )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
+            {entity[effectKeys.GRAVITATION] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.GRAVITATION,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Gravitation"}
+                        currResource={entity[effectKeys.GRAVITATION]}
+                        maxResource={constants.MAX_GRAVITATION}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                    90deg,
+                    #311b92 0%,
+                    #512da8 25%,
+                    #673ab7 50%,
+                    #512da8 75%,
+                    #311b92 100%
+                )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
             {entity[effectKeys.MAX_ENLIGHTENMENT] > 0 && (
                 <div
                     onMouseDown={(e) =>
@@ -288,7 +289,6 @@ function StatsPanel({
             )}
 
             <NebulaStarblightBar
-            
                 entity={entity}
                 handleSetTooltip={handleSetTooltip}
             />
@@ -304,8 +304,8 @@ function StatsPanel({
                         label={"REVELATION"}
                         value={entity[effectKeys.REVELATION]}
                         style={{
-                            borderColor: dynamicStyles["--ascendence-color"],
-                            color: dynamicStyles["--ascendence-color"],
+                            borderColor: "var(--ascendence-color)",
+                            color: "var(--ascendence-color)",
                         }}
                     />
                 </div>
@@ -445,8 +445,6 @@ function StatsPanel({
                 </div>
             )}
 
-            
-
             {entity[effectKeys.MANA_BLEED] > 0 && (
                 <div
                     onMouseDown={(e) =>
@@ -466,8 +464,6 @@ function StatsPanel({
                     />
                 </div>
             )}
-
-            
 
             <div className="stacks-wrapper">
                 {[...FREE_RESOURCES].reverse().map((key) => {
@@ -497,7 +493,6 @@ function StatsPanel({
             <ModifiersTracker
                 entity={entity}
                 handleSetTooltip={handleSetTooltip}
-                
             />
 
             <ConstellationTracker

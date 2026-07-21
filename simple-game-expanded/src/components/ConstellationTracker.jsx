@@ -1,11 +1,7 @@
 import { spawnTooltip } from "../utils/dictionary";
+import { canUseCombatInteractions } from "../utils/entities";
 import {
-    aiKeys,
     effectKeys,
-    entityKeys,
-    playerTurnPhases,
-    roundPhases,
-    turnStatus,
 } from "../utils/enums";
 import { toRoman } from "../utils/general";
 import "./ConstellationTracker.css";
@@ -33,25 +29,7 @@ export default function ConstellationTracker({
         activeClass = "crimson-constellation";
     }
 
-    const currRoundPhase =
-        game.roundQueue && game.roundQueue.length > 0
-            ? game.roundQueue[game.roundIndex]
-            : null;
-    const currPlayerPhase =
-        game.playerQueue && game.playerQueue.length > 0
-            ? game.playerQueue[0]
-            : null;
-
-    const buttonActive =
-        entityKey === entityKeys.PLAYER_ONE
-            ? currRoundPhase === roundPhases.PLAYER_ONE_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN &&
-              entity.controller === aiKeys.HUMAN &&
-              game.status === turnStatus.ONGOING
-            : currRoundPhase === roundPhases.PLAYER_TWO_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN &&
-              entity.controller === aiKeys.HUMAN &&
-              game.status === turnStatus.ONGOING;
+    const buttonActive = canUseCombatInteractions(game);
 
     return (
         <div className={`constellation-tracker-container ${activeClass}`}>

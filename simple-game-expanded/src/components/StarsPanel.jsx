@@ -1,16 +1,14 @@
 import "./StarsPanel.css";
 import {
-    aiKeys,
     effectKeys,
     entityKeys,
-    playerTurnPhases,
     roundPhases,
-    turnStatus,
 } from "../utils/enums";
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
 import { spawnTooltip } from "../utils/dictionary";
+import { canUseCombatInteractions } from "../utils/entities";
 
 function StarsPanel({
     game,
@@ -26,21 +24,8 @@ function StarsPanel({
         game.roundQueue && game.roundQueue.length > 0
             ? game.roundQueue[game.roundIndex]
             : null;
-    const currPlayerPhase =
-        game.playerQueue && game.playerQueue.length > 0
-            ? game.playerQueue[0]
-            : null;
 
-    const showButton =
-        entityKey === entityKeys.PLAYER_ONE
-            ? currRoundPhase === roundPhases.PLAYER_ONE_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN &&
-              entity.controller === aiKeys.HUMAN &&
-              game.status === turnStatus.ONGOING
-            : currRoundPhase === roundPhases.PLAYER_TWO_TURN &&
-              currPlayerPhase === playerTurnPhases.PLAN &&
-              entity.controller === aiKeys.HUMAN &&
-              game.status === turnStatus.ONGOING;
+    const showButton = canUseCombatInteractions(game);
 
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE

@@ -60,7 +60,7 @@ const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 2;
+const HALO_GEN_MULT = 200;
 const SAC_HP_CONSUMPTION = 0.5;
 
 const SHADOW_PACT_BURN = 5;
@@ -83,7 +83,7 @@ const INSIGHT_TO_REV_FACTOR = 10;
 const FLAMES_ABSORPTION_MULTIPLIER = 1;
 const BENEDICTION_GEN = 2;
 
-const CHART_STAR_GAIN = 3;
+const CHART_STAR_GAIN = 300;
 const STARDUST_RATE_CONVERSION = 3;
 
 const MAX_DYNAMO = 100;
@@ -109,10 +109,16 @@ const MAX_NEBULA = 100;
 const MAX_STARBLIGHT = 100;
 
 const NORMAL_YELLOW_NEBULA_GAIN = 5;
-const SUPERNOVA_MULT = 0.5;
+const GRAVITATION_GAIN = 10;
+const MAX_GRAVITATION = 100;
+const MAX_STARFLARE = 100;
+const STARFLARE_GAIN = 5;
 
 export const constants = {
-    SUPERNOVA_MULT,
+    STARFLARE_GAIN,
+    MAX_STARFLARE,
+    GRAVITATION_GAIN,
+    MAX_GRAVITATION,
     NORMAL_YELLOW_NEBULA_GAIN,
     MAX_NEBULA,
     MAX_STARBLIGHT,
@@ -826,7 +832,11 @@ export const roundPhasesMap = {
         descKey: effectKeys.TURN,
         name: "Player Two Turn",
     },
-    [roundPhases.ARRAY_TURN]: {
+    [roundPhases.POST_P1_RUNIC_PULSE]: {
+        descKey: effectKeys.RUNIC_PULSE,
+        name: "Runic Pulse",
+    },
+    [roundPhases.POST_P2_RUNIC_PULSE]: {
         descKey: effectKeys.RUNIC_PULSE,
         name: "Runic Pulse",
     },
@@ -850,13 +860,21 @@ export const roundPhasesMap = {
         descKey: effectKeys.ANOINTMENT,
         name: "Anointment",
     },
-    [roundPhases.MINI_ARRAY_TURN]: {
+    [roundPhases.MANA_SIPHON]: {
         descKey: effectKeys.MANA_SIPHON,
         name: "Mana Siphon",
     },
     [roundPhases.ROUND_END]: {
         descKey: roundPhases.ROUND_END,
         name: "Round End",
+    },
+    [roundPhases.P1_SINGULARITY]: {
+        descKey: effectKeys.SINGULARITY,
+        name: "Player One Singularity",
+    },
+    [roundPhases.P2_SINGULARITY]: {
+        descKey: effectKeys.SINGULARITY,
+        name: "Player Two Singularity",
     },
 };
 
@@ -987,8 +1005,4 @@ export const actionMap = {
     [actionKeys.LUNAR_SHROUD]: { name: "Lunar Shroud", specialClass: "" },
     [actionKeys.SHATTER]: { name: "Shatter", specialClass: "" },
     [actionKeys.CHALK]: { name: "Chalk", specialClass: "" },
-    [actionKeys.SUPERNOVA]: {
-        name: "Supernova",
-        specialClass: "nova-button",
-    },
 };

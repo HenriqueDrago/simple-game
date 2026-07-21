@@ -172,7 +172,7 @@ export const STATE_DESCRIPTIONS = {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Cannot use DEPLOY, LASER or MELTDOWN. Raises DAMAGE REDUCTION by 50%. At turn start, lowers OVERHEAT by 50%. Additionally, if at 0% OVERHEAT, exits VENTING state and enters WEAPONS DEPLOYED.",
+            "Cannot use DEPLOY, LASER or MELTDOWN. At turn start, lowers OVERHEAT by 50% and raises DYNAMO equal to the amount lowered. Additionally, if at 0% OVERHEAT, exits VENTING state and enters WEAPONS DEPLOYED.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -334,14 +334,14 @@ export const STAR_DESCRIPTIONS = {
         name: "STARGAZER",
         type: entryTypes.STATE,
         description:
-            "While active, enables STARFALL after turn end. During the action phase, enables a side-menu for star assignment. When exiting this state, loses all STARS and sets CONTELLATION rank to 0.",
+            "While active, enables STARFALL after turn end. During the action phase, enables a side-menu for star assignment. When exiting this state, loses all STARS and sets CONSTELLATION, AZURE CONSTELLATION and CRIMSON CONSTELLATION to zero.",
     },
 
     [entryTypes.STAR]: {
         name: "STARS",
         type: entryTypes.CATEGORY,
         description:
-            "A unique subset of RESOURCES. Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR",
+            "A unique subset of RESOURCES. Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have three levels: normal, augmented and nova.",
     },
 
     [effectKeys.STARFALL]: {
@@ -405,21 +405,27 @@ export const STAR_DESCRIPTIONS = {
         name: "RED STAR",
         type: entryTypes.STAR,
         description:
-            "At RED STARFALL, converts all RED STAR into WHITE STAR. Deals PHYSICAL DAMAGE equal to the amount of normal RED STAR consumed. Deals PIERCING DAMAGE equal to the amount of augmented RED STAR consumed. These are considered two separate instances of damage. This effect does not look at the STARS owner current condition.",
+            "At RED STARFALL, converts all RED STAR into WHITE STAR. All entities take PHYSICAL DAMAGE equal to normal RED STAR converted. All entities take PIERCING DAMAGE equal to augmented RED STAR converted. All entities take TRUE DAMAGE equal to nova RED STAR converted. These are considered three separate instances of damage.",
     },
 
     [effectKeys.ORANGE_STAR]: {
         name: "ORANGE STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on self equal to the amount of normal ORANGE STAR consumed. Burns RESOURCES on both opponent and self equal to the amount of augmented ORANGE STAR consumed.",
+            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on self equal to normal ORANGE STAR converted. Burns RESOURCES on both opponent and self equal to augmented ORANGE STAR converted. Burns RESOURCES on the opponent only equal to nova ORANGE STAR converted. Gains GRAY STAR equal to the total amount of RESOURCES burned.",
+    },
+
+    [effectKeys.GRAY_STAR]: {
+        name: "GRAY STAR",
+        type: entryTypes.STAR,
+        description: "Cannot be assigned a color.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
         type: entryTypes.STAR,
         description:
-            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Raises NEBULA by 5% for every normal YELLOW STAR consumed. Raises CONSTELLATION rank by the amount of augmented YELLOW STAR consumed.",
+            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Raises NEBULA by 5% for every normal YELLOW STAR converted. Raises CONSTELLATION rank by the amount of augmented YELLOW STAR converted. Raises GRAVITATION by 10% for every nova YELLOW STAR converted.",
     },
 
     [effectKeys.NEBULA]: {
@@ -433,56 +439,56 @@ export const STAR_DESCRIPTIONS = {
         name: "STARBLIGHT",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Lowers MAX HEALTH equal to STARBLIGHT on self, rounded up. Raises DAMAGE BONUS equal to STARBLIGHT on self. When STARBLIGHT reaches 100%, enters NOVA state.",
+            "Lowers MAX HEALTH equal to STARBLIGHT on self. Raises DAMAGE BONUS equal to STARBLIGHT on self. At turn end, lose all STARBLIGHT.",
     },
 
-    [effectKeys.NOVA]: {
-        name: "NOVA",
-        type: entryTypes.STATE,
+    [effectKeys.GRAVITATION]: {
+        name: "GRAVITATION",
+        type: entryTypes.FIXED_RESOURCE,
         description:
-            "Cannot die. Replaces all actions with SUPERNOVA. At turn end, removes this state.",
+            "Capped at 100%. At 100%, enables SINGULARITY. At SINGULARITY end, lose all GRAVITATION.",
     },
 
-    [actionKeys.SUPERNOVA]: {
-        name: "SUPERNOVA",
-        type: entryTypes.OFFENSIVE_ACTION,
+    [effectKeys.SINGULARITY]: {
+        name: "SINGULARITY",
+        type: entryTypes.BATTLE_PHASE,
         description:
-            "Consumes all STARS. Deals TRUE DAMAGE equal to half the STARS consumed, rounded up.",
+            "Special phase equivalent to a player's PLAN subphase. Added to the round queue after STARFALL. Does not trigger UPKEEP or COMMIT subphases.",
     },
 
     [effectKeys.CONSTELLATION]: {
         name: "CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all CONSTELLATION.",
+            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.AZURE_CONSTELLATION]: {
         name: "AZURE CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all AZURE CONSTELLATION.",
+            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.CRIMSON_CONSTELLATION]: {
         name: "CRIMSON CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At turn end, lose all CRIMSON CONSTELLATION.",
+            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to the amount of normal GREEN STAR consumed. Restores RESOURCES on self equal to the amount of augmented GREEN STAR consumed.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted. Restores RESOURCES on all entities equal to nova GREEN STAR converted.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME and converts WHITE STAR into GRAY STAR equal to the amount of normal BLUE STAR consumed. Gains DOME equal to twice the amount of augmented BLUE STAR consumed.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME equal to normal BLUE STAR converted. Gains FIRMAMENT equal to augmented BLUE STAR converted. Gains STARLIT HEAVENS equal to nova BLUE STAR converted.",
     },
 
     [effectKeys.DOME]: {
@@ -490,6 +496,20 @@ export const STAR_DESCRIPTIONS = {
         type: entryTypes.MITIGATION_RESOURCE,
         description:
             "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, converts all DOME into STARDUST.",
+    },
+
+    [effectKeys.FIRMAMENT]: {
+        name: "FIRMAMENT",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FIRMAMENT to reduce the damage taken, then gains STARDUST equal to the amount lost this way. At turn start, converts all FIRMAMENT into DOME.",
+    },
+
+    [effectKeys.STARLIT_HEAVENS]: {
+        name: "STARLIT HEAVENS",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT HEAVENS to reduce the damage taken, then gains GRAY STAR equal to the amount lost this way. At turn start, converts all STARLIT HEAVENS into FIRMAMENT.",
     },
 
     [effectKeys.STARDUST]: {
@@ -503,20 +523,28 @@ export const STAR_DESCRIPTIONS = {
         name: "INDIGO STAR",
         type: entryTypes.STAR,
         description:
-            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to the amount of normal INDIGO STAR consumed. Gains GRAY STAR equal to the amount of augmented INDIGO STAR consumed.",
+            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to normal INDIGO STAR converted. Gains GRAY STAR equal to augmented INDIGO STAR converted. Gains WHITE STAR equal to nova INDIGO STAR converted.",
     },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "When a colored star is consumed, converts VIOLET STAR into WHITE STAR and converts that star into an augmented version of itself. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR.",
+            "When other colored STARS are converted, raises their level by 1 and converts equivalent VIOLET STAR into WHITE STAR. Cannot raise VIOLET STAR levels this way. Cannot raise the same STARS level more than once. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR. Raises STARFLARE by 5% for every VIOLET STAR converted at VIOLET STARFALL.",
     },
 
-    [effectKeys.GRAY_STAR]: {
-        name: "GRAY STAR",
-        type: entryTypes.STAR,
-        description: "Cannot be assigned a color.",
+    [effectKeys.STARFLARE]: {
+        name: "STARFLARE",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capper at 100%. At turn start, if at 100%, loses all STARFLARE and enters NOVA state.",
+    },
+
+    [effectKeys.NOVA]: {
+        name: "NOVA",
+        type: entryTypes.STATE,
+        description:
+            "Raises all STARS levels by 1. At STARFALL end, exit NOVA.",
     },
 };
 

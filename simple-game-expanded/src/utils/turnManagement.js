@@ -1,11 +1,13 @@
-import { constants, coloredStars, elementsMap } from "./constants.js";
+import { constants, elementsMap } from "./constants.js";
 import { DESCRIPTIONS } from "./descriptions.js";
 import {
+    canUseAction,
     consumeResources,
     exitAllStates,
     gainHp,
     gainInsight,
     gainMana,
+    getEntityColoredStars,
     getEntityElement,
     getEntityMaxHealth,
     getEntityTotalMana,
@@ -44,6 +46,17 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     let newEye = prev[effectKeys.EYE_OF_HEAVENS];
     if (!prev[effectKeys.SEVERED_TIME]) {
+        // Starflare
+        if (draftTarget[effectKeys.STARFLARE] >= constants.MAX_STARFLARE) {
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.STARFLARE]: 0,
+                states: {
+                    ...draftTarget.states,
+                    [effectKeys.NOVA]: true,
+                },
+            };
+        }
         // Dome
         if (draftTarget.resources[effectKeys.DOME] > 0) {
             const newStardust =
@@ -56,6 +69,38 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                     ...draftTarget.resources,
                     [effectKeys.DOME]: 0,
                     [effectKeys.STARDUST]: newStardust,
+                },
+            };
+        }
+
+        // Firmament
+        if (draftTarget.resources[effectKeys.FIRMAMENT] > 0) {
+            const newDome =
+                draftTarget.resources[effectKeys.DOME] +
+                draftTarget.resources[effectKeys.FIRMAMENT];
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.DOME]: newDome,
+                    [effectKeys.FIRMAMENT]: 0,
+                },
+            };
+        }
+
+        // Dome
+        if (draftTarget.resources[effectKeys.STARLIT_HEAVENS] > 0) {
+            const newFirmament =
+                draftTarget.resources[effectKeys.FIRMAMENT] +
+                draftTarget.resources[effectKeys.STARLIT_HEAVENS];
+
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.STARLIT_HEAVENS]: 0,
+                    [effectKeys.FIRMAMENT]: newFirmament,
                 },
             };
         }
@@ -262,18 +307,27 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         }
 
         // Venting
-        if (draftTarget.states.venting) {
-            const newOverheat = Math.max(
-                0,
-                draftTarget.currOverheat - constants.VENTING_OVERHEAT_LOSS,
+        if (draftTarget.states[effectKeys.VENTING]) {
+            const overheatConsumed = Math.min(
+                constants.VENTING_OVERHEAT_LOSS,
+                draftTarget[effectKeys.OVERHEAT],
             );
+
+            const newOverheat =
+                draftTarget[effectKeys.OVERHEAT] - overheatConsumed;
+            const newDynamo = Math.min(
+                constants.MAX_DYNAMO,
+                draftTarget[effectKeys.DYNAMO] + overheatConsumed,
+            );
+
             draftTarget = {
                 ...draftTarget,
-                currOverheat: newOverheat,
+                [effectKeys.OVERHEAT]: newOverheat,
+                [effectKeys.DYNAMO]: newDynamo,
                 states: {
                     ...draftTarget.states,
-                    venting: newOverheat > 0,
-                    weaponsDeployed: newOverheat <= 0,
+                    [effectKeys.VENTING]: newOverheat > 0,
+                    [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
                 },
             };
         }
@@ -493,9 +547,7 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         }
 
         // Dissonance
-        if (
-            draftCurrActor.resources[effectKeys.DISSONANCE] > 0
-        ) {
+        if (draftCurrActor.resources[effectKeys.DISSONANCE] > 0) {
             draftCurrActor = takeDamage(
                 draftCurrActor,
                 draftCurrActor.resources[effectKeys.DISSONANCE],
@@ -512,11 +564,11 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         }
 
         // Nebula
-        if(draftCurrActor[effectKeys.NEBULA] > 0) {
+        if (draftCurrActor[effectKeys.NEBULA] > 0) {
             draftCurrActor = {
                 ...draftCurrActor,
                 [effectKeys.NEBULA]: 0,
-            }
+            };
         }
 
         // Starblight
@@ -524,42 +576,7 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
             draftCurrActor = {
                 ...draftCurrActor,
                 [effectKeys.STARBLIGHT]: 0,
-            }
-        }
-
-        // Constellation
-        if(draftCurrActor[effectKeys.CONSTELLATION] > 0) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                [effectKeys.CONSTELLATION]: 0,
-            }
-        }
-
-        // Crimson Constellation
-        if(draftCurrActor[effectKeys.CRIMSON_CONSTELLATION] > 0) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                [effectKeys.CRIMSON_CONSTELLATION]: 0,
-            }
-        }
-
-        // Azure Constellation
-        if(draftCurrActor[effectKeys.AZURE_CONSTELLATION] > 0) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                [effectKeys.AZURE_CONSTELLATION]: 0,
-            }
-        }
-
-        // Nova
-        if(draftCurrActor.states[effectKeys.NOVA]) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                states: {
-                    ...draftCurrActor.states,
-                    [effectKeys.NOVA]: false,
-                }
-            }
+            };
         }
     }
 
@@ -568,8 +585,6 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         ...draftCurrActor,
         lasersUsedThisTurn: 0,
     };
-
-    // add death check later
 
     const newQueue = prev.playerQueue.slice(1);
 
@@ -631,61 +646,98 @@ export function buildRoundQueue(prev) {
 
     // Immediate Mana Siphon trigger on special conditions
     if (
-        p1[effectKeys.MANA] +
-            p2[effectKeys.MANA] +
-            p1.resources[effectKeys.MANA_OVERFLOW] +
-            p2.resources[effectKeys.MANA_OVERFLOW] >
-            0 &&
+        getEntityTotalMana(p1) + getEntityTotalMana(p2) > 0 &&
         prev[effectKeys.RUNIC_ARRAY] > 0
     ) {
-        newQueue.push(roundPhases.MINI_ARRAY_TURN);
+        newQueue.push(roundPhases.MANA_SIPHON);
     }
 
-    const players =
-        prev.startingPlayer === entityKeys.PLAYER_ONE
-            ? [
-                  [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_STARS_TURN, p1],
-                  [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_STARS_TURN, p2],
-              ]
-            : [
-                  [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_STARS_TURN, p2],
-                  [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_STARS_TURN, p1],
-              ];
+    let futurePulsesAvailable = prev[effectKeys.SEVERED_TIME]
+        ? Infinity
+        : prev[effectKeys.RUNIC_ARRAY];
 
-    let futurePulsesAvailable = prev[effectKeys.RUNIC_ARRAY];
-
-    for (let i = 0; i < players.length; i++) {
-        let value = players[i];
-
-        const turnIndex = newQueue.indexOf(value[0]);
-        const pulseAlreadyLockedIn =
-            turnIndex !== -1 &&
-            newQueue
-                .slice(turnIndex + 1, currIndex + 1)
-                .includes(roundPhases.ARRAY_TURN);
-        const isPastTurn =
-            turnIndex !== -1 && turnIndex < currIndex && pulseAlreadyLockedIn;
-
-        if (!newQueue.includes(value[0])) {
-            newQueue.push(value[0]);
+    // Player Logic Helper
+    const playerLogic = (
+        entityKey,
+        turnKey,
+        starfallKey,
+        singularityKey,
+        runicKey,
+        isPastTurn = false,
+    ) => {
+        // Player Turn
+        if (!newQueue.includes(turnKey)) {
+            newQueue.push(turnKey);
         }
 
-        const hasStars = coloredStars.some(
-            (curr) => value[2].stars[curr.star] > 0,
-        );
+        // Starfall
+        const player = prev.entities[entityKey];
+        const hasStars = getEntityColoredStars(player) > 0;
 
         if (
-            !newQueue.includes(value[1]) &&
-            value[2].states[effectKeys.STARGAZER] &&
-            (hasStars)
+            !newQueue.includes(starfallKey) &&
+            player.states[effectKeys.STARGAZER] &&
+            hasStars
         ) {
-            newQueue.push(value[1]);
+            newQueue.push(starfallKey);
         }
 
-        if (!isPastTurn && futurePulsesAvailable > 0) {
-            newQueue.push(roundPhases.ARRAY_TURN);
-            futurePulsesAvailable--;
+        // Singularity
+        if (
+            !newQueue.includes(singularityKey) &&
+            player[effectKeys.GRAVITATION] >= constants.MAX_GRAVITATION
+        ) {
+            newQueue.push(singularityKey);
         }
+
+        // Runic Pulse
+        if (
+            !newQueue.includes(runicKey) &&
+            futurePulsesAvailable > 0 &&
+            !isPastTurn
+        ) {
+            newQueue.push(runicKey);
+            futurePulsesAvailable -= 1;
+        }
+    };
+
+    // Player Logic Order
+    if (prev.startingPlayer === entityKeys.PLAYER_ONE) {
+        const isPastTurn = newQueue.includes(roundPhases.PLAYER_TWO_TURN);
+        playerLogic(
+            entityKeys.PLAYER_ONE,
+            roundPhases.PLAYER_ONE_TURN,
+            roundPhases.P1_STARS_TURN,
+            roundPhases.P1_SINGULARITY,
+            roundPhases.POST_P1_RUNIC_PULSE,
+            isPastTurn,
+        );
+
+        playerLogic(
+            entityKeys.PLAYER_TWO,
+            roundPhases.PLAYER_TWO_TURN,
+            roundPhases.P2_STARS_TURN,
+            roundPhases.P2_SINGULARITY,
+            roundPhases.POST_P2_RUNIC_PULSE,
+        );
+    } else {
+        const isPastTurn = newQueue.includes(roundPhases.PLAYER_ONE_TURN);
+        playerLogic(
+            entityKeys.PLAYER_TWO,
+            roundPhases.PLAYER_TWO_TURN,
+            roundPhases.P2_STARS_TURN,
+            roundPhases.P2_SINGULARITY,
+            roundPhases.POST_P2_RUNIC_PULSE,
+            isPastTurn,
+        );
+
+        playerLogic(
+            entityKeys.PLAYER_ONE,
+            roundPhases.PLAYER_ONE_TURN,
+            roundPhases.P1_STARS_TURN,
+            roundPhases.P1_SINGULARITY,
+            roundPhases.POST_P1_RUNIC_PULSE,
+        );
     }
 
     // Moon Phase
@@ -963,103 +1015,118 @@ export function processRunicPulse(prev) {
 }
 
 export function processStarfallTurn(prev, masterKey, nonMasterKey) {
-    let master = { ...prev.entities[masterKey] };
-    let nonMaster = { ...prev.entities[nonMasterKey] };
+    const master = { ...prev.entities[masterKey] };
 
     const currentPhase = prev.starQueue[0];
     const newQueue = prev.starQueue.slice(1);
 
-    const context = {
-        prev,
-        masterKey,
-        nonMasterKey,
-        master,
-        nonMaster,
+    // Exit Condition: Is Starfall End
+    if (currentPhase === starfallPhases.STARFALL_END) {
+
+        return processDeathCheck({
+            ...prev,
+            starQueue: null, // clears the queue
+            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
+            entities: {
+                ...prev.entities,
+                [masterKey]: {
+                    ...prev.entities[masterKey],
+                    states: {
+                        ...prev.entities[masterKey].states,
+                        [effectKeys.NOVA]: false,
+                    }
+                }
+            }
+        });
+    }
+
+    let newGameState = {
+        ...prev,
+        starQueue: newQueue,
+        status: turnStatus.STARFALL_TRANSITION,
     };
 
     switch (currentPhase) {
-        // ROYGB
         case starfallPhases.RED_STAR: {
             if (master.stars[effectKeys.RED_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.RED_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.ORANGE_STAR: {
             if (master.stars[effectKeys.ORANGE_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.ORANGE_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.YELLOW_STAR: {
             if (master.stars[effectKeys.YELLOW_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.YELLOW_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.GREEN_STAR: {
             if (master.stars[effectKeys.GREEN_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.GREEN_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.BLUE_STAR: {
             if (master.stars[effectKeys.BLUE_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.BLUE_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
-        // IV
         case starfallPhases.INDIGO_STAR: {
             if (master.stars[effectKeys.INDIGO_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.INDIGO_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
 
         case starfallPhases.VIOLET_STAR: {
             if (master.stars[effectKeys.VIOLET_STAR] > 0) {
-                const newEntities = processROYGBIVStar(
-                    context,
+                newGameState = processROYGBIVStar(
+                    newGameState,
+                    masterKey,
+                    nonMasterKey,
                     effectKeys.VIOLET_STAR,
                 );
-                master = newEntities.draftMaster;
-                nonMaster = newEntities.draftNonMaster;
             }
             break;
         }
@@ -1069,39 +1136,17 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
         }
     }
 
-    // exit condition: is violet starfall
-    if (currentPhase === starfallPhases.VIOLET_STAR) {
-        return processDeathCheck({
-            ...prev,
-            starQueue: null,
-            status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
-            entities: {
-                ...prev.entities,
-                [masterKey]: master,
-                [nonMasterKey]: nonMaster,
-            },
-        });
-    }
+    // Process Death Checks
+    newGameState = processDeathCheck(newGameState);
 
-    let newGameState = processDeathCheck({
-        ...prev,
-        starQueue: newQueue,
-        status: turnStatus.STARFALL_TRANSITION,
-        entities: {
-            ...prev.entities,
-            [masterKey]: master,
-            [nonMasterKey]: nonMaster,
-        },
-    });
-
-    if(newGameState.status != turnStatus.STARFALL_TRANSITION) {
+    // Death Override
+    if (newGameState.status !== turnStatus.STARFALL_TRANSITION) {
         newGameState = {
             ...newGameState,
             starQueue: prev.starQueue,
-        }
+        };
     }
 
-    // else, continue to next starfall
     return newGameState;
 }
 
@@ -1199,17 +1244,12 @@ export function processMoonPhase(prev) {
     });
 }
 
-export function processPlan(prev, agentKey, nonAgentKey, action) {
-    // Safeguard
-    const currPhase = prev.roundQueue && prev.roundQueue[prev.roundIndex];
-    const currSubPhase = prev.playerQueue && prev.playerQueue[0];
-
-    if (
-        (currPhase !== roundPhases.PLAYER_ONE_TURN &&
-            currPhase !== roundPhases.PLAYER_TWO_TURN) ||
-        currSubPhase !== playerTurnPhases.PLAN
-    ) {
-        return prev;
+export function processActionUse(prev, agentKey, nonAgentKey, action) {
+    if (!canUseAction(prev, agentKey, action)) {
+        return buildHistory(prev, eventKeys.FAILED_ACTION, {
+            player: agentKey,
+            action: action,
+        });
     }
 
     // Run the action
@@ -1225,16 +1265,54 @@ export function processPlan(prev, agentKey, nonAgentKey, action) {
     };
 
     const sim = simulators[action];
-
     const simulationResult = sim ? sim(context) : prev;
 
-    // process effects that depend on action type (offensive, defensive, etc)
+    // Process effects on Action Type
     let newGameState = processActionTypeUsed(
         simulationResult,
         agentKey,
         nonAgentKey,
         action,
     );
+
+    return buildHistory(newGameState, eventKeys.USE_ACTION, {
+        player: agentKey,
+        action: action,
+    });
+}
+
+export function processSingularity(prev, agentKey, action) {
+    let newGameState = {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...prev.entities[agentKey],
+                [effectKeys.GRAVITATION]: 0,
+            }
+        }
+    };
+
+    // Death check
+    newGameState = processDeathCheck(newGameState);
+
+    // Determine if PLAN subphase ends or not
+    const newStatus =
+        (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
+        newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
+            ? prev.status
+            : turnStatus.ROUND_TRANSITION;
+
+    return buildRoundQueue({
+        ...newGameState,
+        status: newStatus,
+    });
+}
+
+export function processPlan(prev, action) {
+    let newGameState = {
+        ...prev,
+    };
 
     // Death check
     newGameState = processDeathCheck(newGameState);
@@ -1246,12 +1324,21 @@ export function processPlan(prev, agentKey, nonAgentKey, action) {
             ? prev.playerQueue
             : prev.playerQueue.slice(1);
 
+            console.log(action)
+    console.log(action === actionKeys.LASER);
+    console.log(newGameState.status);
+    console.log(prev.playerQueue)
+    console.log(newQueue)
+
+
+    const newStatus =
+        newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
+            ? turnStatus.ONGOING
+            : newGameState.status;
+
     return buildRoundQueue({
         ...newGameState,
-        status:
-            newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
-                ? turnStatus.ONGOING
-                : newGameState.status,
+        status: newStatus,
         playerQueue: newQueue,
     });
 }
@@ -1283,6 +1370,12 @@ export function buildHistory(prev, event, info = {}) {
         case eventKeys.USE_ACTION: {
             const actionName = DESCRIPTIONS[action].name;
             string = `${playerName} used ${actionName}`;
+            break;
+        }
+
+        case eventKeys.FAILED_ACTION: {
+            const actionName = DESCRIPTIONS[action].name;
+            string = `${playerName} failed to use ${actionName}!`;
             break;
         }
 
@@ -1318,7 +1411,6 @@ export function buildHistory(prev, event, info = {}) {
             string = "Anointment";
             break;
 
-        
         default:
             string = "";
             break;
@@ -1328,13 +1420,13 @@ export function buildHistory(prev, event, info = {}) {
         history.push(string);
     }
 
-    if(prev.status === turnStatus.DEFEAT) {
+    if (prev.status === turnStatus.DEFEAT) {
         history.push("Player Two Win");
     }
-    if(prev.status === turnStatus.VICTORY) {
+    if (prev.status === turnStatus.VICTORY) {
         history.push("Player One Win");
     }
-    if(prev.status === turnStatus.DRAW) {
+    if (prev.status === turnStatus.DRAW) {
         history.push("Draw");
     }
 

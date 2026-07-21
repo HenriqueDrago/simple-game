@@ -24,6 +24,8 @@ import {
     processEmanation,
     processPlan,
     buildHistory,
+    processActionUse,
+    processSingularity,
 } from "./utils/turnManagement.js";
 import {
     distributePoints,
@@ -134,14 +136,27 @@ function App() {
     function handleAction(action, agentKey, nonAgentKey) {
         console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
-            return buildHistory(
-                processPlan(prev, agentKey, nonAgentKey, action),
-                eventKeys.USE_ACTION,
-                {
-                    player: agentKey,
-                    action: action,
-                },
+            const currPhase =
+                prev.roundQueue && prev.roundQueue[prev.roundIndex];
+            const isSingularity =
+                currPhase === roundPhases.P1_SINGULARITY ||
+                currPhase === roundPhases.P2_SINGULARITY;
+
+            const processedAction = processActionUse(
+                prev,
+                agentKey,
+                nonAgentKey,
+                action,
             );
+
+            const newGameState = isSingularity
+                ? processSingularity(processedAction, agentKey, action)
+                : processPlan(processedAction, action);
+
+            return buildHistory(newGameState, eventKeys.USE_ACTION, {
+                player: agentKey,
+                action: action,
+            });
         });
     }
 
@@ -613,14 +628,15 @@ function App() {
                     break;
                 }
 
-                case roundPhases.MINI_ARRAY_TURN: {
+                case roundPhases.MANA_SIPHON: {
                     nextState = processManaSiphon(gameState);
                     delayAmount = 1200;
                     historyKey = eventKeys.MANA_SIPHON;
                     break;
                 }
 
-                case roundPhases.ARRAY_TURN: {
+                case roundPhases.POST_P1_RUNIC_PULSE:
+                case roundPhases.POST_P2_RUNIC_PULSE: {
                     nextState = processRunicPulse(gameState);
                     delayAmount = 1200;
                     historyKey = eventKeys.RUNIC_PULSE;
@@ -938,14 +954,29 @@ function App() {
                             player: targetKey,
                         }); // Element Change
                     }
-                    newGame = buildHistory(
-                        processPlan(newGame, targetKey, nonTargetKey, action),
-                        eventKeys.USE_ACTION,
-                        {
-                            player: targetKey,
-                            action: action,
-                        },
-                    ); // Use Action
+
+                    // Use Action
+                    const currPhase =
+                        prev.roundQueue && prev.roundQueue[prev.roundIndex];
+                    const isSingularity =
+                        currPhase === roundPhases.P1_SINGULARITY ||
+                        currPhase === roundPhases.P2_SINGULARITY;
+
+                    newGame = processActionUse(
+                        newGame,
+                        targetKey,
+                        nonTargetKey,
+                        action,
+                    );
+
+                    newGame = isSingularity
+                        ? processSingularity(newGame)
+                        : processPlan(newGame);
+
+                    newGame = buildHistory(newGame, eventKeys.USE_ACTION, {
+                        player: targetKey,
+                        action: action,
+                    });
 
                     return newGame;
                 });

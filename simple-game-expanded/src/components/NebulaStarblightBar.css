@@ -31,10 +31,6 @@
     height: 18px;
     overflow: hidden;
     
-    /* 
-       Left Half (0% - 50%): Yellow Star Nebula accumulation.
-       Right Half (50% - 100%): Unstable Cosmic Starblight leading to Nova.
-    */
     background-image: linear-gradient(
         to right, 
         #854d0e 0%, 

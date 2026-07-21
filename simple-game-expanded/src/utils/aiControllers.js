@@ -1,7 +1,6 @@
 import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
-    consumeResources,
     getEntityDef,
     getEntityMaxHealth,
     getEntityTotalHealth,
@@ -20,7 +19,6 @@ import {
     moonKeys,
 } from "./enums.js";
 import { commitTurn, processUpkeep } from "./turnManagement.js";
-import { processOrangeStar, processRedStar } from "./starfall.js";
 
 // Auxiliary Functions
 function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
@@ -124,7 +122,7 @@ function willEntityEffectivelyDieByNextCommitPostUpkeep(
 
 // Star Assignment
 export function assignStarsAI(context) {
-    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
+    const { agent } = context;
 
     // Initial allocations
     let allocations = {
@@ -138,174 +136,10 @@ export function assignStarsAI(context) {
     };
 
     let totalStars = getEntityUsableStars(agent);
-    let remainingWhite = totalStars;
 
     // Early return if no stars
     if (totalStars <= 0) {
         return allocations;
-    }
-
-    // === Lethal Checks ===
-
-    // A: Normal Red Star
-    if (remainingWhite > 0) {
-        const { draftMaster, draftNonMaster } = processRedStar(
-            { master: agent, nonMaster: nonAgent },
-            remainingWhite,
-            0,
-        );
-
-        const simState = {
-            ...prev,
-            entities: {
-                [agentKey]: draftMaster,
-                [nonAgentKey]: draftNonMaster,
-            },
-        };
-
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simState,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            allocations = {
-                ...allocations,
-                [effectKeys.RED_STAR]: remainingWhite,
-            };
-            remainingWhite = 0;
-        }
-    }
-
-    // B: Augmented Red Star
-    if (remainingWhite > 0) {
-        const violetAlloc = Math.floor(remainingWhite / 2);
-        const redAlloc = remainingWhite - violetAlloc;
-
-        const { draftMaster, draftNonMaster } = processRedStar(
-            { master: agent, nonMaster: nonAgent },
-            0,
-            violetAlloc,
-        );
-
-        const simState = {
-            ...prev,
-            entities: {
-                [agentKey]: draftMaster,
-                [nonAgentKey]: draftNonMaster,
-            },
-        };
-
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simState,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            allocations = {
-                ...allocations,
-                [effectKeys.RED_STAR]: redAlloc,
-                [effectKeys.VIOLET_STAR]: violetAlloc,
-            };
-
-            remainingWhite = 0;
-        }
-    }
-
-    // C: Augmented Orange Star
-    if (remainingWhite > 0) {
-        const maxConsumption = consumeResources(agent, Infinity, effectKeys.ORANGE_STAR).resourcesConsumed.totalConsumption - 1;
-
-        const starsAlloc = Math.min(maxConsumption, Math.floor(remainingWhite / 2));
-
-        const { draftMaster, draftNonMaster } = processOrangeStar(
-            { master: agent, nonMaster: nonAgent },
-            starsAlloc,
-            0,
-        );
-
-        const simState = {
-            ...prev,
-            entities: {
-                [agentKey]: draftMaster,
-                [nonAgentKey]: draftNonMaster,
-            },
-        };
-
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simState,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            allocations = {
-                ...allocations,
-                [effectKeys.ORANGE_STAR]: starsAlloc,
-                [effectKeys.VIOLET_STAR]: starsAlloc,
-            };
-            remainingWhite = 0;
-        }
-    }
-
-    // === Default Logic ===
-
-    // Consume undesirable resources with Orange
-    const undesirableResources = agent.resources[effectKeys.POISON] + agent.resources[effectKeys.SHACKLED_MANA];
-    if(undesirableResources > 0) {
-        const orangeAlloc = Math.min(undesirableResources, remainingWhite);
-        allocations = {
-            ...allocations,
-            [effectKeys.ORANGE_STAR]:
-                remainingWhite + allocations[effectKeys.ORANGE_STAR],
-        };
-
-        remainingWhite -= orangeAlloc;
-    }
-
-    // Restore up to max hp with augmented green, only if no oranges used
-    const missingHp = getEntityMaxHealth(agent) - agent[effectKeys.HEALTH];
-    if (remainingWhite > 0 && missingHp >= getEntityMaxHealth(agent) * 0.2 && undesirableResources <= 0) {
-        const spentStars = Math.min(
-            missingHp,
-            Math.floor(remainingWhite / 2),
-        );
-
-        allocations = {
-            ...allocations,
-            [effectKeys.GREEN_STAR]:
-                spentStars + allocations[effectKeys.GREEN_STAR],
-            [effectKeys.VIOLET_STAR]:
-                spentStars + allocations[effectKeys.VIOLET_STAR],
-        };
-        remainingWhite -= spentStars * 2;
-    }    
-
-    // Nova transformation
-    if (remainingWhite >= 40) {
-        allocations = {
-            ...allocations,
-            [effectKeys.YELLOW_STAR]:
-                remainingWhite + allocations[effectKeys.YELLOW_STAR],
-        };
-        remainingWhite = 0;
-    }
-
-    // Use augmented indigo for resource generation
-    if (remainingWhite > 0) {
-        const spentIndigo = Math.ceil(remainingWhite / 2);
-        const spentViolet = Math.floor(remainingWhite / 2);
-
-        allocations = {
-            ...allocations,
-            [effectKeys.INDIGO_STAR]:
-                spentIndigo + allocations[effectKeys.INDIGO_STAR],
-            [effectKeys.VIOLET_STAR]:
-                spentViolet + allocations[effectKeys.VIOLET_STAR],
-        };
-        // remainingWhite -= spentIndigo + spentViolet;
     }
 
     return allocations;
@@ -1312,7 +1146,7 @@ export function angelAI(context) {
 - Use Chart otherwise
 */
 export function starfarerAI(context) {
-    const { agent, hasManaForSpecial, nonAgentKey, agentKey } = context;
+    const { hasManaForSpecial, nonAgentKey, agentKey } = context;
 
     const simulate = createSimulator(context);
 
@@ -1338,11 +1172,6 @@ export function starfarerAI(context) {
         willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
     ) {
         return actionKeys.ATTACK;
-    }
-
-    // Use Supernova on nova
-    if(agent.states[effectKeys.NOVA]) {
-        return actionKeys.SUPERNOVA
     }
 
     // default: CHART
