@@ -3,6 +3,7 @@ import "./AttrLine.css";
 import { effectKeys, elementalKeys, turnStatus } from "../utils/enums";
 import { getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
 import { spawnTooltip } from "../utils/dictionary";
+import { constants } from "../utils/constants";
 
 const gettersMap = {
     str: getEntityStr,
@@ -24,8 +25,11 @@ function AttrLine({
 
     let specialClass = "";
     if (
-        entity[effectKeys.CONSTELLATION] > 0 &&
-        gettersMap[attr](entity) > entity.attributes[attr].points
+        (entity[effectKeys.CONSTELLATION] > 0 &&
+            gettersMap[attr](entity) > entity.attributes[attr].points) ||
+        (attr === "str" &&
+            entity[effectKeys.DIVINE_SPARK] >
+                constants.DIVINE_SPARK_STR_CONVERSION)
     ) {
         specialClass = "constellation-value-increase";
     }

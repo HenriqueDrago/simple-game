@@ -9,7 +9,6 @@ import {
     loseMana,
     gainHp,
     exitAllStates,
-    processExitAscendence,
     getEntityDef,
     getEntityStr,
     getEntityTotalHealth,
@@ -17,13 +16,7 @@ import {
     getEntityMaxHealth,
     getEntityTotalMana,
 } from "./entities.js";
-import {
-    actionKeys,
-    dmgTypes,
-    effectKeys,
-    elementalKeys,
-    eyeKeys,
-} from "./enums.js";
+import { actionKeys, dmgTypes, effectKeys, elementalKeys } from "./enums.js";
 
 export const simulators = {
     [actionKeys.ATTACK]: simulateAttack,
@@ -55,19 +48,6 @@ export const simulators = {
 
     // Paladin
     [actionKeys.AEGIS]: simulateAegis,
-    [actionKeys.ASCEND]: simulateAscend,
-
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: simulateBaptismOfTheFlames,
-    [actionKeys.CELESTIAL_SCALE]: simulateScale,
-    [actionKeys.HYMNS_OF_SANCTIFICATION]: simulateHymns,
-    [actionKeys.GIFT_OF_APOTHEOSIS]: simulateGiftOfApotheosis,
-
-    [actionKeys.SERAPH_OF_CONDEMNATION]: simulateSeraphOfCondemnation,
-    [actionKeys.GLIMPSE_OF_PANDEMONIUM]: simulateGlimpse,
-    [actionKeys.EDICT_OF_SEVERANCE]: simulateEdict,
-    [actionKeys.THE_WORD_MADE_FLESH]: simulateWordMadeFlesh,
-
-    [actionKeys.JUDGEMENT]: simulateJudgement,
 
     // Lunatic
     [actionKeys.REFRACT]: simulateRefract,
@@ -659,6 +639,8 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
                     ...attacker.states,
                     [effectKeys.THERMAL_OVERLOAD]:
                         newOverheat >= constants.MAX_OVERHEAT,
+                    [effectKeys.WEAPONS_DEPLOYED]:
+                        newOverheat < constants.MAX_OVERHEAT,
                 },
             },
             [nonAgentKey]: {
@@ -720,335 +702,6 @@ function simulateChart({ prev, agent, agentKey }) {
                     ...agent.states,
                     [effectKeys.STARGAZER]: true,
                 },
-            },
-        },
-    };
-}
-
-function simulateAscend({ prev, agent, agentKey }) {
-    const newRev =
-        agent[effectKeys.REVELATION] +
-        agent.attributes.str.value +
-        agent.attributes.def.value;
-
-    let attributes = {};
-    for (let attr of constants.ATTRIBUTE_NAMES) {
-        attributes[attr] = {
-            ...agent.attributes[attr],
-            value: 0,
-        };
-    }
-
-    const { draftEntity, resourcesConsumed } = consumeResources(
-        { ...agent },
-        Infinity,
-        actionKeys.ASCEND,
-    );
-
-    let draftAgent = {
-        ...draftEntity,
-        attributes: { ...attributes },
-    };
-
-    draftAgent = exitAllStates(draftAgent);
-
-    return {
-        ...prev,
-        eyeOfHeavens: eyeKeys.OPEN,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                [effectKeys.ENLIGHTENMENT]: 100,
-                [effectKeys.MAX_ENLIGHTENMENT]: 100,
-                [effectKeys.MAX_INSIGHT]: 100,
-                [effectKeys.REVELATION]: newRev,
-                [effectKeys.DIVINE_SPARK]: 0,
-                states: {
-                    ...draftAgent.states,
-                    [effectKeys.ZENITH_OF_MORTALITY]: false,
-                    [effectKeys.ASCENDENCE_OF_SPIRIT]: true,
-                },
-                resources: {
-                    ...draftAgent.resources,
-                    [effectKeys.INSPIRATION]:
-                        resourcesConsumed.totalConsumption,
-                },
-            },
-        },
-    };
-}
-
-function simulateSeraphOfCondemnation({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const newSin = Math.min(
-        constants.MAX_TARNISHED_SIN,
-        nonAgent[effectKeys.TARNISHED_SIN] + agent[effectKeys.REVELATION],
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                [effectKeys.TARNISHED_SIN]: newSin,
-            },
-        },
-    };
-}
-
-function simulateScale({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const totalKnowledge =
-        agent[effectKeys.ENLIGHTENMENT] + agent[effectKeys.INSIGHT];
-
-    const halfKnow = Math.floor(totalKnowledge / 2);
-
-    const newEnlit = Math.min(agent[effectKeys.MAX_ENLIGHTENMENT], halfKnow);
-    const newInsight = Math.min(agent[effectKeys.MAX_INSIGHT], halfKnow);
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                [effectKeys.ENLIGHTENMENT]: newEnlit,
-                [effectKeys.INSIGHT]: newInsight,
-            },
-        },
-    };
-}
-
-function simulateBaptismOfTheFlames({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const newFlames =
-        nonAgent.resources[effectKeys.SACRED_FLAMES] +
-        agent[effectKeys.REVELATION];
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    [effectKeys.SACRED_FLAMES]: newFlames,
-                },
-            },
-        },
-    };
-}
-
-function simulateHymns({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const { draftEntity, resourcesConsumed } = consumeResources(
-        draftAgent,
-        Infinity,
-        actionKeys.HYMNS_OF_SANCTIFICATION,
-    );
-
-    draftAgent = restoreResources(
-        draftEntity,
-        resourcesConsumed.totalConsumption,
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-        },
-    };
-}
-
-function simulateGlimpse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    let draftNonAgent = {
-        ...nonAgent,
-    };
-
-    if (draftAgent.resources[effectKeys.SACRED_FLAMES] > 0) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftAgent,
-            draftAgent.resources[effectKeys.SACRED_FLAMES],
-            actionKeys.GLIMPSE_OF_PANDEMONIUM,
-        );
-
-        draftAgent = restoreResources(
-            draftEntity,
-            resourcesConsumed.totalConsumption,
-        );
-    }
-
-    if (draftNonAgent.resources[effectKeys.SACRED_FLAMES] > 0) {
-        const { draftEntity, resourcesConsumed } = consumeResources(
-            draftNonAgent,
-            draftNonAgent.resources[effectKeys.SACRED_FLAMES],
-            effectKeys.GLIMPSE_OF_PANDEMONIUM,
-        );
-
-        draftNonAgent = restoreResources(
-            draftEntity,
-            resourcesConsumed.totalConsumption,
-        );
-    }
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-            },
-        },
-    };
-}
-
-function simulateEdict({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    return {
-        ...prev,
-        [effectKeys.SEVERED_TIME]: true,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-        },
-    };
-}
-
-function simulateGiftOfApotheosis({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    if (
-        nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
-        nonAgent.states[effectKeys.ZENITH_OF_MORTALITY] ||
-        nonAgent.states[effectKeys.CUTOFF_WINGS]
-    ) {
-        return prev;
-    }
-
-    const newTarnishedSin = Math.min(
-        constants.MAX_TARNISHED_SIN,
-        nonAgent[effectKeys.TARNISHED_SIN] + agent[effectKeys.TARNISHED_SIN],
-    );
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                [effectKeys.TARNISHED_SIN]: newTarnishedSin,
-            },
-            [nonAgentKey]: {
-                ...nonAgent,
-                [effectKeys.DIVINE_SPARK]: 100,
-                [effectKeys.TARNISHED_SIN]: 0,
-            },
-        },
-    };
-}
-
-function simulateWordMadeFlesh({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
-
-    const burden = Math.floor(draftAgent[effectKeys.REVELATION] / 10);
-
-    draftAgent = processExitAscendence(draftAgent);
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                [effectKeys.BURDEN_OF_STIGMA]: burden,
-                resources: {
-                    ...draftAgent.resources,
-                },
-            },
-        },
-    };
-}
-
-function simulateJudgement({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    let draftNonAgent = {
-        ...nonAgent,
-    };
-
-    draftNonAgent = exitAllStates(draftNonAgent);
-    draftNonAgent = consumeResources(
-        draftNonAgent,
-        Infinity,
-        actionKeys.JUDGEMENT,
-    ).draftEntity;
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                states: {
-                    ...agent.states,
-                    [effectKeys.ANOINTED_PROXY]: false,
-                },
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-                [effectKeys.TARNISHED_SIN]: 0,
             },
         },
     };
@@ -1195,9 +848,7 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const extraDmg =
         agent[effectKeys.MAX_HEALTH] -
         agent[effectKeys.HEALTH] +
-        (agent[effectKeys.MAX_MANA] - agent[effectKeys.MANA]) +
-        (agent[effectKeys.MAX_INSIGHT] - agent[effectKeys.INSIGHT]) +
-        (agent[effectKeys.MAX_ENLIGHTENMENT] - agent[effectKeys.ENLIGHTENMENT]);
+        (agent[effectKeys.MAX_MANA] - agent[effectKeys.MANA]);
 
     const baseDmg = Math.floor(
         agent[effectKeys.MOONLIGHT] *

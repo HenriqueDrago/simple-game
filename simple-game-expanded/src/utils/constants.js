@@ -19,7 +19,6 @@ import {
     starfallPhases,
     turnStatus,
     whoStartsKeys,
-    eyeKeys,
     progKeys,
     sdmKeys,
     entityKeys,
@@ -60,7 +59,7 @@ const MAX_OVERHEAT = 100;
 const VENTING_OVERHEAT_LOSS = 50;
 const NATURAL_OVERHEAT_LOSS = 30;
 
-const HALO_GEN_MULT = 200;
+const HALO_GEN_MULT = 2;
 const SAC_HP_CONSUMPTION = 0.5;
 
 const SHADOW_PACT_BURN = 5;
@@ -73,17 +72,9 @@ const SONORITY_HIGHER_LIMIT = 50;
 const SONORITY_ON_DEFENSE = 5;
 const SONORITY_ON_OFFENSE = -5;
 
-const MAX_ENLIT = 100;
-const MAX_INSIGHT = 100;
-const MAX_TARNISHED_SIN = 100;
 const MAX_DIVINE_SPARK = 100;
 
-const INSIGHT_TO_REV_FACTOR = 10;
-
-const FLAMES_ABSORPTION_MULTIPLIER = 1;
-const BENEDICTION_GEN = 2;
-
-const CHART_STAR_GAIN = 300;
+const CHART_STAR_GAIN = 3;
 const STARDUST_RATE_CONVERSION = 3;
 
 const MAX_DYNAMO = 100;
@@ -114,8 +105,11 @@ const MAX_GRAVITATION = 100;
 const MAX_STARFLARE = 100;
 const STARFLARE_GAIN = 5;
 
+const DIVINE_SPARK_STR_CONVERSION = 5;
+
 export const constants = {
     STARFLARE_GAIN,
+    DIVINE_SPARK_STR_CONVERSION,
     MAX_STARFLARE,
     GRAVITATION_GAIN,
     MAX_GRAVITATION,
@@ -150,12 +144,6 @@ export const constants = {
     SONORITY_LOWER_LIMIT,
     SONORITY_HIGHER_LIMIT,
     VENTING_OVERHEAT_LOSS,
-    MAX_ENLIT,
-    INSIGHT_TO_REV_FACTOR,
-    BENEDICTION_GEN,
-    FLAMES_ABSORPTION_MULTIPLIER,
-    MAX_INSIGHT,
-    MAX_TARNISHED_SIN,
     CHART_STAR_GAIN,
     STARDUST_RATE_CONVERSION,
     MAX_DIVINE_SPARK,
@@ -175,13 +163,15 @@ export const constants = {
 };
 
 export const MITIGATION_RESOURCES = [
-    effectKeys.REFRACTED_DIVINITY,
-    effectKeys.HALO,
-    effectKeys.LINGERING_EMBER,
+    effectKeys.STARLIT_HEAVENS,
+    effectKeys.FIRMAMENT,
     effectKeys.DOME,
-    effectKeys.HARMONY,
-    effectKeys.MYCELIUM,
+    effectKeys.HALO,
+    effectKeys.REFRACTED_DIVINITY,
     effectKeys.FUNERARY_URN,
+    effectKeys.LINGERING_EMBER,
+    effectKeys.MYCELIUM,
+    effectKeys.HARMONY,
 ];
 
 export const FREE_RESOURCES = [
@@ -196,7 +186,7 @@ export const FREE_RESOURCES = [
     effectKeys.STARDUST,
     effectKeys.MOONDUST,
     effectKeys.RADIANCE,
-    effectKeys.SACRED_FLAMES,
+
 ];
 
 export const presetAi = {
@@ -295,6 +285,21 @@ export const presetAi = {
             effectKeys.MANA_BLEED,
         ],
     },
+    [aiKeys.PALADIN]: {
+        name: "Paladin",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: paladinAI,
+        desc: [
+            actionKeys.AEGIS,
+            effectKeys.RADIANT,
+            effectKeys.HALO,
+            effectKeys.RADIANCE,
+            effectKeys.DIVINE_SPARK,
+        ],
+    },
     [aiKeys.HEXER]: {
         name: "Hexer",
         best: {
@@ -336,8 +341,8 @@ export const presetAi = {
     [aiKeys.MAESTRO]: {
         name: "Maestro",
         best: {
-            str: 5,
-            def: 5,
+            str: 0,
+            def: 10,
         },
         caller: maestroAI,
         desc: [
@@ -375,7 +380,7 @@ export const presetAi = {
         ],
     },
     [aiKeys.STARFARER]: {
-        name: "Starfarer",
+        name: "Starfarer (Broken AI)",
         best: {
             str: 0,
             def: 10,
@@ -454,52 +459,6 @@ export const presetAi = {
             dmgTypes.LUNIC,
         ],
     },
-    [aiKeys.PALADIN]: {
-        name: "Paladin",
-        best: {
-            str: 0,
-            def: 10,
-        },
-        caller: paladinAI,
-        desc: [
-            actionKeys.AEGIS,
-            effectKeys.RADIANT,
-            effectKeys.HALO,
-            effectKeys.RADIANCE,
-            effectKeys.ENLIGHTENMENT,
-            effectKeys.MAX_ENLIGHTENMENT,
-            effectKeys.ZENITH_OF_MORTALITY,
-            actionKeys.ASCEND,
-            effectKeys.ASCENDENCE_OF_SPIRIT,
-            entryTypes.ACT_OF_BENEDICTION,
-            entryTypes.ACT_OF_MALEDICTION,
-            effectKeys.TARNISHED_SIN,
-            effectKeys.EYE_OF_HEAVENS,
-            effectKeys.INSIGHT,
-            effectKeys.MAX_INSIGHT,
-            effectKeys.CUTOFF_WINGS,
-            effectKeys.REVELATION,
-            effectKeys.BURDEN_OF_STIGMA,
-            effectKeys.SEVERED_TIME,
-            effectKeys.INSPIRATION,
-            effectKeys.SACRED_FLAMES,
-            actionKeys.BAPTISM_OF_THE_FLAMES,
-            actionKeys.CELESTIAL_SCALE,
-            actionKeys.HYMNS_OF_SANCTIFICATION,
-            actionKeys.GIFT_OF_APOTHEOSIS,
-            actionKeys.SERAPH_OF_CONDEMNATION,
-            actionKeys.GLIMPSE_OF_PANDEMONIUM,
-            actionKeys.EDICT_OF_SEVERANCE,
-            actionKeys.THE_WORD_MADE_FLESH,
-
-            effectKeys.DIVINE_SPARK,
-            actionKeys.JUDGEMENT,
-            effectKeys.ABANDONED_BY_GRACE,
-            effectKeys.ANOINTED_PROXY,
-            effectKeys.EMANATION,
-            effectKeys.ANOINTMENT,
-        ],
-    },
 };
 
 const offensiveActions = [
@@ -548,26 +507,10 @@ const transformativeActions = [
     actionKeys.SHATTER,
 ];
 
-const actsOfBenediction = [
-    actionKeys.BAPTISM_OF_THE_FLAMES,
-    actionKeys.CELESTIAL_SCALE,
-    actionKeys.HYMNS_OF_SANCTIFICATION,
-    actionKeys.GIFT_OF_APOTHEOSIS,
-];
-
-const actsOfMalediction = [
-    actionKeys.SERAPH_OF_CONDEMNATION,
-    actionKeys.GLIMPSE_OF_PANDEMONIUM,
-    actionKeys.EDICT_OF_SEVERANCE,
-    actionKeys.THE_WORD_MADE_FLESH,
-];
-
 export const actionsClass = {
     offensiveActions,
     defensiveActions,
     transformativeActions,
-    actsOfBenediction,
-    actsOfMalediction,
 };
 
 export const stackCounters = {
@@ -649,24 +592,6 @@ export const stackCounters = {
             color: "#fff59d",
             borderColor: "#fff59d",
             backgroundColor: "rgba(255, 245, 157, 0.2)",
-        },
-    },
-
-    [effectKeys.SACRED_FLAMES]: {
-        label: "Sacred Flames",
-        style: {
-            color: "#ffb300",
-            borderColor: "#ffb300",
-            backgroundColor: "rgba(255, 179, 0, 0.2)",
-        },
-    },
-
-    [effectKeys.DOME]: {
-        label: "Dome",
-        style: {
-            color: "#80d8ff",
-            borderColor: "#80d8ff",
-            backgroundColor: "rgba(128, 216, 255, 0.2)",
         },
     },
 
@@ -766,8 +691,6 @@ export const INITIAL_GAME_STATE = {
 
     // game logic
     [effectKeys.RUNIC_ARRAY]: 0,
-    eyeOfHeavens: eyeKeys.DORMANT,
-    [effectKeys.SEVERED_TIME]: false,
 
     // other
     whoStarts: whoStartsKeys.PLAYER_ONE,
@@ -840,10 +763,6 @@ export const roundPhasesMap = {
         descKey: effectKeys.RUNIC_PULSE,
         name: "Runic Pulse",
     },
-    [roundPhases.EMINENCE_TURN]: {
-        descKey: effectKeys.EMANATION,
-        name: "Emanation",
-    },
     [roundPhases.P1_STARS_TURN]: {
         descKey: effectKeys.STARFALL,
         name: "Player One Starfall",
@@ -855,10 +774,6 @@ export const roundPhasesMap = {
     [roundPhases.P2_STARS_TURN]: {
         descKey: effectKeys.STARFALL,
         name: "Player Two Starfall",
-    },
-    [roundPhases.SPECIAL_EMINENCE_TURN]: {
-        descKey: effectKeys.ANOINTMENT,
-        name: "Anointment",
     },
     [roundPhases.MANA_SIPHON]: {
         descKey: effectKeys.MANA_SIPHON,
@@ -923,8 +838,6 @@ export const entryTypesMap = {
     [entryTypes.RANKED_RESOURCE]: "RANKED RESOURCE",
     [entryTypes.OVERFLOWN_RESOURCE]: "OVERFLOWN RESOURCE",
     [entryTypes.DAMAGE_MODIFIERS]: "DAMAGE MODIFIER",
-    [entryTypes.ACT_OF_BENEDICTION]: "ACT OF BENEDICTION",
-    [entryTypes.ACT_OF_MALEDICTION]: "ACT OF MALEDICTION",
     [entryTypes.OFFENSIVE_ACTION]: "OFFENSIVE ACTION",
     [entryTypes.DEFENSIVE_ACTION]: "DEFENSIVE ACTION",
     [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
@@ -958,43 +871,8 @@ export const actionMap = {
     },
     [actionKeys.BABEL]: { name: "Babel", specialClass: "" },
     [actionKeys.CHART]: { name: "Chart", specialClass: "" },
-    [actionKeys.ASCEND]: { name: "Ascend", specialClass: "ascend-button" },
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: {
-        name: "Baptism of the Flames",
-        specialClass: "good-angel-button",
-    },
-    [actionKeys.CELESTIAL_SCALE]: {
-        name: "Celestial Scale",
-        specialClass: "good-angel-button",
-    },
-    [actionKeys.HYMNS_OF_SANCTIFICATION]: {
-        name: "Hymns of Sanctification",
-        specialClass: "good-angel-button",
-    },
-    [actionKeys.GIFT_OF_APOTHEOSIS]: {
-        name: "Gift of Apotheosis",
-        specialClass: "good-angel-button",
-    },
-    [actionKeys.SERAPH_OF_CONDEMNATION]: {
-        name: "Seraph of Condemnation",
-        specialClass: "bad-angel-button",
-    },
-    [actionKeys.GLIMPSE_OF_PANDEMONIUM]: {
-        name: "Glimpse of Pandemonium",
-        specialClass: "bad-angel-button",
-    },
-    [actionKeys.EDICT_OF_SEVERANCE]: {
-        name: "Edict of Severance",
-        specialClass: "bad-angel-button",
-    },
-    [actionKeys.THE_WORD_MADE_FLESH]: {
-        name: "The Word Made Flesh",
-        specialClass: "bad-angel-button",
-    },
-    [actionKeys.JUDGEMENT]: {
-        name: "Judgement",
-        specialClass: "judgement-button",
-    },
+
+
     [actionKeys.REFRACT]: { name: "Refract", specialClass: "" },
     [actionKeys.MIRROR]: { name: "Mirror", specialClass: "" },
     [actionKeys.LUNAR_STRIKE]: { name: "Lunar Strike", specialClass: "" },

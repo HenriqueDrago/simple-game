@@ -19,14 +19,14 @@ export const ACTION_DESCRIPTIONS = {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Consumes MANA to replenish missing HEALTH. Cleanses POISON, then gains DISTILLED TOXIN equal to the amount cleansed.",
+            "Consumes MANA to replenish missing HEALTH. Cleanses POISON and gains DISTILLED TOXIN equal to the amount cleansed.",
     },
 
     [actionKeys.GUARD]: {
         name: "GUARD",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Restores MANA equal to 30% of MAX MANA and enters GUARDING state until next turn start. Cannot gain MANA OVERFLOW this way.",
+            "Restores 30% of MAX MANA and enters GUARDING state until next turn start. Cannot gain MANA OVERFLOW this way.",
     },
 
     [actionKeys.SPECIAL_ATTACK]: {
@@ -40,21 +40,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "SACRIFICE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Loses half current HEALTH, rounded up. Gains BLOOD SACRIFICE and increases MAX MANA equal to the HEALTH lost this way, raises MANA BLEED rank equal to half the HEALTH lost this way, rounded up, then enters SACRIFICIAL state until next turn start.",
-    },
-
-    [actionKeys.ARRAY]: {
-        name: "ARRAY",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Envelops the battlefield in a RUNIC ARRAY for 3 turns. Consumes all MANA and MANA OVERFLOW from every entity, then grants SHACKLED MANA equal to the amount consumed on each entity.",
-    },
-
-    [actionKeys.CURSE]: {
-        name: "CURSE",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Ends RUNIC ARRAY. Then, consumes all SHACKLED MANA from every entity. Each entity gains POISON equal to the amount consumed on self.",
+            "Halves current HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the HEALTH lost this way, raises MANA BLEED rank equal to half the HEALTH lost this way. Enters SACRIFICIAL state until next turn start.",
     },
 
     [actionKeys.SHADOW_PACT]: {
@@ -264,15 +250,6 @@ export const RESOURCE_DESCRIPTIONS = {
         type: entryTypes.LIMITED_RESOURCE,
         description:
             "Capped at MAX HEALTH. Cannot restore HEALTH above the limit. When HEALTH reaches 0, loses the battle.",
-    },
-};
-
-export const FIELD_EFFECT_DESCRIPTIONS = {
-    [effectKeys.RUNIC_ARRAY]: {
-        name: "RUNIC ARRAY",
-        type: entryTypes.FIELD_EFFECT,
-        description:
-            "While active, enables MANA SIPHON and RUNIC PULSE. Additionally, replaces ARRAY with CURSE and disables MANA OVERFLOW turn end effects.",
     },
 };
 
@@ -553,7 +530,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "AEGIS",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Gains HALO equal to twice the user's DEF. Enters RADIANT state until next turn start.",
+            "Gains HALO equal to twice the user's DEF. Enters RADIANT state until next turn start. Cannot be used at 0 or less DEF.",
     },
 
     [effectKeys.RADIANT]: {
@@ -573,204 +550,14 @@ export const PALADIN_DESCRIPTIONS = {
         name: "RADIANCE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using ATTACK, consumes all RADIANCE on self to increase the damage dealt.",
+            "When using ATTACK, consumes all RADIANCE on self to increase the damage dealt. At turn end, lose all RADIANCE and take TRUE DAMAGE equal to the amount lost.",
     },
 
     [effectKeys.DIVINE_SPARK]: {
         name: "DIVINE SPARK",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "At turn start, if at 100% DIVINE SPARK, enters ZENITH OF MORTALITY. Additionally, if the EYE OF HEAVENS is DORMANT, awakens it in the CLOSED state.",
-    },
-
-    [effectKeys.ENLIGHTENMENT]: {
-        name: "ENLIGHTENMENT",
-        type: entryTypes.LIMITED_RESOURCE,
-        description:
-            "Cannot exceed MAX ENLIGHTENMENT. Replaces HEALTH for entities on the ASCENDENCE OF SPIRIT state.",
-    },
-
-    [effectKeys.ZENITH_OF_MORTALITY]: {
-        name: "ZENITH OF MORTALITY",
-        type: entryTypes.STATE,
-        description: "Replaces all actions with ASCEND.",
-    },
-
-    [actionKeys.ASCEND]: {
-        name: "ASCEND",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Opens the EYE OF HEAVENS, exits all other states, and consumes all RESOURCES on self. Then gains REVELATION based on STR and DEF on self and enters ASCENDENCE OF SPIRIT. Afterwards, loses all STR and DEF on self, and gains INSPIRATION equal to the RESOURCES consumed previously. Additionally, sets MAX ENLIGHTENMENT and MAX INSIGHT to 100, then gains 100 ENLIGHTENMENT. This action does not end the turn.",
-    },
-
-    [effectKeys.ASCENDENCE_OF_SPIRIT]: {
-        name: "ASCENDENCE OF SPIRIT",
-        type: entryTypes.STATE,
-        description:
-            "Does not die upon reaching 0 HEALTH. At turn start, if at 0 or less ENLIGHTENMENT, exits this state and enters CUTOFF WINGS. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, loses ENLIGHTENMENT instead of HEALTH, then gains INSPIRATION equal to the ENLIGHTENMENT lost. Additionally, when taking PHYSICAL DAMAGE, decreases the damage taken by the REVELATION on self. When taking TRUE DAMAGE, raises TARNISHED SIN by 1% for every point of damage received instead of losing HEALTH. When restoring HEALTH or MANA, gains INSPIRATION instead. Replaces all actions with ACTS OF BENEDICTION and ACTS OF MALEDICTION.",
-    },
-
-    [effectKeys.TARNISHED_SIN]: {
-        name: "TARNISHED SIN",
-        type: entryTypes.FIXED_RESOURCE,
-        description:
-            "When reaching 100% TARNISHED SIN, enters ABANDONED BY GRACE state.",
-    },
-
-    [effectKeys.ABANDONED_BY_GRACE]: {
-        name: "ABANDONED BY GRACE",
-        type: entryTypes.STATE,
-        description:
-            "If there's any entity on this state, but no entity on ANOINTED PROXY state, immediately opens the EYE OF HEAVENS and triggers ANOINTMENT.",
-    },
-
-    [effectKeys.ANOINTED_PROXY]: {
-        name: "ANOINTED PROXY",
-        type: entryTypes.STATE,
-        description: "Replaces all actions with JUDGEMENT.",
-    },
-
-    [actionKeys.JUDGEMENT]: {
-        name: "JUDGEMENT",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Cleanses all STATES, TARNISHED SIN, and RESOURCES from the opponent. Then, exits ANOINTED PROXY.",
-    },
-
-    [effectKeys.EYE_OF_HEAVENS]: {
-        name: "EYE OF HEAVENS",
-        type: entryTypes.FIELD_EFFECT,
-        description:
-            "Enables EMANATION at round end. During EMANATION, if closed, opens, grants REVELATION to each entity for every 10 INSIGHT on them and removes SEVERED TIME from the battlefield; otherwise, closes. If there's at least one entity with ABANDONED BY GRACE on the battlefield, opens and grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES and consumes all RESOURCES from both entities, then ends battle.",
-    },
-
-    [effectKeys.ANOINTMENT]: {
-        name: "ANOINTMENT",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered when there's an entity in the ABANDONED BY GRACE state present, but no entity in the ANOINTED PROXY state. If there's at least one entity with ABANDONED BY GRACE on the battlefield, grants ANOINTED PROXY to their adversary. If their adversary is also on the ABANDONED BY GRACE state, instead cleanses all STATES, TARNISHED SIN and RESOURCES from both entities.",
-    },
-
-    [effectKeys.EMANATION]: {
-        name: "EMANATION",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered at ROUND end while EYE OF HEAVENS is awoken. On this phase, if there's no entities on the ASCENDENCE OF SPIRIT state present, EYE OF HEAVENS is set to DORMANT; if EYE OF HEAVENS is CLOSED, opens it, grants REVELATION to each entity for every 10 INSIGHT on them, and removes SEVERED TIME from the battlefield; if EYE OF HEAVENS is OPEN, closes it. ",
-    },
-
-    [effectKeys.INSIGHT]: {
-        name: "INSIGHT",
-        type: entryTypes.LIMITED_RESOURCE,
-        description:
-            "Cannot exceed MAX INSIGHT. When restoring INSIGHT above the limit, gains INSPIRATION instead.",
-    },
-
-    [effectKeys.CUTOFF_WINGS]: {
-        name: "CUTOFF WINGS",
-        type: entryTypes.STATE,
-        description:
-            "Cannot use AEGIS. Upon entering this state, sets MAX HEALTH to 1 and recovers 1 HEALTH.",
-    },
-
-    [effectKeys.REVELATION]: {
-        name: "REVELATION",
-        type: entryTypes.SPECIAL_ATTRIBUTES,
-        description: "Used by certain actions and effects.",
-    },
-
-    [effectKeys.SEVERED_TIME]: {
-        name: "SEVERED TIME",
-        type: entryTypes.FIELD_EFFECT,
-        description:
-            "Turn start and turn end effects do not trigger. At MOON PHASE, MIRRORED MOON does not change phases. At RUNIC PULSE, RUNIC ARRAY duration does not decrease.",
-    },
-
-    [effectKeys.INSPIRATION]: {
-        name: "INSPIRATION",
-        type: entryTypes.OVERFLOWN_RESOURCE,
-        description:
-            "At turn start, loses INSPIRATION equal to missing INSIGHT, then restores INSIGHT equal to the amount lost this way.",
-    },
-
-    [effectKeys.SACRED_FLAMES]: {
-        name: "SACRED FLAMES",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, loses SACRED FLAMES for every 1% DIVINE SPARK on self, then loses 1% DIVINE SPARK for every SACRED FLAMES lost this way. Afterwards, loses SACRED FLAMES equal to ENLIGHTENMENT on self, then loses ENLIGHTENMENT equal to the amount lost this way. Finally, loses SACRED FLAMES equal to missing HEALTH, then restores HEALTH equal to the amount lost this way.",
-    },
-
-    [actionKeys.BAPTISM_OF_THE_FLAMES]: {
-        name: "BAPTISM OF THE FLAMES",
-        type: entryTypes.ACT_OF_BENEDICTION,
-        description:
-            "Grants SACRED FLAMES to the target based on REVELATION on self.",
-    },
-
-    [actionKeys.CELESTIAL_SCALE]: {
-        name: "CELESTIAL SCALE",
-        type: entryTypes.ACT_OF_BENEDICTION,
-        description: "Redistributes ENLIGHTENMENT and INSIGHT evenly on self.",
-    },
-
-    [actionKeys.HYMNS_OF_SANCTIFICATION]: {
-        name: "HYMNS OF SANCTIFICATION",
-        type: entryTypes.ACT_OF_BENEDICTION,
-        description:
-            "Consumes all RESOURCES on self, then restores RESOURCES equal to the amount consumed.",
-    },
-
-    [actionKeys.GIFT_OF_APOTHEOSIS]: {
-        name: "GIFT OF APOTHEOSIS",
-        type: entryTypes.ACT_OF_BENEDICTION,
-        description:
-            "Absorbs all TARNISHED SIN on the opponent, then raises their DIVINE SPARK to 100%. Cannot be used if the target is in ASCENDENCE OF SPIRIT, ZENITH OF MORTALITY or CUTOFF WINGS states.",
-    },
-
-    [actionKeys.SERAPH_OF_CONDEMNATION]: {
-        name: "SERAPH OF CONDEMNATION",
-        type: entryTypes.ACT_OF_MALEDICTION,
-        description:
-            "Inflicts TARNISHED SIN on the target based on REVELATION on self.",
-    },
-
-    [actionKeys.GLIMPSE_OF_PANDEMONIUM]: {
-        name: "GLIMPSE OF PANDEMONIUM",
-        type: entryTypes.ACT_OF_MALEDICTION,
-        description:
-            "Burns RESOURCES on every entity equal to SACRED FLAMES on each, then restores RESOURCES equal to the amount consumed on each. Cannot burn SACRED FLAMES this way.",
-    },
-
-    [actionKeys.EDICT_OF_SEVERANCE]: {
-        name: "EDICT OF SEVERANCE",
-        type: entryTypes.ACT_OF_MALEDICTION,
-        description: "Applies SEVERED TIME to the battlefield.",
-    },
-
-    [actionKeys.THE_WORD_MADE_FLESH]: {
-        name: "THE WORD MADE FLESH",
-        type: entryTypes.ACT_OF_MALEDICTION,
-        description:
-            "Gains BURDEN OF STIGMA equal to a tenth of current REVELATION. Then, exits ASCENDENCE OF SPIRIT.",
-    },
-
-    [effectKeys.BURDEN_OF_STIGMA]: {
-        name: "BURDEN OF STIGMA",
-        type: entryTypes.MECHANIC,
-        description: "Cannot die. At turn start, loses 1 BURDEN OF STIGMA.",
-    },
-
-    [effectKeys.MAX_ENLIGHTENMENT]: {
-        name: "MAX ENLIGHTENMENT",
-        type: entryTypes.MECHANIC,
-        description:
-            "Starts at 0. Limits how much ENLIGHTENMENT you can hold. Increased to 100 upon using ASCEND.",
-    },
-
-    [effectKeys.MAX_INSIGHT]: {
-        name: "MAX INSIGHT",
-        type: entryTypes.MECHANIC,
-        description:
-            "Starts at 0. Limits how much INSIGHT you can hold. Increased to 100 upon using ASCEND.",
+            "Capped at 100%. Raises STR by every 5% DIVINE SPARK on self.",
     },
 };
 
@@ -869,7 +656,7 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         name: "ROUND",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A full game cycle. A basic ROUND consists of: ROUND START, PLAYER ONE TURN, PLAYER TWO TURN and ROUND END, but can be extended via additional phases. A complete game round may consist of: ROUND START, PLAYER ONE TURN, PLAYER ONE STARFALL, RUNIC PULSE, PLAYER TWO TURN, PLAYER TWO STARFALL, RUNIC PULSE, MOON PHASE, EMANATION and ROUND END, disregarding MANA SIPHON and ANOINTMENT, which can be triggered at any given time between ROUND START and ROUND END.",
+            "A full game cycle. A basic ROUND consists of: ROUND START, PLAYER ONE TURN, PLAYER TWO TURN and ROUND END, but can be extended via additional phases. A complete game round may consist of: ROUND START, PLAYER ONE TURN, PLAYER ONE STARFALL, RUNIC PULSE, PLAYER TWO TURN, PLAYER TWO STARFALL, RUNIC PULSE, MOON PHASE and ROUND END, disregarding MANA SIPHON, which can be triggered at any given time between ROUND START and ROUND END.",
     },
 
     [roundPhases.ROUND_START]: {
@@ -910,20 +697,6 @@ export const BATTLE_PHASE_DESCRIPTIONS = {
         type: entryTypes.BATTLE_PHASE,
         description: "A TURN subphase where an ACTION can be used.",
     },
-
-    [effectKeys.RUNIC_PULSE]: {
-        name: "RUNIC PULSE",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered between each player's TURN while RUNIC ARRAY is active. On this phase, grants every entity 5 SHACKLED MANA and decreases remaining RUNIC ARRAY duration. If duration reaches 0 due to this effect, does not grant SHACKLED MANA; instead, absorbs all SHACKLED MANA on all entities, then redistributes it evenly between them and ends RUNIC ARRAY.",
-    },
-
-    [effectKeys.MANA_SIPHON]: {
-        name: "MANA SIPHON",
-        type: entryTypes.BATTLE_PHASE,
-        description:
-            "A special phase triggered whenever an entity has MANA or MANA OVERFLOW during a phase transition. On this phase, absorbs all MANA and MANA OVERFLOW from each entity, then grants SHACKLED MANA corresponding to the amount consumed on each.",
-    },
 };
 
 export const ACTION_CATEGORY_DESCRIPTIONS = {
@@ -945,21 +718,7 @@ export const ACTION_CATEGORY_DESCRIPTIONS = {
         name: "TRANSFORMATIVE ACTIONS",
         type: entryTypes.CATEGORY,
         description:
-            "A type of ACTION. Includes ARRAY, CURSE, DEPLOY, ATTUNE, DA CAPO, SOUND OF SILENCE, BABEL, SHADOW PACT, BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, DARK PROMISE, CHART, REFRACT, MIRROR, SHATTER, ASCEND and JUDGEMENT.",
-    },
-
-    [entryTypes.ACT_OF_BENEDICTION]: {
-        name: "ACTS OF BENEDICTION",
-        type: entryTypes.CATEGORY,
-        description:
-            "A type of ACTION. Includes BAPTISM OF THE FLAMES, CELESTIAL SCALE, HYMNS OF SANCTIFICATION and GIFT OF APOTHEOSIS. When using an ACT OF BENEDICTION while EYE OF HEAVENS is CLOSED, gains INSPIRATION equal to REVELATION on self.",
-    },
-
-    [entryTypes.ACT_OF_MALEDICTION]: {
-        name: "ACTS OF MALEDICTION",
-        type: entryTypes.CATEGORY,
-        description:
-            "A type of ACTION. Includes SERAPH OF CONDEMNATION, GLIMPSE OF PANDEMONIUM, EDICT OF SEVERANCE and THE WORD MADE FLESH. When using an ACT OF MALEDICTION while EYE OF HEAVENS is OPEN, raises TARNISHED SIN on self by 1% for every REVELATION on self.",
+            "A type of ACTION. Includes ARRAY, CURSE, DEPLOY, ATTUNE, DA CAPO, SOUND OF SILENCE, BABEL, SHADOW PACT, BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, DARK PROMISE, CHART, REFRACT, MIRROR and SHATTER.",
     },
 };
 
@@ -1010,28 +769,28 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, POISON, SHACKLED MANA, BLOOD SACRIFICE, STARDUST, RADIANCE, MOONDUST and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, POISON, SHACKLED MANA, BLOOD SACRIFICE, STARDUST, RADIANCE and MOONDUST. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
         name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that has upper cap. Includes MANA, HEALTH, INSIGHT, ENLIGHTENMENT. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follows that rule; otherwise continues to the next RESOURCE on the list.",
+            "A subset of RESOURCES that has upper cap. Includes MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follows that rule; otherwise continues to the next RESOURCE on the list.",
     },
 
     [entryTypes.FIXED_RESOURCE]: {
         name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, LUNACY, TARNISHED SIN and DIVINE SPARK.",
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, LUNACY and DIVINE SPARK.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, MOONLIT TEARS and BURDEN OF STIGMA.",
+            "A subset of RESOURCES that are rank-based. Includes MANA BLEED and MOONLIT TEARS.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
@@ -1045,7 +804,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "OVERFLOWN RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that can be gained when restoring LIMITED RESOURCES above their cap. Includes SILVER BLOOD, MANA OVERFLOW and INSPIRATION. When consuming LIMITED RESOURCES, consumes the corresponding OVERFLOWN RESOURCES first.",
+            "A subset of RESOURCES that can be gained when restoring LIMITED RESOURCES above their cap. Includes SILVER BLOOD and MANA OVERFLOW. When consuming LIMITED RESOURCES, consumes the corresponding OVERFLOWN RESOURCES first.",
     },
 
     [entryTypes.BATTLE_PHASE]: {
@@ -1078,7 +837,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "ACTION",
         type: entryTypes.CATEGORY,
         description:
-            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, TRANSFORMATIVE ACTIONS, ACTS OF BENEDICTION and ACTS OF MALEDICTION. Most actions automatically advance the turn phase to COMMIT. A player's base actions include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, ARRAY, DEPLOY, ATTUNE, REFRACT, CHART, SHADOW PACT and AEGIS.",
+            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT. A player's base actions include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, ARRAY, DEPLOY, ATTUNE, REFRACT, CHART, SHADOW PACT and AEGIS.",
     },
 };
 
@@ -1395,10 +1154,46 @@ export const SONORITY_DESCRIPTIONS = {
     },
 };
 
+export const ARRAY_DESCRIPTIONS = {
+    [actionKeys.ARRAY]: {
+        name: "ARRAY",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Converts all MANA and MANA OVERFLOW on all entities into SHACKLED MANA. Envelops the battlefield in a RUNIC ARRAY for 3 turns.",
+    },
+
+    [actionKeys.CURSE]: {
+        name: "CURSE",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Ends RUNIC ARRAY. Consumes all SHACKLED MANA from every entity and grants POISON equal to the amount consumed on each.",
+    },
+
+    [effectKeys.RUNIC_ARRAY]: {
+        name: "RUNIC ARRAY",
+        type: entryTypes.FIELD_EFFECT,
+        description:
+            "While active, enables MANA SIPHON and RUNIC PULSE. Replaces ARRAY with CURSE. Disables MANA OVERFLOW turn end effects.",
+    },
+
+    [effectKeys.RUNIC_PULSE]: {
+        name: "RUNIC PULSE",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered after each player's TURN while RUNIC ARRAY is active. On this phase, grants every entity 5 SHACKLED MANA and decreases remaining RUNIC ARRAY duration. If duration reaches 0 due to this effect, does not grant SHACKLED MANA; instead, absorbs all SHACKLED MANA on all entities, then redistributes it evenly between them and ends RUNIC ARRAY.",
+    },
+
+    [effectKeys.MANA_SIPHON]: {
+        name: "MANA SIPHON",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "A special phase triggered whenever an entity has MANA or MANA OVERFLOW during a phase transition. On this phase, absorbs all MANA and MANA OVERFLOW from each entity, then grants SHACKLED MANA corresponding to the amount consumed on each.",
+    },
+};
+
 export const DESCRIPTIONS = {
     ...ACTION_DESCRIPTIONS,
     ...DAMAGE_TYPE_DESCRIPTIONS,
-    ...FIELD_EFFECT_DESCRIPTIONS,
     ...MECHANIC_DESCRIPTIONS,
     ...RESOURCE_DESCRIPTIONS,
     ...STATE_DESCRIPTIONS,
@@ -1410,4 +1205,5 @@ export const DESCRIPTIONS = {
     ...BATTLE_PHASE_DESCRIPTIONS,
     ...SELENIAN_DESCRIPTIONS,
     ...SONORITY_DESCRIPTIONS,
+    ...ARRAY_DESCRIPTIONS,
 };

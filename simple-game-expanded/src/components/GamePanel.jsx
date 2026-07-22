@@ -5,7 +5,6 @@ import StarsPanel from "./StarsPanel";
 import MitigationTracker from "./MitigationTracker"; // Imported tracker component
 
 import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
-import EyeOfHeavens from "./EyeOfHeavens";
 
 function GamePanel({
     game,
@@ -17,6 +16,8 @@ function GamePanel({
     handleElementChange,
     handleSetTooltip,
     handleConstellation,
+    handleClearTooltip,
+    handleAction,
 }) {
     const isSetupPhase = game.status === turnStatus.SETUP;
 
@@ -39,17 +40,7 @@ function GamePanel({
 
             <div className="central-game-panel">
                 <div className="game-panel-upper-elements-container">
-                    <div className="upper-slot left-slot">
-                        {/* Empty Slot to balance out the grid */}
-                    </div>
-
-                    <div className="upper-slot center-slot">
-                        <EyeOfHeavens eyeState={game.eyeOfHeavens} />
-                    </div>
-
-                    <div className="upper-slot right-slot">
-                        {/* Empty Slot to balance out the grid */}
-                    </div>
+                    {/* Empty */}
                 </div>
 
                 <div className="stars-and-game-panel-container">
@@ -70,11 +61,10 @@ function GamePanel({
                     <div
                         className={`stats-panels-container ${game[effectKeys.RUNIC_ARRAY] > 0 ? "array-active" : ""}`}
                     >
-
                         <div className="player-panel-wrapper">
-                            <MitigationTracker 
-                                entity={game.entities[entityKeys.PLAYER_ONE]} 
-                                handleSetTooltip={handleSetTooltip} 
+                            <MitigationTracker
+                                entity={game.entities[entityKeys.PLAYER_ONE]}
+                                handleSetTooltip={handleSetTooltip}
                             />
                             <StatsPanel
                                 game={game}
@@ -83,13 +73,15 @@ function GamePanel({
                                 handleElementChange={handleElementChange}
                                 handleSetTooltip={handleSetTooltip}
                                 handleConstellation={handleConstellation}
+                                handleClearTooltip={handleClearTooltip}
+                                handleAction={handleAction}
                             />
                         </div>
 
                         <div className="player-panel-wrapper panel-reversed">
-                            <MitigationTracker 
-                                entity={game.entities[entityKeys.PLAYER_TWO]} 
-                                handleSetTooltip={handleSetTooltip} 
+                            <MitigationTracker
+                                entity={game.entities[entityKeys.PLAYER_TWO]}
+                                handleSetTooltip={handleSetTooltip}
                             />
                             <StatsPanel
                                 game={game}
@@ -98,6 +90,8 @@ function GamePanel({
                                 handleElementChange={handleElementChange}
                                 handleSetTooltip={handleSetTooltip}
                                 handleConstellation={handleConstellation}
+                                handleClearTooltip={handleClearTooltip}
+                                handleAction={handleAction}
                             />
                         </div>
                     </div>

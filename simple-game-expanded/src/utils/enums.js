@@ -13,11 +13,9 @@ export const roundPhases = Object.freeze({
     PLAYER_ONE_TURN: "p1turn",
     PLAYER_TWO_TURN: "p2turn",
 
-    EMINENCE_TURN: "mainEminenceTurn",
     P1_STARS_TURN: "p1starfall",
     MOON_TURN: "moonPhaseTurn",
     P2_STARS_TURN: "p2Starfall",
-    SPECIAL_EMINENCE_TURN: "spEminenceTurn",
     MANA_SIPHON: "manaSiphon",
 
     POST_P1_RUNIC_PULSE: "p1Pulse",
@@ -109,20 +107,6 @@ export const actionKeys = Object.freeze({
     BABEL: "babel",
     CHART: "chart",
 
-    ASCEND: "ascend",
-
-    BAPTISM_OF_THE_FLAMES: "baptismOfTheFlames",
-    CELESTIAL_SCALE: "celestialScale",
-    HYMNS_OF_SANCTIFICATION: "hymnsOfSanctification",
-    GIFT_OF_APOTHEOSIS: "giftOfApotheosis",
-
-    SERAPH_OF_CONDEMNATION: "seraphOfCondemnation",
-    GLIMPSE_OF_PANDEMONIUM: "glimpseOfPandemonium",
-    EDICT_OF_SEVERANCE: "edictOfSeverance",
-    THE_WORD_MADE_FLESH: "theWordMadeFlesh",
-
-    JUDGEMENT: "judgement",
-
     REFRACT: "refract",
     MIRROR: "mirror",
     LUNAR_STRIKE: "lunarStrike",
@@ -133,6 +117,8 @@ export const actionKeys = Object.freeze({
     LUNAR_SHROUD: "lunarShroud",
     SHATTER: "shatter",
     CHALK: "chalk",
+
+    ASCEND: "ascend",
 });
 
 export const effectKeys = Object.freeze({
@@ -156,33 +142,29 @@ export const effectKeys = Object.freeze({
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
-    ENLIGHTENMENT: "currEnlit",
-    MAX_ENLIGHTENMENT: "maxEnlit",
-    ASCENDENCE_OF_SPIRIT: "ascendenceOfSpirit",
-    EYE_OF_HEAVENS: "eyeOfHeavens",
+
     DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
     OVERHEAT: "currOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
-    CUTOFF_WINGS: "cutoffWings",
-    INSIGHT: "currInsight",
-    MAX_INSIGHT: "maxInsight",
+
+
     BLEAK_DECEPTION: "bleakDeception",
-    SACRED_FLAMES: "sacredFlames",
-    BURDEN_OF_STIGMA: "burdenOfStigma",
-    REVELATION: "revelation",
+
+
+
     RUNIC_ARRAY: "runicArray",
     HEALTH: "currHp",
     MANA: "currMana",
-    TARNISHED_SIN: "currTarnishedSin",
+
     MAX_MANA: "maxMana",
     MAX_HEALTH: "maxHp",
     STR: "str",
     DEF: "def",
     DAMAGE_REDUCTION: "dr",
     DEF_EFFECTIVENESS: "defEffect",
-    ZENITH_OF_MORTALITY: "zenithOfMortality",
+
     WHITE_STAR: "white",
     GRAY_STAR: "gray",
     RED_STAR: "red",
@@ -203,11 +185,10 @@ export const effectKeys = Object.freeze({
     BLUE_STARFALL: "blueStarfall",
     INDIGO_STARFALL: "indigoStarfall",
     VIOLET_STARFALL: "violetStarfall",
-    INSPIRATION: "inspiration",
-    SEVERED_TIME: "severedTime",
+
+
     DIVINE_SPARK: "currDivineSpark",
-    ABANDONED_BY_GRACE: "abandonedByGrace",
-    ANOINTED_PROXY: "anointedProxy",
+
     DYNAMO: "dynamo",
     ENERGY_LEVEL: "energyLevel",
     MIRRORED_MOON: "mirrorMoon",
@@ -231,14 +212,13 @@ export const effectKeys = Object.freeze({
     MANA_IMBALANCE: "manaImbalance",
     RUNIC_PULSE: "runicPulse",
     MANA_SIPHON: "manaSiphon",
-    EMANATION: "emanation",
+
     OFFENSIVE_ACTIONS: "offensiveActions",
     DEFENSIVE_ACTIONS: "defensiveActions",
     TRANSFORMATIVE_ACTIONS: "transformativeActions",
-    ACTS_OF_BENEDICTION: "actsOfBenediction",
-    ACTS_OF_MALEDICTION: "actsOfMalediction",
+
     MOON_PHASE: "moonPhase",
-    ANOINTMENT: "anointment",
+
     FRAGILITY: "fragility",
     DAMAGE_BONUS: "dmgBonus",
     WEAKNESS: "weakness",
@@ -262,15 +242,6 @@ export const effectKeys = Object.freeze({
 
     GRAVITATION: "gravitation",
     SINGULARITY: "singularity",
-
-    
-
-});
-
-export const eyeKeys = Object.freeze({
-    DORMANT: "dormant",
-    OPEN: "open",
-    CLOSED: "closed",
 });
 
 export const moonKeys = Object.freeze({
@@ -301,8 +272,6 @@ export const entryTypes = Object.freeze({
     OFFENSIVE_ACTION: "offensiveActions",
     DEFENSIVE_ACTION: "defensiveActions",
     TRANSFORMATIVE_ACTION: "transformativeActions",
-    ACT_OF_BENEDICTION: "actOfBenediction",
-    ACT_OF_MALEDICTION: "actOfMalediction",
     BASE_ATTRIBUTES: "baseStats",
     SPECIAL_ATTRIBUTES: "alternateStats",
 });
@@ -348,8 +317,6 @@ export const eventKeys = Object.freeze({
     MANA_SIPHON: "manaSiphon",
     RUNIC_PULSE: "runicPulse",
     MOON_PHASE: "moonPhase",
-    EMANATION: "emanation",
-    ANOINTMENT: "anointment",
     VICTORY: "victory",
     DEFEAT: "defeat",
     DRAW: "draw",

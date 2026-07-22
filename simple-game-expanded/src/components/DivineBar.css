@@ -1,0 +1,61 @@
+.divine-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* GradientBar container takes up remaining space */
+.divine-bar > div {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Ascend button styling */
+.divine-bar button {
+    flex-shrink: 0;
+    box-sizing: border-box;
+
+    background-color: #0a0f1d;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.3);
+    animation: pulse-zenith 1.5s infinite alternate;
+    transition: all 0.2s ease-in-out;
+}
+
+.divine-bar button:not(:disabled):hover {
+    background-color: #ffffff;
+    color: #0a0f1d;
+    border-color: #ffd700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+.divine-bar button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(80%);
+    animation: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+@keyframes pulse-zenith {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+}

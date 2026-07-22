@@ -20,8 +20,6 @@ import {
     buildRoundQueue,
     processManaSiphon,
     processRunicPulse,
-    processAnnoitement,
-    processEmanation,
     processPlan,
     buildHistory,
     processActionUse,
@@ -42,7 +40,6 @@ import {
     aiKeys,
     sdmKeys,
     whoStartsKeys,
-    eyeKeys,
     starfallPhases,
     effectKeys,
     progKeys,
@@ -80,8 +77,6 @@ function resetGameState(prev) {
 
         // game logic
         [effectKeys.RUNIC_ARRAY]: 0,
-        [effectKeys.EYE_OF_HEAVENS]: eyeKeys.DORMANT,
-        [effectKeys.SEVERED_TIME]: false,
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -643,20 +638,6 @@ function App() {
                     break;
                 }
 
-                case roundPhases.SPECIAL_EMINENCE_TURN: {
-                    nextState = processAnnoitement(gameState);
-                    delayAmount = 1200;
-                    historyKey = eventKeys.ANOINTMENT;
-                    break;
-                }
-
-                case roundPhases.EMINENCE_TURN: {
-                    nextState = processEmanation(gameState);
-                    delayAmount = 1200;
-                    historyKey = eventKeys.EMANATION;
-                    break;
-                }
-
                 case roundPhases.MOON_TURN: {
                     nextState = processMoonPhase(gameState);
                     delayAmount = 1200;
@@ -970,8 +951,8 @@ function App() {
                     );
 
                     newGame = isSingularity
-                        ? processSingularity(newGame)
-                        : processPlan(newGame);
+                        ? processSingularity(newGame, targetKey, action)
+                        : processPlan(newGame, action);
 
                     newGame = buildHistory(newGame, eventKeys.USE_ACTION, {
                         player: targetKey,
@@ -1173,6 +1154,8 @@ function App() {
                 handleElementChange={handleElementChange}
                 handleSetTooltip={handleSetTooltip}
                 handleConstellation={handleConstellation}
+                handleClearTooltip={handleClearTooltip}
+                handleAction={handleAction}
             />
             <ActionPanel
                 handleAction={handleAction}

@@ -12,7 +12,6 @@ import {
     effectKeys,
     dmgTypes,
     elementalKeys,
-    eyeKeys,
     moonKeys,
     entityKeys,
     turnStatus,
@@ -26,25 +25,6 @@ export function restoreResources(entity, amount) {
     let draftEntity = {
         ...entity,
     };
-
-    // Enlightenment
-    if (entity[effectKeys.MAX_ENLIGHTENMENT] > 0) {
-        const missingEnlit = draftEntity.maxEnlit - draftEntity.currEnlit;
-        const restoredEnlit = Math.min(missingEnlit, amount);
-
-        amount -= restoredEnlit;
-
-        draftEntity = {
-            ...draftEntity,
-            currEnlit: draftEntity.currEnlit + restoredEnlit,
-        };
-    }
-
-    // Insight
-    if (entity[effectKeys.MAX_INSIGHT] > 0) {
-        draftEntity = gainInsight(draftEntity, amount);
-        return draftEntity; // Early return since restoring insight consumes all
-    }
 
     // Health
     if (getEntityMaxHealth(draftEntity) > 0) {
@@ -70,16 +50,6 @@ export function restoreResources(entity, amount) {
         draftEntity = gainMana(draftEntity, amount);
         return draftEntity; // Early return since restoring mana consumes all
     }
-
-    // The rest becomes sacred flames (safeguard, currently unreacheable)
-    draftEntity = {
-        ...draftEntity,
-        resources: {
-            ...draftEntity.resources,
-            [effectKeys.SACRED_FLAMES]:
-                draftEntity.resources[effectKeys.SACRED_FLAMES] + amount,
-        },
-    };
 
     return draftEntity;
 }
@@ -210,13 +180,7 @@ export function createBaseEntity() {
         maxMana: constants.BASE_STATS.mana,
         currMana: constants.BASE_STATS.mana,
 
-        maxEnlit: 0,
-        currEnlit: 0,
-        maxInsight: 0,
-        currInsight: 0,
-
         // fixed resources
-        [effectKeys.TARNISHED_SIN]: 0,
         [effectKeys.DIVINE_SPARK]: 0,
         [effectKeys.DYNAMO]: 0,
         [effectKeys.OVERHEAT]: 0,
@@ -227,7 +191,6 @@ export function createBaseEntity() {
         [effectKeys.GRAVITATION]: 0,
 
         // ranked resources
-        [effectKeys.BURDEN_OF_STIGMA]: 0,
         [effectKeys.MANA_BLEED]: 0,
         [effectKeys.MOONLIT_TEARS]: 0,
         [effectKeys.CONSTELLATION]: 0,
@@ -254,8 +217,7 @@ export function createBaseEntity() {
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
-            [effectKeys.SACRED_FLAMES]: 0,
-            [effectKeys.INSPIRATION]: 0,
+
             [effectKeys.STARDUST]: 0,
             [effectKeys.SILVER_BLOOD]: 0,
             [effectKeys.MOONDUST]: 0,
@@ -298,11 +260,6 @@ export function createBaseEntity() {
 
             // Aegis
             [effectKeys.RADIANT]: false,
-            [effectKeys.CUTOFF_WINGS]: false,
-            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-            [effectKeys.ZENITH_OF_MORTALITY]: false,
-            [effectKeys.ABANDONED_BY_GRACE]: false,
-            [effectKeys.ANOINTED_PROXY]: false,
         },
         stars: {
             [effectKeys.WHITE_STAR]: 0,
@@ -506,25 +463,7 @@ export function dealDamage(
         draftAttacker = takeDamage(draftAttacker, thornsDmg, dmgTypes.PHYSICAL);
     }
 
-    if (draftDefender.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        if (dmgType === dmgTypes.TRUE) {
-            draftDefender = gainSin(draftDefender, damagePostMitigation);
-        } else {
-            draftDefender = loseEnlit(draftDefender, damagePostMitigation);
-
-            draftDefender = {
-                ...draftDefender,
-                resources: {
-                    ...draftDefender.resources,
-                    [effectKeys.INSPIRATION]:
-                        draftDefender.resources[effectKeys.INSPIRATION] +
-                        damagePostMitigation,
-                },
-            };
-        }
-    } else {
-        draftDefender = loseHp(draftDefender, damagePostMitigation);
-    }
+    draftDefender = loseHp(draftDefender, damagePostMitigation);
 
     // Wither Moonlit Gain
     if (isElementActive(draftDefender, elementalKeys.WITHER)) {
@@ -599,25 +538,7 @@ export function takeDamage(entity, baseDmg, dmgType) {
             consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
     }
 
-    if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        if (dmgType === dmgTypes.TRUE) {
-            draftEntity = gainSin(draftEntity, damagePostMitigation);
-        } else {
-            draftEntity = loseEnlit(draftEntity, damagePostMitigation);
-
-            draftEntity = {
-                ...draftEntity,
-                resources: {
-                    ...draftEntity.resources,
-                    [effectKeys.INSPIRATION]:
-                        draftEntity.resources[effectKeys.INSPIRATION] +
-                        damagePostMitigation,
-                },
-            };
-        }
-    } else {
-        draftEntity = loseHp(draftEntity, damagePostMitigation);
-    }
+    draftEntity = loseHp(draftEntity, damagePostMitigation);
 
     // Wither Moonlit Gain
     if (isElementActive(draftEntity, elementalKeys.WITHER)) {
@@ -654,80 +575,7 @@ export function resetPlayerEntity(prev, entityKey) {
     );
 }
 
-export function gainEnlit(entity, amount) {
-    const newEnlit = Math.min(
-        entity[effectKeys.MAX_ENLIGHTENMENT],
-        entity[effectKeys.ENLIGHTENMENT] + amount,
-    );
-
-    return {
-        ...entity,
-        [effectKeys.ENLIGHTENMENT]: newEnlit,
-    };
-}
-
-export function loseEnlit(entity, amount) {
-    const newEnlit = Math.max(0, entity[effectKeys.ENLIGHTENMENT] - amount);
-
-    return {
-        ...entity,
-        [effectKeys.ENLIGHTENMENT]: newEnlit,
-    };
-}
-
-export function gainSin(entity, amount) {
-    const newSin = Math.min(
-        entity[effectKeys.TARNISHED_SIN] + amount,
-        constants.MAX_TARNISHED_SIN,
-    );
-
-    return {
-        ...entity,
-        [effectKeys.TARNISHED_SIN]: newSin,
-    };
-}
-
-export function gainInsight(entity, amount) {
-    const missingInsight = entity.maxInsight - entity.currInsight;
-
-    const newInsight = Math.min(entity.maxInsight, entity.currInsight + amount);
-    const newInspiration =
-        entity.resources[effectKeys.INSPIRATION] +
-        Math.max(0, amount - missingInsight);
-
-    return {
-        ...entity,
-        currInsight: newInsight,
-        resources: {
-            ...entity.resources,
-            [effectKeys.INSPIRATION]: newInspiration,
-        },
-    };
-}
-
-export function loseInsight(entity, amount) {
-    const newInsight = Math.max(0, entity[effectKeys.INSIGHT] - amount);
-
-    return {
-        ...entity,
-        [effectKeys.INSIGHT]: newInsight,
-    };
-}
-
 export function gainHp(entity, amount) {
-    // If on ascendence, restore inspiration and returns early
-    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        const newInspiration =
-            entity.resources[effectKeys.INSPIRATION] + amount;
-        return {
-            ...entity,
-            resources: {
-                ...entity.resources,
-                [effectKeys.INSPIRATION]: newInspiration,
-            },
-        };
-    }
-
     const missingHp = getEntityMaxHealth(entity) - entity[effectKeys.HEALTH];
 
     const hpGained = Math.min(missingHp, amount);
@@ -810,19 +658,6 @@ export function loseHp(entity, amount) {
 }
 
 export function gainMana(entity, amount) {
-    // If on ascendence, restore inspiration and returns early
-    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        const newInspiration =
-            entity.resources[effectKeys.INSPIRATION] + amount;
-        return {
-            ...entity,
-            resources: {
-                ...entity.resources,
-                [effectKeys.INSPIRATION]: newInspiration,
-            },
-        };
-    }
-
     const missingMana = entity.maxMana - entity.currMana;
 
     const newMana = Math.min(entity.maxMana, entity.currMana + amount);
@@ -885,27 +720,6 @@ export function processExitResonant(entity) {
     };
 }
 
-export function processExitAscendence(entity) {
-    let { draftEntity } = consumeResources(
-        entity,
-        Infinity,
-        effectKeys.ASCENDENCE_OF_SPIRIT,
-    );
-
-    draftEntity = {
-        ...draftEntity,
-        [effectKeys.MAX_ENLIGHTENMENT]: 0,
-        [effectKeys.MAX_INSIGHT]: 0,
-        [effectKeys.REVELATION]: 0,
-        states: {
-            ...draftEntity.states,
-            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-        },
-    };
-
-    return processEnterCutoffWings(draftEntity);
-}
-
 export function processExitSelenian(entity) {
     let draftEntity = {
         ...entity,
@@ -929,20 +743,6 @@ export function processExitSelenian(entity) {
     return draftEntity;
 }
 
-export function processEnterCutoffWings(entity) {
-    let draftEntity = {
-        ...entity,
-        [effectKeys.HEALTH]: 1,
-        [effectKeys.MAX_HEALTH]: 1,
-        states: {
-            ...entity.states,
-            [effectKeys.CUTOFF_WINGS]: true,
-        },
-    };
-
-    return draftEntity;
-}
-
 export function exitAllStates(entity) {
     let draftEntity = {
         ...entity,
@@ -954,9 +754,6 @@ export function exitAllStates(entity) {
     if (draftEntity.states[effectKeys.RESONANT]) {
         draftEntity = processExitResonant(draftEntity);
     }
-    if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftEntity = processExitAscendence(draftEntity);
-    }
     if (draftEntity.states[effectKeys.SELENIAN]) {
         draftEntity = processExitSelenian(draftEntity);
     }
@@ -965,8 +762,6 @@ export function exitAllStates(entity) {
         ...draftEntity,
         states: {
             ...createBaseEntity().states,
-            [effectKeys.CUTOFF_WINGS]:
-                draftEntity.states[effectKeys.CUTOFF_WINGS],
         },
     };
 
@@ -983,8 +778,6 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
 
     const isDefensive = actionsClass.defensiveActions.includes(action);
     const isOffensive = actionsClass.offensiveActions.includes(action);
-    const isBenediction = actionsClass.actsOfBenediction.includes(action);
-    const isMalediction = actionsClass.actsOfMalediction.includes(action);
 
     if (isDefensive) {
         // Sonority
@@ -1074,37 +867,6 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
         }
     }
 
-    if (isBenediction) {
-        if (prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
-            const newIns =
-                draftAgent.resources[effectKeys.INSPIRATION] +
-                draftAgent[effectKeys.REVELATION];
-
-            draftAgent = {
-                ...draftAgent,
-                resources: {
-                    ...draftAgent.resources,
-                    [effectKeys.INSPIRATION]: newIns,
-                },
-            };
-        }
-    }
-
-    if (isMalediction) {
-        if (prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
-            const newSin = Math.min(
-                constants.MAX_TARNISHED_SIN,
-                draftAgent[effectKeys.TARNISHED_SIN] +
-                    draftAgent[effectKeys.REVELATION],
-            );
-
-            draftAgent = {
-                ...draftAgent,
-                [effectKeys.TARNISHED_SIN]: newSin,
-            };
-        }
-    }
-
     return {
         ...prev,
         entities: {
@@ -1147,33 +909,11 @@ export function processDeathCheck(prev) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    if (draftEntity[effectKeys.TARNISHED_SIN] >= constants.MAX_TARNISHED_SIN) {
-        draftEntity = {
-            ...draftEntity,
-            states: {
-                ...draftEntity.states,
-                [effectKeys.ABANDONED_BY_GRACE]: true,
-            },
-        };
-    }
-
-    if (
-        draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        draftEntity[effectKeys.ENLIGHTENMENT] <= 0
-    ) {
-        draftEntity = processExitAscendence(draftEntity);
-    }
-
     return processHealth(draftEntity);
 }
 
 export function isEntityDead(entity) {
-    return (
-        (getEntityTotalHealth(entity) <= 0 ||
-            getEntityMaxHealth(entity) <= 0) &&
-        !entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        entity[effectKeys.BURDEN_OF_STIGMA] <= 0
-    );
+    return getEntityTotalHealth(entity) <= 0 || getEntityMaxHealth(entity) <= 0;
 }
 
 export function getEntityElement(entity) {
@@ -1257,17 +997,25 @@ export function getEntityStr(entity) {
         ...entity,
     };
 
+    let bonusSTR = 0;
+
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
     }
 
-    return (
-        draftEntity.attributes.str.value +
-        (isElementActive(draftEntity, elementalKeys.SCORCH)
-            ? draftEntity[effectKeys.MOONLIGHT]
-            : 0) +
-        draftEntity[effectKeys.CRIMSON_CONSTELLATION]
-    );
+    if (entity[effectKeys.DIVINE_SPARK] > 0) {
+        bonusSTR += Math.floor(entity[effectKeys.DIVINE_SPARK] / constants.DIVINE_SPARK_STR_CONVERSION);
+    }
+
+    if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
+        bonusSTR += draftEntity[effectKeys.CRIMSON_CONSTELLATION];
+    }
+
+    if (isElementActive(draftEntity, elementalKeys.SCORCH)) {
+        bonusSTR += draftEntity[effectKeys.MOONLIGHT];
+    }
+
+    return draftEntity.attributes.str.value + bonusSTR;
 }
 
 export function getEntityMaxHealth(entity) {
@@ -1289,14 +1037,6 @@ export function getEntityTotalHealth(entity) {
     return (
         entity[effectKeys.HEALTH] + entity.resources[effectKeys.SILVER_BLOOD]
     );
-}
-
-export function getEntityTotalInsight(entity) {
-    return entity[effectKeys.INSIGHT];
-}
-
-export function getEntityTotalEnlightenment(entity) {
-    return entity[effectKeys.ENLIGHTENMENT];
 }
 
 export function consumeMitigationResources(entity, amount, cause = null) {
@@ -1454,10 +1194,6 @@ export function consumeFreeResources(entity, amount, cause = null) {
                     cause === actionKeys.BLACK_MAYHEM) &&
                 (currResourceKey === effectKeys.SHADOWFLAME ||
                     currResourceKey === effectKeys.UNRELENTING_SHADOWS)
-            ) &&
-            !(
-                cause === actionKeys.GLIMPSE_OF_PANDEMONIUM &&
-                currResourceKey === effectKeys.SACRED_FLAMES
             )
         ) {
             const currAmount = draftEntity.resources[currResourceKey];
@@ -1523,34 +1259,6 @@ export function consumeLimitedResources(entity, amount) {
     limitedResourcesConsumed = {
         ...limitedResourcesConsumed,
         [effectKeys.HEALTH]: healthConsumed,
-    };
-
-    // Insight
-    const insightConsumed = Math.min(
-        getEntityTotalInsight(draftEntity),
-        amount,
-    );
-    draftEntity = loseInsight(draftEntity, insightConsumed);
-    amount -= insightConsumed;
-
-    totalLimitedResourcesConsumption += insightConsumed;
-    limitedResourcesConsumed = {
-        ...limitedResourcesConsumed,
-        [effectKeys.INSIGHT]: insightConsumed,
-    };
-
-    // Enlightenment
-    const enlitConsumed = Math.min(
-        getEntityTotalEnlightenment(draftEntity),
-        amount,
-    );
-    draftEntity = loseEnlit(draftEntity, enlitConsumed);
-    amount -= enlitConsumed;
-
-    totalLimitedResourcesConsumption += enlitConsumed;
-    limitedResourcesConsumed = {
-        ...limitedResourcesConsumed,
-        [effectKeys.ENLIGHTENMENT]: enlitConsumed,
     };
 
     // total
@@ -1874,22 +1582,12 @@ export function canUseAction(prev, entityKey, action) {
     const states = entity.states;
 
     // Exclusive Overriding Ultimate States
-    if (states[effectKeys.ZENITH_OF_MORTALITY]) {
-        return action === actionKeys.ASCEND;
-    }
     if (states[effectKeys.THERMAL_OVERLOAD]) {
         return action === actionKeys.MELTDOWN;
     }
-    if (states[effectKeys.ANOINTED_PROXY]) {
-        return action === actionKeys.JUDGEMENT;
-    }
 
     // Reject ultimate actions if their corresponding state overrides are not active
-    if (
-        [actionKeys.ASCEND, actionKeys.MELTDOWN, actionKeys.JUDGEMENT].includes(
-            action,
-        )
-    ) {
+    if ([actionKeys.MELTDOWN].includes(action)) {
         return false;
     }
 
@@ -1904,24 +1602,6 @@ export function canUseAction(prev, entityKey, action) {
         return umbralActions.includes(action);
     }
     if (umbralActions.includes(action)) {
-        return false;
-    }
-
-    // Angel Actions (Acts of Benediction & Malediction)
-    const angelActions = [
-        actionKeys.BAPTISM_OF_THE_FLAMES,
-        actionKeys.CELESTIAL_SCALE,
-        actionKeys.HYMNS_OF_SANCTIFICATION,
-        actionKeys.GIFT_OF_APOTHEOSIS,
-        actionKeys.SERAPH_OF_CONDEMNATION,
-        actionKeys.GLIMPSE_OF_PANDEMONIUM,
-        actionKeys.EDICT_OF_SEVERANCE,
-        actionKeys.THE_WORD_MADE_FLESH,
-    ];
-    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        return angelActions.includes(action);
-    }
-    if (angelActions.includes(action)) {
         return false;
     }
 
@@ -2063,9 +1743,10 @@ export function canUseAction(prev, entityKey, action) {
         if (isElementActive(entity, elementalKeys.FROST)) {
             return false;
         }
-        if (states[effectKeys.CUTOFF_WINGS]) {
+        if(getEntityDef(entity) <= 0) {
             return false;
         }
+        
         return !isProgLocked(aiKeys.PALADIN);
     }
 
@@ -2091,28 +1772,8 @@ export function getActions(prev, entityKey) {
     const states = entity.states;
 
     // Ultimate Action Overrides
-    if (states[effectKeys.ZENITH_OF_MORTALITY]) {
-        return [actionKeys.ASCEND];
-    }
     if (states[effectKeys.THERMAL_OVERLOAD]) {
         return [actionKeys.MELTDOWN];
-    }
-    if (states[effectKeys.ANOINTED_PROXY]) {
-        return [actionKeys.JUDGEMENT];
-    }
-
-    // Angel Actions (Acts of Benediction & Malediction)
-    if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        return [
-            actionKeys.BAPTISM_OF_THE_FLAMES,
-            actionKeys.CELESTIAL_SCALE,
-            actionKeys.HYMNS_OF_SANCTIFICATION,
-            actionKeys.GIFT_OF_APOTHEOSIS,
-            actionKeys.SERAPH_OF_CONDEMNATION,
-            actionKeys.GLIMPSE_OF_PANDEMONIUM,
-            actionKeys.EDICT_OF_SEVERANCE,
-            actionKeys.THE_WORD_MADE_FLESH,
-        ];
     }
 
     // Umbral Core Actions
@@ -2163,6 +1824,13 @@ export function getActions(prev, entityKey) {
         actions.push(actionKeys.SACRIFICE);
     }
 
+    // Aegis / Lunar Shroud
+    if (isElementActive(entity, elementalKeys.FROST)) {
+        actions.push(actionKeys.LUNAR_SHROUD);
+    } else {
+        actions.push(actionKeys.AEGIS);
+    }
+
     // Array / Curse
     const arrayActive = prev[effectKeys.RUNIC_ARRAY] > 0;
     if (arrayActive) {
@@ -2193,6 +1861,12 @@ export function getActions(prev, entityKey) {
         }
     }
 
+    // Shadow Pact
+    actions.push(actionKeys.SHADOW_PACT);
+
+    // Chart
+    actions.push(actionKeys.CHART);
+
     // Refract Transformations
     if (!states[effectKeys.SELENIAN]) {
         actions.push(actionKeys.REFRACT);
@@ -2206,19 +1880,6 @@ export function getActions(prev, entityKey) {
                 actions.push(actionKeys.MIRROR);
             }
         }
-    }
-
-    // Chart
-    actions.push(actionKeys.CHART);
-
-    // Shadow Pact
-    actions.push(actionKeys.SHADOW_PACT);
-
-    // Aegis / Lunar Shroud
-    if (isElementActive(entity, elementalKeys.FROST)) {
-        actions.push(actionKeys.LUNAR_SHROUD);
-    } else {
-        actions.push(actionKeys.AEGIS);
     }
 
     return actions;

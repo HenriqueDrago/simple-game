@@ -1,6 +1,7 @@
 import { constants, presetAi } from "./constants.js";
 import { simulators } from "./simulators.js";
 import {
+    canUseAction,
     getEntityDef,
     getEntityMaxHealth,
     getEntityTotalHealth,
@@ -11,13 +12,7 @@ import {
     restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
-import {
-    actionKeys,
-    effectKeys,
-    elementalKeys,
-    eyeKeys,
-    moonKeys,
-} from "./enums.js";
+import { actionKeys, effectKeys, elementalKeys, moonKeys } from "./enums.js";
 import { commitTurn, processUpkeep } from "./turnManagement.js";
 
 // Auxiliary Functions
@@ -43,22 +38,11 @@ function willEntityDieImmediately(entity) {
 }
 
 function willEntityEffectivelyDie(entity) {
-    if (entity[effectKeys.BURDEN_OF_STIGMA] > 0) {
-        return false;
-    }
-
-    if (entity[effectKeys.TARNISHED_SIN] >= 100) {
+    if (getEntityTotalHealth(entity) <= 0) {
         return true;
     }
 
-    if (entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        if (entity[effectKeys.ENLIGHTENMENT] <= 0) {
-            return true;
-        }
-        return false;
-    }
-
-    if (getEntityTotalHealth(entity) <= 0) {
+    if (getEntityMaxHealth(entity) <= 0) {
         return true;
     }
 
@@ -322,11 +306,6 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         caller = shadowSorcererAI;
     }
 
-    // Use Angel AI if on Ascendence
-    if (agent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        caller = angelAI;
-    }
-
     // Process Stars
     const assignedStars = assignStarsAI(context);
 
@@ -348,16 +327,6 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     let action = caller(context);
 
     // Action overrides
-    // Use Judgement if Annointed
-    if (agent.states[effectKeys.ANOINTED_PROXY]) {
-        action = actionKeys.JUDGEMENT;
-    }
-
-    // Use Ascend if on Zenith
-    if (agent.states[effectKeys.ZENITH_OF_MORTALITY]) {
-        action = actionKeys.ASCEND;
-    }
-
     // Use Meltdown if on Overload
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         action = actionKeys.MELTDOWN;
@@ -530,30 +499,17 @@ export function bloodknightAI(context) {
     /*
     Conditions
     - We'll deal a considerable amount of damage
-    = half their max health (or a third of enlit if they're ascended)
+    = half their max health
     */
-    if (nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        const enemyEnlitLost =
-            nonAgent[effectKeys.ENLIGHTENMENT] -
-            simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
+    const enemyHealthLost =
+        getEntityTotalHealth(nonAgent) -
+        getEntityTotalHealth(simAttack.entities[nonAgentKey]);
 
-        if (
-            enemyEnlitLost >= nonAgent[effectKeys.MAX_ENLIGHTENMENT] * 0.25 ||
-            simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT] <= 0
-        ) {
-            return actionKeys.ATTACK;
-        }
-    } else {
-        const enemyHealthLost =
-            getEntityTotalHealth(nonAgent) -
-            getEntityTotalHealth(simAttack.entities[nonAgentKey]);
-
-        if (
-            enemyHealthLost >= getEntityMaxHealth(nonAgent) * 0.5 ||
-            simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0
-        ) {
-            return actionKeys.ATTACK;
-        }
+    if (
+        enemyHealthLost >= getEntityMaxHealth(nonAgent) * 0.5 ||
+        simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0
+    ) {
+        return actionKeys.ATTACK;
     }
 
     // Sacrifice to accumulate damage
@@ -598,23 +554,34 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const { agent, agentKey, nonAgentKey } = context;
+    const { prev, agent, agentKey, nonAgentKey } = context;
 
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
 
-    // Use ATTACK if it kills
+    // Use Attack if it kills
     if (willEntityEffectivelyDieByNextUpkeep(simAtk, nonAgentKey, agentKey)) {
         return actionKeys.ATTACK;
     }
 
-    // Use AEGIS if available
-    if (!agent.states[effectKeys.CUTOFF_WINGS]) {
-        return actionKeys.AEGIS;
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+
+    // Use Special Attack if it kills
+    if (willEntityEffectivelyDieByNextUpkeep(simSpecial, nonAgentKey, agentKey)) {
+        return actionKeys.SPECIAL_ATTACK;
     }
 
-    // otherwise, play selenian
-    return lunaticAI(context);
+    if(agent.resources[effectKeys.RADIANCE] >= getEntityTotalHealth(agent) * 0.5) {
+        return actionKeys.ATTACK;
+    }
+
+    // If cannot use Aegis or at Max Divine Spark, use Warlock AI
+    if(!canUseAction(prev, agentKey, actionKeys.AEGIS) || agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK) {
+        return warlockAI(context);
+    }
+
+    // default: Aegis
+    return actionKeys.AEGIS;
 }
 
 export function hexerAI(context) {
@@ -1016,131 +983,6 @@ export function maestroAI(context) {
     return actionKeys.GUARD;
 }
 
-export function angelAI(context) {
-    const { prev, agent, nonAgent, agentKey, nonAgentKey } = context;
-    const simulate = createSimulator(context);
-
-    const isEyeOpen = prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN;
-
-    const maledictionSafe =
-        !isEyeOpen ||
-        agent[effectKeys.REVELATION] <
-            constants.MAX_TARNISHED_SIN - agent[effectKeys.TARNISHED_SIN];
-
-    // 1. Seraph kill
-    const simSeraph = simulate(actionKeys.SERAPH_OF_CONDEMNATION);
-
-    if (
-        maledictionSafe &&
-        willEntityEffectivelyDieByNextUpkeep(simSeraph, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.SERAPH_OF_CONDEMNATION;
-    }
-
-    // 2. Flames kill
-    const simFlames = simulate(actionKeys.BAPTISM_OF_THE_FLAMES);
-
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simFlames, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.BAPTISM_OF_THE_FLAMES;
-    }
-
-    // 3. Hymmns
-    const simHymmnsAgent = simulate(actionKeys.HYMNS_OF_SANCTIFICATION)
-        .entities[agentKey];
-
-    // Case 1: we have poison
-    if (agent.resources[effectKeys.POISON] > 0) {
-        return actionKeys.HYMNS_OF_SANCTIFICATION;
-    }
-
-    // Case 2: we're low on enlit and this will recover it significantly (20%+)
-    if (
-        agent[effectKeys.ENLIGHTENMENT] <
-            agent[effectKeys.MAX_ENLIGHTENMENT] * 0.5 &&
-        simHymmnsAgent[effectKeys.ENLIGHTENMENT] >
-            agent[effectKeys.ENLIGHTENMENT] +
-                agent[effectKeys.MAX_ENLIGHTENMENT] * 0.2
-    ) {
-        return actionKeys.HYMNS_OF_SANCTIFICATION;
-    }
-
-    // 4. Celestial Scale
-    /* 
-    Conditions:
-    - Won't bring us to low enligtement
-    - Will raise Insight considerably (>15)
-    - Won't waste much (more than 5) inspiration
-    */
-    const simScaleAgent = simulate(actionKeys.CELESTIAL_SCALE).entities[
-        agentKey
-    ];
-
-    const missingInsightPostScale =
-        simScaleAgent[effectKeys.MAX_INSIGHT] -
-        simScaleAgent[effectKeys.INSIGHT];
-
-    if (
-        simScaleAgent[effectKeys.ENLIGHTENMENT] >=
-            simScaleAgent[effectKeys.MAX_ENLIGHTENMENT] * 0.5 &&
-        simScaleAgent[effectKeys.INSIGHT] - agent[effectKeys.INSIGHT] >= 15 &&
-        missingInsightPostScale - 5 >=
-            simScaleAgent.resources[effectKeys.INSPIRATION]
-    ) {
-        return actionKeys.CELESTIAL_SCALE;
-    }
-
-    // 5. Glimpse
-    /* 
-    Conditions:
-    - eye is not open
-    - enemy is not on ascendence
-    - enemy has resources we wanna get rid of
-    */
-    const undesirableResources =
-        nonAgent.resources[effectKeys.BLOOD_SACRIFICE] +
-        nonAgent.resources[effectKeys.RADIANCE] +
-        nonAgent.resources[effectKeys.MOONDUST];
-    if (
-        !isEyeOpen &&
-        !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        nonAgent.resources[effectKeys.SACRED_FLAMES] >=
-            undesirableResources * 0.4 &&
-        undesirableResources >= 10
-    ) {
-        return actionKeys.GLIMPSE_OF_PANDEMONIUM;
-    }
-
-    // 6. Flames
-
-    // Case 1: Enemy has ascended or has a high amount of divine spark
-    if (
-        nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
-        nonAgent[effectKeys.DIVINE_SPARK] > constants.MAX_DIVINE_SPARK * 0.5
-    ) {
-        return actionKeys.BAPTISM_OF_THE_FLAMES;
-    }
-
-    // Case 2: Enemy has a resource we want to consume and not enough flame
-    if (
-        !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        undesirableResources >= 10 &&
-        nonAgent.resources[effectKeys.SACRED_FLAMES] <
-            undesirableResources * 0.4
-    ) {
-        return actionKeys.BAPTISM_OF_THE_FLAMES;
-    }
-
-    // 7. Seraph if malediction is safe
-    if (maledictionSafe) {
-        return actionKeys.SERAPH_OF_CONDEMNATION;
-    }
-
-    // 8. flames fall back
-    return actionKeys.BAPTISM_OF_THE_FLAMES;
-}
-
 /* Starfarer AI
 - Use Attack or Special Attack if it can finish the enemy
 - Use Chart otherwise
@@ -1183,7 +1025,7 @@ export function starfarerAI(context) {
 - decides which action to use according to the element received
 */
 export function lunaticAI(context) {
-    const { agent, nonAgent, agentKey, nonAgentKey, selectedElement } = context;
+    const { agent, agentKey, nonAgentKey, selectedElement } = context;
 
     // Enter Selenian if not already on it
     if (!agent.states[effectKeys.SELENIAN]) {
@@ -1223,20 +1065,6 @@ export function lunaticAI(context) {
             const enemyHpAttack = getEntityTotalHealth(
                 simAttack.entities[nonAgentKey],
             );
-
-            const enemyEnlitStrike =
-                simStrike.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
-
-            const enemyEnlitAttack =
-                simAttack.entities[nonAgentKey][effectKeys.ENLIGHTENMENT];
-
-            if (nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-                if (enemyEnlitStrike <= enemyEnlitAttack) {
-                    return actionKeys.LUNAR_STRIKE;
-                } else {
-                    return actionKeys.ATTACK;
-                }
-            }
 
             if (enemyHpStrike <= enemyHpAttack) {
                 return actionKeys.LUNAR_STRIKE;

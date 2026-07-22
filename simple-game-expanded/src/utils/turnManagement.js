@@ -3,13 +3,10 @@ import { DESCRIPTIONS } from "./descriptions.js";
 import {
     canUseAction,
     consumeResources,
-    exitAllStates,
     gainHp,
-    gainInsight,
     gainMana,
     getEntityColoredStars,
     getEntityElement,
-    getEntityMaxHealth,
     getEntityTotalMana,
     isElementActive,
     loseMana,
@@ -23,7 +20,6 @@ import {
     entityKeys,
     actionKeys,
     effectKeys,
-    eyeKeys,
     dmgTypes,
     starfallPhases,
     moonKeys,
@@ -44,465 +40,359 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
-    let newEye = prev[effectKeys.EYE_OF_HEAVENS];
-    if (!prev[effectKeys.SEVERED_TIME]) {
-        // Starflare
-        if (draftTarget[effectKeys.STARFLARE] >= constants.MAX_STARFLARE) {
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.STARFLARE]: 0,
-                states: {
-                    ...draftTarget.states,
-                    [effectKeys.NOVA]: true,
-                },
-            };
-        }
-        // Dome
-        if (draftTarget.resources[effectKeys.DOME] > 0) {
-            const newStardust =
-                draftTarget.resources[effectKeys.STARDUST] +
-                draftTarget.resources[effectKeys.DOME];
+    // Starflare
+    if (draftTarget[effectKeys.STARFLARE] >= constants.MAX_STARFLARE) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.STARFLARE]: 0,
+            states: {
+                ...draftTarget.states,
+                [effectKeys.NOVA]: true,
+            },
+        };
+    }
+    // Dome
+    if (draftTarget.resources[effectKeys.DOME] > 0) {
+        const newStardust =
+            draftTarget.resources[effectKeys.STARDUST] +
+            draftTarget.resources[effectKeys.DOME];
 
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.DOME]: 0,
-                    [effectKeys.STARDUST]: newStardust,
-                },
-            };
-        }
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.DOME]: 0,
+                [effectKeys.STARDUST]: newStardust,
+            },
+        };
+    }
 
-        // Firmament
-        if (draftTarget.resources[effectKeys.FIRMAMENT] > 0) {
-            const newDome =
-                draftTarget.resources[effectKeys.DOME] +
-                draftTarget.resources[effectKeys.FIRMAMENT];
+    // Firmament
+    if (draftTarget.resources[effectKeys.FIRMAMENT] > 0) {
+        const newDome =
+            draftTarget.resources[effectKeys.DOME] +
+            draftTarget.resources[effectKeys.FIRMAMENT];
 
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.DOME]: newDome,
-                    [effectKeys.FIRMAMENT]: 0,
-                },
-            };
-        }
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.DOME]: newDome,
+                [effectKeys.FIRMAMENT]: 0,
+            },
+        };
+    }
 
-        // Dome
-        if (draftTarget.resources[effectKeys.STARLIT_HEAVENS] > 0) {
-            const newFirmament =
-                draftTarget.resources[effectKeys.FIRMAMENT] +
-                draftTarget.resources[effectKeys.STARLIT_HEAVENS];
+    // Starlit Heavens
+    if (draftTarget.resources[effectKeys.STARLIT_HEAVENS] > 0) {
+        const newFirmament =
+            draftTarget.resources[effectKeys.FIRMAMENT] +
+            draftTarget.resources[effectKeys.STARLIT_HEAVENS];
 
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.STARLIT_HEAVENS]: 0,
-                    [effectKeys.FIRMAMENT]: newFirmament,
-                },
-            };
-        }
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.STARLIT_HEAVENS]: 0,
+                [effectKeys.FIRMAMENT]: newFirmament,
+            },
+        };
+    }
 
-        // Stardust
-        if (draftTarget.resources[effectKeys.STARDUST] > 0) {
-            const newStardust =
-                draftTarget.resources[effectKeys.STARDUST] %
-                constants.STARDUST_RATE_CONVERSION;
-            const newWhites =
-                draftTarget.stars[effectKeys.WHITE_STAR] +
-                Math.floor(
-                    draftTarget.resources[effectKeys.STARDUST] /
-                        constants.STARDUST_RATE_CONVERSION,
-                );
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.STARDUST]: newStardust,
-                },
-                stars: {
-                    ...draftTarget.stars,
-                    [effectKeys.WHITE_STAR]: newWhites,
-                },
-            };
-        }
-
-        // Moon Dew
-        if (draftTarget.states[effectKeys.MOON_DEW]) {
-            draftTarget = restoreResources(
-                draftTarget,
-                draftTarget[effectKeys.MOONLIGHT],
+    // Stardust
+    if (draftTarget.resources[effectKeys.STARDUST] > 0) {
+        const newStardust =
+            draftTarget.resources[effectKeys.STARDUST] %
+            constants.STARDUST_RATE_CONVERSION;
+        const newWhites =
+            draftTarget.stars[effectKeys.WHITE_STAR] +
+            Math.floor(
+                draftTarget.resources[effectKeys.STARDUST] /
+                    constants.STARDUST_RATE_CONVERSION,
             );
 
-            draftTarget = {
-                ...draftTarget,
-                states: {
-                    ...draftTarget.states,
-                    [effectKeys.MOON_DEW]: false,
-                },
-            };
-        }
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.STARDUST]: newStardust,
+            },
+            stars: {
+                ...draftTarget.stars,
+                [effectKeys.WHITE_STAR]: newWhites,
+            },
+        };
+    }
 
-        // Harmony
-        if (draftTarget.resources[effectKeys.HARMONY] > 0) {
-            draftTarget = restoreResources(
-                draftTarget,
-                draftTarget.resources[effectKeys.HARMONY],
-            );
+    // Moon Dew
+    if (draftTarget.states[effectKeys.MOON_DEW]) {
+        draftTarget = restoreResources(
+            draftTarget,
+            draftTarget[effectKeys.MOONLIGHT],
+        );
 
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.HARMONY]: 0,
-                },
-            };
-        }
-
-        // Unrelenting Shadows
-        if (draftTarget.resources.unrelentingShadows > 0) {
-            draftTarget = restoreResources(
-                draftTarget,
-                draftTarget.resources.unrelentingShadows,
-            );
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    unrelentingShadows: 0,
-                },
-            };
-        }
-
-        // Distilled Toxin
-        if (draftTarget.resources[effectKeys.DISTILLED_TOXIN] > 0) {
-            const toxinConsumed = Math.ceil(
-                draftTarget.resources[effectKeys.DISTILLED_TOXIN] / 2,
-            );
-
-            draftTarget = gainMana(draftTarget, toxinConsumed);
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.DISTILLED_TOXIN]:
-                        draftTarget.resources[effectKeys.DISTILLED_TOXIN] -
-                        toxinConsumed,
-                },
-            };
-        }
-
-        // Shadowflame
-        if (
-            draftTarget.resources.shadowflame > 0 &&
-            !draftTarget.states.darkEmbrace
-        ) {
-            const { draftEntity, resourcesConsumed } = consumeResources(
-                draftTarget,
-                draftTarget.resources.shadowflame,
-                effectKeys.SHADOWFLAME,
-            );
-
-            draftTarget = {
-                ...draftEntity,
-            };
-
-            const newShadowflame =
-                draftTarget.resources.shadowflame +
-                resourcesConsumed.totalConsumption;
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    shadowflame: newShadowflame,
-                },
-            };
-        }
-
-        // Lingering Embers
-        if (draftTarget.resources.lingeringEmber > 0) {
-            const halvedLE = Math.ceil(
-                draftTarget.resources.lingeringEmber / 2,
-            );
-
-            const newLE = draftTarget.resources.lingeringEmber - halvedLE;
-            const newCinders = draftTarget.resources.cinders + halvedLE;
-            const newSF = draftTarget.resources.shadowflame + halvedLE;
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    lingeringEmber: newLE,
-                    cinders: newCinders,
-                    shadowflame: newSF,
-                },
-            };
-        }
-
-        // Umbral Core
-        if (
-            draftTarget.states.umbralCore &&
-            draftTarget.resources.lingeringEmber <= 0 &&
-            draftTarget.resources.shadowflame <= 0
-        ) {
-            draftTarget = {
-                ...draftTarget,
-                states: {
-                    ...draftTarget.states,
-                    umbralCore: false,
-                    bleakDeception: true,
-                },
-            };
-        }
-
-        // Shattered
-        if (isElementActive(draftTarget, elementalKeys.SHATTERED)) {
-            draftTarget = takeDamage(
-                draftTarget,
-                draftTarget[effectKeys.MOONLIGHT],
-                dmgTypes.LUNIC,
-            );
-        }
-
-        // Poison
-        if (
-            draftTarget.resources.poison > 0 &&
-            !draftTarget.states.dimmingDarkness
-        ) {
-            draftTarget = takeDamage(
-                draftTarget,
-                draftTarget.resources.poison,
-                dmgTypes.TRUE,
-            );
-        }
-
-        // Mana Bleed
-        if (draftTarget[effectKeys.MANA_BLEED] > 0) {
-            const manaBleed = Math.min(
-                getEntityTotalMana(draftTarget),
-                draftTarget[effectKeys.MANA_BLEED],
-            );
-
-            draftTarget = loseMana(draftTarget, manaBleed);
-            draftTarget = gainHp(draftTarget, manaBleed);
-        }
-
-        // Deployment
-        if (draftTarget.states.deployment) {
-            draftTarget = {
-                ...draftTarget,
-                states: {
-                    ...draftTarget.states,
-                    deployment: false,
-                    weaponsDeployed: true,
-                },
-            };
-        }
-
-        // Venting
-        if (draftTarget.states[effectKeys.VENTING]) {
-            const overheatConsumed = Math.min(
-                constants.VENTING_OVERHEAT_LOSS,
-                draftTarget[effectKeys.OVERHEAT],
-            );
-
-            const newOverheat =
-                draftTarget[effectKeys.OVERHEAT] - overheatConsumed;
-            const newDynamo = Math.min(
-                constants.MAX_DYNAMO,
-                draftTarget[effectKeys.DYNAMO] + overheatConsumed,
-            );
-
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.OVERHEAT]: newOverheat,
-                [effectKeys.DYNAMO]: newDynamo,
-                states: {
-                    ...draftTarget.states,
-                    [effectKeys.VENTING]: newOverheat > 0,
-                    [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
-                },
-            };
-        }
-
-        // Dynamo
-        if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.DYNAMO]: 0,
-                [effectKeys.ENERGY_LEVEL]:
-                    draftTarget[effectKeys.ENERGY_LEVEL] + 1,
-            };
-        }
-
-        // Sacred Flames
-        if (draftTarget.resources[effectKeys.SACRED_FLAMES] > 0) {
-            let remainingFlames =
-                draftTarget.resources[effectKeys.SACRED_FLAMES];
-
-            const sparkConsumed = Math.min(
-                remainingFlames,
-                draftTarget[effectKeys.DIVINE_SPARK],
-            );
-            remainingFlames -= sparkConsumed;
-
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.DIVINE_SPARK]:
-                    draftTarget[effectKeys.DIVINE_SPARK] - sparkConsumed,
-            };
-
-            const enlitConsumed = Math.min(
-                remainingFlames,
-                draftTarget[effectKeys.ENLIGHTENMENT],
-            );
-            remainingFlames -= enlitConsumed;
-
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.ENLIGHTENMENT]:
-                    draftTarget[effectKeys.ENLIGHTENMENT] - enlitConsumed,
-            };
-
-            const missingHp =
-                getEntityMaxHealth(draftTarget) -
-                draftTarget[effectKeys.HEALTH];
-
-            const hpRestored = Math.min(missingHp, remainingFlames);
-            const newFlames = remainingFlames - hpRestored;
-
-            draftTarget = gainHp(draftTarget, hpRestored);
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.SACRED_FLAMES]: newFlames,
-                },
-            };
-        }
-
-        // Inspiration
-        if (draftTarget.resources[effectKeys.INSPIRATION] > 0) {
-            const missingInsight =
-                draftTarget[effectKeys.MAX_INSIGHT] -
-                draftTarget[effectKeys.INSIGHT];
-
-            const insightRestored = Math.min(
-                missingInsight,
-                draftTarget.resources[effectKeys.INSPIRATION],
-            );
-            const newInspiration =
-                draftTarget.resources[effectKeys.INSPIRATION] - insightRestored;
-
-            draftTarget = gainInsight(draftTarget, insightRestored);
-
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.INSPIRATION]: newInspiration,
-                },
-            };
-        }
-
-        // Refracted Divinity
-        if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
-            const newLunacy = Math.min(
-                draftTarget.resources[effectKeys.REFRACTED_DIVINITY] +
-                    draftTarget[effectKeys.LUNACY],
-                constants.MAX_LUNACY,
-            );
-
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.LUNACY]: newLunacy,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.REFRACTED_DIVINITY]: 0,
-                },
-            };
-        }
-
-        // Lunacy
-        if (draftTarget[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
-            };
-        }
-
-        // Halo
-        if (draftTarget.resources.halo > 0) {
-            const newSpark = Math.min(
-                draftTarget.resources.halo +
-                    draftTarget[effectKeys.DIVINE_SPARK],
-                constants.MAX_DIVINE_SPARK,
-            );
-
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.DIVINE_SPARK]: newSpark,
-                resources: {
-                    ...draftTarget.resources,
-                    halo: 0,
-                },
-            };
-        }
-
-        // Divine Spark
-        if (
-            draftTarget[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK
-        ) {
-            draftTarget = {
-                ...draftTarget,
-                states: {
-                    ...draftTarget.states,
-                    [effectKeys.ZENITH_OF_MORTALITY]: true,
-                },
-            };
-
-            if (newEye === eyeKeys.DORMANT) {
-                newEye = eyeKeys.CLOSED;
-            }
-        }
-
-        // Burden
-        if (draftTarget[effectKeys.BURDEN_OF_STIGMA] > 0) {
-            draftTarget = {
-                ...draftTarget,
-                [effectKeys.BURDEN_OF_STIGMA]:
-                    draftTarget[effectKeys.BURDEN_OF_STIGMA] - 1,
-            };
-        }
-
-        // States cleared at turn start
         draftTarget = {
             ...draftTarget,
             states: {
                 ...draftTarget.states,
-                guarding: false,
-                sacrificial: false,
-                radiant: false,
-                darkEmbrace: false,
-                dimmingDarkness: false,
-                [effectKeys.PRISMATIC]: false,
+                [effectKeys.MOON_DEW]: false,
             },
         };
     }
+
+    // Harmony
+    if (draftTarget.resources[effectKeys.HARMONY] > 0) {
+        draftTarget = restoreResources(
+            draftTarget,
+            draftTarget.resources[effectKeys.HARMONY],
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.HARMONY]: 0,
+            },
+        };
+    }
+
+    // Unrelenting Shadows
+    if (draftTarget.resources.unrelentingShadows > 0) {
+        draftTarget = restoreResources(
+            draftTarget,
+            draftTarget.resources.unrelentingShadows,
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                unrelentingShadows: 0,
+            },
+        };
+    }
+
+    // Distilled Toxin
+    if (draftTarget.resources[effectKeys.DISTILLED_TOXIN] > 0) {
+        const toxinConsumed = Math.ceil(
+            draftTarget.resources[effectKeys.DISTILLED_TOXIN] / 2,
+        );
+
+        draftTarget = gainMana(draftTarget, toxinConsumed);
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.DISTILLED_TOXIN]:
+                    draftTarget.resources[effectKeys.DISTILLED_TOXIN] -
+                    toxinConsumed,
+            },
+        };
+    }
+
+    // Shadowflame
+    if (
+        draftTarget.resources.shadowflame > 0 &&
+        !draftTarget.states.darkEmbrace
+    ) {
+        const { draftEntity, resourcesConsumed } = consumeResources(
+            draftTarget,
+            draftTarget.resources.shadowflame,
+            effectKeys.SHADOWFLAME,
+        );
+
+        draftTarget = {
+            ...draftEntity,
+        };
+
+        const newShadowflame =
+            draftTarget.resources.shadowflame +
+            resourcesConsumed.totalConsumption;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                shadowflame: newShadowflame,
+            },
+        };
+    }
+
+    // Lingering Embers
+    if (draftTarget.resources.lingeringEmber > 0) {
+        const halvedLE = Math.ceil(draftTarget.resources.lingeringEmber / 2);
+
+        const newLE = draftTarget.resources.lingeringEmber - halvedLE;
+        const newCinders = draftTarget.resources.cinders + halvedLE;
+        const newSF = draftTarget.resources.shadowflame + halvedLE;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                lingeringEmber: newLE,
+                cinders: newCinders,
+                shadowflame: newSF,
+            },
+        };
+    }
+
+    // Umbral Core
+    if (
+        draftTarget.states.umbralCore &&
+        draftTarget.resources.lingeringEmber <= 0 &&
+        draftTarget.resources.shadowflame <= 0
+    ) {
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                umbralCore: false,
+                bleakDeception: true,
+            },
+        };
+    }
+
+    // Shattered
+    if (isElementActive(draftTarget, elementalKeys.SHATTERED)) {
+        draftTarget = takeDamage(
+            draftTarget,
+            draftTarget[effectKeys.MOONLIGHT],
+            dmgTypes.LUNIC,
+        );
+    }
+
+    // Poison
+    if (
+        draftTarget.resources.poison > 0 &&
+        !draftTarget.states.dimmingDarkness
+    ) {
+        draftTarget = takeDamage(
+            draftTarget,
+            draftTarget.resources.poison,
+            dmgTypes.TRUE,
+        );
+    }
+
+    // Mana Bleed
+    if (draftTarget[effectKeys.MANA_BLEED] > 0) {
+        const manaBleed = Math.min(
+            getEntityTotalMana(draftTarget),
+            draftTarget[effectKeys.MANA_BLEED],
+        );
+
+        draftTarget = loseMana(draftTarget, manaBleed);
+        draftTarget = gainHp(draftTarget, manaBleed);
+    }
+
+    // Deployment
+    if (draftTarget.states.deployment) {
+        draftTarget = {
+            ...draftTarget,
+            states: {
+                ...draftTarget.states,
+                deployment: false,
+                weaponsDeployed: true,
+            },
+        };
+    }
+
+    // Venting
+    if (draftTarget.states[effectKeys.VENTING]) {
+        const overheatConsumed = Math.min(
+            constants.VENTING_OVERHEAT_LOSS,
+            draftTarget[effectKeys.OVERHEAT],
+        );
+
+        const newOverheat = draftTarget[effectKeys.OVERHEAT] - overheatConsumed;
+        const newDynamo = Math.min(
+            constants.MAX_DYNAMO,
+            draftTarget[effectKeys.DYNAMO] + overheatConsumed,
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.OVERHEAT]: newOverheat,
+            [effectKeys.DYNAMO]: newDynamo,
+            states: {
+                ...draftTarget.states,
+                [effectKeys.VENTING]: newOverheat > 0,
+                [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
+            },
+        };
+    }
+
+    // Dynamo
+    if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.DYNAMO]: 0,
+            [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
+        };
+    }
+
+    // Refracted Divinity
+    if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
+        const newLunacy = Math.min(
+            draftTarget.resources[effectKeys.REFRACTED_DIVINITY] +
+                draftTarget[effectKeys.LUNACY],
+            constants.MAX_LUNACY,
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.LUNACY]: newLunacy,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.REFRACTED_DIVINITY]: 0,
+            },
+        };
+    }
+
+    // Lunacy
+    if (draftTarget[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
+        };
+    }
+
+    // Halo
+    if (draftTarget.resources.halo > 0) {
+        const newSpark = Math.min(
+            draftTarget.resources.halo + draftTarget[effectKeys.DIVINE_SPARK],
+            constants.MAX_DIVINE_SPARK,
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.DIVINE_SPARK]: newSpark,
+            resources: {
+                ...draftTarget.resources,
+                halo: 0,
+            },
+        };
+    }
+
+    // States cleared at turn start
+    draftTarget = {
+        ...draftTarget,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.GUARDING_STATE]: false,
+            [effectKeys.SACRIFICIAL_STATE]: false,
+            [effectKeys.RADIANT]: false,
+            [effectKeys.DARK_EMBRACE]: false,
+            [effectKeys.DIMMING_DARKNESS]: false,
+            [effectKeys.PRISMATIC]: false,
+        },
+    };
 
     const newQueue = prev.playerQueue.slice(1);
 
     return processDeathCheck({
         ...prev,
-        [effectKeys.EYE_OF_HEAVENS]: newEye,
         playerQueue: newQueue,
         entities: {
             ...prev.entities,
@@ -524,60 +414,75 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         ...prev.entities[nextActorKey],
     };
 
-    if (!prev[effectKeys.SEVERED_TIME]) {
-        // Mana Overflow
-        if (
-            draftCurrActor.resources.manaOverflow > 0 &&
-            !draftCurrActor.states.dimmingDarkness &&
-            prev[effectKeys.RUNIC_ARRAY] <= 0
-        ) {
-            draftCurrActor = takeDamage(
-                draftCurrActor,
-                draftCurrActor.resources.manaOverflow,
-                dmgTypes.TRUE,
-            );
+    // Mana Overflow
+    if (
+        draftCurrActor.resources.manaOverflow > 0 &&
+        !draftCurrActor.states.dimmingDarkness &&
+        prev[effectKeys.RUNIC_ARRAY] <= 0
+    ) {
+        draftCurrActor = takeDamage(
+            draftCurrActor,
+            draftCurrActor.resources.manaOverflow,
+            dmgTypes.TRUE,
+        );
 
-            draftCurrActor = {
-                ...draftCurrActor,
-                resources: {
-                    ...draftCurrActor.resources,
-                    manaOverflow: 0,
-                },
-            };
-        }
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                manaOverflow: 0,
+            },
+        };
+    }
 
-        // Dissonance
-        if (draftCurrActor.resources[effectKeys.DISSONANCE] > 0) {
-            draftCurrActor = takeDamage(
-                draftCurrActor,
-                draftCurrActor.resources[effectKeys.DISSONANCE],
-                dmgTypes.TRUE,
-            );
+    // Dissonance
+    if (draftCurrActor.resources[effectKeys.DISSONANCE] > 0) {
+        draftCurrActor = takeDamage(
+            draftCurrActor,
+            draftCurrActor.resources[effectKeys.DISSONANCE],
+            dmgTypes.TRUE,
+        );
 
-            draftCurrActor = {
-                ...draftCurrActor,
-                resources: {
-                    ...draftCurrActor.resources,
-                    [effectKeys.DISSONANCE]: 0,
-                },
-            };
-        }
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.DISSONANCE]: 0,
+            },
+        };
+    }
 
-        // Nebula
-        if (draftCurrActor[effectKeys.NEBULA] > 0) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                [effectKeys.NEBULA]: 0,
-            };
-        }
+    // Radiance
+    if (draftCurrActor.resources[effectKeys.RADIANCE] > 0) {
+        draftCurrActor = takeDamage(
+            draftCurrActor,
+            draftCurrActor.resources[effectKeys.RADIANCE],
+            dmgTypes.TRUE,
+        );
 
-        // Starblight
-        if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
-            draftCurrActor = {
-                ...draftCurrActor,
-                [effectKeys.STARBLIGHT]: 0,
-            };
-        }
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.RADIANCE]: 0,
+            },
+        };
+    }
+
+    // Nebula
+    if (draftCurrActor[effectKeys.NEBULA] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.NEBULA]: 0,
+        };
+    }
+
+    // Starblight
+    if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.STARBLIGHT]: 0,
+        };
     }
 
     // Laser used
@@ -613,35 +518,9 @@ export function buildRoundQueue(prev) {
     const p1 = prev.entities[entityKeys.PLAYER_ONE];
     const p2 = prev.entities[entityKeys.PLAYER_TWO];
 
-    const currentActivePhase = newQueue[currIndex];
-
     // Round Start
     if (!newQueue.includes(roundPhases.ROUND_START)) {
         newQueue.push(roundPhases.ROUND_START);
-    }
-
-    // Immediate Emanation trigger on special conditions
-    if (
-        (p1.states[effectKeys.ABANDONED_BY_GRACE] ||
-            p2.states[effectKeys.ABANDONED_BY_GRACE]) &&
-        !p1.states[effectKeys.ANOINTED_PROXY] &&
-        !p2.states[effectKeys.ANOINTED_PROXY]
-    ) {
-        newQueue.push(roundPhases.SPECIAL_EMINENCE_TURN);
-    }
-
-    // Proxy insertion
-    if (
-        p1.states[effectKeys.ANOINTED_PROXY] &&
-        currentActivePhase !== roundPhases.PLAYER_ONE_TURN
-    ) {
-        newQueue.push(roundPhases.PLAYER_ONE_TURN);
-    }
-    if (
-        p2.states[effectKeys.ANOINTED_PROXY] &&
-        currentActivePhase !== roundPhases.PLAYER_TWO_TURN
-    ) {
-        newQueue.push(roundPhases.PLAYER_TWO_TURN);
     }
 
     // Immediate Mana Siphon trigger on special conditions
@@ -652,9 +531,7 @@ export function buildRoundQueue(prev) {
         newQueue.push(roundPhases.MANA_SIPHON);
     }
 
-    let futurePulsesAvailable = prev[effectKeys.SEVERED_TIME]
-        ? Infinity
-        : prev[effectKeys.RUNIC_ARRAY];
+    let futurePulsesAvailable = prev[effectKeys.RUNIC_ARRAY];
 
     // Player Logic Helper
     const playerLogic = (
@@ -748,15 +625,6 @@ export function buildRoundQueue(prev) {
         newQueue.push(roundPhases.MOON_TURN);
     }
 
-    // Emanation
-    if (
-        (p1.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
-            p2.states[effectKeys.ASCENDENCE_OF_SPIRIT]) &&
-        !newQueue.includes(roundPhases.EMINENCE_TURN)
-    ) {
-        newQueue.push(roundPhases.EMINENCE_TURN);
-    }
-
     // Round End
     if (!newQueue.includes(roundPhases.ROUND_END)) {
         newQueue.push(roundPhases.ROUND_END);
@@ -813,147 +681,12 @@ export function processManaSiphon(prev) {
     });
 }
 
-export function processAnnoitement(prev) {
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    const p1Graceless = playerOne.states[effectKeys.ABANDONED_BY_GRACE];
-    const p2Graceless = playerTwo.states[effectKeys.ABANDONED_BY_GRACE];
-    if (p1Graceless || p2Graceless) {
-        if (p1Graceless) {
-            if (p2Graceless) {
-                // Punishes both players
-                playerOne = exitAllStates(playerOne);
-                playerOne = consumeResources(
-                    playerOne,
-                    Infinity,
-                    actionKeys.JUDGEMENT,
-                ).draftEntity;
-
-                playerOne = {
-                    ...playerOne,
-                    [effectKeys.TARNISHED_SIN]: 0,
-                };
-
-                playerTwo = exitAllStates(playerTwo);
-                playerTwo = consumeResources(
-                    playerTwo,
-                    Infinity,
-                    actionKeys.JUDGEMENT,
-                ).draftEntity;
-
-                playerTwo = {
-                    ...playerTwo,
-                    [effectKeys.TARNISHED_SIN]: 0,
-                };
-            } else {
-                // Chooses a proxy
-                playerTwo = {
-                    ...playerTwo,
-                    states: {
-                        ...playerTwo.states,
-                        [effectKeys.ANOINTED_PROXY]: true,
-                    },
-                };
-            }
-        } else {
-            // Chooses a proxy
-            playerOne = {
-                ...playerOne,
-                states: {
-                    ...playerOne.states,
-                    [effectKeys.ANOINTED_PROXY]: true,
-                },
-            };
-        }
-
-        // add death check later
-
-        return processDeathCheck({
-            ...prev,
-            [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
-            status: turnStatus.ROUND_TRANSITION,
-            entities: {
-                ...prev.entities,
-                [entityKeys.PLAYER_ONE]: { ...playerOne },
-                [entityKeys.PLAYER_TWO]: { ...playerTwo },
-            },
-        });
-    }
-
-    return processDeathCheck({
-        ...prev,
-        status: turnStatus.ROUND_TRANSITION,
-    });
-}
-
-export function processEmanation(prev) {
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    // Disables itself if no ascended players
-    if (
-        !playerOne.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        !playerTwo.states[effectKeys.ASCENDENCE_OF_SPIRIT]
-    ) {
-        return processDeathCheck({
-            ...prev,
-            eyeOfHeavens: eyeKeys.DORMANT,
-            [effectKeys.SEVERED_TIME]: false,
-            status: turnStatus.ROUND_TRANSITION,
-        });
-    }
-
-    // else, runs current state logic
-    let severedTime = prev[effectKeys.SEVERED_TIME];
-    if (prev[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
-        // When opening, grants Revelation and disables severed time
-        const p1NewRev =
-            playerOne.revelation +
-            Math.floor(playerOne.currInsight / constants.INSIGHT_TO_REV_FACTOR);
-        const p2NewRev =
-            playerTwo.revelation +
-            Math.floor(playerTwo.currInsight / constants.INSIGHT_TO_REV_FACTOR);
-
-        playerOne = {
-            ...playerOne,
-            revelation: p1NewRev,
-        };
-        playerTwo = {
-            ...playerTwo,
-            revelation: p2NewRev,
-        };
-
-        severedTime = false;
-    }
-
-    // Switchs state
-    const nextEye =
-        prev.eyeOfHeavens === eyeKeys.OPEN ? eyeKeys.CLOSED : eyeKeys.OPEN;
-
-    // Add death check later
-
-    return processDeathCheck({
-        ...prev,
-        eyeOfHeavens: nextEye,
-        [effectKeys.SEVERED_TIME]: severedTime,
-        status: turnStatus.ROUND_TRANSITION,
-        entities: {
-            ...prev.entities,
-            [entityKeys.PLAYER_ONE]: { ...playerOne },
-            [entityKeys.PLAYER_TWO]: { ...playerTwo },
-        },
-    });
-}
-
 export function processRunicPulse(prev) {
     let playerOne = prev.entities[entityKeys.PLAYER_ONE];
     let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
 
-    // Decrease Array duration if not on severed time
-    const newArray = !prev[effectKeys.SEVERED_TIME]
-        ? prev[effectKeys.RUNIC_ARRAY] - 1
-        : prev[effectKeys.RUNIC_ARRAY];
+    // Decrease Array duration
+    const newArray = prev[effectKeys.RUNIC_ARRAY] - 1;
 
     // If Array dying, redistribute mana
     if (newArray <= 0) {
@@ -1022,7 +755,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
 
     // Exit Condition: Is Starfall End
     if (currentPhase === starfallPhases.STARFALL_END) {
-
         return processDeathCheck({
             ...prev,
             starQueue: null, // clears the queue
@@ -1034,9 +766,9 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
                     states: {
                         ...prev.entities[masterKey].states,
                         [effectKeys.NOVA]: false,
-                    }
-                }
-            }
+                    },
+                },
+            },
         });
     }
 
@@ -1162,25 +894,15 @@ export function processMoonPhase(prev) {
 
         const moon = draftEntity[effectKeys.MIRRORED_MOON];
         let newMoon = moon;
-        if (newGameState[effectKeys.SEVERED_TIME]) {
-            if (moon === moonKeys.CORONAL) {
-                newMoon = moonKeys.WANING;
-            } else if (moon === moonKeys.BLOODSTAINED) {
-                newMoon = moonKeys.WAXING;
-            }
-        } else {
-            if (
-                moon === moonKeys.HIDDEN ||
-                moon === moonKeys.WANING ||
-                moon === moonKeys.CORONAL
-            ) {
-                newMoon = moonKeys.WAXING;
-            } else if (
-                moon === moonKeys.BLOODSTAINED ||
-                moon === moonKeys.WAXING
-            ) {
-                newMoon = moonKeys.WANING;
-            }
+
+        if (
+            moon === moonKeys.HIDDEN ||
+            moon === moonKeys.WANING ||
+            moon === moonKeys.CORONAL
+        ) {
+            newMoon = moonKeys.WAXING;
+        } else if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.WAXING) {
+            newMoon = moonKeys.WANING;
         }
 
         let newMoonlight = draftEntity[effectKeys.MOONLIGHT];
@@ -1289,8 +1011,8 @@ export function processSingularity(prev, agentKey, action) {
             [agentKey]: {
                 ...prev.entities[agentKey],
                 [effectKeys.GRAVITATION]: 0,
-            }
-        }
+            },
+        },
     };
 
     // Death check
@@ -1298,7 +1020,7 @@ export function processSingularity(prev, agentKey, action) {
 
     // Determine if PLAN subphase ends or not
     const newStatus =
-        (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
+        action === actionKeys.LASER && // free actions
         newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
             ? prev.status
             : turnStatus.ROUND_TRANSITION;
@@ -1319,17 +1041,16 @@ export function processPlan(prev, action) {
 
     // Determine if PLAN subphase ends or not
     const newQueue =
-        (action === actionKeys.ASCEND || action === actionKeys.LASER) && // free actions
+        action === actionKeys.LASER && // free actions
         newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
             ? prev.playerQueue
             : prev.playerQueue.slice(1);
 
-            console.log(action)
+    console.log(action);
     console.log(action === actionKeys.LASER);
     console.log(newGameState.status);
-    console.log(prev.playerQueue)
-    console.log(newQueue)
-
+    console.log(prev.playerQueue);
+    console.log(newQueue);
 
     const newStatus =
         newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
@@ -1401,14 +1122,6 @@ export function buildHistory(prev, event, info = {}) {
 
         case eventKeys.MOON_PHASE:
             string = "Moon Phase";
-            break;
-
-        case eventKeys.EMANATION:
-            string = "Emanation";
-            break;
-
-        case eventKeys.ANOINTMENT:
-            string = "Anointment";
             break;
 
         default:

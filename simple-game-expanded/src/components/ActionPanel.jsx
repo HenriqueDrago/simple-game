@@ -8,7 +8,11 @@ import {
     roundPhases,
 } from "../utils/enums";
 import { presetAi, actionMap } from "../utils/constants";
-import { getActions, canUseAction, canUseCombatInteractions } from "../utils/entities";
+import {
+    getActions,
+    canUseAction,
+    canUseCombatInteractions,
+} from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
 
 function ActionPanel({
@@ -26,11 +30,19 @@ function ActionPanel({
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const isPlayerOneTurn = currPhase === roundPhases.PLAYER_ONE_TURN || currPhase === roundPhases.P1_SINGULARITY;
-    const isPlayerTwoTurn = currPhase === roundPhases.PLAYER_TWO_TURN || currPhase === roundPhases.P2_SINGULARITY;
+    const isPlayerOneTurn =
+        currPhase === roundPhases.PLAYER_ONE_TURN ||
+        currPhase === roundPhases.P1_SINGULARITY;
+    const isPlayerTwoTurn =
+        currPhase === roundPhases.PLAYER_TWO_TURN ||
+        currPhase === roundPhases.P2_SINGULARITY;
 
-    const currEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_ONE : entityKeys.PLAYER_TWO;
-    const targetEntityKey = isPlayerOneTurn ? entityKeys.PLAYER_TWO : entityKeys.PLAYER_ONE;
+    const currEntityKey = isPlayerOneTurn
+        ? entityKeys.PLAYER_ONE
+        : entityKeys.PLAYER_TWO;
+    const targetEntityKey = isPlayerOneTurn
+        ? entityKeys.PLAYER_TWO
+        : entityKeys.PLAYER_ONE;
     const currEntity = game.entities[currEntityKey];
 
     // Visibility Constraints
@@ -66,10 +78,11 @@ function ActionPanel({
         waitLabel = enemyLabel;
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
-    } else if (currPhase === roundPhases.POST_P1_RUNIC_PULSE || currPhase === roundPhases.POST_P2_RUNIC_PULSE) {
+    } else if (
+        currPhase === roundPhases.POST_P1_RUNIC_PULSE ||
+        currPhase === roundPhases.POST_P2_RUNIC_PULSE
+    ) {
         waitLabel = "Runic Pulse";
-    } else if (currPhase === roundPhases.EMINENCE_TURN) {
-        waitLabel = "Emanation";
     } else if (
         currPhase === roundPhases.P1_STARS_TURN ||
         currPhase === roundPhases.P2_STARS_TURN
@@ -79,8 +92,6 @@ function ActionPanel({
         waitLabel = "Moon Phase";
     } else if (currPhase === roundPhases.MANA_SIPHON) {
         waitLabel = "Mana Siphon";
-    } else if (currPhase === roundPhases.SPECIAL_EMINENCE_TURN) {
-        waitLabel = "Anointment";
     }
 
     // Process Action List & Classes dynamically via shared state logic
@@ -99,14 +110,8 @@ function ActionPanel({
             };
         });
 
-        if (
-            currEntity.states[effectKeys.ANOINTED_PROXY] ||
-            currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
-            currEntity.states[effectKeys.ZENITH_OF_MORTALITY]
-        ) {
+        if (currEntity.states[effectKeys.THERMAL_OVERLOAD]) {
             containerClass = "single-button-container";
-        } else if (currEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-            containerClass = "angel-button-grid";
         } else if (currEntity.states[effectKeys.UMBRAL_CORE]) {
             containerClass = "shadow-button-grid";
         } else {
@@ -136,7 +141,11 @@ function ActionPanel({
                                 key={action.key}
                                 onClick={() => {
                                     handleClearTooltip();
-                                    handleAction(action.key, currEntityKey, targetEntityKey);
+                                    handleAction(
+                                        action.key,
+                                        currEntityKey,
+                                        targetEntityKey,
+                                    );
                                 }}
                                 onMouseDown={(e) => {
                                     if (e.button === 1) {
