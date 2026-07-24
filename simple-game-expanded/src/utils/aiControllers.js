@@ -195,16 +195,10 @@ export function selectElementAI(context) {
 
     const tideSim = simWithElement(elementalKeys.OCEAN, actionKeys.LUNAR_TIDE);
     const hasBadResources =
-        agent.resources[effectKeys.POISON] > 0 ||
-        agent.resources[effectKeys.SHACKLED_MANA] > 0 ||
         agent.resources[effectKeys.MANA_OVERFLOW] > 0 ||
         agent.resources[effectKeys.DISSONANCE] > 0;
 
     if (hasBadResources) {
-        if (tideSim.entities[agentKey].resources[effectKeys.POISON] > 0) {
-            return elementalKeys.NATURE;
-        }
-
         return elementalKeys.OCEAN;
     }
 
@@ -293,9 +287,8 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         agentKey,
         nonAgent,
         nonAgentKey,
-        isArrayActive: prev[effectKeys.RUNIC_ARRAY] > 0,
         hasManaForSpecial:
-            getEntityTotalMana(agent) >= constants.SP_ATTACK_COST,
+            getEntityTotalMana(agent) >= constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
     };
 
     let caller = presetAi[agent.controller].caller || simpleAI;
@@ -371,7 +364,7 @@ export function simpleAI(context) {
 - Heal if at low health
 */
 export function warlockAI(context) {
-    const { agent, agentKey, nonAgentKey, isArrayActive, hasManaForSpecial } =
+    const { agent, agentKey, nonAgentKey, hasManaForSpecial } =
         context;
 
     const simulate = createSimulator(context);
@@ -400,21 +393,6 @@ export function warlockAI(context) {
         return actionKeys.ATTACK;
     }
 
-    // Simulate Curse
-    // If it kills, use it
-    if (isArrayActive) {
-        const simCurse = simulate(actionKeys.CURSE);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simCurse,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.CURSE;
-        }
-    }
-
     if (
         getEntityTotalMana(agent) <=
         agent[effectKeys.MAX_MANA] -
@@ -438,7 +416,6 @@ export function bloodknightAI(context) {
         agentKey,
         nonAgentKey,
         nonAgent,
-        isArrayActive,
         hasManaForSpecial,
     } = context;
 
@@ -485,7 +462,6 @@ export function bloodknightAI(context) {
     - missing hp is considerable (25% of max)
     */
     if (
-        !isArrayActive &&
         nextTurnHeal < missingHp &&
         agent[effectKeys.MANA_BLEED] > getEntityTotalMana(agent) &&
         missingMana >=
@@ -541,7 +517,6 @@ export function bloodknightAI(context) {
     // Attack if not array or halo or divinity
     if (
         !(
-            isArrayActive ||
             nonAgent.resources[effectKeys.HALO] > 0 ||
             nonAgent.resources[effectKeys.REFRACTED_DIVINITY] > 0
         )
@@ -584,87 +559,8 @@ export function paladinAI(context) {
     return actionKeys.AEGIS;
 }
 
-export function hexerAI(context) {
-    const { agent, agentKey, nonAgentKey, isArrayActive, hasManaForSpecial } =
-        context;
-
-    const simulate = createSimulator(context);
-
-    // Simulate Special Attack
-    // If it kills, use it
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // if has poison on self, heal to cleanse
-    if (agent.resources[effectKeys.POISON] > 0) {
-        return actionKeys.HEAL;
-    }
-
-    // When Array is active...
-    if (isArrayActive) {
-        // Simulate CURSE
-        const simCurse = simulate(actionKeys.CURSE);
-
-        // If enemy dies for sure, use CURSE
-        if (
-            willEntityImmediatelyDieByNextUpkeep(
-                simCurse,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.CURSE;
-        }
-
-        // If we don't die, also use CURSE
-        if (
-            !willEntityImmediatelyDieByNextUpkeep(
-                simCurse,
-                agentKey,
-                nonAgentKey,
-            )
-        ) {
-            return actionKeys.CURSE;
-        }
-
-        // otherwise, guard for the upcoming MANA redistribution
-        return actionKeys.GUARD;
-    }
-
-    // if not on array and has mana
-    // dumps mana with either HEAL or SPECIAL ATTACK
-    if (
-        getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5 &&
-        getEntityTotalMana(agent) >= 5
-    ) {
-        return actionKeys.HEAL;
-    }
-
-    if (hasManaForSpecial) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // lastly, casts ARRAY
-    return actionKeys.ARRAY;
+export function augurAI(context) {
+   return simpleAI(context);
 }
 
 export function shadowSorcererAI(context) {
@@ -673,7 +569,6 @@ export function shadowSorcererAI(context) {
         agent,
         agentKey,
         nonAgentKey,
-        isArrayActive,
         hasManaForSpecial,
     } = context;
 
@@ -707,28 +602,6 @@ export function shadowSorcererAI(context) {
             )
         ) {
             return actionKeys.ATTACK;
-        }
-
-        // if has poison on self, heal to cleanse
-        if (agent.resources[effectKeys.POISON] > 0) {
-            return actionKeys.HEAL;
-        }
-
-        // When Array is active...
-        if (isArrayActive) {
-            // Simulate CURSE
-            const simCurse = simulate(actionKeys.CURSE);
-
-            // If enemy dies for sure, use CURSE
-            if (
-                willEntityImmediatelyDieByNextUpkeep(
-                    simCurse,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.CURSE;
-            }
         }
 
         // Bleak redirect
@@ -1049,7 +922,7 @@ export function lunaticAI(context) {
             const hpGrowth = getEntityTotalHealth(simGrowth.entities[agentKey]);
             const hpHeal = getEntityTotalHealth(simHeal.entities[agentKey]);
 
-            if (hpGrowth >= hpHeal && agent.resources[effectKeys.POISON] <= 0) {
+            if (hpGrowth >= hpHeal) {
                 return actionKeys.LUNAR_GROWTH;
             } else {
                 return actionKeys.HEAL;

@@ -47,6 +47,12 @@ function AttrLine({
     ) {
         specialClass = "stat-value-def";
     }
+    if (
+        attr === "str" &&
+        (entity[effectKeys.PAST_MEMORIES] > 0)
+    ) {
+        specialClass = "str-value-past-memories";
+    }
 
     const showControls = modifiable && battleState === turnStatus.SETUP;
 

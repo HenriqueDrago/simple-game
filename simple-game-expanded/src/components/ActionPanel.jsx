@@ -79,19 +79,12 @@ function ActionPanel({
     } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
     } else if (
-        currPhase === roundPhases.POST_P1_RUNIC_PULSE ||
-        currPhase === roundPhases.POST_P2_RUNIC_PULSE
-    ) {
-        waitLabel = "Runic Pulse";
-    } else if (
         currPhase === roundPhases.P1_STARS_TURN ||
         currPhase === roundPhases.P2_STARS_TURN
     ) {
         waitLabel = "Starfall";
     } else if (currPhase === roundPhases.MOON_TURN) {
         waitLabel = "Moon Phase";
-    } else if (currPhase === roundPhases.MANA_SIPHON) {
-        waitLabel = "Mana Siphon";
     }
 
     // Process Action List & Classes dynamically via shared state logic
@@ -128,7 +121,7 @@ function ActionPanel({
             )}
 
             {showButtons && (
-                <div className="actions-buttons-text-container">
+                <div className={`actions-buttons-text-container ${currEntity.states[effectKeys.VISIONARY] ? "is-visionary" : ""}`}>
                     {showHelperText && (
                         <span className="actions-mouse-wheel-explainer">
                             Tip: You can mouse-wheel click on most things to see
@@ -150,7 +143,7 @@ function ActionPanel({
                                 onMouseDown={(e) => {
                                     if (e.button === 1) {
                                         e.preventDefault();
-                                        const entry = DESCRIPTIONS[action.key];
+                                        const entry = DESCRIPTIONS?.[action.key];
                                         if (entry) {
                                             handleSetTooltip({
                                                 keyword: entry.name,

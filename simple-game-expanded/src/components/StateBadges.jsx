@@ -20,6 +20,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.BLEAK_DECEPTION, label: "Bleak Deception" },
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },
     { key: effectKeys.NOVA, label: "Nova" },
+    { key: effectKeys.VISIONARY, label: "Visionary" },
 ];
 
 function StateBadges({ states, handleSetTooltip }) {

@@ -18,8 +18,6 @@ import {
     processStarfallTurn,
     processMoonPhase,
     buildRoundQueue,
-    processManaSiphon,
-    processRunicPulse,
     processPlan,
     buildHistory,
     processActionUse,
@@ -74,9 +72,6 @@ function resetGameState(prev) {
         roundQueue: null,
         roundIndex: 0,
         history: [],
-
-        // game logic
-        [effectKeys.RUNIC_ARRAY]: 0,
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -144,9 +139,13 @@ function App() {
                 action,
             );
 
+            
+
             const newGameState = isSingularity
                 ? processSingularity(processedAction, agentKey, action)
                 : processPlan(processedAction, action);
+
+            console.log(newGameState);
 
             return buildHistory(newGameState, eventKeys.USE_ACTION, {
                 player: agentKey,
@@ -620,21 +619,6 @@ function App() {
                     };
                     delayAmount = gameState.roundCount > 0 ? 600 : 0;
                     historyKey = eventKeys.ROUND_START;
-                    break;
-                }
-
-                case roundPhases.MANA_SIPHON: {
-                    nextState = processManaSiphon(gameState);
-                    delayAmount = 1200;
-                    historyKey = eventKeys.MANA_SIPHON;
-                    break;
-                }
-
-                case roundPhases.POST_P1_RUNIC_PULSE:
-                case roundPhases.POST_P2_RUNIC_PULSE: {
-                    nextState = processRunicPulse(gameState);
-                    delayAmount = 1200;
-                    historyKey = eventKeys.RUNIC_PULSE;
                     break;
                 }
 

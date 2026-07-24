@@ -10,7 +10,10 @@
     --ash-color: #b87333;
     --albedo-color: #ffffff;
 
-    
+    /* Rune Colors */
+    --color-rune-urd: #00f0ff;      /* Urd - Cyan */
+    --color-rune-verdandi: #4caf50; /* Verdandi - Green */
+    --color-rune-skuld: #b388ff;    /* Skuld - Purple */
 }
 
 body {

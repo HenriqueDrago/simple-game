@@ -25,7 +25,7 @@ function StarsPanel({
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const showButton = canUseCombatInteractions(game);
+    const showButton = canUseCombatInteractions(game, entityKey);
 
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE

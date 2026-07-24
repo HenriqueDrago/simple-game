@@ -59,7 +59,7 @@ function GamePanel({
                     </div>
 
                     <div
-                        className={`stats-panels-container ${game[effectKeys.RUNIC_ARRAY] > 0 ? "array-active" : ""}`}
+                        className={`stats-panels-container`}
                     >
                         <div className="player-panel-wrapper">
                             <MitigationTracker

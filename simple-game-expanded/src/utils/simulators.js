@@ -15,8 +15,15 @@ import {
     loseHp,
     getEntityMaxHealth,
     getEntityTotalMana,
+    addRune,
 } from "./entities.js";
-import { actionKeys, dmgTypes, effectKeys, elementalKeys } from "./enums.js";
+import {
+    actionKeys,
+    dmgTypes,
+    effectKeys,
+    elementalKeys,
+    runeKeys,
+} from "./enums.js";
 
 export const simulators = {
     [actionKeys.ATTACK]: simulateAttack,
@@ -25,9 +32,6 @@ export const simulators = {
     [actionKeys.SPECIAL_ATTACK]: simulateSpecialAttack,
 
     [actionKeys.SACRIFICE]: simulateSacrifice,
-
-    [actionKeys.ARRAY]: simulateArray,
-    [actionKeys.CURSE]: simulateCurse,
 
     [actionKeys.SHADOW_PACT]: simulateShadowPact,
     [actionKeys.BLACK_MAYHEM]: simulateBlackMayhem,
@@ -61,6 +65,10 @@ export const simulators = {
     [actionKeys.LUNAR_SHROUD]: simulateLunarShroud,
     [actionKeys.LUNAR_TIDE]: simulateLunarTide,
     [actionKeys.LUNAR_SHED]: simulateLunarShed,
+
+    // Array
+    [actionKeys.CARVE]: simulateCarve,
+    [actionKeys.CURSE]: simulateCurse,
 };
 
 function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -158,7 +166,6 @@ function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         getEntityStr(agent) + agent.resources.radiance,
         dmgTypes.PHYSICAL,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const draftAttacker = {
@@ -190,13 +197,6 @@ function simulateSpecialAttack({
     nonAgent,
     nonAgentKey,
 }) {
-    if (
-        agent.currMana + agent.resources.manaOverflow <
-        constants.SP_ATTACK_COST
-    ) {
-        return prev;
-    }
-
     const manaDiff = agent[effectKeys.MANA] - nonAgent[effectKeys.MANA];
 
     const { attacker, defender } = dealDamage(
@@ -204,7 +204,6 @@ function simulateSpecialAttack({
         nonAgent,
         getEntityStr(agent) + manaDiff,
         dmgTypes.PIERCING,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     let draftDefender = {
@@ -220,7 +219,10 @@ function simulateSpecialAttack({
         draftAttacker = gainMana(attacker, -manaDiff);
     }
 
-    draftAttacker = loseMana(draftAttacker, constants.SP_ATTACK_COST);
+    draftAttacker = loseMana(
+        draftAttacker,
+        constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+    );
 
     return {
         ...prev,
@@ -239,17 +241,6 @@ function simulateSpecialAttack({
 function simulateHeal({ prev, agent, agentKey }) {
     let draftAgent = {
         ...agent,
-    };
-    // cleanse poison
-    draftAgent = {
-        ...draftAgent,
-        resources: {
-            ...draftAgent.resources,
-            [effectKeys.POISON]: 0,
-            [effectKeys.DISTILLED_TOXIN]:
-                draftAgent.resources[effectKeys.DISTILLED_TOXIN] +
-                draftAgent.resources[effectKeys.POISON],
-        },
     };
 
     const base_heal = Math.min(
@@ -271,104 +262,32 @@ function simulateHeal({ prev, agent, agentKey }) {
     };
 }
 
-function simulateCurse({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const agentNewPoison =
-        agent.resources.shackledMana + agent.resources.poison;
-    const nonAgentNewPoison =
-        nonAgent.resources.shackledMana + nonAgent.resources.poison;
-
-    return {
-        ...prev,
-        [effectKeys.RUNIC_ARRAY]: 0,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: {
-                ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    poison: nonAgentNewPoison,
-                    shackledMana: 0,
-                },
-            },
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    poison: agentNewPoison,
-                    shackledMana: 0,
-                },
-            },
-        },
-    };
-}
-
-function simulateArray({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const agentShackledMana =
-        agent.resources.shackledMana +
-        agent.currMana +
-        agent.resources.manaOverflow;
-    const nonAgentShackledMana =
-        nonAgent.resources.shackledMana +
-        nonAgent.currMana +
-        nonAgent.resources.manaOverflow;
-
-    return {
-        ...prev,
-        [effectKeys.RUNIC_ARRAY]: constants.ARRAY_DURATION,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: {
-                ...nonAgent,
-                currMana: 0,
-                resources: {
-                    ...nonAgent.resources,
-                    manaOverflow: 0,
-                    shackledMana: nonAgentShackledMana,
-                },
-            },
-            [agentKey]: {
-                ...agent,
-                currMana: 0,
-                resources: {
-                    ...agent.resources,
-                    manaOverflow: 0,
-                    shackledMana: agentShackledMana,
-                },
-            },
-        },
-    };
-}
-
-function simulateShadowPact({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    if (agent.states.bleakDeception) {
-        return prev;
-    }
+function simulateShadowPact({ prev, agentKey, nonAgent, nonAgentKey }) {
+    const newGameState = exitAllStates(prev, agentKey, nonAgentKey);
 
     const { draftEntity, resourcesConsumed } = consumeResources(
-        { ...agent },
+        { ...newGameState.entities[agentKey] },
         constants.SHADOW_PACT_BURN,
         actionKeys.SHADOW_PACT,
     );
 
-    const draftAgent = exitAllStates({
-        ...draftEntity,
-    });
-
     return {
         ...prev,
         entities: {
             ...prev.entities,
-            [nonAgentKey]: { ...nonAgent },
+            [nonAgentKey]: {
+                ...nonAgent,
+            },
             [agentKey]: {
-                ...draftAgent,
+                ...draftEntity,
                 states: {
-                    ...createBaseEntity().states,
-                    umbralCore: true,
+                    ...draftEntity.states,
+                    [effectKeys.UMBRAL_CORE]: true,
                 },
                 resources: {
-                    ...draftAgent.resources,
-                    shadowflame:
-                        draftAgent.resources.shadowflame +
+                    ...draftEntity.resources,
+                    [effectKeys.SHADOWFLAME]:
+                        draftEntity.resources[effectKeys.SHADOWFLAME] +
                         resourcesConsumed.totalConsumption,
                 },
             },
@@ -615,7 +534,6 @@ function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         agent[effectKeys.ENERGY_LEVEL],
         dmgTypes.PIERCING,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const newOverheat =
@@ -756,7 +674,6 @@ function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         agent[effectKeys.MOONLIGHT],
         dmgTypes.LUNIC,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     return {
@@ -819,7 +736,6 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         Math.floor(getEntityStr(agent) / 2) +
             agent.resources[effectKeys.MOONDUST],
         dmgTypes.PIERCING,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     const draftAgent = {
@@ -860,7 +776,6 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         nonAgent,
         baseDmg,
         dmgTypes.PIERCING,
-        prev[effectKeys.RUNIC_ARRAY] > 0,
     );
 
     return {
@@ -929,4 +844,66 @@ function simulateLunarShed({ prev, agent, agentKey }) {
             },
         },
     };
+}
+
+function simulateCarve({ prev, agent, agentKey }) {
+    let draftAgent = {
+        ...agent,
+    };
+
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.VISIONARY]: true,
+        },
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [agentKey]: {
+                ...draftAgent,
+            },
+        },
+    };
+}
+
+function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
+    let newGameState = {
+        ...prev,
+    };
+
+    const arrayLength = agent?.[effectKeys.RUNIC_ARRAY]?.length || 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+        const currRune =
+            newGameState.entities[agentKey][effectKeys.RUNIC_ARRAY][0];
+
+        if (currRune === runeKeys.EMPTY) {
+            newGameState = {
+                ...newGameState,
+                entities: {
+                    ...newGameState.entities,
+                    [agentKey]: {
+                        ...takeDamage(
+                            newGameState.entities[agentKey],
+                            constants.CURSE_EMPTY_RUNE_DMG,
+                            dmgTypes.TRUE,
+                        ),
+                    },
+                },
+            };
+        }
+
+        newGameState = addRune(
+            newGameState,
+            agentKey,
+            nonAgentKey,
+            runeKeys.EMPTY,
+        );
+    }
+
+    return newGameState;
 }

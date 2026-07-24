@@ -19,6 +19,7 @@ import {
     aiKeys,
     roundPhases,
     playerTurnPhases,
+    runeKeys,
 } from "./enums.js";
 
 export function restoreResources(entity, amount) {
@@ -189,6 +190,8 @@ export function createBaseEntity() {
         [effectKeys.NEBULA]: 0,
         [effectKeys.STARFLARE]: 0,
         [effectKeys.GRAVITATION]: 0,
+        [effectKeys.BAD_OMEN]: 0,
+        [effectKeys.RECOLLECTION]: 0,
 
         // ranked resources
         [effectKeys.MANA_BLEED]: 0,
@@ -196,6 +199,7 @@ export function createBaseEntity() {
         [effectKeys.CONSTELLATION]: 0,
         [effectKeys.AZURE_CONSTELLATION]: 0,
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
+        [effectKeys.PAST_MEMORIES]: 0,
 
         // alternate stats
         [effectKeys.REVELATION]: 0,
@@ -206,14 +210,18 @@ export function createBaseEntity() {
         [effectKeys.SONORITY]: constants.STARTING_SONORITY,
         [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
         [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.DULLED],
+        [effectKeys.RUNIC_ARRAY]: [
+            runeKeys.EMPTY,
+            runeKeys.EMPTY,
+            runeKeys.EMPTY,
+        ],
         lasersUsedThisTurn: 0,
 
         resources: {
             [effectKeys.MANA_OVERFLOW]: 0,
             [effectKeys.BLOOD_SACRIFICE]: 0,
             [effectKeys.RADIANCE]: 0,
-            [effectKeys.SHACKLED_MANA]: 0,
-            [effectKeys.POISON]: 0,
+
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
@@ -221,8 +229,8 @@ export function createBaseEntity() {
             [effectKeys.STARDUST]: 0,
             [effectKeys.SILVER_BLOOD]: 0,
             [effectKeys.MOONDUST]: 0,
-            [effectKeys.DISTILLED_TOXIN]: 0,
             [effectKeys.DISSONANCE]: 0,
+            [effectKeys.PRECOGNITION]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -234,6 +242,7 @@ export function createBaseEntity() {
             [effectKeys.MYCELIUM]: 0,
             [effectKeys.REFRACTED_DIVINITY]: 0,
             [effectKeys.HARMONY]: 0,
+            [effectKeys.CONJECTURE]: 0,
         },
         states: {
             // standalones
@@ -245,6 +254,7 @@ export function createBaseEntity() {
             [effectKeys.RESONANT]: false,
             [effectKeys.PRISMATIC]: false,
             [effectKeys.MOON_DEW]: false,
+            [effectKeys.VISIONARY]: false,
 
             // Shadowflame
             [effectKeys.DARK_EMBRACE]: false,
@@ -334,6 +344,9 @@ export function processEntityDamageBonus(entity) {
     if (entity[effectKeys.SONORITY] > 0) {
         dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
     }
+    if (entity[effectKeys.RECOLLECTION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.RECOLLECTION] / 100;
+    }
 
     return dmgBonus;
 }
@@ -347,6 +360,10 @@ export function processEntityFragility(entity) {
         frail *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
+    if (entity[effectKeys.BAD_OMEN] > 0) {
+        frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
+    }
+
     return frail;
 }
 
@@ -357,16 +374,21 @@ export function processEntityWeakness(entity) {
         weak *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
+    if (entity.states[effectKeys.VISIONARY]) {
+        weak *=
+            1 +
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
+                constants.SKULD_WEAK;
+    }
+
+    if (entity[effectKeys.BAD_OMEN] > 0) {
+        weak *= 1 + entity[effectKeys.BAD_OMEN] / 100;
+    }
+
     return weak;
 }
 
-export function dealDamage(
-    attacker,
-    defender,
-    baseDmg,
-    dmgType,
-    isArrayActive,
-) {
+export function dealDamage(attacker, defender, baseDmg, dmgType) {
     let draftAttacker = {
         ...attacker,
     };
@@ -451,16 +473,6 @@ export function dealDamage(
         draftDefender = consumptionResult.draftEntity;
         damagePostMitigation =
             consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
-    }
-
-    // Shackled Mana thorns
-    const thornsDmg =
-        isArrayActive && dmgType === dmgTypes.PHYSICAL
-            ? draftDefender.resources[effectKeys.SHACKLED_MANA]
-            : 0;
-
-    if (thornsDmg > 0) {
-        draftAttacker = takeDamage(draftAttacker, thornsDmg, dmgTypes.PHYSICAL);
     }
 
     draftDefender = loseHp(draftDefender, damagePostMitigation);
@@ -693,36 +705,52 @@ export function loseMana(entity, amount) {
     };
 }
 
-export function processExitStargazer(entity) {
+export function processExitStargazer(prev, targetKey) {
+    const currentEntity = prev.entities[targetKey];
+
     return {
-        ...entity,
-        [effectKeys.CONSTELLATION]: 0,
-        [effectKeys.AZURE_CONSTELLATION]: 0,
-        [effectKeys.CRIMSON_CONSTELLATION]: 0,
-        states: {
-            ...entity.states,
-            [effectKeys.STARGAZER]: false,
-        },
-        stars: {
-            ...createBaseEntity().stars,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...currentEntity,
+                [effectKeys.CONSTELLATION]: 0,
+                [effectKeys.AZURE_CONSTELLATION]: 0,
+                [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                states: {
+                    ...currentEntity.states,
+                    [effectKeys.STARGAZER]: false,
+                },
+                stars: {
+                    ...createBaseEntity().stars,
+                },
+            },
         },
     };
 }
 
-export function processExitResonant(entity) {
+export function processExitResonant(prev, targetKey) {
+    const currentEntity = prev.entities[targetKey];
+
     return {
-        ...entity,
-        [effectKeys.SONORITY]: 0,
-        states: {
-            ...entity.states,
-            [effectKeys.RESONANT]: false,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...currentEntity,
+                [effectKeys.SONORITY]: 0,
+                states: {
+                    ...currentEntity.states,
+                    [effectKeys.RESONANT]: false,
+                },
+            },
         },
     };
 }
 
-export function processExitSelenian(entity) {
+export function processExitSelenian(prev, targetKey) {
     let draftEntity = {
-        ...entity,
+        ...prev.entities[targetKey],
     };
 
     draftEntity = takeDamage(
@@ -738,34 +766,87 @@ export function processExitSelenian(entity) {
         [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
         [effectKeys.LUNACY]: 0,
         [effectKeys.MOONLIT_TEARS]: 0,
-    };
-
-    return draftEntity;
-}
-
-export function exitAllStates(entity) {
-    let draftEntity = {
-        ...entity,
-    };
-
-    if (draftEntity.states[effectKeys.STARGAZER]) {
-        draftEntity = processExitStargazer(draftEntity);
-    }
-    if (draftEntity.states[effectKeys.RESONANT]) {
-        draftEntity = processExitResonant(draftEntity);
-    }
-    if (draftEntity.states[effectKeys.SELENIAN]) {
-        draftEntity = processExitSelenian(draftEntity);
-    }
-
-    draftEntity = {
-        ...draftEntity,
         states: {
-            ...createBaseEntity().states,
+            ...draftEntity.states,
+            [effectKeys.SELENIAN]: false,
         },
     };
 
-    return draftEntity;
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: draftEntity,
+        },
+    };
+}
+
+export function processExitVisionary(prev, targetKey, nonTargetKey) {
+    let newGameState = {
+        ...prev,
+    };
+
+    const arrayLength =
+        prev.entities[targetKey]?.[effectKeys.RUNIC_ARRAY]?.length || 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+        newGameState = addRune(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+            runeKeys.EMPTY,
+        );
+    }
+
+    return {
+        ...newGameState,
+        entities: {
+            ...newGameState.entities,
+            [targetKey]: {
+                ...newGameState.entities[targetKey],
+                states: {
+                    ...newGameState.entities[targetKey].states,
+                    [effectKeys.VISIONARY]: false,
+                },
+            },
+        },
+    };
+}
+
+export function exitAllStates(prev, targetKey, nonTargetKey) {
+    const originalStates = {
+        ...prev.entities[targetKey].states,
+    };
+
+    // Clear all states
+    let newGameState = {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...prev.entities[targetKey],
+                states: {
+                    ...createBaseEntity().states,
+                },
+            },
+        },
+    };
+
+    // Process special removals
+    if (originalStates[effectKeys.VISIONARY]) {
+        newGameState = processExitVisionary(prev, targetKey, nonTargetKey);
+    }
+    if (originalStates[effectKeys.STARGAZER]) {
+        newGameState = processExitStargazer(prev, targetKey, nonTargetKey);
+    }
+    if (originalStates[effectKeys.RESONANT]) {
+        newGameState = processExitResonant(prev, targetKey, nonTargetKey);
+    }
+    if (originalStates[effectKeys.SELENIAN]) {
+        newGameState = processExitSelenian(prev, targetKey, nonTargetKey);
+    }
+
+    return newGameState;
 }
 
 export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
@@ -867,7 +948,7 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
         }
     }
 
-    return {
+    let newGame = {
         ...prev,
         entities: {
             ...prev.entities,
@@ -875,6 +956,39 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             [nonAgentKey]: draftNonAgent,
         },
     };
+
+    // Runes
+    if (draftAgent.states[effectKeys.VISIONARY]) {
+        switch (action) {
+            case actionKeys.GUARD: {
+                newGame = addRune(newGame, agentKey, nonAgentKey, runeKeys.URD);
+                break;
+            }
+            case actionKeys.HEAL: {
+                newGame = addRune(
+                    newGame,
+                    agentKey,
+                    nonAgentKey,
+                    runeKeys.VERDANDI,
+                );
+                break;
+            }
+            case actionKeys.SPECIAL_ATTACK: {
+                newGame = addRune(
+                    newGame,
+                    agentKey,
+                    nonAgentKey,
+                    runeKeys.SKULD,
+                );
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    return newGame;
 }
 
 export function processDeathCheck(prev) {
@@ -909,7 +1023,10 @@ export function processDeathCheck(prev) {
 export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
-    return processHealth(draftEntity);
+    draftEntity = processHealth(draftEntity);
+    draftEntity = processPrecognition(draftEntity);
+
+    return draftEntity;
 }
 
 export function isEntityDead(entity) {
@@ -983,12 +1100,13 @@ export function getEntityDef(entity) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
     }
 
-    return (
+    return Math.max(
+        0,
         draftEntity.attributes.def.value +
-        (isElementActive(draftEntity, elementalKeys.FROST)
-            ? draftEntity[effectKeys.MOONLIGHT]
-            : 0) +
-        draftEntity[effectKeys.AZURE_CONSTELLATION]
+            (isElementActive(draftEntity, elementalKeys.FROST)
+                ? draftEntity[effectKeys.MOONLIGHT]
+                : 0) +
+            draftEntity[effectKeys.AZURE_CONSTELLATION],
     );
 }
 
@@ -1004,7 +1122,10 @@ export function getEntityStr(entity) {
     }
 
     if (entity[effectKeys.DIVINE_SPARK] > 0) {
-        bonusSTR += Math.floor(entity[effectKeys.DIVINE_SPARK] / constants.DIVINE_SPARK_STR_CONVERSION);
+        bonusSTR += Math.floor(
+            entity[effectKeys.DIVINE_SPARK] /
+                constants.DIVINE_SPARK_STR_CONVERSION,
+        );
     }
 
     if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
@@ -1015,7 +1136,19 @@ export function getEntityStr(entity) {
         bonusSTR += draftEntity[effectKeys.MOONLIGHT];
     }
 
-    return draftEntity.attributes.str.value + bonusSTR;
+    if (draftEntity[effectKeys.PAST_MEMORIES] > 0) {
+        bonusSTR += draftEntity[effectKeys.PAST_MEMORIES];
+    }
+
+    if (draftEntity.states[effectKeys.VISIONARY]) {
+        bonusSTR +=
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
+        bonusSTR -=
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
+            3;
+    }
+
+    return Math.max(0, draftEntity.attributes.str.value + bonusSTR);
 }
 
 export function getEntityMaxHealth(entity) {
@@ -1109,6 +1242,11 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                         [effectKeys.RADIANCE]: currentRadiance + consumption,
                     },
                 };
+            }
+
+            // Conjecture
+            if (isCauseDamage && currResourceKey === effectKeys.CONJECTURE) {
+                draftEntity = gainMana(draftEntity, consumption);
             }
 
             // Refracted Divinity
@@ -1463,6 +1601,35 @@ export function processHealth(entity) {
     return draftEntity;
 }
 
+export function processPrecognition(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    const missingMana =
+        draftEntity[effectKeys.MAX_MANA] - draftEntity[effectKeys.MANA];
+
+    if (missingMana > 0) {
+        const precogConsumed = Math.min(
+            missingMana,
+            draftEntity.resources[effectKeys.PRECOGNITION],
+        );
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.MANA]: draftEntity[effectKeys.MANA] + precogConsumed,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftEntity.resources[effectKeys.PRECOGNITION] -
+                    precogConsumed,
+            },
+        };
+    }
+
+    return draftEntity;
+}
+
 export function takeLunicDamage(entity, amount) {
     const maxHpConsumed = Math.min(amount, entity[effectKeys.MAX_HEALTH]);
     const moonlightConsumed = Math.min(
@@ -1650,18 +1817,6 @@ export function canUseAction(prev, entityKey, action) {
         return !isProgLocked(aiKeys.CYBORG);
     }
 
-    // Runic Array Mechanics
-    const arrayActive = prev[effectKeys.RUNIC_ARRAY] > 0;
-    if (action === actionKeys.CURSE) {
-        return arrayActive;
-    }
-    if (action === actionKeys.ARRAY) {
-        if (arrayActive) {
-            return false;
-        }
-        return !isProgLocked(aiKeys.HEXER);
-    }
-
     // Selenian Actions & Active Element Conditions
     if (!states[effectKeys.SELENIAN]) {
         const lunarActions = [
@@ -1731,7 +1886,10 @@ export function canUseAction(prev, entityKey, action) {
         if (isElementActive(entity, elementalKeys.SCORCH)) {
             return false;
         }
-        return getEntityTotalMana(entity) >= constants.SP_ATTACK_COST;
+        return (
+            getEntityTotalMana(entity) >=
+            constants.SP_ATTACK_COST * entity[effectKeys.MAX_MANA]
+        );
     }
     if (action === actionKeys.SACRIFICE) {
         if (isElementActive(entity, elementalKeys.WITHER)) {
@@ -1743,11 +1901,25 @@ export function canUseAction(prev, entityKey, action) {
         if (isElementActive(entity, elementalKeys.FROST)) {
             return false;
         }
-        if(getEntityDef(entity) <= 0) {
+        if (getEntityDef(entity) <= 0) {
             return false;
         }
-        
+
         return !isProgLocked(aiKeys.PALADIN);
+    }
+
+    // Curse
+    if (action === actionKeys.CURSE) {
+        if (states[effectKeys.VISIONARY]) {
+            if (
+                countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.EMPTY) ===
+                entity[effectKeys.RUNIC_ARRAY].length
+            ) {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     // Untransformed Base Stances
@@ -1762,6 +1934,12 @@ export function canUseAction(prev, entityKey, action) {
             return false;
         }
         return !isProgLocked(aiKeys.SHADOW_SORCERER);
+    }
+    if (action === actionKeys.CARVE) {
+        if (states[effectKeys.VISIONARY]) {
+            return false;
+        }
+        return !isProgLocked(aiKeys.HEXER);
     }
 
     return true;
@@ -1831,12 +2009,11 @@ export function getActions(prev, entityKey) {
         actions.push(actionKeys.AEGIS);
     }
 
-    // Array / Curse
-    const arrayActive = prev[effectKeys.RUNIC_ARRAY] > 0;
-    if (arrayActive) {
+    // Carve / Curse
+    if (states[effectKeys.VISIONARY]) {
         actions.push(actionKeys.CURSE);
     } else {
-        actions.push(actionKeys.ARRAY);
+        actions.push(actionKeys.CARVE);
     }
 
     // Deploy / Laser
@@ -1885,7 +2062,7 @@ export function getActions(prev, entityKey) {
     return actions;
 }
 
-export function canUseCombatInteractions(prev) {
+export function canUseCombatInteractions(prev, realEntityKey = null) {
     const currRoundPhase =
         prev.roundQueue && prev.roundQueue.length > 0
             ? prev.roundQueue[prev.roundIndex]
@@ -1901,6 +2078,11 @@ export function canUseCombatInteractions(prev) {
         currRoundPhase === roundPhases.PLAYER_ONE_TURN
             ? entityKeys.PLAYER_ONE
             : entityKeys.PLAYER_TWO;
+
+    // Incorrect Player
+    if (realEntityKey && realEntityKey !== entityKey) {
+        return false;
+    }
 
     // Battle not ongoing
     if (prev.status !== turnStatus.ONGOING) {
@@ -1932,4 +2114,229 @@ export function canUseCombatInteractions(prev) {
     }
 
     return true;
+}
+
+export function addRune(prev, targetKey, nonTargetKey, newRune) {
+    let draftTarget = {
+        ...prev.entities[targetKey],
+    };
+
+    const disposedRune =
+        draftTarget[effectKeys.RUNIC_ARRAY][0] || runeKeys.EMPTY;
+
+    // Recollection on detonation
+    if (disposedRune !== runeKeys.EMPTY) {
+        const recConsumed = Math.min(
+            draftTarget[effectKeys.RECOLLECTION],
+            constants.RECOLLECTION_LOSE,
+        );
+        const memGain = Math.floor(recConsumed / constants.PAST_MEMORIES_GAIN);
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.RECOLLECTION]:
+                draftTarget[effectKeys.RECOLLECTION] - recConsumed,
+            [effectKeys.PAST_MEMORIES]:
+                draftTarget[effectKeys.PAST_MEMORIES] + memGain,
+        };
+    }
+
+    let newGameState = {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...draftTarget,
+            },
+        },
+    };
+
+    // Detonate Old Rune
+    switch (disposedRune) {
+        case runeKeys.URD: {
+            newGameState = detonateUrd(newGameState, targetKey, nonTargetKey);
+            break;
+        }
+        case runeKeys.VERDANDI: {
+            newGameState = detonateVerdandi(
+                newGameState,
+                targetKey,
+                nonTargetKey,
+            );
+            break;
+        }
+        case runeKeys.SKULD: {
+            newGameState = detonateSkuld(newGameState, targetKey, nonTargetKey);
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+
+    draftTarget = {
+        ...newGameState.entities[targetKey],
+    };
+
+    // Activate On Aquisition Effects
+    switch (newRune) {
+        case runeKeys.URD: {
+            // Gain Recollection
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.RECOLLECTION]: Math.min(
+                    draftTarget[effectKeys.RECOLLECTION] +
+                        getEntityDef(draftTarget) * constants.URD_DEF_REC,
+                    constants.MAX_RECOLLECTION,
+                ),
+            };
+
+            break;
+        }
+        case runeKeys.VERDANDI: {
+            // Gain Conjecture
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.CONJECTURE]:
+                        draftTarget.resources[effectKeys.CONJECTURE] +
+                        getEntityStr(draftTarget),
+                },
+            };
+
+            break;
+        }
+        case runeKeys.SKULD: {
+            // Restore Mana
+            draftTarget = {
+                ...gainMana(
+                    draftTarget,
+                    draftTarget[effectKeys.MAX_MANA] *
+                        constants.SKULD_MANA_REGEN,
+                ),
+            };
+
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+
+    // Add the new rune
+    const newArray = [...draftTarget[effectKeys.RUNIC_ARRAY].slice(1), newRune];
+    draftTarget = {
+        ...draftTarget,
+        [effectKeys.RUNIC_ARRAY]: [...newArray],
+    };
+
+    newGameState = {
+        ...newGameState,
+        entities: {
+            ...newGameState.entities,
+            [targetKey]: draftTarget,
+        },
+    };
+
+    return newGameState;
+}
+
+export function detonateUrd(prev, targetKey, nonTargetKey) {
+    let draftTarget = {
+        ...prev.entities[targetKey],
+    };
+
+    let draftNonTarget = {
+        ...prev.entities[nonTargetKey],
+    };
+
+    draftTarget = gainHp(
+        draftTarget,
+        getEntityMaxHealth(draftTarget) * constants.URD_HEALTH_REGEN,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...draftTarget,
+            },
+            [nonTargetKey]: {
+                ...draftNonTarget,
+            },
+        },
+    };
+}
+
+export function detonateVerdandi(prev, targetKey, nonTargetKey) {
+    let draftTarget = {
+        ...prev.entities[targetKey],
+    };
+
+    let draftNonTarget = {
+        ...prev.entities[nonTargetKey],
+    };
+
+    draftNonTarget = {
+        ...draftNonTarget,
+        [effectKeys.BAD_OMEN]: Math.min(
+            constants.MAX_BAD_OMEN,
+            draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN,
+        ),
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...draftTarget,
+            },
+            [nonTargetKey]: {
+                ...draftNonTarget,
+            },
+        },
+    };
+}
+
+export function detonateSkuld(prev, targetKey, nonTargetKey) {
+    let draftTarget = {
+        ...prev.entities[targetKey],
+    };
+
+    let draftNonTarget = {
+        ...prev.entities[nonTargetKey],
+    };
+
+    draftTarget = {
+        ...draftTarget,
+        resources: {
+            ...draftTarget.resources,
+            [effectKeys.PRECOGNITION]:
+                draftTarget.resources[effectKeys.PRECOGNITION] +
+                draftTarget[effectKeys.MAX_MANA] *
+                    constants.SKULD_PRECOGNITION_GAIN,
+        },
+    };
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...draftTarget,
+            },
+            [nonTargetKey]: {
+                ...draftNonTarget,
+            },
+        },
+    };
+}
+
+export function countRunes(array, targetRune) {
+    return array.filter((rune) => rune === targetRune).length;
 }

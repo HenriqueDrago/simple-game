@@ -26,6 +26,7 @@ import ModifiersTracker from "./ModifiersTracker.jsx";
 import NebulaStarblightBar from "./NebulaStarblightBar.jsx";
 import ConstellationTracker from "./ConstellationTracker.jsx";
 import DivineBar from "./DivineBar.jsx";
+import RunicArray from "./RunicArray.jsx";
 
 function StatsPanel({
     game,
@@ -64,6 +65,7 @@ function StatsPanel({
         [effectKeys.PRISMATIC]: "state-prismatic",
         [effectKeys.MOON_DEW]: "state-moon-dew",
         [effectKeys.NOVA]: "state-nova",
+        [effectKeys.VISIONARY]: "state-visionary",
     };
 
     const activeStates = Object.keys(stateClassMap)
@@ -169,6 +171,60 @@ function StatsPanel({
                     #673ab7 50%,
                     #512da8 75%,
                     #311b92 100%
+                )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
+            {entity[effectKeys.RECOLLECTION] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.RECOLLECTION,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Recollection"}
+                        currResource={entity[effectKeys.RECOLLECTION]}
+                        maxResource={constants.MAX_RECOLLECTION || 100}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                90deg,
+                                #00838f 0%,
+                                #00f0ff 35%,
+                                #80deea 50%,
+                                #00f0ff 65%,
+                                #00838f 100%
+                            )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
+            {entity[effectKeys.BAD_OMEN] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.BAD_OMEN)
+                    }
+                >
+                    <GradientBar
+                        label={"Bad Omen"}
+                        currResource={entity[effectKeys.BAD_OMEN]}
+                        maxResource={constants.MAX_BAD_OMEN || 100}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                    90deg,
+                    #3e2723 0%,
+                    #6d4c41 35%,
+                    #a1887f 50%,
+                    #6d4c41 65%,
+                    #3e2723 100%
                 )`,
                         }}
                         showPercent={true}
@@ -311,6 +367,30 @@ function StatsPanel({
                 </div>
             )}
 
+            {entity[effectKeys.PAST_MEMORIES] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.PAST_MEMORIES,
+                        )
+                    }
+                >
+                    <SpecialCounter
+                        roman={true}
+                        label={"PAST MEMORIES"}
+                        value={entity[effectKeys.PAST_MEMORIES]}
+                        style={{
+                            color: "#00f0ff",
+                            borderColor: "#80deea",
+                            backgroundColor: "rgba(0, 240, 255, 0.15)",
+                            boxShadow: "inset 0 0 8px rgba(0, 240, 255, 0.3)",
+                        }}
+                    />
+                </div>
+            )}
+
             <div className="stacks-wrapper">
                 {[...FREE_RESOURCES].reverse().map((key) => {
                     const counter = stackCounters[key];
@@ -348,6 +428,14 @@ function StatsPanel({
                 handleSetTooltip={handleSetTooltip}
                 game={game}
             />
+
+            <div
+                onMouseDown={(e) =>
+                    spawnTooltip(e, handleSetTooltip, effectKeys.RUNIC_ARRAY)
+                }
+            >
+                <RunicArray entity={entity} handleSetTooltip={handleSetTooltip}/>
+            </div>
 
             <div className="attributes-wrapper">
                 {constants.ATTRIBUTE_NAMES.map((attr) => (

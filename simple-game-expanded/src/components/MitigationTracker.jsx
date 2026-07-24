@@ -1,5 +1,6 @@
 import {
     Amphora,
+    ChartNoAxesCombined,
     Flame,
     Globe,
     Hexagon,
@@ -59,6 +60,11 @@ const mitigators = {
         icon: <Sparkles className="svg-icon" strokeWidth={2.5} />,
         color: "#536dfe",
         borderColor: "rgba(83, 109, 254, 0.25)",
+    },
+    [effectKeys.CONJECTURE]: {
+        icon: <ChartNoAxesCombined className="svg-icon" strokeWidth={2.5} />,
+        color: "#00e676",
+        borderColor: "rgba(0, 230, 118, 0.25)",
     },
 };
 

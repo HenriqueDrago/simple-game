@@ -6,6 +6,7 @@ import {
     entryTypes,
     moonKeys,
     roundPhases,
+    runeKeys,
 } from "./enums";
 
 export const ACTION_DESCRIPTIONS = {
@@ -19,7 +20,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Consumes MANA to replenish missing HEALTH. Cleanses POISON and gains DISTILLED TOXIN equal to the amount cleansed.",
+            "Consumes MANA to replenish missing HEALTH.",
     },
 
     [actionKeys.GUARD]: {
@@ -33,7 +34,7 @@ export const ACTION_DESCRIPTIONS = {
         name: "SPECIAL ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Deals PIERCING DAMAGE equal to the user's STR. If MANA IMBALANCE is positive, restores MANA to the target and increases the damage dealt by its value. If MANA IMBALANCE is negative, restores MANA on self and decreases the damage dealt by its value. Then, consumes 6 MANA. Cannot be used at less than 6 MANA.",
+            "Deals PIERCING DAMAGE equal to the user's STR. If MANA IMBALANCE is positive, restores MANA to the target and increases the damage dealt by its value. If MANA IMBALANCE is negative, restores MANA on self and decreases the damage dealt by its value. Then, consumes MANA equal to 60% of MAX MANA. Cannot be used at less than 60% MAX MANA.",
     },
 
     [actionKeys.SACRIFICE]: {
@@ -131,7 +132,7 @@ export const STATE_DESCRIPTIONS = {
         name: "DIMMING DARKNESS",
         type: entryTypes.STATE,
         description:
-            "Does not activate POISON and MANA OVERFLOW effects on self. Cleared at turn start.",
+            "Does not activate MANA OVERFLOW effects on self. Cleared at turn start.",
     },
 
     [effectKeys.DEPLOYMENT]: {
@@ -174,27 +175,6 @@ export const RESOURCE_DESCRIPTIONS = {
         type: entryTypes.OVERFLOWN_RESOURCE,
         description:
             "Used before MANA by abilities that consume MANA. At turn end, loses all MANA OVERFLOW on self and takes TRUE DAMAGE equal to the amount lost.",
-    },
-
-    [effectKeys.SHACKLED_MANA]: {
-        name: "SHACKLED MANA",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "Inactive. Cannot be used as MANA. When taking PHYSICAL DAMAGE, the attacker takes damage equal to SHACKLED MANA on self.",
-    },
-
-    [effectKeys.POISON]: {
-        name: "POISON",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, takes TRUE DAMAGE equal to current POISON stacks.",
-    },
-
-    [effectKeys.DISTILLED_TOXIN]: {
-        name: "DISTILLED TOXIN",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, loses half stack, rounded up, and replenishes MANA equal to the amount lost.",
     },
 
     [effectKeys.SHADOWFLAME]: {
@@ -318,7 +298,7 @@ export const STAR_DESCRIPTIONS = {
         name: "STARS",
         type: entryTypes.CATEGORY,
         description:
-            "A unique subset of RESOURCES. Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have three levels: normal, augmented and nova.",
+            "Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have three levels: normal, augmented and nova.",
     },
 
     [effectKeys.STARFALL]: {
@@ -769,7 +749,7 @@ export const CATEGORY_DESCRIPTIONS = {
         name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, POISON, SHACKLED MANA, BLOOD SACRIFICE, STARDUST, RADIANCE and MOONDUST. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, SHACKLED MANA, BLOOD SACRIFICE, STARDUST, RADIANCE and MOONDUST. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
@@ -1155,39 +1135,93 @@ export const SONORITY_DESCRIPTIONS = {
 };
 
 export const ARRAY_DESCRIPTIONS = {
-    [actionKeys.ARRAY]: {
-        name: "ARRAY",
+    [actionKeys.CARVE]: {
+        name: "CARVE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Converts all MANA and MANA OVERFLOW on all entities into SHACKLED MANA. Envelops the battlefield in a RUNIC ARRAY for 3 turns.",
+        description: "Enters VISIONARY state.",
     },
 
     [actionKeys.CURSE]: {
         name: "CURSE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Ends RUNIC ARRAY. Consumes all SHACKLED MANA from every entity and grants POISON equal to the amount consumed on each.",
+            "Detonates all RUNES, starting from the newest. Takes 5 TRUE DAMAGE when detonating an empty socket. This action does not end your turn. Cannot be used when RUNIC ARRAY is empty.",
+    },
+
+    [effectKeys.VISIONARY]: {
+        name: "VISIONARY",
+        type: entryTypes.STATE,
+        description:
+            "Enables RUNIC ARRAY. When using GUARD, HEAL or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI or RUNE OF SKULD to the RUNIC ARRAY, respectively. When exiting this state, detonates all RUNES.",
     },
 
     [effectKeys.RUNIC_ARRAY]: {
         name: "RUNIC ARRAY",
-        type: entryTypes.FIELD_EFFECT,
+        type: entryTypes.MECHANIC,
         description:
-            "While active, enables MANA SIPHON and RUNIC PULSE. Replaces ARRAY with CURSE. Disables MANA OVERFLOW turn end effects.",
+            "Can hold up to 3 RUNES. When acquiring more than 3 RUNES, detonate the oldest one to make space.",
     },
 
-    [effectKeys.RUNIC_PULSE]: {
-        name: "RUNIC PULSE",
-        type: entryTypes.BATTLE_PHASE,
+    [entryTypes.RUNES]: {
+        name: "RUNES",
+        type: entryTypes.CATEGORY,
         description:
-            "A special phase triggered after each player's TURN while RUNIC ARRAY is active. On this phase, grants every entity 5 SHACKLED MANA and decreases remaining RUNIC ARRAY duration. If duration reaches 0 due to this effect, does not grant SHACKLED MANA; instead, absorbs all SHACKLED MANA on all entities, then redistributes it evenly between them and ends RUNIC ARRAY.",
+            "Includes RUNE OF URD, RUNE OF VERDANDI and RUNE OF SKULD.",
     },
 
-    [effectKeys.MANA_SIPHON]: {
-        name: "MANA SIPHON",
-        type: entryTypes.BATTLE_PHASE,
+    [runeKeys.URD]: {
+        name: "RUNE OF URD",
+        type: entryTypes.RUNES,
         description:
-            "A special phase triggered whenever an entity has MANA or MANA OVERFLOW during a phase transition. On this phase, absorbs all MANA and MANA OVERFLOW from each entity, then grants SHACKLED MANA corresponding to the amount consumed on each.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 3% for every point of the user's DEF. While on RUNIC ARRAY: Raises the user's STR by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
+    },
+
+    [runeKeys.VERDANDI]: {
+        name: "RUNE OF VERDANDI",
+        type: entryTypes.RUNES,
+        description:
+            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's STR. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
+    },
+
+    [runeKeys.SKULD]: {
+        name: "RUNE OF SKULD",
+        type: entryTypes.RUNES,
+        description:
+            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Gains PRECOGNITION equal to 30% MAX MANA.",
+    },
+
+    [effectKeys.PRECOGNITION]: {
+        name: "PRECOGNITION",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish missing MANA.",
+    },
+
+    [effectKeys.CONJECTURE]: {
+        name: "CONJECTURE",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. Then, restores MANA equal to the CONJECTURE consumed this way.",
+    },
+
+    [effectKeys.BAD_OMEN]: {
+        name: "BAD OMEN",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. At turn end, lowers BAD OMEN by 30%.",
+    },
+
+    [effectKeys.RECOLLECTION]: {
+        name: "RECOLLECTION",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When RUNES detonate, lose 30% RECOLLECTION and raises PAST MEMORIES rank by 1 for every 6% RECOLLECTION lost.",
+    },
+
+    [effectKeys.PAST_MEMORIES]: {
+        name: "PAST MEMORIES",
+        type: entryTypes.RANKED_RESOURCE,
+        description: "Raises STR by its rank.",
     },
 };
 

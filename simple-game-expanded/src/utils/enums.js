@@ -16,10 +16,6 @@ export const roundPhases = Object.freeze({
     P1_STARS_TURN: "p1starfall",
     MOON_TURN: "moonPhaseTurn",
     P2_STARS_TURN: "p2Starfall",
-    MANA_SIPHON: "manaSiphon",
-
-    POST_P1_RUNIC_PULSE: "p1Pulse",
-    POST_P2_RUNIC_PULSE: "p2Pulse",
 
     P1_SINGULARITY: "p1Singularity",
     P2_SINGULARITY: "p2Singularity",
@@ -90,8 +86,7 @@ export const actionKeys = Object.freeze({
     GUARD: "guard",
     SPECIAL_ATTACK: "spAtk",
     SACRIFICE: "sacrifice",
-    ARRAY: "array",
-    CURSE: "curse",
+
     AEGIS: "aegis",
     SHADOW_PACT: "shadowPact",
     BLACK_MAYHEM: "blackMayhem",
@@ -119,6 +114,9 @@ export const actionKeys = Object.freeze({
     CHALK: "chalk",
 
     ASCEND: "ascend",
+
+    CARVE: "carve",
+    CURSE: "curse",
 });
 
 export const effectKeys = Object.freeze({
@@ -126,8 +124,6 @@ export const effectKeys = Object.freeze({
     MANA_BLEED: "manaBleed",
     MANA_OVERFLOW: "manaOverflow",
     SACRIFICIAL_STATE: "sacrificial",
-    SHACKLED_MANA: "shackledMana",
-    POISON: "poison",
     RADIANCE: "radiance",
     RESOURCES: "resources",
     UMBRAL_CORE: "umbralCore",
@@ -148,23 +144,15 @@ export const effectKeys = Object.freeze({
     OVERHEAT: "currOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
     VENTING: "venting",
-
-
     BLEAK_DECEPTION: "bleakDeception",
-
-
-
-    RUNIC_ARRAY: "runicArray",
     HEALTH: "currHp",
     MANA: "currMana",
-
     MAX_MANA: "maxMana",
     MAX_HEALTH: "maxHp",
     STR: "str",
     DEF: "def",
     DAMAGE_REDUCTION: "dr",
     DEF_EFFECTIVENESS: "defEffect",
-
     WHITE_STAR: "white",
     GRAY_STAR: "gray",
     RED_STAR: "red",
@@ -185,7 +173,6 @@ export const effectKeys = Object.freeze({
     BLUE_STARFALL: "blueStarfall",
     INDIGO_STARFALL: "indigoStarfall",
     VIOLET_STARFALL: "violetStarfall",
-
 
     DIVINE_SPARK: "currDivineSpark",
 
@@ -210,8 +197,6 @@ export const effectKeys = Object.freeze({
     PLAN: "plan",
     COMMIT: "commit",
     MANA_IMBALANCE: "manaImbalance",
-    RUNIC_PULSE: "runicPulse",
-    MANA_SIPHON: "manaSiphon",
 
     OFFENSIVE_ACTIONS: "offensiveActions",
     DEFENSIVE_ACTIONS: "defensiveActions",
@@ -223,7 +208,6 @@ export const effectKeys = Object.freeze({
     DAMAGE_BONUS: "dmgBonus",
     WEAKNESS: "weakness",
     EFFECTIVE_DEF: "effectiveDef",
-    DISTILLED_TOXIN: "distilledToxin",
     FUNERARY_URN: "funeraryUrn",
 
     HARMONY: "harmony",
@@ -242,6 +226,23 @@ export const effectKeys = Object.freeze({
 
     GRAVITATION: "gravitation",
     SINGULARITY: "singularity",
+
+    // Runic Array
+    RUNES: "runes",
+    RUNIC_ARRAY: "runicArray",
+    VISIONARY: "visionary",
+    RECOLLECTION: "recollection",
+    PRECOGNITION: "precognition",
+    CONJECTURE: "conjecture",
+    BAD_OMEN: "badOmen",
+    PAST_MEMORIES: "pastMemories",
+});
+
+export const runeKeys = Object.freeze({
+    EMPTY: "empty",
+    URD: "urd",
+    VERDANDI: "verdandi",
+    SKULD: "skuld",
 });
 
 export const moonKeys = Object.freeze({
@@ -274,6 +275,7 @@ export const entryTypes = Object.freeze({
     TRANSFORMATIVE_ACTION: "transformativeActions",
     BASE_ATTRIBUTES: "baseStats",
     SPECIAL_ATTRIBUTES: "alternateStats",
+    RUNES: "runes",
 });
 
 export const starfallPhases = Object.freeze({
@@ -314,8 +316,6 @@ export const eventKeys = Object.freeze({
     TURN_UPKEEP: "turnUpkeep",
     TURN_COMMIT: "turnCommit",
     STAR_ACTIVATION: "starActivation",
-    MANA_SIPHON: "manaSiphon",
-    RUNIC_PULSE: "runicPulse",
     MOON_PHASE: "moonPhase",
     VICTORY: "victory",
     DEFEAT: "defeat",

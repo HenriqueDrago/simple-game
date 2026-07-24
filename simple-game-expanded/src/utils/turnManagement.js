@@ -1,5 +1,4 @@
-import { constants, elementsMap } from "./constants.js";
-import { DESCRIPTIONS } from "./descriptions.js";
+import { actionMap, constants, elementsMap } from "./constants.js";
 import {
     canUseAction,
     consumeResources,
@@ -172,25 +171,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Distilled Toxin
-    if (draftTarget.resources[effectKeys.DISTILLED_TOXIN] > 0) {
-        const toxinConsumed = Math.ceil(
-            draftTarget.resources[effectKeys.DISTILLED_TOXIN] / 2,
-        );
-
-        draftTarget = gainMana(draftTarget, toxinConsumed);
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.DISTILLED_TOXIN]:
-                    draftTarget.resources[effectKeys.DISTILLED_TOXIN] -
-                    toxinConsumed,
-            },
-        };
-    }
-
     // Shadowflame
     if (
         draftTarget.resources.shadowflame > 0 &&
@@ -260,18 +240,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             draftTarget,
             draftTarget[effectKeys.MOONLIGHT],
             dmgTypes.LUNIC,
-        );
-    }
-
-    // Poison
-    if (
-        draftTarget.resources.poison > 0 &&
-        !draftTarget.states.dimmingDarkness
-    ) {
-        draftTarget = takeDamage(
-            draftTarget,
-            draftTarget.resources.poison,
-            dmgTypes.TRUE,
         );
     }
 
@@ -414,11 +382,22 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         ...prev.entities[nextActorKey],
     };
 
+    // Bad Omen
+    if (draftCurrActor[effectKeys.BAD_OMEN] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.BAD_OMEN]: Math.max(
+                0,
+                draftCurrActor[effectKeys.BAD_OMEN] -
+                    constants.BAD_OMEN_TURN_END_LOSS,
+            ),
+        };
+    }
+
     // Mana Overflow
     if (
-        draftCurrActor.resources.manaOverflow > 0 &&
-        !draftCurrActor.states.dimmingDarkness &&
-        prev[effectKeys.RUNIC_ARRAY] <= 0
+        draftCurrActor.resources[effectKeys.MANA_OVERFLOW] > 0 &&
+        !draftCurrActor.states.dimmingDarkness
     ) {
         draftCurrActor = takeDamage(
             draftCurrActor,
@@ -523,25 +502,8 @@ export function buildRoundQueue(prev) {
         newQueue.push(roundPhases.ROUND_START);
     }
 
-    // Immediate Mana Siphon trigger on special conditions
-    if (
-        getEntityTotalMana(p1) + getEntityTotalMana(p2) > 0 &&
-        prev[effectKeys.RUNIC_ARRAY] > 0
-    ) {
-        newQueue.push(roundPhases.MANA_SIPHON);
-    }
-
-    let futurePulsesAvailable = prev[effectKeys.RUNIC_ARRAY];
-
     // Player Logic Helper
-    const playerLogic = (
-        entityKey,
-        turnKey,
-        starfallKey,
-        singularityKey,
-        runicKey,
-        isPastTurn = false,
-    ) => {
+    const playerLogic = (entityKey, turnKey, starfallKey, singularityKey) => {
         // Player Turn
         if (!newQueue.includes(turnKey)) {
             newQueue.push(turnKey);
@@ -566,28 +528,15 @@ export function buildRoundQueue(prev) {
         ) {
             newQueue.push(singularityKey);
         }
-
-        // Runic Pulse
-        if (
-            !newQueue.includes(runicKey) &&
-            futurePulsesAvailable > 0 &&
-            !isPastTurn
-        ) {
-            newQueue.push(runicKey);
-            futurePulsesAvailable -= 1;
-        }
     };
 
     // Player Logic Order
     if (prev.startingPlayer === entityKeys.PLAYER_ONE) {
-        const isPastTurn = newQueue.includes(roundPhases.PLAYER_TWO_TURN);
         playerLogic(
             entityKeys.PLAYER_ONE,
             roundPhases.PLAYER_ONE_TURN,
             roundPhases.P1_STARS_TURN,
             roundPhases.P1_SINGULARITY,
-            roundPhases.POST_P1_RUNIC_PULSE,
-            isPastTurn,
         );
 
         playerLogic(
@@ -595,17 +544,13 @@ export function buildRoundQueue(prev) {
             roundPhases.PLAYER_TWO_TURN,
             roundPhases.P2_STARS_TURN,
             roundPhases.P2_SINGULARITY,
-            roundPhases.POST_P2_RUNIC_PULSE,
         );
     } else {
-        const isPastTurn = newQueue.includes(roundPhases.PLAYER_ONE_TURN);
         playerLogic(
             entityKeys.PLAYER_TWO,
             roundPhases.PLAYER_TWO_TURN,
             roundPhases.P2_STARS_TURN,
             roundPhases.P2_SINGULARITY,
-            roundPhases.POST_P2_RUNIC_PULSE,
-            isPastTurn,
         );
 
         playerLogic(
@@ -613,7 +558,6 @@ export function buildRoundQueue(prev) {
             roundPhases.PLAYER_ONE_TURN,
             roundPhases.P1_STARS_TURN,
             roundPhases.P1_SINGULARITY,
-            roundPhases.POST_P1_RUNIC_PULSE,
         );
     }
 
@@ -633,117 +577,6 @@ export function buildRoundQueue(prev) {
     return processDeathCheck({
         ...prev,
         roundQueue: newQueue,
-    });
-}
-
-export function processManaSiphon(prev) {
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    // Convert mana
-    const p1NewManaShackle =
-        playerOne[effectKeys.MANA] +
-        playerOne.resources[effectKeys.SHACKLED_MANA] +
-        playerOne.resources[effectKeys.MANA_OVERFLOW];
-    const p2NewManaShackle =
-        playerTwo[effectKeys.MANA] +
-        playerTwo.resources[effectKeys.SHACKLED_MANA] +
-        playerTwo.resources[effectKeys.MANA_OVERFLOW];
-
-    playerOne = {
-        ...playerOne,
-        [effectKeys.MANA]: 0,
-        resources: {
-            ...playerOne.resources,
-            [effectKeys.MANA_OVERFLOW]: 0,
-            [effectKeys.SHACKLED_MANA]: p1NewManaShackle,
-        },
-    };
-
-    playerTwo = {
-        ...playerTwo,
-        [effectKeys.MANA]: 0,
-        resources: {
-            ...playerTwo.resources,
-            [effectKeys.MANA_OVERFLOW]: 0,
-            [effectKeys.SHACKLED_MANA]: p2NewManaShackle,
-        },
-    };
-
-    return processDeathCheck({
-        ...prev,
-        status: turnStatus.ROUND_TRANSITION,
-        entities: {
-            ...prev.entities,
-            [entityKeys.PLAYER_ONE]: { ...playerOne },
-            [entityKeys.PLAYER_TWO]: { ...playerTwo },
-        },
-    });
-}
-
-export function processRunicPulse(prev) {
-    let playerOne = prev.entities[entityKeys.PLAYER_ONE];
-    let playerTwo = prev.entities[entityKeys.PLAYER_TWO];
-
-    // Decrease Array duration
-    const newArray = prev[effectKeys.RUNIC_ARRAY] - 1;
-
-    // If Array dying, redistribute mana
-    if (newArray <= 0) {
-        const totalShackledMana =
-            playerOne.resources[effectKeys.SHACKLED_MANA] +
-            playerTwo.resources[effectKeys.SHACKLED_MANA];
-        const manaShare = Math.floor(totalShackledMana / 2);
-
-        playerOne = gainMana(playerOne, manaShare);
-        playerOne = {
-            ...playerOne,
-            resources: {
-                ...playerOne.resources,
-                shackledMana: 0,
-            },
-        };
-
-        playerTwo = gainMana(playerTwo, manaShare);
-        playerTwo = {
-            ...playerTwo,
-            resources: {
-                ...playerTwo.resources,
-                shackledMana: 0,
-            },
-        };
-    } else {
-        // else, grants shackled mana
-        playerOne = {
-            ...playerOne,
-            resources: {
-                ...playerOne.resources,
-                [effectKeys.SHACKLED_MANA]:
-                    playerOne.resources[effectKeys.SHACKLED_MANA] +
-                    constants.MANA_SHACKLE_TURN_GAIN,
-            },
-        };
-
-        playerTwo = {
-            ...playerTwo,
-            resources: {
-                ...playerTwo.resources,
-                [effectKeys.SHACKLED_MANA]:
-                    playerTwo.resources[effectKeys.SHACKLED_MANA] +
-                    constants.MANA_SHACKLE_TURN_GAIN,
-            },
-        };
-    }
-
-    return processDeathCheck({
-        ...prev,
-        [effectKeys.RUNIC_ARRAY]: newArray,
-        status: turnStatus.ROUND_TRANSITION,
-        entities: {
-            ...prev.entities,
-            [entityKeys.PLAYER_ONE]: { ...playerOne },
-            [entityKeys.PLAYER_TWO]: { ...playerTwo },
-        },
     });
 }
 
@@ -1020,7 +853,7 @@ export function processSingularity(prev, agentKey, action) {
 
     // Determine if PLAN subphase ends or not
     const newStatus =
-        action === actionKeys.LASER && // free actions
+        (action === actionKeys.LASER || action === actionKeys.CURSE) && // free actions
         newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
             ? prev.status
             : turnStatus.ROUND_TRANSITION;
@@ -1041,21 +874,18 @@ export function processPlan(prev, action) {
 
     // Determine if PLAN subphase ends or not
     const newQueue =
-        action === actionKeys.LASER && // free actions
+        (action === actionKeys.LASER || action === actionKeys.CURSE) && // free actions
         newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
             ? prev.playerQueue
             : prev.playerQueue.slice(1);
-
-    console.log(action);
-    console.log(action === actionKeys.LASER);
-    console.log(newGameState.status);
-    console.log(prev.playerQueue);
-    console.log(newQueue);
 
     const newStatus =
         newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
             ? turnStatus.ONGOING
             : newGameState.status;
+
+    console.log("plan");
+    console.log(newGameState);
 
     return buildRoundQueue({
         ...newGameState,
@@ -1089,13 +919,13 @@ export function buildHistory(prev, event, info = {}) {
             break;
 
         case eventKeys.USE_ACTION: {
-            const actionName = DESCRIPTIONS[action].name;
+            const actionName = actionMap[action].name;
             string = `${playerName} used ${actionName}`;
             break;
         }
 
         case eventKeys.FAILED_ACTION: {
-            const actionName = DESCRIPTIONS[action].name;
+            const actionName = actionMap[action].name;
             string = `${playerName} failed to use ${actionName}!`;
             break;
         }
@@ -1111,14 +941,6 @@ export function buildHistory(prev, event, info = {}) {
             string = `${playerName}'s Starfall Start`;
             break;
         }
-
-        case eventKeys.MANA_SIPHON:
-            string = "Mana Siphon";
-            break;
-
-        case eventKeys.RUNIC_PULSE:
-            string = "Runic Pulse";
-            break;
 
         case eventKeys.MOON_PHASE:
             string = "Moon Phase";

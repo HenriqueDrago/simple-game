@@ -10,8 +10,8 @@
     
     /* Default Base state */
     border: 2px solid rgba(255, 255, 255, 0.2);
-    background: rgba(15, 15, 20, 0.85);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+    background: rgba(15, 15, 20, 0.92);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
     transition: all 0.3s ease-in-out;
 }
 
@@ -20,28 +20,33 @@
 ========================================= */
 .stats-panel-container.state-umbral {
     border-color: #9d00ff;
-    box-shadow: 0 0 15px rgba(157, 0, 255, 0.4), inset 0 0 20px rgba(74, 43, 102, 0.3);
+    background: linear-gradient(to bottom, rgba(157, 0, 255, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(157, 0, 255, 0.5), inset 0 0 15px rgba(157, 0, 255, 0.15);
 }
 
 .stats-panel-container.state-resonant {
     border-color: var(--resonant-color, cyan);
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.15);
+    background: linear-gradient(to bottom, rgba(0, 255, 255, 0.04), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.45), inset 0 0 15px rgba(0, 255, 255, 0.12);
 }
 
 .stats-panel-container.state-weapons-deployed {
     border-color: #ff8c00;
-    box-shadow: 0 0 15px rgba(255, 140, 0, 0.4), inset 0 0 15px rgba(255, 140, 0, 0.2);
+    background: linear-gradient(to bottom, rgba(255, 140, 0, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(255, 140, 0, 0.5), inset 0 0 15px rgba(255, 140, 0, 0.15);
 }
 
 .stats-panel-container.state-thermal-overload {
     border-color: #ff3300;
-    box-shadow: 0 0 20px rgba(255, 51, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.4);
+    background: linear-gradient(to bottom, rgba(255, 51, 0, 0.08), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 22px rgba(255, 51, 0, 0.65), inset 0 0 20px rgba(255, 0, 0, 0.25);
     animation: overload-pulse 1.5s infinite alternate;
 }
 
 .stats-panel-container.state-venting {
     border-color: #87ceeb;
-    box-shadow: 0 0 15px rgba(135, 206, 235, 0.4), inset 0 0 15px rgba(135, 206, 235, 0.2);
+    background: linear-gradient(to bottom, rgba(135, 206, 235, 0.04), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(135, 206, 235, 0.45), inset 0 0 15px rgba(135, 206, 235, 0.12);
 }
 
 /* =========================================
@@ -49,89 +54,132 @@
 ========================================= */
 .stats-panel-container.state-guarding {
     border-color: #a9a9a9;
-    box-shadow: 0 0 12px rgba(169, 169, 169, 0.5), inset 0 0 10px rgba(169, 169, 169, 0.2);
+    background: linear-gradient(to bottom, rgba(169, 169, 169, 0.04), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 15px rgba(169, 169, 169, 0.45);
 }
 
 .stats-panel-container.state-sacrificial {
     border-color: #dc143c;
-    box-shadow: 0 0 15px rgba(220, 20, 60, 0.5), inset 0 0 15px rgba(220, 20, 60, 0.2);
+    background: linear-gradient(to bottom, rgba(220, 20, 60, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(220, 20, 60, 0.55);
 }
 
 .stats-panel-container.state-radiant {
     border-color: #fff9c4;
-    box-shadow: 0 0 15px rgba(255, 249, 196, 0.5), inset 0 0 15px rgba(255, 249, 196, 0.2);
+    background: linear-gradient(to bottom, rgba(255, 249, 196, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(255, 249, 196, 0.5);
 }
 
 .stats-panel-container.state-deployment {
     border-color: #c0c0c0;
-    box-shadow: 0 0 12px rgba(192, 192, 192, 0.5), inset 0 0 10px rgba(192, 192, 192, 0.2);
+    background: linear-gradient(to bottom, rgba(192, 192, 192, 0.04), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.45);
 }
 
-/* --- New Heavy Debuff States --- */
+/* Heavy Debuff States */
 .stats-panel-container.state-bleak-deception {
     border-color: #4a4a4a;
-    background: rgba(20, 20, 20, 0.95);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.9);
+    background: linear-gradient(to bottom, rgba(74, 74, 74, 0.05), rgba(15, 15, 20, 0.95));
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
 /* Umbral Overrides */
 .stats-panel-container.state-dark-embrace {
     border-color: #2b2b2b;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(30, 30, 30, 0.6);
+    background: linear-gradient(to bottom, rgba(43, 43, 43, 0.05), rgba(15, 15, 20, 0.95));
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.85);
 }
 
 .stats-panel-container.state-dimming {
     border-color: #4b0082;
-    box-shadow: 0 0 15px rgba(75, 0, 130, 0.5), inset 0 0 20px rgba(40, 0, 40, 0.5);
+    background: linear-gradient(to bottom, rgba(75, 0, 130, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(75, 0, 130, 0.5);
 }
 
-/* Stargazer: Cosmic cosmic shimmer */
+/* Stargazer: Calibrated spectrum corner glow */
 .stats-panel-container.state-stargazer {
-    border-color: #ffb347;
-    background: linear-gradient(to bottom, rgba(26, 18, 48, 0.9), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 15px rgba(255, 179, 71, 0.45), inset 0 0 20px rgba(123, 104, 238, 0.25);
+    border: 2px solid;
+    border-image: linear-gradient(
+        135deg,
+        #ff1744 0%,   /* Red Star */
+        #ff9100 16%,  /* Orange Star */
+        #ffea00 33%,  /* Yellow Star */
+        #00e676 50%,  /* Green Star */
+        #2979ff 66%,  /* Blue Star */
+        #651fff 83%,  /* Indigo Star */
+        #d500f9 100%  /* Violet Star */
+    ) 1;
+    background: linear-gradient(
+        180deg,
+        rgba(18, 15, 30, 0.95) 0%,
+        rgba(10, 12, 22, 0.95) 100%
+    );
+    box-shadow: 
+        -3px -3px 13px rgba(255, 23, 68, 0.30),  /* Top-Left: Red */
+        3px -3px 13px rgba(255, 234, 0, 0.26),   /* Top-Right: Yellow */
+        -3px 3px 13px rgba(41, 121, 255, 0.30),  /* Bottom-Left: Blue */
+        3px 3px 13px rgba(213, 0, 249, 0.30),   /* Bottom-Right: Violet */
+        inset 0 0 10px rgba(255, 255, 255, 0.04);
 }
 
-.stats-panel-container.state-zenith {
-    border-color: #f0f4f8; /* Soft platinum white */
-    background: linear-gradient(to bottom, rgba(240, 244, 248, 0.08), rgba(15, 15, 20, 0.9));
-    animation: zenith-glow 2s infinite alternate ease-in-out;
+/* Visionary */
+.stats-panel-container.state-visionary {
+    border: 2px solid;
+    border-image: linear-gradient(
+        180deg,
+        #00f0ff 0%,
+        #4caf50 50%,
+        #b388ff 100%
+    ) 1;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 240, 255, 0.04) 0%,
+        rgba(76, 175, 80, 0.04) 50%,
+        rgba(179, 136, 255, 0.04) 100%
+    ), rgba(15, 15, 20, 0.92);
+    box-shadow: 
+        0 -4px 14px rgba(0, 240, 255, 0.45),
+        0 0 14px rgba(76, 175, 80, 0.4),
+        0 4px 14px rgba(179, 136, 255, 0.45),
+        inset 0 0 12px rgba(0, 240, 255, 0.1);
 }
 
-/* Abandoned by Grace: Dark, bloody crimson overlay */
+
 .stats-panel-container.state-abandoned {
     border-color: #8b0000;
-    background: linear-gradient(to bottom, rgba(42, 0, 0, 0.9), rgba(10, 10, 12, 0.95));
-    box-shadow: 0 0 18px rgba(139, 0, 0, 0.6), inset 0 0 25px rgba(0, 0, 0, 0.85);
+    background: linear-gradient(to bottom, rgba(139, 0, 0, 0.06), rgba(15, 15, 20, 0.95));
+    box-shadow: 0 0 18px rgba(139, 0, 0, 0.6);
 }
 
-/* Anointed Proxy: Bright golden-white holy aura */
 .stats-panel-container.state-anointed-proxy {
     border-color: #fff9d4;
-    background: linear-gradient(to bottom, rgba(255, 249, 212, 0.15), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 22px rgba(255, 249, 212, 0.55), inset 0 0 15px rgba(255, 255, 255, 0.25);
+    background: linear-gradient(to bottom, rgba(255, 249, 212, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 20px rgba(255, 249, 212, 0.55);
 }
 
-/* Selenian: Ethereal silver-blue lunar aura */
 .stats-panel-container.state-selenian {
     border-color: #80d8ff;
-    background: linear-gradient(to bottom, rgba(128, 216, 255, 0.12), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 15px rgba(128, 216, 255, 0.45), inset 0 0 15px rgba(128, 216, 255, 0.2);
+    background: linear-gradient(to bottom, rgba(128, 216, 255, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(128, 216, 255, 0.5);
 }
 
-/* Prismatic: Shifting pastel crystal highlights */
 .stats-panel-container.state-prismatic {
     border-color: #ff8a80;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 18px rgba(255, 138, 128, 0.4), inset 0 0 20px rgba(128, 216, 255, 0.3);
+    background: linear-gradient(to bottom, rgba(255, 138, 128, 0.04), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(255, 138, 128, 0.5);
     animation: prismatic-glow 3s infinite alternate ease-in-out;
 }
 
-/* Moon Dew: Vibrant aquamarine mist */
 .stats-panel-container.state-moon-dew {
     border-color: #4fc3f7;
-    background: linear-gradient(to bottom, rgba(79, 195, 247, 0.15), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 15px rgba(79, 195, 247, 0.4), inset 0 0 12px rgba(79, 195, 247, 0.2);
+    background: linear-gradient(to bottom, rgba(79, 195, 247, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(79, 195, 247, 0.5);
+}
+
+.stats-panel-container.state-nova {
+    border-color: #ba68c8;
+    background: linear-gradient(to bottom, rgba(186, 104, 200, 0.05), rgba(15, 15, 20, 0.92));
+    box-shadow: 0 0 18px rgba(186, 104, 200, 0.45);
 }
 
 .stats-panel-warning {
@@ -143,19 +191,19 @@
 }
 
 @keyframes overload-pulse {
-    from { box-shadow: 0 0 15px rgba(255, 51, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.2); }
-    to { box-shadow: 0 0 25px rgba(255, 51, 0, 0.8), inset 0 0 20px rgba(255, 0, 0, 0.6); }
+    from { box-shadow: 0 0 10px rgba(255, 51, 0, 0.35), inset 0 0 10px rgba(255, 0, 0, 0.15); }
+    to { box-shadow: 0 0 22px rgba(255, 51, 0, 0.75), inset 0 0 20px rgba(255, 0, 0, 0.35); }
 }
 
 @keyframes zenith-glow {
-    from { box-shadow: 0 0 12px rgba(240, 244, 248, 0.25), inset 0 0 10px rgba(173, 216, 230, 0.2); }
-    to { box-shadow: 0 0 22px rgba(240, 244, 248, 0.55), inset 0 0 25px rgba(173, 216, 230, 0.45); }
+    from { box-shadow: 0 0 10px rgba(240, 244, 248, 0.25), inset 0 0 10px rgba(173, 216, 230, 0.15); }
+    to { box-shadow: 0 0 22px rgba(240, 244, 248, 0.55), inset 0 0 20px rgba(173, 216, 230, 0.35); }
 }
 
 @keyframes prismatic-glow {
-    0% { border-color: #ff8a80; box-shadow: 0 0 15px rgba(255, 138, 128, 0.4); }
-    50% { border-color: #b9f6ca; box-shadow: 0 0 15px rgba(185, 246, 202, 0.4); }
-    100% { border-color: #82b1ff; box-shadow: 0 0 15px rgba(130, 177, 255, 0.4); }
+    0% { border-color: #ff8a80; box-shadow: 0 0 18px rgba(255, 138, 128, 0.5); }
+    50% { border-color: #b9f6ca; box-shadow: 0 0 18px rgba(185, 246, 202, 0.5); }
+    100% { border-color: #82b1ff; box-shadow: 0 0 18px rgba(130, 177, 255, 0.5); }
 }
 
 .stacks-wrapper {
@@ -183,10 +231,4 @@
     font-size: 1.3rem;
     font-weight: 900;
     color: #ffff00;
-}
-
-.stats-panel-container.state-nova {
-    border-color: #ba68c8;
-    background: linear-gradient(to bottom, rgba(138, 43, 226, 0.1), rgba(15, 15, 20, 0.85));
-    box-shadow: 0 0 10px rgba(186, 104, 200, 0.3), inset 0 0 10px rgba(138, 43, 226, 0.15);
 }

@@ -1,0 +1,65 @@
+.runic-array-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px;
+    background-color: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: max-content;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Neutral frame for each rune slot (inner shadow removed) */
+.rune-slot {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0a0d14;
+    border: 1px solid #2a2d38;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Map each rune class to its global variable */
+.rune-slot.rune-urd { --rune-color: var(--color-rune-urd); }
+.rune-slot.rune-verdandi { --rune-color: var(--color-rune-verdandi); }
+.rune-slot.rune-skuld { --rune-color: var(--color-rune-skuld); }
+
+/* Active slot frame */
+.rune-slot.active {
+    border-color: #3a3f50;
+    background-color: #0d0f17;
+}
+
+/* Intensified multi-layer glow for vivid rune coloration */
+.rune-slot.active .rune-icon {
+    filter: invert(100%) 
+            drop-shadow(0 0 1px var(--rune-color)) 
+            drop-shadow(0 0 3px var(--rune-color)) 
+            drop-shadow(0 0 6px var(--rune-color))
+}
+
+/* Empty slot frame */
+.rune-slot.empty {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.rune-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    transition: filter 0.2s ease-in-out;
+}
+
+/* Empty diamond placeholder */
+.empty-rune-icon {
+    width: 14px;
+    height: 14px;
+    color: rgba(255, 255, 255, 0.35);
+    display: block;
+}

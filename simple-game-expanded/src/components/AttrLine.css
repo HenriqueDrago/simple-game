@@ -81,3 +81,7 @@
 .constellation-value-increase {
     color: yellow;
 }
+
+.str-value-past-memories {
+    color: var(--color-rune-urd)
+}

@@ -22,6 +22,7 @@ export function spawnTooltip(e, handleSetTooltip, itemKey) {
     // Mouse wheel opens tooltip
     if (e.button === 1) {
         e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
+        e.stopPropagation(); // Prevents the event from trigerring other effects
 
         const entry = DESCRIPTIONS[itemKey];
         if (itemKey && entry) {

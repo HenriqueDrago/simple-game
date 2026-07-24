@@ -2,13 +2,13 @@ import {
     simpleAI,
     bloodknightAI,
     paladinAI,
-    hexerAI,
     warlockAI,
     shadowSorcererAI,
     cyborgAI,
     maestroAI,
     starfarerAI,
     lunaticAI,
+    augurAI,
 } from "./aiControllers.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
@@ -47,7 +47,7 @@ const STANDARD_DR_INCREASE = 0.5;
 const STANDARD_DEF_EFFECT_INCREASE = 1.5;
 const GUARD_MANA_REGEN = 0.3;
 
-const SP_ATTACK_COST = 6;
+const SP_ATTACK_COST = 0.6;
 
 const MANA_BLEED_MULT = 0.5;
 const BLOOD_SACRIFICE_MULT = 1.0;
@@ -107,7 +107,32 @@ const STARFLARE_GAIN = 5;
 
 const DIVINE_SPARK_STR_CONVERSION = 5;
 
+const URD_HEALTH_REGEN = 0.3;
+const VERDANDI_OMEN_GAIN = 30;
+const MAX_BAD_OMEN = 100;
+const MAX_RECOLLECTION = 100;
+const SKULD_PRECOGNITION_GAIN = 0.3;
+const RECOLLECTION_LOSE = 30;
+const PAST_MEMORIES_GAIN = 6;
+const URD_DEF_REC = 3;
+const SKULD_WEAK = 0.3;
+const SKULD_MANA_REGEN = 0.3;
+const CURSE_EMPTY_RUNE_DMG = 5;
+const BAD_OMEN_TURN_END_LOSS = 30;
+
 export const constants = {
+    BAD_OMEN_TURN_END_LOSS,
+    CURSE_EMPTY_RUNE_DMG,
+    SKULD_MANA_REGEN,
+    SKULD_WEAK,
+    PAST_MEMORIES_GAIN,
+    URD_DEF_REC,
+    RECOLLECTION_LOSE,
+    SKULD_PRECOGNITION_GAIN,
+    MAX_RECOLLECTION,
+    URD_HEALTH_REGEN,
+    VERDANDI_OMEN_GAIN,
+    MAX_BAD_OMEN,
     STARFLARE_GAIN,
     DIVINE_SPARK_STR_CONVERSION,
     MAX_STARFLARE,
@@ -168,6 +193,7 @@ export const MITIGATION_RESOURCES = [
     effectKeys.DOME,
     effectKeys.HALO,
     effectKeys.REFRACTED_DIVINITY,
+    effectKeys.CONJECTURE,
     effectKeys.FUNERARY_URN,
     effectKeys.LINGERING_EMBER,
     effectKeys.MYCELIUM,
@@ -179,14 +205,11 @@ export const FREE_RESOURCES = [
     effectKeys.UNRELENTING_SHADOWS,
     effectKeys.CINDERS,
     effectKeys.DISSONANCE,
-    effectKeys.POISON,
-    effectKeys.DISTILLED_TOXIN,
-    effectKeys.SHACKLED_MANA,
+    effectKeys.PRECOGNITION,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
     effectKeys.MOONDUST,
     effectKeys.RADIANCE,
-
 ];
 
 export const presetAi = {
@@ -240,7 +263,9 @@ export const presetAi = {
             entryTypes.OVERFLOWN_RESOURCE,
             entryTypes.DAMAGE_MODIFIERS,
             entryTypes.MECHANIC,
-            entryTypes.STAT,
+            entryTypes.ATTRIBUTES,
+            entryTypes.BASE_ATTRIBUTES,
+            entryTypes.SPECIAL_ATTRIBUTES,
             entryTypes.CATEGORY,
         ],
     },
@@ -300,23 +325,6 @@ export const presetAi = {
             effectKeys.DIVINE_SPARK,
         ],
     },
-    [aiKeys.HEXER]: {
-        name: "Hexer",
-        best: {
-            str: 10,
-            def: 0,
-        },
-        caller: hexerAI,
-        desc: [
-            actionKeys.ARRAY,
-            actionKeys.CURSE,
-            effectKeys.RUNIC_ARRAY,
-            effectKeys.RUNIC_PULSE,
-            effectKeys.MANA_SIPHON,
-            effectKeys.SHACKLED_MANA,
-            effectKeys.POISON,
-        ],
-    },
     [aiKeys.CYBORG]: {
         name: "Cyborg",
         best: {
@@ -356,6 +364,29 @@ export const presetAi = {
             effectKeys.DISSONANCE,
         ],
     },
+    [aiKeys.HEXER]: {
+        name: "Augur",
+        best: {
+            str: 10,
+            def: 0,
+        },
+        caller: augurAI,
+        desc: [
+            actionKeys.CARVE,
+            actionKeys.CURSE,
+            effectKeys.VISIONARY,
+            effectKeys.RUNIC_ARRAY,
+            entryTypes.RUNES,
+            runeKeys.URD,
+            runeKeys.VERDANDI,
+            runeKeys.SKULD,
+            effectKeys.PRECOGNITION,
+            effectKeys.CONJECTURE,
+            effectKeys.BAD_OMEN,
+            effectKeys.RECOLLECTION,
+            effectKeys.PAST_MEMORIES,
+        ],
+    },
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
@@ -380,7 +411,7 @@ export const presetAi = {
         ],
     },
     [aiKeys.STARFARER]: {
-        name: "Starfarer (Broken AI)",
+        name: "Starfarer",
         best: {
             str: 0,
             def: 10,
@@ -406,8 +437,19 @@ export const presetAi = {
             effectKeys.INDIGO_STAR,
             effectKeys.VIOLET_STAR,
             effectKeys.GRAY_STAR,
+            effectKeys.NEBULA,
+            effectKeys.STARBLIGHT,
+            effectKeys.GRAVITATION,
+            effectKeys.SINGULARITY,
+            effectKeys.CONSTELLATION,
+            effectKeys.AZURE_CONSTELLATION,
+            effectKeys.CRIMSON_CONSTELLATION,
             effectKeys.STARDUST,
             effectKeys.DOME,
+            effectKeys.FIRMAMENT,
+            effectKeys.STARLIT_HEAVENS,
+            effectKeys.STARFLARE,
+            effectKeys.NOVA,
         ],
     },
     [aiKeys.LUNATIC]: {
@@ -485,9 +527,6 @@ const defensiveActions = [
 ];
 
 const transformativeActions = [
-    actionKeys.ARRAY,
-    actionKeys.CURSE,
-
     actionKeys.DEPLOY,
 
     actionKeys.ATTUNE,
@@ -520,24 +559,6 @@ export const stackCounters = {
             color: "#ff3333",
             borderColor: "#ff3333",
             backgroundColor: "rgba(255, 51, 51, 0.2)",
-        },
-    },
-
-    [effectKeys.POISON]: {
-        label: "Poison",
-        style: {
-            color: "#00e676",
-            borderColor: "#00e676",
-            backgroundColor: "rgba(0, 230, 118, 0.2)",
-        },
-    },
-
-    [effectKeys.SHACKLED_MANA]: {
-        label: "Shackled Mana",
-        style: {
-            color: "#2979ff",
-            borderColor: "#2979ff",
-            backgroundColor: "rgba(41, 121, 255, 0.2)",
         },
     },
 
@@ -604,21 +625,12 @@ export const stackCounters = {
         },
     },
 
-    [effectKeys.DISTILLED_TOXIN]: {
-        label: "Distilled Toxin",
-        style: {
-            color: "#1de9b6",
-            borderColor: "#1de9b6",
-            backgroundColor: "rgba(29, 233, 182, 0.2)",
-        },
-    },
-
     [effectKeys.MOONDUST]: {
         label: "Moondust",
         style: {
-            color: "white",
-            borderColor: "white",
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            color: "#e1f5fe",
+            borderColor: "#e1f5fe",
+            backgroundColor: "rgba(225, 245, 254, 0.2)",
         },
     },
 
@@ -628,6 +640,15 @@ export const stackCounters = {
             color: "#ff3333",
             borderColor: "#ff3333",
             backgroundColor: "rgba(255, 51, 51, 0.2)",
+        },
+    },
+
+    [effectKeys.PRECOGNITION]: {
+        label: "Precognition",
+        style: {
+            color: "#b388ff",
+            borderColor: "#b388ff",
+            backgroundColor: "rgba(179, 136, 255, 0.2)",
         },
     },
 };
@@ -688,9 +709,6 @@ export const INITIAL_GAME_STATE = {
     roundQueue: null,
     roundIndex: 0,
     history: [],
-
-    // game logic
-    [effectKeys.RUNIC_ARRAY]: 0,
 
     // other
     whoStarts: whoStartsKeys.PLAYER_ONE,
@@ -755,14 +773,6 @@ export const roundPhasesMap = {
         descKey: effectKeys.TURN,
         name: "Player Two Turn",
     },
-    [roundPhases.POST_P1_RUNIC_PULSE]: {
-        descKey: effectKeys.RUNIC_PULSE,
-        name: "Runic Pulse",
-    },
-    [roundPhases.POST_P2_RUNIC_PULSE]: {
-        descKey: effectKeys.RUNIC_PULSE,
-        name: "Runic Pulse",
-    },
     [roundPhases.P1_STARS_TURN]: {
         descKey: effectKeys.STARFALL,
         name: "Player One Starfall",
@@ -775,10 +785,7 @@ export const roundPhasesMap = {
         descKey: effectKeys.STARFALL,
         name: "Player Two Starfall",
     },
-    [roundPhases.MANA_SIPHON]: {
-        descKey: effectKeys.MANA_SIPHON,
-        name: "Mana Siphon",
-    },
+
     [roundPhases.ROUND_END]: {
         descKey: roundPhases.ROUND_END,
         name: "Round End",
@@ -845,12 +852,13 @@ export const entryTypesMap = {
 
 export const actionMap = {
     [actionKeys.ATTACK]: { name: "Attack", specialClass: "" },
-    [actionKeys.HEAL]: { name: "Heal", specialClass: "" },
-    [actionKeys.GUARD]: { name: "Guard", specialClass: "" },
-    [actionKeys.SPECIAL_ATTACK]: { name: "Special Attack", specialClass: "" },
+    [actionKeys.HEAL]: { name: "Heal", specialClass: "action-verdandi" },
+    [actionKeys.GUARD]: { name: "Guard", specialClass: "action-urd" },
+    [actionKeys.SPECIAL_ATTACK]: {
+        name: "Special Attack",
+        specialClass: "action-skuld",
+    },
     [actionKeys.SACRIFICE]: { name: "Sacrifice", specialClass: "" },
-    [actionKeys.ARRAY]: { name: "Array", specialClass: "" },
-    [actionKeys.CURSE]: { name: "Curse", specialClass: "" },
     [actionKeys.AEGIS]: { name: "Aegis", specialClass: "" },
     [actionKeys.SHADOW_PACT]: { name: "Shadow Pact", specialClass: "" },
     [actionKeys.BLACK_MAYHEM]: { name: "Black Mayhem", specialClass: "" },
@@ -872,7 +880,6 @@ export const actionMap = {
     [actionKeys.BABEL]: { name: "Babel", specialClass: "" },
     [actionKeys.CHART]: { name: "Chart", specialClass: "" },
 
-
     [actionKeys.REFRACT]: { name: "Refract", specialClass: "" },
     [actionKeys.MIRROR]: { name: "Mirror", specialClass: "" },
     [actionKeys.LUNAR_STRIKE]: { name: "Lunar Strike", specialClass: "" },
@@ -883,4 +890,7 @@ export const actionMap = {
     [actionKeys.LUNAR_SHROUD]: { name: "Lunar Shroud", specialClass: "" },
     [actionKeys.SHATTER]: { name: "Shatter", specialClass: "" },
     [actionKeys.CHALK]: { name: "Chalk", specialClass: "" },
+
+    [actionKeys.CARVE]: { name: "Carve", specialClass: "" },
+    [actionKeys.CURSE]: { name: "Curse", specialClass: "" },
 };
