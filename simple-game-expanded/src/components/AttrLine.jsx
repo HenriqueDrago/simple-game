@@ -1,7 +1,7 @@
 import "./AttrLine.css";
 
-import { effectKeys, elementalKeys, turnStatus } from "../utils/enums";
-import { getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
+import { effectKeys, elementalKeys, runeKeys, turnStatus } from "../utils/enums";
+import { countRunes, getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
 import { spawnTooltip } from "../utils/dictionary";
 import { constants } from "../utils/constants";
 
@@ -49,9 +49,15 @@ function AttrLine({
     }
     if (
         attr === "str" &&
-        (entity[effectKeys.PAST_MEMORIES] > 0)
+        (entity[effectKeys.PAST_MEMORIES] > 0 || countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD))
     ) {
         specialClass = "str-value-past-memories";
+    }
+    if (
+        attr === "str" &&
+        (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI))
+    ) {
+        specialClass = "str-value-verdandi";
     }
 
     const showControls = modifiable && battleState === turnStatus.SETUP;

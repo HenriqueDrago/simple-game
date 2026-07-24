@@ -178,6 +178,35 @@ function StatsPanel({
                 </div>
             )}
 
+            {entity[effectKeys.PROPHECY_OF_DOOM] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(
+                            e,
+                            handleSetTooltip,
+                            effectKeys.PROPHECY_OF_DOOM,
+                        )
+                    }
+                >
+                    <GradientBar
+                        label={"Prophecy of Doom"}
+                        currResource={entity[effectKeys.PROPHECY_OF_DOOM]}
+                        maxResource={constants.MAX_PROPHECY_OF_DOOM || 100}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                                90deg,
+                                                #4c0519 0%,
+                                                #881337 25%,
+                                                #e11d48 50%,
+                                                #881337 75%,
+                                                #4c0519 100%
+                                            )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
             {entity[effectKeys.RECOLLECTION] > 0 && (
                 <div
                     onMouseDown={(e) =>
@@ -434,7 +463,10 @@ function StatsPanel({
                     spawnTooltip(e, handleSetTooltip, effectKeys.RUNIC_ARRAY)
                 }
             >
-                <RunicArray entity={entity} handleSetTooltip={handleSetTooltip}/>
+                <RunicArray
+                    entity={entity}
+                    handleSetTooltip={handleSetTooltip}
+                />
             </div>
 
             <div className="attributes-wrapper">

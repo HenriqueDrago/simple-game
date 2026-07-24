@@ -197,7 +197,7 @@ function simulateSpecialAttack({
     nonAgent,
     nonAgentKey,
 }) {
-    const manaDiff = agent[effectKeys.MANA] - nonAgent[effectKeys.MANA];
+    const manaDiff = getEntityTotalMana(agent) - getEntityTotalMana(nonAgent);
 
     const { attacker, defender } = dealDamage(
         agent,

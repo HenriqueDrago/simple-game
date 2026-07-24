@@ -10,7 +10,19 @@ import {
     lunaticAI,
     augurAI,
 } from "./aiControllers.js";
-import { AUGUR_DESCRIPTIONS, BLOODKNIGHT_DESCRIPTIONS, CYBORG_DESCRIPTIONS, HUMAN_DESCRIPTIONS, LUNATIC_DESCRIPTIONS, MAESTRO_DESCRIPTIONS, MUNDANE_DESCRIPTIONS, PALADIN_DESCRIPTIONS, SHADOW_SORCERER_DESCRIPTIONS, STARFARER_DESCRIPTIONS, WARLOCK_DESCRIPTIONS } from "./descriptions.js";
+import {
+    AUGUR_DESCRIPTIONS,
+    BLOODKNIGHT_DESCRIPTIONS,
+    CYBORG_DESCRIPTIONS,
+    GENERAL_DESCRIPTIONS,
+    LUNATIC_DESCRIPTIONS,
+    MAESTRO_DESCRIPTIONS,
+    BASIC_DESCRIPTIONS,
+    PALADIN_DESCRIPTIONS,
+    SHADOW_SORCERER_DESCRIPTIONS,
+    STARFARER_DESCRIPTIONS,
+    WARLOCK_DESCRIPTIONS,
+} from "./descriptions.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
 import {
@@ -27,8 +39,6 @@ import {
     roundPhases,
     elementalKeys,
     moonKeys,
-    dmgTypes,
-    runeKeys,
 } from "./enums.js";
 
 const INITIAL_POINTS_AVAILABLE = 10;
@@ -109,20 +119,32 @@ const STARFLARE_GAIN = 5;
 
 const DIVINE_SPARK_STR_CONVERSION = 5;
 
-const URD_HEALTH_REGEN = 0.3;
-const VERDANDI_OMEN_GAIN = 30;
 const MAX_BAD_OMEN = 100;
 const MAX_RECOLLECTION = 100;
-const SKULD_PRECOGNITION_GAIN = 0.3;
-const RECOLLECTION_LOSE = 30;
-const PAST_MEMORIES_GAIN = 6;
-const URD_DEF_REC = 3;
+const MAX_PROPHECY_OF_DOOM = 100;
+const CURSE_EMPTY_RUNE_DMG = 5;
+
+// Urd
+const URD_HEALTH_REGEN = 0.3;
+const URD_DEF_REC = 2;
+const RECOLLECTION_LOSE = 20;
+const PAST_MEMORIES_GAIN = 5;
+
+// Skuld
 const SKULD_WEAK = 0.3;
 const SKULD_MANA_REGEN = 0.3;
-const CURSE_EMPTY_RUNE_DMG = 5;
-const BAD_OMEN_TURN_END_LOSS = 30;
+const SKULD_PRECOGNITION_GAIN = 0.3;
+const SKULD_PROFECY_GAIN = 20;
+const PROFECY_TURN_END_LOSS = 20;
+
+// Verdandi
+const VERDANDI_OMEN_GAIN = 20;
+const BAD_OMEN_TURN_END_LOSS = 20;
 
 export const constants = {
+    MAX_PROPHECY_OF_DOOM,
+    SKULD_PROFECY_GAIN,
+    PROFECY_TURN_END_LOSS,
     BAD_OMEN_TURN_END_LOSS,
     CURSE_EMPTY_RUNE_DMG,
     SKULD_MANA_REGEN,
@@ -222,9 +244,7 @@ export const presetAi = {
             def: 5,
         },
         caller: simpleAI,
-        desc: [
-            ...Object.keys(HUMAN_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(GENERAL_DESCRIPTIONS)],
     },
     [aiKeys.SIMPLE]: {
         name: "Mundane",
@@ -233,9 +253,7 @@ export const presetAi = {
             def: 5,
         },
         caller: simpleAI,
-        desc: [
-            ...Object.keys(MUNDANE_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(BASIC_DESCRIPTIONS)],
     },
     [aiKeys.WARLOCK]: {
         name: "Warlock",
@@ -244,9 +262,7 @@ export const presetAi = {
             def: 0,
         },
         caller: warlockAI,
-        desc: [
-            ...Object.keys(WARLOCK_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(WARLOCK_DESCRIPTIONS)],
     },
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
@@ -255,9 +271,7 @@ export const presetAi = {
             def: 10,
         },
         caller: bloodknightAI,
-        desc: [
-            ...Object.keys(BLOODKNIGHT_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(BLOODKNIGHT_DESCRIPTIONS)],
     },
     [aiKeys.PALADIN]: {
         name: "Paladin",
@@ -266,9 +280,7 @@ export const presetAi = {
             def: 10,
         },
         caller: paladinAI,
-        desc: [
-            ...Object.keys(PALADIN_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(PALADIN_DESCRIPTIONS)],
     },
     [aiKeys.CYBORG]: {
         name: "Cyborg",
@@ -277,9 +289,7 @@ export const presetAi = {
             def: 10,
         },
         caller: cyborgAI,
-        desc: [
-            ...Object.keys(CYBORG_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(CYBORG_DESCRIPTIONS)],
     },
     [aiKeys.MAESTRO]: {
         name: "Maestro",
@@ -288,20 +298,16 @@ export const presetAi = {
             def: 10,
         },
         caller: maestroAI,
-        desc: [
-            ...Object.keys(MAESTRO_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
     },
     [aiKeys.HEXER]: {
-        name: "Augur",
+        name: "Augur (Broken AI)",
         best: {
             str: 10,
             def: 0,
         },
         caller: augurAI,
-        desc: [
-            ...Object.keys(AUGUR_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(AUGUR_DESCRIPTIONS)],
     },
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
@@ -310,20 +316,16 @@ export const presetAi = {
             def: 10,
         },
         caller: shadowSorcererAI,
-        desc: [
-            ...Object.keys(SHADOW_SORCERER_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
     },
     [aiKeys.STARFARER]: {
-        name: "Starfarer",
+        name: "Starfarer (Broken AI)",
         best: {
             str: 0,
             def: 10,
         },
         caller: starfarerAI,
-        desc: [
-            ...Object.keys(STARFARER_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(STARFARER_DESCRIPTIONS)],
     },
     [aiKeys.LUNATIC]: {
         name: "Lunatic",
@@ -332,9 +334,7 @@ export const presetAi = {
             def: 5,
         },
         caller: lunaticAI,
-        desc: [
-            ...Object.keys(LUNATIC_DESCRIPTIONS),
-        ],
+        desc: [...Object.keys(LUNATIC_DESCRIPTIONS)],
     },
 };
 

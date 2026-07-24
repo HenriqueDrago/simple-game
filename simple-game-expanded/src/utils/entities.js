@@ -192,6 +192,7 @@ export function createBaseEntity() {
         [effectKeys.GRAVITATION]: 0,
         [effectKeys.BAD_OMEN]: 0,
         [effectKeys.RECOLLECTION]: 0,
+        [effectKeys.PROPHECY_OF_DOOM]: 0,
 
         // ranked resources
         [effectKeys.MANA_BLEED]: 0,
@@ -309,6 +310,10 @@ export function processEntityDR(entity) {
 
     if (entity[effectKeys.SONORITY] < 0) {
         drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
+    }
+
+    if (entity[effectKeys.PROPHECY_OF_DOOM] > 0) {
+        drMult *= Math.max(0, 1 - entity[effectKeys.PROPHECY_OF_DOOM] / 100);
     }
 
     return drMult;
@@ -1246,7 +1251,15 @@ export function consumeMitigationResources(entity, amount, cause = null) {
 
             // Conjecture
             if (isCauseDamage && currResourceKey === effectKeys.CONJECTURE) {
-                draftEntity = gainMana(draftEntity, consumption);
+                draftEntity = {
+                    ...draftEntity,
+                    resources: {
+                        ...draftEntity.resources,
+                        [effectKeys.PRECOGNITION]:
+                            draftEntity.resources[effectKeys.PRECOGNITION] +
+                            consumption,
+                    },
+                };
             }
 
             // Refracted Divinity
@@ -2314,13 +2327,11 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
 
     draftTarget = {
         ...draftTarget,
-        resources: {
-            ...draftTarget.resources,
-            [effectKeys.PRECOGNITION]:
-                draftTarget.resources[effectKeys.PRECOGNITION] +
-                draftTarget[effectKeys.MAX_MANA] *
-                    constants.SKULD_PRECOGNITION_GAIN,
-        },
+        [effectKeys.PROPHECY_OF_DOOM]: Math.min(
+            constants.MAX_PROPHECY_OF_DOOM,
+            draftTarget[effectKeys.PROPHECY_OF_DOOM] +
+                constants.SKULD_PROFECY_GAIN,
+        ),
     };
 
     return {

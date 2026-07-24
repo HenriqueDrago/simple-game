@@ -9,12 +9,12 @@ import {
     runeKeys,
 } from "./enums";
 
-export const HUMAN_DESCRIPTIONS = {
+export const GENERAL_DESCRIPTIONS = {
     [effectKeys.ROUND]: {
         name: "ROUND",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A full game cycle. A basic ROUND consists of: ROUND START, PLAYER ONE TURN, PLAYER TWO TURN and ROUND END, but can be extended via additional phases. A complete game round may consist of: ROUND START, PLAYER ONE TURN, PLAYER ONE STARFALL, RUNIC PULSE, PLAYER TWO TURN, PLAYER TWO STARFALL, RUNIC PULSE, MOON PHASE and ROUND END, disregarding MANA SIPHON, which can be triggered at any given time between ROUND START and ROUND END.",
+            "A full game cycle. A basic ROUND consists of: ROUND START, PLAYER ONE TURN, PLAYER TWO TURN and ROUND END, but can be extended via additional phases. A complete game round may consist of up to: ROUND START, PLAYER ONE TURN, PLAYER ONE STARFALL, PLAYER ONE SINGULARITY, PLAYER TWO TURN, PLAYER TWO STARFALL, PLAYER TWO SINGULARITY, MOON PHASE and ROUND END.",
     },
 
     [effectKeys.TURN]: {
@@ -34,7 +34,8 @@ export const HUMAN_DESCRIPTIONS = {
     [effectKeys.PLAN]: {
         name: "PLAN",
         type: entryTypes.BATTLE_PHASE,
-        description: "A TURN subphase where an ACTION can be used.",
+        description:
+            "A TURN subphase where a player may interact with the game and use ACTIONS.",
     },
 
     [effectKeys.COMMIT]: {
@@ -311,7 +312,7 @@ export const HUMAN_DESCRIPTIONS = {
     },
 };
 
-export const MUNDANE_DESCRIPTIONS = {
+export const BASIC_DESCRIPTIONS = {
     [actionKeys.ATTACK]: {
         name: "ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
@@ -593,21 +594,21 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF URD",
         type: entryTypes.RUNES,
         description:
-            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 3% for every point of the user's DEF. While on RUNIC ARRAY: Raises the user's STR by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 2% for every point of the user's DEF. While on RUNIC ARRAY: Raises the user's STR by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
     },
 
     [runeKeys.VERDANDI]: {
         name: "RUNE OF VERDANDI",
         type: entryTypes.RUNES,
         description:
-            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's STR. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
+            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's STR. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Raises the opponent's BAD OMEN by 20%.",
     },
 
     [runeKeys.SKULD]: {
         name: "RUNE OF SKULD",
         type: entryTypes.RUNES,
         description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Gains PRECOGNITION equal to 30% MAX MANA.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PROFECY OF DOOM by 20%.",
     },
 
     [effectKeys.PRECOGNITION]: {
@@ -621,27 +622,34 @@ export const AUGUR_DESCRIPTIONS = {
         name: "CONJECTURE",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. Then, restores MANA equal to the CONJECTURE consumed this way.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. Then, gain PRECOGNITION equal to the CONJECTURE consumed this way.",
     },
 
     [effectKeys.BAD_OMEN]: {
         name: "BAD OMEN",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. At turn end, lowers BAD OMEN by 30%.",
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. At turn end, lowers BAD OMEN by 20%.",
     },
 
     [effectKeys.RECOLLECTION]: {
         name: "RECOLLECTION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When RUNES detonate, lose 30% RECOLLECTION and raises PAST MEMORIES rank by 1 for every 6% RECOLLECTION lost.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When RUNES detonate, lose 20% RECOLLECTION and raises PAST MEMORIES rank by 1 for every 5% RECOLLECTION lost.",
     },
 
     [effectKeys.PAST_MEMORIES]: {
         name: "PAST MEMORIES",
         type: entryTypes.RANKED_RESOURCE,
         description: "Raises STR by its rank.",
+    },
+
+    [effectKeys.PROPHECY_OF_DOOM]: {
+        name: "PROFECY OF DOOM",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. Raises DAMAGE REDUCTION equal to PROFECY OF DOOM on self. At turn start, lowers PROFECY OF DOOM by 20%.",
     },
 };
 
@@ -1226,8 +1234,8 @@ export const LUNATIC_DESCRIPTIONS = {
 };
 
 export const DESCRIPTIONS = {
-    ...HUMAN_DESCRIPTIONS,
-    ...MUNDANE_DESCRIPTIONS,
+    ...GENERAL_DESCRIPTIONS,
+    ...BASIC_DESCRIPTIONS,
     ...WARLOCK_DESCRIPTIONS,
     ...BLOODKNIGHT_DESCRIPTIONS,
     ...PALADIN_DESCRIPTIONS,

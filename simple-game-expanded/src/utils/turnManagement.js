@@ -342,6 +342,18 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
+    // Bad Omen
+    if (draftTarget[effectKeys.PROPHECY_OF_DOOM] > 0) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.PROPHECY_OF_DOOM]: Math.max(
+                0,
+                draftTarget[effectKeys.PROPHECY_OF_DOOM] -
+                    constants.PROFECY_TURN_END_LOSS,
+            ),
+        };
+    }
+
     // States cleared at turn start
     draftTarget = {
         ...draftTarget,

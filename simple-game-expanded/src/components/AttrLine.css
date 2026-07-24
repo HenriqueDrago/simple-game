@@ -85,3 +85,7 @@
 .str-value-past-memories {
     color: var(--color-rune-urd)
 }
+
+.str-value-verdandi {
+    color: var(--color-rune-verdandi);
+}

@@ -20,7 +20,6 @@ export const roundPhases = Object.freeze({
     P1_SINGULARITY: "p1Singularity",
     P2_SINGULARITY: "p2Singularity",
 
-
     ROUND_END: "roundEnd",
 });
 
@@ -48,7 +47,7 @@ export const sdmKeys = Object.freeze({
     BEST: "best",
     FULL_DEF: "fullDef",
     FULL_STR: "fullStr",
-    BALANCED: "balanced"
+    BALANCED: "balanced",
 });
 
 export const elementalKeys = Object.freeze({
@@ -236,6 +235,7 @@ export const effectKeys = Object.freeze({
     CONJECTURE: "conjecture",
     BAD_OMEN: "badOmen",
     PAST_MEMORIES: "pastMemories",
+    PROPHECY_OF_DOOM: "prophecyOfDoom",
 });
 
 export const runeKeys = Object.freeze({
