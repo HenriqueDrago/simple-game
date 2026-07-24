@@ -317,9 +317,14 @@ export function processBlueStar(
             ...draftMaster.resources,
             [effectKeys.DOME]:
                 draftMaster.resources[effectKeys.DOME] + normalStars,
-            [effectKeys.STARLIT_HEAVENS]:
-                draftMaster.resources[effectKeys.STARLIT_HEAVENS] + augmentedStars,
+            [effectKeys.STARLIT_DOME]:
+                draftMaster.resources[effectKeys.STARLIT_DOME] + augmentedStars,
         },
+        stars: {
+            ...draftMaster.stars,
+            [effectKeys.WHITE_STAR]: draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
+            [effectKeys.GRAY_STAR]: draftMaster.stars[effectKeys.GRAY_STAR] + normalStars,
+        }
     };
 
     return {
@@ -396,11 +401,10 @@ export function processYellowStar(
     };
 }
 
-// Currently does nothing
 export function processVioletStar(
     { master, nonMaster },
-    // normalStars,
-    // augmentedStars,
+    normalStars,
+    augmentedStars,
 ) {
     let draftMaster = {
         ...master,
@@ -409,6 +413,18 @@ export function processVioletStar(
     let draftNonMaster = {
         ...nonMaster,
     };
+
+    // Convert Gray Star into White Star
+    const grayConsumed = Math.min(draftMaster.stars[effectKeys.GRAY_STAR], normalStars + augmentedStars);
+
+    draftMaster = {
+        ...draftMaster,
+        stars: {
+            ...draftMaster.stars,
+            [effectKeys.WHITE_STAR]: draftMaster.stars[effectKeys.WHITE_STAR] + grayConsumed,
+            [effectKeys.GRAY_STAR]: draftMaster.stars[effectKeys.GRAY_STAR] - grayConsumed,
+        }
+    }
 
     return {
         draftMaster,

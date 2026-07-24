@@ -219,8 +219,7 @@ export const effectKeys = Object.freeze({
     AZURE_CONSTELLATION: "azureConstellation",
 
     STARFLARE: "starflare",
-    FIRMAMENT: "firmament",
-    STARLIT_HEAVENS: "starlitHeavens",
+    STARLIT_DOME: "starlitDome",
 
     GRAVITATION: "gravitation",
     SINGULARITY: "singularity",

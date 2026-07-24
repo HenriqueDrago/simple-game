@@ -4,6 +4,7 @@
     gap: 3px;
     width: max-content; 
     align-self: flex-start; 
+    min-width: 47px;
 }
 
 .mitigation-item {

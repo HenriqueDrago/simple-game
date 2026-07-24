@@ -208,8 +208,7 @@ export const constants = {
 };
 
 export const MITIGATION_RESOURCES = [
-    effectKeys.STARLIT_HEAVENS,
-    effectKeys.FIRMAMENT,
+    effectKeys.STARLIT_DOME,
     effectKeys.DOME,
     effectKeys.HALO,
     effectKeys.REFRACTED_DIVINITY,

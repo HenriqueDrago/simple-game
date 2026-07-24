@@ -236,8 +236,7 @@ export function createBaseEntity() {
             [effectKeys.LINGERING_EMBER]: 0,
             [effectKeys.FUNERARY_URN]: 0,
             [effectKeys.DOME]: 0,
-            [effectKeys.FIRMAMENT]: 0,
-            [effectKeys.STARLIT_HEAVENS]: 0,
+            [effectKeys.STARLIT_DOME]: 0,
             [effectKeys.MYCELIUM]: 0,
             [effectKeys.REFRACTED_DIVINITY]: 0,
             [effectKeys.HARMONY]: 0,
@@ -1276,30 +1275,17 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 };
             }
 
-            // Firmament
-            if (isCauseDamage && currResourceKey === effectKeys.FIRMAMENT) {
+            // Starlit Dome
+            if (
+                isCauseDamage &&
+                currResourceKey === effectKeys.STARLIT_DOME
+            ) {
                 draftEntity = {
                     ...draftEntity,
                     resources: {
                         ...draftEntity.resources,
                         [effectKeys.STARDUST]:
                             draftEntity.resources[effectKeys.STARDUST] +
-                            consumption,
-                    },
-                };
-            }
-
-            // Starlit Heavens
-            if (
-                isCauseDamage &&
-                currResourceKey === effectKeys.STARLIT_HEAVENS
-            ) {
-                draftEntity = {
-                    ...draftEntity,
-                    stars: {
-                        ...draftEntity.stars,
-                        [effectKeys.GRAY_STAR]:
-                            draftEntity.stars[effectKeys.GRAY_STAR] +
                             consumption,
                     },
                 };

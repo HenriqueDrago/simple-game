@@ -49,6 +49,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             },
         };
     }
+    
     // Dome
     if (draftTarget.resources[effectKeys.DOME] > 0) {
         const newStardust =
@@ -65,34 +66,18 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Firmament
-    if (draftTarget.resources[effectKeys.FIRMAMENT] > 0) {
+    // Starlit Dome
+    if (draftTarget.resources[effectKeys.STARLIT_DOME] > 0) {
         const newDome =
             draftTarget.resources[effectKeys.DOME] +
-            draftTarget.resources[effectKeys.FIRMAMENT];
+            draftTarget.resources[effectKeys.STARLIT_DOME];
 
         draftTarget = {
             ...draftTarget,
             resources: {
                 ...draftTarget.resources,
+                [effectKeys.STARLIT_DOME]: 0,
                 [effectKeys.DOME]: newDome,
-                [effectKeys.FIRMAMENT]: 0,
-            },
-        };
-    }
-
-    // Starlit Heavens
-    if (draftTarget.resources[effectKeys.STARLIT_HEAVENS] > 0) {
-        const newFirmament =
-            draftTarget.resources[effectKeys.FIRMAMENT] +
-            draftTarget.resources[effectKeys.STARLIT_HEAVENS];
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.STARLIT_HEAVENS]: 0,
-                [effectKeys.FIRMAMENT]: newFirmament,
             },
         };
     }

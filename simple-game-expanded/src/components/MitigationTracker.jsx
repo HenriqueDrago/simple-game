@@ -2,7 +2,6 @@ import {
     Amphora,
     ChartNoAxesCombined,
     Flame,
-    Globe,
     Hexagon,
     Moon,
     Music2,
@@ -51,12 +50,7 @@ const mitigators = {
         color: "#b0bec5",
         borderColor: "rgba(176, 190, 197, 0.25)",
     },
-    [effectKeys.FIRMAMENT]: {
-        icon: <Globe className="svg-icon" strokeWidth={2.5} />,
-        color: "#2979ff",
-        borderColor: "rgba(41, 121, 255, 0.25)",
-    },
-    [effectKeys.STARLIT_HEAVENS]: {
+    [effectKeys.STARLIT_DOME]: {
         icon: <Sparkles className="svg-icon" strokeWidth={2.5} />,
         color: "#536dfe",
         borderColor: "rgba(83, 109, 254, 0.25)",
@@ -76,6 +70,10 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
                 if (!mitigator) return null;
 
                 const amount = entity?.resources?.[key] ?? 0;
+
+                if(amount <= 0) {
+                    return null;
+                }
 
                 return (
                     <div

@@ -153,7 +153,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes STARLIT HEAVENS, FIRMAMENT, DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes STARLIT DOME, DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.BATTLE_PHASE]: {
@@ -848,14 +848,14 @@ export const STARFARER_DESCRIPTIONS = {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Consumes WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME equal to normal BLUE STAR converted. Gains FIRMAMENT equal to augmented BLUE STAR converted.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Converts WHITE STAR into GRAY STAR and gains DOME equal to normal BLUE STAR converted. Gains STARLIT DOME equal to augmented BLUE STAR converted.",
     },
 
     [effectKeys.INDIGO_STAR]: {
@@ -869,7 +869,7 @@ export const STARFARER_DESCRIPTIONS = {
         name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "When other colored STARS are converted, converts equivalent VIOLET STAR into WHITE STAR and augments that STARS effects. Cannot augment VIOLET STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR.",
+            "When other colored STARS are converted, converts equivalent VIOLET STAR into WHITE STAR and augments that STARS effects. Cannot augment VIOLET STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR. Converts GRAY STAR into WHITE STAR equal to VIOLET STAR converted at this phase.",
     },
 
     [effectKeys.GRAY_STAR]: {
@@ -934,18 +934,11 @@ export const STARFARER_DESCRIPTIONS = {
             "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, converts all DOME into STARDUST.",
     },
 
-    [effectKeys.FIRMAMENT]: {
-        name: "FIRMAMENT",
+    [effectKeys.STARLIT_DOME]: {
+        name: "STARLIT DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FIRMAMENT to reduce the damage taken, then gains STARDUST equal to the amount lost this way. At turn start, converts all FIRMAMENT into DOME.",
-    },
-
-    [effectKeys.STARLIT_HEAVENS]: {
-        name: "STARLIT HEAVENS",
-        type: entryTypes.MITIGATION_RESOURCE,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT HEAVENS to reduce the damage taken, then gains GRAY STAR equal to the amount lost this way. At turn start, converts all STARLIT HEAVENS into FIRMAMENT.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken, then gains STARDUST equal to the amount lost this way. At turn start, converts all STARLIT DOME into DOME.",
     },
 };
 
