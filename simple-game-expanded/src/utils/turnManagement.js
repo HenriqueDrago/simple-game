@@ -3,7 +3,6 @@ import {
     canUseAction,
     consumeResources,
     gainHp,
-    gainMana,
     getEntityColoredStars,
     getEntityElement,
     getEntityTotalMana,
