@@ -15,28 +15,22 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
         ...prev.entities[nonMasterKey],
     };
 
-    const isNova = draftMaster.states[effectKeys.NOVA];
-
     // Calculate augmented amount
     const totalStars = draftMaster.stars[starKey];
     let augmentedStars = 0;
-    let novaStars = 0;
     let normalStars = totalStars;
     if (starKey !== effectKeys.VIOLET_STAR) {
-        novaStars = isNova
-            ? Math.min(totalStars, draftMaster.stars[effectKeys.VIOLET_STAR])
-            : 0;
 
-        augmentedStars = isNova
-            ? totalStars - novaStars
-            : Math.min(totalStars, draftMaster.stars[effectKeys.VIOLET_STAR]);
+        augmentedStars = 
 
-        normalStars = isNova ? 0 : totalStars - augmentedStars;
+            Math.min(totalStars, draftMaster.stars[effectKeys.VIOLET_STAR]);
+
+        normalStars = totalStars - augmentedStars;
 
         // Augment Logic
         const newViolet =
             draftMaster.stars[effectKeys.VIOLET_STAR] -
-            (isNova ? novaStars : augmentedStars);
+             augmentedStars;
 
         // Convert all into White Star
         draftMaster = {
@@ -47,7 +41,7 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 [effectKeys.WHITE_STAR]:
                     draftMaster.stars[effectKeys.WHITE_STAR] +
                     totalStars +
-                    (isNova ? novaStars : augmentedStars),
+                    augmentedStars,
                 [effectKeys.VIOLET_STAR]: newViolet,
             },
         };
@@ -72,7 +66,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -83,7 +76,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -94,7 +86,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -105,7 +96,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -116,7 +106,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -127,7 +116,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -138,7 +126,6 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
                 newContext,
                 normalStars,
                 augmentedStars,
-                novaStars,
             );
             draftMaster = newEntities.draftMaster;
             draftNonMaster = newEntities.draftNonMaster;
@@ -162,7 +149,6 @@ export function processRedStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -172,21 +158,9 @@ export function processRedStar(
         ...nonMaster,
     };
 
-    if (novaStars > 0) {
-        draftNonMaster = takeDamage(draftNonMaster, novaStars, dmgTypes.TRUE);
-
-        draftMaster = takeDamage(draftMaster, novaStars, dmgTypes.TRUE);
-    }
-
     if (augmentedStars > 0) {
         draftNonMaster = takeDamage(
             draftNonMaster,
-            augmentedStars,
-            dmgTypes.PIERCING,
-        );
-
-        draftMaster = takeDamage(
-            draftMaster,
             augmentedStars,
             dmgTypes.PIERCING,
         );
@@ -198,11 +172,7 @@ export function processRedStar(
             normalStars,
             dmgTypes.PHYSICAL,
         );
-
-        draftMaster = takeDamage(draftMaster, normalStars, dmgTypes.PHYSICAL);
     }
-
-    console.log(draftMaster)
 
     return {
         draftMaster,
@@ -214,7 +184,6 @@ export function processOrangeStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -234,7 +203,7 @@ export function processOrangeStar(
     // Consume resources on opponent
     const resultNonSelf = consumeResources(
         draftNonMaster,
-        augmentedStars + novaStars,
+        augmentedStars,
         effectKeys.ORANGE_STAR,
     );
 
@@ -265,7 +234,6 @@ export function processIndigoStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -286,8 +254,6 @@ export function processIndigoStar(
             ...draftMaster.stars,
             [effectKeys.GRAY_STAR]:
                 draftMaster.stars[effectKeys.GRAY_STAR] + augmentedStars,
-            [effectKeys.WHITE_STAR]:
-                draftMaster.stars[effectKeys.WHITE_STAR] + novaStars,
         },
     };
 
@@ -301,7 +267,6 @@ export function processGreenStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -314,9 +279,8 @@ export function processGreenStar(
     // Restores resources
     draftMaster = restoreResources(
         draftMaster,
-        normalStars + augmentedStars + novaStars,
+        normalStars + augmentedStars,
     );
-    draftNonMaster = restoreResources(draftNonMaster, novaStars);
 
     // lose normal stars used
     draftMaster = {
@@ -338,7 +302,6 @@ export function processBlueStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -354,10 +317,8 @@ export function processBlueStar(
             ...draftMaster.resources,
             [effectKeys.DOME]:
                 draftMaster.resources[effectKeys.DOME] + normalStars,
-            [effectKeys.FIRMAMENT]:
-                draftMaster.resources[effectKeys.FIRMAMENT] + normalStars,
             [effectKeys.STARLIT_HEAVENS]:
-                draftMaster.resources[effectKeys.STARLIT_HEAVENS] + novaStars,
+                draftMaster.resources[effectKeys.STARLIT_HEAVENS] + augmentedStars,
         },
     };
 
@@ -371,7 +332,6 @@ export function processYellowStar(
     { master, nonMaster },
     normalStars,
     augmentedStars,
-    novaStars,
 ) {
     let draftMaster = {
         ...master,
@@ -382,21 +342,21 @@ export function processYellowStar(
     };
 
     // Normal Star
-    const totalRaise = normalStars * constants.NORMAL_YELLOW_NEBULA_GAIN;
-    const nebulaRaised = Math.min(
+    const totalRaise = normalStars * constants.GRAVITATION_GAIN;
+    const gravRaised = Math.min(
         totalRaise,
-        constants.MAX_NEBULA - draftMaster[effectKeys.NEBULA],
+        constants.MAX_GRAVITATION - draftMaster[effectKeys.GRAVITATION],
     );
     const starblightRaised = Math.min(
-        totalRaise - nebulaRaised,
+        totalRaise - gravRaised,
         constants.MAX_STARBLIGHT - draftMaster[effectKeys.STARBLIGHT],
     );
 
     draftMaster = {
         ...draftMaster,
-        [effectKeys.NEBULA]: Math.max(
+        [effectKeys.GRAVITATION]: Math.max(
             0,
-            draftMaster[effectKeys.NEBULA] + nebulaRaised,
+            draftMaster[effectKeys.GRAVITATION] + gravRaised,
         ),
         [effectKeys.STARBLIGHT]: Math.max(
             0,
@@ -430,27 +390,17 @@ export function processYellowStar(
         };
     }
 
-    // Nova Star
-    draftMaster = {
-        ...draftMaster,
-        [effectKeys.GRAVITATION]: Math.min(
-            constants.MAX_GRAVITATION,
-            draftMaster[effectKeys.GRAVITATION] +
-                novaStars * constants.GRAVITATION_GAIN,
-        ),
-    };
-
     return {
         draftMaster,
         draftNonMaster,
     };
 }
 
+// Currently does nothing
 export function processVioletStar(
     { master, nonMaster },
-    normalStars,
-    augmentedStars,
-    novaStars,
+    // normalStars,
+    // augmentedStars,
 ) {
     let draftMaster = {
         ...master,
@@ -459,18 +409,6 @@ export function processVioletStar(
     let draftNonMaster = {
         ...nonMaster,
     };
-
-    draftMaster = {
-        ...draftMaster,
-        [effectKeys.STARFLARE]: Math.min(
-            constants.MAX_STARFLARE,
-            draftMaster[effectKeys.STARFLARE] +
-                (normalStars + augmentedStars + novaStars) *
-                    constants.STARFLARE_GAIN,
-        ),
-    };
-
-    console.log(draftMaster);
 
     return {
         draftMaster,

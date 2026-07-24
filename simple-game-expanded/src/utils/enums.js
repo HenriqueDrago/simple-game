@@ -212,7 +212,6 @@ export const effectKeys = Object.freeze({
     HARMONY: "harmony",
     DISSONANCE: "dissonance",
 
-    NEBULA: "nebula",
     STARBLIGHT: "starblight",
     CONSTELLATION: "constellation",
     NOVA: "nova",

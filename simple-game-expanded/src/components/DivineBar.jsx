@@ -18,8 +18,6 @@ export default function DivineBar({
             ? entityKeys.PLAYER_TWO
             : entityKeys.PLAYER_ONE;
 
-    console.log(entity[effectKeys.DIVINE_SPARK]);
-
     if (entity[effectKeys.DIVINE_SPARK] <= 0) {
         return null;
     }

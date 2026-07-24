@@ -1,9 +1,5 @@
 import "./StarsPanel.css";
-import {
-    effectKeys,
-    entityKeys,
-    roundPhases,
-} from "../utils/enums";
+import { effectKeys, entityKeys, roundPhases } from "../utils/enums";
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
@@ -25,7 +21,11 @@ function StarsPanel({
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const showButton = canUseCombatInteractions(game, entityKey);
+    const isSingularity =
+        currRoundPhase === roundPhases.P1_SINGULARITY ||
+        currRoundPhase === roundPhases.P2_SINGULARITY;
+
+    const showButton = canUseCombatInteractions(game, entityKey) && !isSingularity;
 
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE
@@ -33,9 +33,7 @@ function StarsPanel({
             : currRoundPhase === roundPhases.P2_STARS_TURN;
 
     return (
-        <div
-            className="star-panel-container"
-        >
+        <div className="star-panel-container">
             <div className="star-panel-main-container">
                 <div className="white-and-gray-container">
                     <div

@@ -49,13 +49,13 @@ function AttrLine({
     }
     if (
         attr === "str" &&
-        (entity[effectKeys.PAST_MEMORIES] > 0 || countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD))
+        (entity[effectKeys.PAST_MEMORIES] > 0 || countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0)
     ) {
         specialClass = "str-value-past-memories";
     }
     if (
         attr === "str" &&
-        (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI))
+        (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0)
     ) {
         specialClass = "str-value-verdandi";
     }

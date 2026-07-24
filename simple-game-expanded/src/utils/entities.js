@@ -187,8 +187,6 @@ export function createBaseEntity() {
         [effectKeys.OVERHEAT]: 0,
         [effectKeys.LUNACY]: 0,
         [effectKeys.STARBLIGHT]: 0,
-        [effectKeys.NEBULA]: 0,
-        [effectKeys.STARFLARE]: 0,
         [effectKeys.GRAVITATION]: 0,
         [effectKeys.BAD_OMEN]: 0,
         [effectKeys.RECOLLECTION]: 0,
@@ -340,8 +338,8 @@ export function processEntityDamageBonus(entity) {
     if (entity[effectKeys.LUNACY] > 0) {
         dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
     }
-    if (entity[effectKeys.NEBULA] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.NEBULA] / 100;
+    if (entity[effectKeys.GRAVITATION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.GRAVITATION] / 100;
     }
     if (entity[effectKeys.STARBLIGHT] > 0) {
         dmgBonus *= 1 + entity[effectKeys.STARBLIGHT] / 100;

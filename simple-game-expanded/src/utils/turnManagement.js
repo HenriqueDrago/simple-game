@@ -459,19 +459,11 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
-    // Nebula
-    if (draftCurrActor[effectKeys.NEBULA] > 0) {
+    // Gravitation
+    if (draftCurrActor[effectKeys.GRAVITATION] > 0) {
         draftCurrActor = {
             ...draftCurrActor,
-            [effectKeys.NEBULA]: 0,
-        };
-    }
-
-    // Starblight
-    if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
-        draftCurrActor = {
-            ...draftCurrActor,
-            [effectKeys.STARBLIGHT]: 0,
+            [effectKeys.GRAVITATION]: 0,
         };
     }
 
@@ -850,13 +842,6 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
 export function processSingularity(prev, agentKey, action) {
     let newGameState = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...prev.entities[agentKey],
-                [effectKeys.GRAVITATION]: 0,
-            },
-        },
     };
 
     // Death check
@@ -894,9 +879,6 @@ export function processPlan(prev, action) {
         newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
             ? turnStatus.ONGOING
             : newGameState.status;
-
-    console.log("plan");
-    console.log(newGameState);
 
     return buildRoundQueue({
         ...newGameState,

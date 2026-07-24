@@ -11,9 +11,9 @@
     --albedo-color: #ffffff;
 
     /* Rune Colors */
-    --color-rune-urd: #00f0ff;      /* Urd - Cyan */
-    --color-rune-verdandi: #4caf50; /* Verdandi - Green */
-    --color-rune-skuld: #b388ff;    /* Skuld - Purple */
+    --color-rune-urd: #00f0ff;
+    --color-rune-verdandi: #4caf50;
+    --color-rune-skuld: #b388ff;
 }
 
 body {

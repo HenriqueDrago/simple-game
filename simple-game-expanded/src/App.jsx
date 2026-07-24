@@ -145,8 +145,6 @@ function App() {
                 ? processSingularity(processedAction, agentKey, action)
                 : processPlan(processedAction, action);
 
-            console.log(newGameState);
-
             return buildHistory(newGameState, eventKeys.USE_ACTION, {
                 player: agentKey,
                 action: action,

@@ -23,7 +23,6 @@ import {
 import SpecialCounter from "./SpecialCounter.jsx";
 import { spawnTooltip } from "../utils/dictionary.js";
 import ModifiersTracker from "./ModifiersTracker.jsx";
-import NebulaStarblightBar from "./NebulaStarblightBar.jsx";
 import ConstellationTracker from "./ConstellationTracker.jsx";
 import DivineBar from "./DivineBar.jsx";
 import RunicArray from "./RunicArray.jsx";
@@ -124,31 +123,6 @@ function StatsPanel({
                 </div>
             )}
 
-            {entity[effectKeys.STARFLARE] > 0 && (
-                <div
-                    onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.STARFLARE)
-                    }
-                >
-                    <GradientBar
-                        label={"Starflare"}
-                        currResource={entity[effectKeys.STARFLARE]}
-                        maxResource={constants.MAX_STARFLARE}
-                        trackStyle={{
-                            backgroundImage: `linear-gradient(
-                    90deg,
-                    #7b1fa2 0%,
-                    #9c27b0 35%,
-                    #ab47bc 50%,
-                    #9c27b0 65%,
-                    #7b1fa2 100%
-                )`,
-                        }}
-                        showPercent={true}
-                    />
-                </div>
-            )}
-
             {entity[effectKeys.GRAVITATION] > 0 && (
                 <div
                     onMouseDown={(e) =>
@@ -172,6 +146,31 @@ function StatsPanel({
                     #512da8 75%,
                     #311b92 100%
                 )`,
+                        }}
+                        showPercent={true}
+                    />
+                </div>
+            )}
+
+            {entity[effectKeys.STARBLIGHT] > 0 && (
+                <div
+                    onMouseDown={(e) =>
+                        spawnTooltip(e, handleSetTooltip, effectKeys.STARBLIGHT)
+                    }
+                >
+                    <GradientBar
+                        label={"Starblight"}
+                        currResource={entity[effectKeys.STARBLIGHT]}
+                        maxResource={constants.MAX_STARBLIGHT}
+                        trackStyle={{
+                            backgroundImage: `linear-gradient(
+                                                90deg,
+                                                #9aa4b0 0%,
+                                                #c2c9d2 35%,
+                                                #e6eaf0 50%,
+                                                #c2c9d2 65%,
+                                                #9aa4b0 100%
+                                            )`,
                         }}
                         showPercent={true}
                     />
@@ -260,11 +259,6 @@ function StatsPanel({
                     />
                 </div>
             )}
-
-            <NebulaStarblightBar
-                entity={entity}
-                handleSetTooltip={handleSetTooltip}
-            />
 
             <>
                 <div

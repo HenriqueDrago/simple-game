@@ -146,7 +146,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, NEBULA, STARBLIGHT, GRAVITATION, STARFLARE and LUNACY.",
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, STARBLIGHT and LUNACY.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
@@ -608,7 +608,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF SKULD",
         type: entryTypes.RUNES,
         description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PROFECY OF DOOM by 20%.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PROPHECY OF DOOM by 20%.",
     },
 
     [effectKeys.PRECOGNITION]: {
@@ -646,10 +646,10 @@ export const AUGUR_DESCRIPTIONS = {
     },
 
     [effectKeys.PROPHECY_OF_DOOM]: {
-        name: "PROFECY OF DOOM",
+        name: "PROPHECY OF DOOM",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE REDUCTION equal to PROFECY OF DOOM on self. At turn start, lowers PROFECY OF DOOM by 20%.",
+            "Capped at 100%. Raises DAMAGE REDUCTION equal to PROPHECY OF DOOM on self. At turn start, lowers PROPHECY OF DOOM by 20%.",
     },
 };
 
@@ -763,7 +763,7 @@ export const STARFARER_DESCRIPTIONS = {
         name: "STARS",
         type: entryTypes.CATEGORY,
         description:
-            "Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have three levels: normal, augmented and nova.",
+            "Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have two forms: normal and augmented.",
     },
 
     [effectKeys.STARFALL]: {
@@ -827,49 +827,49 @@ export const STARFARER_DESCRIPTIONS = {
         name: "RED STAR",
         type: entryTypes.STAR,
         description:
-            "At RED STARFALL, converts all RED STAR into WHITE STAR. All entities take PHYSICAL DAMAGE equal to normal RED STAR converted. All entities take PIERCING DAMAGE equal to augmented RED STAR converted. All entities take TRUE DAMAGE equal to nova RED STAR converted. These are considered three separate instances of damage.",
+            "At RED STARFALL, converts all RED STAR into WHITE STAR. The opponent takes PHYSICAL DAMAGE equal to normal RED STAR converted. The opponent takes PIERCING DAMAGE equal to augmented RED STAR converted. These are considered two separate instances of damage.",
     },
 
     [effectKeys.ORANGE_STAR]: {
         name: "ORANGE STAR",
         type: entryTypes.STAR,
         description:
-            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on self equal to normal ORANGE STAR converted. Burns RESOURCES on both opponent and self equal to augmented ORANGE STAR converted. Burns RESOURCES on the opponent only equal to nova ORANGE STAR converted. Gains GRAY STAR equal to the total amount of RESOURCES burned.",
+            "At ORANGE STARFALL, converts all ORANGE STAR into WHITE STAR. Burns RESOURCES on self equal to normal ORANGE STAR converted. Burns RESOURCES on both opponent and self equal to augmented ORANGE STAR converted. Gains GRAY STAR equal to the total amount of RESOURCES burned.",
     },
 
     [effectKeys.YELLOW_STAR]: {
         name: "YELLOW STAR",
         type: entryTypes.STAR,
         description:
-            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Raises NEBULA by 5% for every normal YELLOW STAR converted. Raises CONSTELLATION rank by the amount of augmented YELLOW STAR converted. Raises GRAVITATION by 10% for every nova YELLOW STAR converted.",
+            "At YELLOW STARFALL, converts all YELLOW STAR into WHITE STAR. Raises GRAVITATION by 5% for every normal YELLOW STAR converted. Raises CONSTELLATION rank by the amount of augmented YELLOW STAR converted.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted. Restores RESOURCES on all entities equal to nova GREEN STAR converted.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Loses WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted.",
     },
 
     [effectKeys.BLUE_STAR]: {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME equal to normal BLUE STAR converted. Gains FIRMAMENT equal to augmented BLUE STAR converted. Gains STARLIT HEAVENS equal to nova BLUE STAR converted.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains DOME equal to normal BLUE STAR converted. Gains FIRMAMENT equal to augmented BLUE STAR converted.",
     },
 
     [effectKeys.INDIGO_STAR]: {
         name: "INDIGO STAR",
         type: entryTypes.STAR,
         description:
-            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to normal INDIGO STAR converted. Gains GRAY STAR equal to augmented INDIGO STAR converted. Gains WHITE STAR equal to nova INDIGO STAR converted.",
+            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to normal INDIGO STAR converted. Gains GRAY STAR equal to augmented INDIGO STAR converted.",
     },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
         type: entryTypes.STAR,
         description:
-            "When other colored STARS are converted, raises their level by 1 and converts equivalent VIOLET STAR into WHITE STAR. Cannot raise VIOLET STAR levels this way. Cannot raise the same STARS level more than once. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR. Raises STARFLARE by 5% for every VIOLET STAR converted at VIOLET STARFALL.",
+            "When other colored STARS are converted, converts equivalent VIOLET STAR into WHITE STAR and augments that STARS effects. Cannot augment VIOLET STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR.",
     },
 
     [effectKeys.GRAY_STAR]: {
@@ -878,25 +878,18 @@ export const STARFARER_DESCRIPTIONS = {
         description: "Cannot be assigned a color.",
     },
 
-    [effectKeys.NEBULA]: {
-        name: "NEBULA",
+    [effectKeys.GRAVITATION]: {
+        name: "GRAVITATION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. When raising NEBULA above 100%, raises STARBLIGHT instead. Raises DAMAGE BONUS equal to NEBULA. At turn end, lose all NEBULA.",
+            "Capped at 100%. When raising GRAVITATION above 100%, raises STARBLIGHT instead. Raises DAMAGE BONUS equal to GRAVITATION. At 100% GRAVITATION, enables SINGULARITY. At turn end, lose all GRAVITATION.",
     },
 
     [effectKeys.STARBLIGHT]: {
         name: "STARBLIGHT",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Lowers MAX HEALTH equal to STARBLIGHT on self. Raises DAMAGE BONUS equal to STARBLIGHT on self. At turn end, lose all STARBLIGHT.",
-    },
-
-    [effectKeys.GRAVITATION]: {
-        name: "GRAVITATION",
-        type: entryTypes.FIXED_RESOURCE,
-        description:
-            "Capped at 100%. At 100%, enables SINGULARITY. At SINGULARITY end, lose all GRAVITATION.",
+            "Lowers MAX HEALTH equal to STARBLIGHT on self. Raises DAMAGE BONUS equal to STARBLIGHT on self.",
     },
 
     [effectKeys.SINGULARITY]: {
@@ -953,20 +946,6 @@ export const STARFARER_DESCRIPTIONS = {
         type: entryTypes.MITIGATION_RESOURCE,
         description:
             "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT HEAVENS to reduce the damage taken, then gains GRAY STAR equal to the amount lost this way. At turn start, converts all STARLIT HEAVENS into FIRMAMENT.",
-    },
-
-    [effectKeys.STARFLARE]: {
-        name: "STARFLARE",
-        type: entryTypes.FIXED_RESOURCE,
-        description:
-            "Capper at 100%. At turn start, if at 100%, loses all STARFLARE and enters NOVA state.",
-    },
-
-    [effectKeys.NOVA]: {
-        name: "NOVA",
-        type: entryTypes.STATE,
-        description:
-            "Raises all STARS levels by 1. At STARFALL end, exit NOVA.",
     },
 };
 
