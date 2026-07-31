@@ -70,15 +70,12 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
                 if (!mitigator) return null;
 
                 const amount = entity?.resources?.[key] ?? 0;
-
-                if(amount <= 0) {
-                    return null;
-                }
+                if (amount <= 0) return null;
 
                 return (
                     <div
                         key={key}
-                        className={`mitigation-item ${amount <= 0 ? "zero-resource" : ""}`}
+                        className="mitigation-item"
                         style={{
                             color: mitigator.color,
                             borderColor: mitigator.borderColor,
@@ -88,7 +85,7 @@ export default function MitigationTracker({ entity, handleSetTooltip }) {
                         }
                     >
                         {mitigator.icon}
-                        <span>{amount}</span>
+                        <span className="mitigation-amount">{amount}</span>
                     </div>
                 );
             })}

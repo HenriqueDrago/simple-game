@@ -20,18 +20,25 @@
     background-color: transparent;
     border: 1px solid white;
     overflow: hidden;
-    display: flex;
-    flex-direction: row;
+    position: relative;
 }
 
 .mana-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     background-color: blue;
     transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out; 
+    z-index: 1;
 }
 
 .mana-overflow-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     background-color: cyan;
     transition: width 0.3s ease-in-out; 
+    z-index: 2;
 }

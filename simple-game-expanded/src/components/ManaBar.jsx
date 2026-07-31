@@ -5,16 +5,18 @@ function ManaBar({ entity }) {
     const hasOverflow = entity.resources.manaOverflow > 0;
     const totalMana = entity.currMana + entity.resources.manaOverflow;
 
-    // Calculate percentages
-    const overflowPercentage = Math.min(
-        100,
-        (entity.resources.manaOverflow / entity.maxMana) * 100,
-    );
-    const remainingSpace = 100 - overflowPercentage;
-    const manaPercentage = Math.min(
-        remainingSpace,
-        (entity.currMana / entity.maxMana) * 100,
-    );
+    // Calculate percentages independently
+    const overflowPercentage =
+        entity.maxMana > 0 && hasOverflow
+            ? Math.min(
+                  100,
+                  (entity.resources.manaOverflow / entity.maxMana) * 100,
+              )
+            : 0;
+    const manaPercentage =
+        entity.maxMana > 0 
+            ? Math.min(100, (entity.currMana / entity.maxMana) * 100)
+            : 0;
 
     const backgroundColor =
         entity[effectKeys.MANA_BLEED] > 0 ? "purple" : "blue";
@@ -35,18 +37,16 @@ function ManaBar({ entity }) {
                 </span>
             </div>
             <div className="mana-track">
-                {hasOverflow && (
-                    <div
-                        className="mana-overflow-fill"
-                        style={{ width: `${overflowPercentage}%` }}
-                    />
-                )}
                 <div
                     className="mana-fill"
                     style={{
                         width: `${manaPercentage}%`,
                         backgroundColor: `${backgroundColor}`,
                     }}
+                />
+                <div
+                    className="mana-overflow-fill"
+                    style={{ width: `${overflowPercentage}%` }}
                 />
             </div>
         </div>

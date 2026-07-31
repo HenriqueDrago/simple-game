@@ -311,20 +311,23 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
     }
 
     // Halo
-    if (draftTarget.resources.halo > 0) {
-        const newSpark = Math.min(
-            draftTarget.resources.halo + draftTarget[effectKeys.DIVINE_SPARK],
-            constants.MAX_DIVINE_SPARK,
-        );
+    if (draftTarget.resources[effectKeys.HALO] > 0) {
+        const missingSpark = constants.MAX_DIVINE_SPARK - draftTarget[effectKeys.DIVINE_SPARK];
+        const sparkGained = draftTarget.resources[effectKeys.HALO];
 
+        const newSpark = draftTarget[effectKeys.DIVINE_SPARK] + Math.min(sparkGained, missingSpark);
+        
         draftTarget = {
             ...draftTarget,
             [effectKeys.DIVINE_SPARK]: newSpark,
             resources: {
                 ...draftTarget.resources,
-                halo: 0,
+                [effectKeys.HALO]: 0,
             },
         };
+
+        const toBeRestored = Math.max(0, Math.floor(sparkGained - missingSpark));
+        draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
     // Bad Omen

@@ -266,7 +266,7 @@ function StatsPanel({
                         spawnTooltip(e, handleSetTooltip, effectKeys.HEALTH)
                     }
                 >
-                    <HpBar entity={entity} />
+                    <HpBar entity={entity} handleSetTooltip={handleSetTooltip}/>
                 </div>
 
                 <div

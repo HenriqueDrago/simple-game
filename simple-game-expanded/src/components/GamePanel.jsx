@@ -2,7 +2,6 @@ import "./GamePanel.css";
 import ControlPanel from "./ControlPanel";
 import StatsPanel from "./StatsPanel";
 import StarsPanel from "./StarsPanel";
-import MitigationTracker from "./MitigationTracker"; // Imported tracker component
 
 import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
 
@@ -62,10 +61,6 @@ function GamePanel({
                         className={`stats-panels-container`}
                     >
                         <div className="player-panel-wrapper">
-                            <MitigationTracker
-                                entity={game.entities[entityKeys.PLAYER_ONE]}
-                                handleSetTooltip={handleSetTooltip}
-                            />
                             <StatsPanel
                                 game={game}
                                 updateStatsPoints={updateStatsPoints}
@@ -79,10 +74,6 @@ function GamePanel({
                         </div>
 
                         <div className="player-panel-wrapper panel-reversed">
-                            <MitigationTracker
-                                entity={game.entities[entityKeys.PLAYER_TWO]}
-                                handleSetTooltip={handleSetTooltip}
-                            />
                             <StatsPanel
                                 game={game}
                                 updateStatsPoints={updateStatsPoints}

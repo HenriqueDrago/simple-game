@@ -139,7 +139,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that has upper cap. Includes MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the next RESOURCE on the list. When restoring a LIMITED RESOURCE above the limit, if they have an overflow rule, follows that rule; otherwise continues to the next RESOURCE on the list.",
+            "A subset of RESOURCES that has upper cap. Includes MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the following RESOURCES on the list. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise continues to the following RESOURCES on the list.",
     },
 
     [entryTypes.FIXED_RESOURCE]: {
@@ -330,14 +330,14 @@ export const BASIC_DESCRIPTIONS = {
         name: "GUARDING",
         type: entryTypes.STATE,
         description:
-            "Raises DEF EFFECTIVENESS and DAMAGE REDUCTION by 50%. Cleared at turn start.",
+            "Raises DEF EFFECTIVENESS and DAMAGE REDUCTION by 50%. At turn start, exits this state.",
     },
 
     [actionKeys.HEAL]: {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Consumes MANA to replenish missing HEALTH. Cleanses POISON and gains DISTILLED TOXIN equal to the amount cleansed.",
+            "Consumes MANA to replenish missing HEALTH.",
     },
 };
 
@@ -375,7 +375,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
     [effectKeys.SACRIFICIAL_STATE]: {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
-        description: "Raises DAMAGE REDUCTION by 50%. Cleared at turn start.",
+        description: "Raises DAMAGE REDUCTION by 50%. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
@@ -425,7 +425,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "DIVINE SPARK",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises STR by every 5% DIVINE SPARK on self.",
+            "Capped at 100%. Raises STR by every 5% DIVINE SPARK on self. When raising DIVINE SPARK above 100%, restores RESOURCES for every 1% excess.",
     },
 };
 
@@ -516,7 +516,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "SONORITY",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Ranges from -100% to +100%. When using a DEFENSIVE ACTION, raises SONORITY by 10%. When using an OFFENSIVE ACTION, lowers SONORITY by 10%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
+            "Ranges from -50% to +50%. When using a DEFENSIVE ACTION, raises SONORITY by 5%. When using an OFFENSIVE ACTION, lowers SONORITY by 5%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
     },
 
     [actionKeys.DA_CAPO]: {
@@ -530,7 +530,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Gain 1 HARMONY for every 10% shift on SONORITY.",
+            "Inverts current SONORITY. Gain 1 HARMONY for every 5% shift on SONORITY.",
     },
 
     [effectKeys.HARMONY]: {
@@ -544,7 +544,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "BABEL",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Inflicts 1 DISSONANCE on the opponent for every 10% shift on SONORITY.",
+            "Inverts current SONORITY. Inflicts 1 DISSONANCE on the opponent for every 5% shift on SONORITY.",
     },
 
     [effectKeys.DISSONANCE]: {
@@ -566,14 +566,14 @@ export const AUGUR_DESCRIPTIONS = {
         name: "CURSE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Detonates all RUNES, starting from the newest. Takes 5 TRUE DAMAGE when detonating an empty socket. This action does not end your turn. Cannot be used when RUNIC ARRAY is empty.",
+            "Detonates all RUNES, starting from the oldest. Takes 5 TRUE DAMAGE when detonating an empty socket. This action does not end your turn. Cannot be used when RUNIC ARRAY is empty.",
     },
 
     [effectKeys.VISIONARY]: {
         name: "VISIONARY",
         type: entryTypes.STATE,
         description:
-            "Enables RUNIC ARRAY. When using GUARD, HEAL or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI or RUNE OF SKULD to the RUNIC ARRAY, respectively. When exiting this state, detonates all RUNES.",
+            "Enables RUNIC ARRAY. When using GUARD, HEAL or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI or RUNE OF SKULD to the RUNIC ARRAY, respectively. When exiting this state, detonates all RUNES, starting from the oldest.",
     },
 
     [effectKeys.RUNIC_ARRAY]: {
@@ -700,14 +700,14 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "DARK EMBRACE",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. While active, SHADOWFLAME on self does not burn RESOURCES. Cleared at turn start.",
+            "Raises DAMAGE REDUCTION by 50%. While active, SHADOWFLAME on self does not burn RESOURCES. At turn start, exits this state.",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
         name: "DIMMING DARKNESS",
         type: entryTypes.STATE,
         description:
-            "Does not activate POISON and MANA OVERFLOW effects on self. Cleared at turn start.",
+            "Does not activate MANA OVERFLOW turn end effects. At turn start, exits this state.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {

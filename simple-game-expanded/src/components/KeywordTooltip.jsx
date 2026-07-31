@@ -1,13 +1,12 @@
+import { entryTypeClassMap } from '../utils/constants';
 import { keywordDictionary } from '../utils/dictionary';
 import './KeywordTooltip.css';
 
 function KeywordTooltip({ keyword, type, handleSetTooltip, depth }) {
-    
     const handleMouseDown = (e) => {
-        // Trigger on mouse wheel
         if (e.button === 1 || e.button === 0) {
-            e.preventDefault(); // Stops the auto-scroll icon
-            e.stopPropagation(); // Prevents the backdrop from closing tooltips
+            e.preventDefault();
+            e.stopPropagation();
             const entry = keywordDictionary[keyword];
             
             if (entry) {
@@ -17,14 +16,16 @@ function KeywordTooltip({ keyword, type, handleSetTooltip, depth }) {
                     description: entry.description,
                     x: e.clientX,
                     y: e.clientY
-                }, depth + 1); // Depth + 1 ensures it spawns as a child (in front)
+                }, depth + 1);
             }
         }
     };
 
+    const typeClass = entryTypeClassMap[type] || 'type-category';
+
     return (
         <span 
-            className={`keyword-text type-${type?.toLowerCase()}`}
+            className={`keyword-text ${typeClass}`}
             onMouseDown={handleMouseDown}
         >
             {keyword}
