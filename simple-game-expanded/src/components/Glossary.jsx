@@ -1,33 +1,52 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { entryTypesMap, presetAi } from "../utils/constants";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { aiKeys, progKeys } from "../utils/enums";
 import "./Glossary.css";
 
-function Glossary({ handleGlossary, game }) {
+function Glossary() {
+    const { game } = useGame();
+    const { UIElements, setUIElements } = useUI();
+
+    if (!UIElements.glossary) {
+        return null;
+    }
+
     const aiObjects = [...Object.entries(presetAi)];
     return (
         <div className="glossary-container">
-            <button
-                className="glossary-close-button"
-                onClick={() => {
-                    handleGlossary(false);
-                }}
-                aria-label="Close glossary"
-            >
-                &times;
-            </button>
+            <div className="glossary-header-container">
+                <span>Glossary</span>
+                <button
+                    className="glossary-close-button"
+                    onClick={() => {
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                glossary: false,
+                            };
+                        });
+                    }}
+                >
+                    &times;
+                </button>
+            </div>
 
             {aiObjects.map(([aiKey, aiObj], i) => {
-                const name =
-                     aiKey === aiKeys.HUMAN ? "General" : aiObj.name;
+                const name = aiKey === aiKeys.HUMAN ? "General" : aiObj.name;
 
-                if (!aiObj.desc || (game.progressMode && game.progressStatus[aiKey] === progKeys.LOCKED)) {
+                if (
+                    !aiObj.desc ||
+                    (game.progressMode &&
+                        game.progressStatus[aiKey] === progKeys.LOCKED)
+                ) {
                     return null;
                 }
 
                 return (
                     <div className="glossary-column-container" key={i}>
-                        <h2 className="glossary-column-title">{name}</h2>
+                        <span className="glossary-column-title">{name}</span>
 
                         {aiObj.desc.map((item) => {
                             const descData = DESCRIPTIONS[item];

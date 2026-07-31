@@ -3,9 +3,12 @@ import Parser from "./Parser";
 import "./TooltipDisplay.css";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { entryTypesMap } from "../utils/constants";
+import { useUI } from "../contexts/UIContext";
 
-function TooltipDisplay({ tooltipStack, handleSetTooltip }) {
+function TooltipDisplay() {
     const scrollRef = useRef(null);
+
+    const { tooltipStack, handleSetTooltip } = useUI();
 
     // Auto-scroll to the bottom when a new definition is added
     useEffect(() => {

@@ -5,7 +5,7 @@ import "./RunicArray.css";
 import othala from "../assets/Runic_letter_othalan.svg";
 import jera from "../assets/Runic_letter_jeran.svg";
 import naudiz from "../assets/Runic_letter_naudiz.svg";
-import { spawnTooltip } from "../utils/dictionary";
+import { useUI } from "../contexts/UIContext";
 
 const runeMap = {
     [runeKeys.EMPTY]: <Diamond className="empty-rune-icon" />,
@@ -26,7 +26,8 @@ const runeClassMap = {
     [runeKeys.SKULD]: "rune-skuld",
 };
 
-export default function RunicArray({ entity, handleSetTooltip }) {
+export default function RunicArray({ entity }) {
+    const { handleSpawnTooltip } = useUI();
     if (!entity.states[effectKeys.VISIONARY]) {
         return null;
     }
@@ -45,9 +46,7 @@ export default function RunicArray({ entity, handleSetTooltip }) {
                     key={index}
                     className={`rune-slot ${rune === runeKeys.EMPTY ? "empty" : "active"} ${runeClassMap[rune] || ""}`}
                     onMouseDown={(e) =>
-                        spawnTooltip(
-                            e,
-                            handleSetTooltip,
+                        handleSpawnTooltip(e,
                             rune !== runeKeys.EMPTY
                                 ? rune
                                 : effectKeys.RUNIC_ARRAY,

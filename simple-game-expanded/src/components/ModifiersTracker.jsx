@@ -13,15 +13,16 @@ import {
     processEntityWeakness,
 } from "../utils/entities";
 import "./ModifiersTracker.css";
-import { spawnTooltip } from "../utils/dictionary";
 import { effectKeys } from "../utils/enums";
+import { useUI } from "../contexts/UIContext";
 
-export default function ModifiersTracker({ entity, handleSetTooltip }) {
+export default function ModifiersTracker({ entity }) {
+    const { handleSpawnTooltip } = useUI();
     return (
         <div className="modifiers-tracker-container">
             <span
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.DAMAGE_BONUS)
+                    handleSpawnTooltip(e, effectKeys.DAMAGE_BONUS)
                 }
             >
                 <Sword size={18} />
@@ -29,7 +30,7 @@ export default function ModifiersTracker({ entity, handleSetTooltip }) {
             </span>
             <span
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.WEAKNESS)
+                    handleSpawnTooltip(e, effectKeys.WEAKNESS)
                 }
             >
                 <ChevronsDown size={18} />
@@ -37,7 +38,7 @@ export default function ModifiersTracker({ entity, handleSetTooltip }) {
             </span>
             <span
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.DAMAGE_REDUCTION)
+                    handleSpawnTooltip(e, effectKeys.DAMAGE_REDUCTION)
                 }
             >
                 <Shield size={18} />
@@ -45,7 +46,7 @@ export default function ModifiersTracker({ entity, handleSetTooltip }) {
             </span>
             <span
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.FRAGILITY)
+                    handleSpawnTooltip(e, effectKeys.FRAGILITY)
                 }
             >
                 <HeartCrack size={18} />
@@ -53,7 +54,7 @@ export default function ModifiersTracker({ entity, handleSetTooltip }) {
             </span>
             <span
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.DEF_EFFECTIVENESS)
+                    handleSpawnTooltip(e, effectKeys.DEF_EFFECTIVENESS)
                 }
             >
                 <ShieldCogCorner size={18} />

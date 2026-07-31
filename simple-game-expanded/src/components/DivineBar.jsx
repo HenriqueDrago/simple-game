@@ -1,17 +1,15 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { constants } from "../utils/constants";
-import { spawnTooltip } from "../utils/dictionary";
 import { canUseAction } from "../utils/entities";
 import { actionKeys, effectKeys, entityKeys } from "../utils/enums";
 import "./DivineBar.css";
 import GradientBar from "./GradientBar";
 
-export default function DivineBar({
-    handleSetTooltip,
-    handleClearTooltip,
-    handleAction,
-    game,
-    entityKey,
-}) {
+export default function DivineBar({ entityKey }) {
+    const { game, handleAction } = useGame();
+    const { handleSpawnTooltip, handleClearTooltip } = useUI();
+
     const entity = game.entities[entityKey];
     const otherEntityKey =
         entityKey === entityKeys.PLAYER_ONE
@@ -26,7 +24,7 @@ export default function DivineBar({
         <div className="divine-bar">
             <div
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.DIVINE_SPARK)
+                    handleSpawnTooltip(e, effectKeys.DIVINE_SPARK)
                 }
             >
                 <GradientBar
@@ -51,9 +49,7 @@ export default function DivineBar({
                     handleClearTooltip();
                     handleAction(actionKeys.ASCEND, entityKey, otherEntityKey);
                 }}
-                onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, actionKeys.ASCEND)
-                }
+                onMouseDown={(e) => handleSpawnTooltip(e, actionKeys.ASCEND)}
                 disabled={canUseAction(game, entityKey, actionKeys.ASCEND)}
             >
                 Ascend

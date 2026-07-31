@@ -2,16 +2,18 @@ import "./ControlPanel.css";
 import { presetAi } from "../utils/constants";
 import { sdmKeys, entityKeys, progKeys, aiKeys } from "../utils/enums";
 import { RotateCcw } from "lucide-react";
+import { useGame } from "../contexts/GameContext";
 
-function ControlPanel({
-    handleAiChange,
-    handleDistributionModeChange,
-    entityKey,
-    statDistributionMode,
-    controller,
-    game,
-    handleRandomizeStats
-}) {
+function ControlPanel({ entityKey }) {
+    const {
+        game,
+        handleDistributionModeChange,
+        handleRandomizeStats,
+        handleAiChange,
+    } = useGame();
+
+    const entity = game.entities[entityKey];
+
     const playerLabel =
         entityKey === entityKeys.PLAYER_ONE ? "Player One" : "Player Two";
 
@@ -24,7 +26,7 @@ function ControlPanel({
                     </label>
                     <select
                         id={`distribution-mode-${entityKey}`}
-                        value={statDistributionMode}
+                        value={entity.statDistributionMode}
                         onChange={(e) =>
                             handleDistributionModeChange(
                                 e.target.value,
@@ -35,7 +37,7 @@ function ControlPanel({
                         <option value={sdmKeys.CUSTOM}>Custom</option>
                         <option
                             value={sdmKeys.BEST}
-                            disabled={controller === aiKeys.HUMAN}
+                            disabled={entity.controller === aiKeys.HUMAN}
                         >
                             "Best"
                         </option>
@@ -48,11 +50,13 @@ function ControlPanel({
                         onClick={() => {
                             handleRandomizeStats(entityKey);
                         }}
-                        disabled={statDistributionMode !== sdmKeys.CUSTOM}
+                        disabled={
+                            entity.statDistributionMode !== sdmKeys.CUSTOM
+                        }
                         title="Randomize Stats"
                     >
                         <RotateCcw size={18} strokeWidth={2.5} />
-                    </button >
+                    </button>
                 </div>
             )}
 
@@ -63,7 +67,7 @@ function ControlPanel({
                     </label>
                     <select
                         id={`player-ai-${entityKey}`}
-                        value={controller}
+                        value={entity.controller}
                         onChange={(e) =>
                             handleAiChange(e.target.value, entityKey)
                         }

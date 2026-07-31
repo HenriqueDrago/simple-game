@@ -2,8 +2,9 @@ import "./AttrLine.css";
 
 import { effectKeys, elementalKeys, runeKeys, turnStatus } from "../utils/enums";
 import { countRunes, getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
-import { spawnTooltip } from "../utils/dictionary";
+
 import { constants } from "../utils/constants";
+import { useUI } from "../contexts/UIContext";
 
 const gettersMap = {
     str: getEntityStr,
@@ -17,8 +18,8 @@ function AttrLine({
     attr,
     entity,
     entityKey,
-    handleSetTooltip,
 }) {
+    const { handleSpawnTooltip } = useUI();
     if (entity.attributes[attr].value == null) {
         return null;
     }
@@ -67,14 +68,14 @@ function AttrLine({
             {showControls ? (
                 <p
                     className="changeable-status"
-                    onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, attr)}
+                    onMouseDown={(e) => handleSpawnTooltip(e, attr)}
                 >
                     {attr.toUpperCase() + ": " + gettersMap[attr](entity)}
                 </p>
             ) : (
                 <p
                     className="non-changeable-status"
-                    onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, attr)}
+                    onMouseDown={(e) => handleSpawnTooltip(e, attr)}
                 >
                     {attr.toUpperCase() + ": "}
                     <span className={specialClass}>

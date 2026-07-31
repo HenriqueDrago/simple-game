@@ -1,18 +1,15 @@
-import { spawnTooltip } from "../utils/dictionary";
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { canUseCombatInteractions } from "../utils/entities";
-import {
-    effectKeys,
-} from "../utils/enums";
+import { effectKeys } from "../utils/enums";
 import { toRoman } from "../utils/general";
 import "./ConstellationTracker.css";
 
-export default function ConstellationTracker({
-    game,
-    entityKey,
-    entity,
-    handleConstellation,
-    handleSetTooltip,
-}) {
+export default function ConstellationTracker({ entityKey }) {
+    const { game, handleConstellation } = useGame();
+    const { handleSpawnTooltip } = useUI();
+
+    const entity = game.entities[entityKey];
     const totalConstellation =
         entity[effectKeys.CONSTELLATION] +
         entity[effectKeys.AZURE_CONSTELLATION] +
@@ -36,7 +33,7 @@ export default function ConstellationTracker({
             <span
                 className="constellation-display"
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.CONSTELLATION)
+                    handleSpawnTooltip(e, effectKeys.CONSTELLATION)
                 }
             >
                 Constellation: {toRoman(totalConstellation)}
@@ -45,11 +42,7 @@ export default function ConstellationTracker({
                 <button
                     className="constellation-crimson-button"
                     onMouseDown={(e) =>
-                        spawnTooltip(
-                            e,
-                            handleSetTooltip,
-                            effectKeys.CRIMSON_CONSTELLATION,
-                        )
+                        handleSpawnTooltip(e, effectKeys.CRIMSON_CONSTELLATION)
                     }
                     onClick={() =>
                         handleConstellation(
@@ -64,11 +57,7 @@ export default function ConstellationTracker({
                 <button
                     className="constellation-azure-button"
                     onMouseDown={(e) =>
-                        spawnTooltip(
-                            e,
-                            handleSetTooltip,
-                            effectKeys.AZURE_CONSTELLATION,
-                        )
+                        handleSpawnTooltip(e, effectKeys.AZURE_CONSTELLATION)
                     }
                     onClick={() =>
                         handleConstellation(

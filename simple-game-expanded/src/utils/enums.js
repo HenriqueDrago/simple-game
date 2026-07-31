@@ -214,11 +214,9 @@ export const effectKeys = Object.freeze({
 
     STARBLIGHT: "starblight",
     CONSTELLATION: "constellation",
-    NOVA: "nova",
     CRIMSON_CONSTELLATION: "crimsonConstellation",
     AZURE_CONSTELLATION: "azureConstellation",
 
-    STARFLARE: "starflare",
     STARLIT_DOME: "starlitDome",
 
     GRAVITATION: "gravitation",
@@ -233,7 +231,7 @@ export const effectKeys = Object.freeze({
     CONJECTURE: "conjecture",
     BAD_OMEN: "badOmen",
     PAST_MEMORIES: "pastMemories",
-    PROPHECY_OF_DOOM: "prophecyOfDoom",
+    PREMONITION: "premonition",
 });
 
 export const runeKeys = Object.freeze({

@@ -3,12 +3,11 @@ import { effectKeys, elementalKeys } from "../utils/enums";
 import "./HpBar.css";
 import MitigationTracker from "./MitigationTracker";
 
-function HpBar({ entity, handleSetTooltip }) {
+function HpBar({ entity, simEntity }) {
     const maxHealth = getEntityMaxHealth(entity);
 
-    const silverHp = entity.resources[effectKeys.SILVER_BLOOD];
     const baseHp = entity.currHp;
-
+    const silverHp = entity.resources?.[effectKeys.SILVER_BLOOD] ?? 0;
     const hasSilver = silverHp > 0;
 
     const silverPercentage =
@@ -20,6 +19,41 @@ function HpBar({ entity, handleSetTooltip }) {
 
     const silverTimes = maxHealth > 0 ? Math.floor(silverHp / maxHealth) : 0;
 
+    const simHp = simEntity ? simEntity.currHp : baseHp;
+    const simSilver = simEntity
+        ? simEntity.resources?.[effectKeys.SILVER_BLOOD] ?? 0
+        : silverHp;
+
+    const isSimulating =
+        simEntity && (simHp !== baseHp || simSilver !== silverHp);
+    const displayHp = isSimulating ? simHp : baseHp;
+    const displaySilver = isSimulating ? simSilver : silverHp;
+    const displayHasSilver = displaySilver > 0;
+
+    const hpDelta = simHp - baseHp;
+    const hpLossAmount = hpDelta < 0 ? Math.abs(hpDelta) : 0;
+    const hpGainAmount = hpDelta > 0 ? hpDelta : 0;
+
+    const hpLossLeft = maxHealth > 0 ? (simHp / maxHealth) * 100 : 0;
+    const hpLossWidth =
+        maxHealth > 0 ? Math.min(100, (hpLossAmount / maxHealth) * 100) : 0;
+
+    const hpGainLeft = maxHealth > 0 ? (baseHp / maxHealth) * 100 : 0;
+    const hpGainWidth =
+        maxHealth > 0 ? Math.min(100, (hpGainAmount / maxHealth) * 100) : 0;
+
+    const silverDelta = simSilver - silverHp;
+    const silverLossAmount = silverDelta < 0 ? Math.abs(silverDelta) : 0;
+    const silverGainAmount = silverDelta > 0 ? silverDelta : 0;
+
+    const silverLossLeft = maxHealth > 0 ? (simSilver / maxHealth) * 100 : 0;
+    const silverLossWidth =
+        maxHealth > 0 ? Math.min(100, (silverLossAmount / maxHealth) * 100) : 0;
+
+    const silverGainLeft = maxHealth > 0 ? (silverHp / maxHealth) * 100 : 0;
+    const silverGainWidth =
+        maxHealth > 0 ? Math.min(100, (silverGainAmount / maxHealth) * 100) : 0;
+
     return (
         <div className="hp-bar-container">
             <div className="hp-text-wrapper">
@@ -28,18 +62,24 @@ function HpBar({ entity, handleSetTooltip }) {
                         {`Health${silverTimes > 0 ? ` x${silverTimes}` : ""}`}
                     </span>
                     <MitigationTracker
-                        handleSetTooltip={handleSetTooltip}
                         entity={entity}
+                        simEntity={simEntity}
                     />
                 </div>
                 <div className="hp-values">
-                    {hasSilver ? (
-                        <span className="extra-silver-hp">
-                            {baseHp + silverHp}
-                        </span>
-                    ) : (
-                        <span>{baseHp}</span>
-                    )}
+                    <span
+                        className={`hp-value-display ${
+                            isSimulating ? "is-preview" : ""
+                        }`}
+                    >
+                        {displayHasSilver ? (
+                            <span className="extra-silver-hp">
+                                {displayHp + displaySilver}
+                            </span>
+                        ) : (
+                            <span>{displayHp}</span>
+                        )}
+                    </span>
                     <span> / </span>
                     <span
                         className={
@@ -60,12 +100,52 @@ function HpBar({ entity, handleSetTooltip }) {
                     }}
                 />
 
-                <div
-                    className="overgrowth-hp-fill"
-                    style={{
-                        width: `${silverPercentage}%`,
-                    }}
-                />
+                {hpLossWidth > 0 && (
+                    <div
+                        className="preview-chunk hp-loss"
+                        style={{
+                            left: `${hpLossLeft}%`,
+                            width: `${hpLossWidth}%`,
+                        }}
+                    />
+                )}
+                {hpGainWidth > 0 && (
+                    <div
+                        className="preview-chunk hp-gain"
+                        style={{
+                            left: `${hpGainLeft}%`,
+                            width: `${hpGainWidth}%`,
+                        }}
+                    />
+                )}
+
+                {hasSilver && (
+                    <div
+                        className="overgrowth-hp-fill"
+                        style={{
+                            width: `${silverPercentage}%`,
+                        }}
+                    />
+                )}
+
+                {silverLossWidth > 0 && (
+                    <div
+                        className="preview-chunk silver-loss"
+                        style={{
+                            left: `${silverLossLeft}%`,
+                            width: `${silverLossWidth}%`,
+                        }}
+                    />
+                )}
+                {silverGainWidth > 0 && (
+                    <div
+                        className="preview-chunk silver-gain"
+                        style={{
+                            left: `${silverGainLeft}%`,
+                            width: `${silverGainWidth}%`,
+                        }}
+                    />
+                )}
             </div>
         </div>
     );

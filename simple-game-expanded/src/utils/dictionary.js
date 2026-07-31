@@ -17,24 +17,3 @@ export const keywordDictionary = allEntries.reduce((acc, entry) => {
 export const sortedKeywordList = Object.keys(keywordDictionary).sort(
     (a, b) => b.length - a.length,
 );
-
-export function spawnTooltip(e, handleSetTooltip, itemKey) {
-    // Mouse wheel opens tooltip
-    if (e.button === 1) {
-        e.preventDefault(); // Prevents the browser's auto-scroll icon from popping up
-        e.stopPropagation(); // Prevents the event from trigerring other effects
-
-        const entry = DESCRIPTIONS[itemKey];
-        if (itemKey && entry) {
-            handleSetTooltip({
-                keyword: entry.name,
-                type: entry.type,
-                description: entry.description,
-                x: e.clientX,
-                y: e.clientY - 30,
-            });
-        } else {
-            console.error(`Entry [${itemKey}] not found.`)
-        }
-    }
-}

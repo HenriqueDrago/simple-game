@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { effectKeys } from "../utils/enums";
 import "./MitigationTracker.css";
-import { spawnTooltip } from "../utils/dictionary";
 import { MITIGATION_RESOURCES } from "../utils/constants";
+import { useUI } from "../contexts/UIContext";
 
 const mitigators = {
     [effectKeys.HALO]: {
@@ -62,30 +62,72 @@ const mitigators = {
     },
 };
 
-export default function MitigationTracker({ entity, handleSetTooltip }) {
-    return (
-        <div className="mitigation-tracker-container">
-            {[...MITIGATION_RESOURCES].map((key) => {
-                const mitigator = mitigators[key];
-                if (!mitigator) return null;
+export default function MitigationTracker({
+    entity,
+    simEntity,
+}) {
+    const { handleSpawnTooltip } = useUI();
+    const activeResources = [...MITIGATION_RESOURCES].filter((key) => {
+        if (!mitigators[key]) {
+            return false;
+        }
 
-                const amount = entity?.resources?.[key] ?? 0;
-                if (amount <= 0) return null;
+        const currentAmount = entity?.resources?.[key] ?? 0;
+        const simAmount = simEntity
+            ? (simEntity?.resources?.[key] ?? 0)
+            : currentAmount;
+        return currentAmount > 0 || simAmount > 0;
+    });
+
+    if (activeResources.length === 0) {
+        return null;
+    }
+
+    const hasOverflow = activeResources.length > 3;
+
+    return (
+        <div
+            className={`mitigation-tracker-container ${
+                hasOverflow ? "has-overflow" : ""
+            }`}
+        >
+            {activeResources.map((key) => {
+                const mitigator = mitigators[key];
+                const currentAmount = entity?.resources?.[key] ?? 0;
+                const simAmount = simEntity
+                    ? (simEntity?.resources?.[key] ?? 0)
+                    : currentAmount;
+
+                const isNewResource = currentAmount <= 0 && simAmount > 0;
+                const isNumberChanged =
+                    simEntity && simAmount !== currentAmount;
+
+                const displayAmount = simEntity ? simAmount : currentAmount;
 
                 return (
                     <div
                         key={key}
-                        className="mitigation-item"
+                        className={`mitigation-item ${
+                            isNewResource ? "is-new-preview" : ""
+                        }`}
                         style={{
                             color: mitigator.color,
                             borderColor: mitigator.borderColor,
                         }}
                         onMouseDown={(e) =>
-                            spawnTooltip(e, handleSetTooltip, key)
+                            handleSpawnTooltip(e, key)
                         }
                     >
                         {mitigator.icon}
-                        <span className="mitigation-amount">{amount}</span>
+                        <span
+                            className={`mitigation-amount ${
+                                isNumberChanged && !isNewResource
+                                    ? "is-preview"
+                                    : ""
+                            }`}
+                        >
+                            {displayAmount}
+                        </span>
                     </div>
                 );
             })}

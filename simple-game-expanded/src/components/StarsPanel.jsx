@@ -3,16 +3,17 @@ import { effectKeys, entityKeys, roundPhases } from "../utils/enums";
 import StarIcon from "./StarIcon";
 import StarRow from "./StarRow";
 import { coloredStars } from "../utils/constants";
-import { spawnTooltip } from "../utils/dictionary";
 import { canUseCombatInteractions } from "../utils/entities";
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 
 function StarsPanel({
-    game,
     entityKey,
-    handleStarChange,
     reversed,
-    handleSetTooltip,
 }) {
+    const {game} = useGame();
+    const {handleSpawnTooltip} = useUI();
+
     const entity = game.entities[entityKey];
     const currPhase = game.starQueue ? game.starQueue[0] : null;
 
@@ -39,9 +40,8 @@ function StarsPanel({
                     <div
                         className="special-star"
                         onMouseDown={(e) =>
-                            spawnTooltip(
+                            handleSpawnTooltip(
                                 e,
-                                handleSetTooltip,
                                 effectKeys.GRAY_STAR,
                             )
                         }
@@ -59,9 +59,8 @@ function StarsPanel({
                     <div
                         className="special-star"
                         onMouseDown={(e) =>
-                            spawnTooltip(
+                            handleSpawnTooltip(
                                 e,
-                                handleSetTooltip,
                                 effectKeys.WHITE_STAR,
                             )
                         }
@@ -85,12 +84,10 @@ function StarsPanel({
                             entity={entity}
                             color={star.color}
                             starKey={star.star}
-                            handleStarChange={handleStarChange}
                             showButton={showButton}
                             starPhase={star.starPhase}
                             currentPhase={currPhase}
                             reversed={reversed}
-                            handleSetTooltip={handleSetTooltip}
                             isPlayerStarfall={isPlayerStarfall}
                         />
                     ))}

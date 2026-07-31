@@ -2,13 +2,15 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    max-width: 125px;
+    height: 20px;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
-.mitigation-tracker-container::-webkit-scrollbar {
-    display: none;
+.mitigation-tracker-container.has-overflow {
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
 }
 
 .mitigation-item {
@@ -19,15 +21,15 @@
     background-color: #000000;
     border: 1px solid;
     box-sizing: border-box;
+    height: 20px;
     flex-shrink: 0;
-    cursor: pointer;
     user-select: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
 }
 
-.mitigation-item:hover {
-    border-color: currentColor !important;
-    box-shadow: 0 0 6px currentColor;
+.mitigation-item.is-new-preview {
+    opacity: 0.6;
+    filter: grayscale(50%);
 }
 
 .svg-icon {
@@ -41,4 +43,9 @@
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+}
+
+.mitigation-amount.is-preview {
+    font-style: italic;
+    opacity: 0.75;
 }

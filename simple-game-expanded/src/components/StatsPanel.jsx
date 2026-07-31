@@ -1,48 +1,35 @@
 import HpBar from "./HpBar.jsx";
 import ManaBar from "./ManaBar.jsx";
 import AttrLine from "./AttrLine.jsx";
-import StackCounter from "./StackCounter.jsx";
 import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
-import {
-    constants,
-    FREE_RESOURCES,
-    stackCounters,
-} from "../utils/constants.js";
-import { sdmKeys, effectKeys, elementalKeys } from "../utils/enums.js";
+import { constants } from "../utils/constants.js";
+import { sdmKeys, effectKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
 import SelenianTracker from "./SelenianTracker.jsx";
-import {
-    canUseCombatInteractions,
-    isElementActive,
-    isEntityDead,
-} from "../utils/entities.js";
+import { canUseCombatInteractions, isEntityDead } from "../utils/entities.js";
 import SpecialCounter from "./SpecialCounter.jsx";
-import { spawnTooltip } from "../utils/dictionary.js";
 import ModifiersTracker from "./ModifiersTracker.jsx";
 import ConstellationTracker from "./ConstellationTracker.jsx";
 import DivineBar from "./DivineBar.jsx";
 import RunicArray from "./RunicArray.jsx";
+import FreeResourcesTracker from "./FreeResourcesTracker.jsx";
+import { useGame } from "../contexts/GameContext.js";
+import { useUI } from "../contexts/UIContext.js";
 
-function StatsPanel({
-    game,
-    updateStatsPoints,
-    entityKey,
-    handleElementChange,
-    handleSetTooltip,
-    handleConstellation,
-    handleClearTooltip,
-    handleAction,
-}) {
+function StatsPanel({ entityKey }) {
+    const { game } = useGame();
+    const { handleSpawnTooltip } = useUI();
+
     const entity = game.entities[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
     const battleState = game.status;
     const distributionMode = entity.statDistributionMode;
 
     const states = entity.states;
-    const resources = entity.resources;
 
     const showWarning = canUseCombatInteractions(game) && isEntityDead(entity);
 
@@ -63,7 +50,6 @@ function StatsPanel({
         [effectKeys.SELENIAN]: "state-selenian",
         [effectKeys.PRISMATIC]: "state-prismatic",
         [effectKeys.MOON_DEW]: "state-moon-dew",
-        [effectKeys.NOVA]: "state-nova",
         [effectKeys.VISIONARY]: "state-visionary",
     };
 
@@ -77,31 +63,20 @@ function StatsPanel({
         <div className={`stats-panel-container ${statesClass}`}>
             {entity.states[effectKeys.SELENIAN] && (
                 <SelenianTracker
-                    entity={entity}
-                    changeElement={(element) => {
-                        handleElementChange(entityKey, element);
-                    }}
-                    clickable={
-                        canUseCombatInteractions(game) &&
-                        !isElementActive(entity, elementalKeys.SHATTERED)
-                    }
-                    handleSetTooltip={handleSetTooltip}
+                    entityKey={entityKey}
                 />
             )}
-            <StateBadges states={states} handleSetTooltip={handleSetTooltip} />
+            <StateBadges states={states} />
 
             <DivineBar
-                handleSetTooltip={handleSetTooltip}
-                handleClearTooltip={handleClearTooltip}
-                handleAction={handleAction}
-                game={game}
+
                 entityKey={entityKey}
             />
 
             {entity[effectKeys.LUNACY] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.LUNACY)
+                        handleSpawnTooltip(e,  effectKeys.LUNACY)
                     }
                 >
                     <GradientBar
@@ -126,9 +101,9 @@ function StatsPanel({
             {entity[effectKeys.GRAVITATION] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(
+                        handleSpawnTooltip(
                             e,
-                            handleSetTooltip,
+                            
                             effectKeys.GRAVITATION,
                         )
                     }
@@ -155,7 +130,7 @@ function StatsPanel({
             {entity[effectKeys.STARBLIGHT] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.STARBLIGHT)
+                        handleSpawnTooltip(e,  effectKeys.STARBLIGHT)
                     }
                 >
                     <GradientBar
@@ -177,20 +152,20 @@ function StatsPanel({
                 </div>
             )}
 
-            {entity[effectKeys.PROPHECY_OF_DOOM] > 0 && (
+            {entity[effectKeys.PREMONITION] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(
+                        handleSpawnTooltip(
                             e,
-                            handleSetTooltip,
-                            effectKeys.PROPHECY_OF_DOOM,
+                            
+                            effectKeys.PREMONITION,
                         )
                     }
                 >
                     <GradientBar
-                        label={"Prophecy of Doom"}
-                        currResource={entity[effectKeys.PROPHECY_OF_DOOM]}
-                        maxResource={constants.MAX_PROPHECY_OF_DOOM || 100}
+                        label={"Premonition"}
+                        currResource={entity[effectKeys.PREMONITION]}
+                        maxResource={constants.MAX_PREMONITION || 100}
                         trackStyle={{
                             backgroundImage: `linear-gradient(
                                                 90deg,
@@ -209,9 +184,9 @@ function StatsPanel({
             {entity[effectKeys.RECOLLECTION] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(
+                        handleSpawnTooltip(
                             e,
-                            handleSetTooltip,
+                            
                             effectKeys.RECOLLECTION,
                         )
                     }
@@ -238,7 +213,7 @@ function StatsPanel({
             {entity[effectKeys.BAD_OMEN] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.BAD_OMEN)
+                        handleSpawnTooltip(e,  effectKeys.BAD_OMEN)
                     }
                 >
                     <GradientBar
@@ -263,18 +238,21 @@ function StatsPanel({
             <>
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.HEALTH)
+                        handleSpawnTooltip(e,  effectKeys.HEALTH)
                     }
                 >
-                    <HpBar entity={entity} handleSetTooltip={handleSetTooltip}/>
+                    <HpBar
+                        entity={entity}
+                        simEntity={simEntity}
+                    />
                 </div>
 
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.MANA)
+                        handleSpawnTooltip(e,  effectKeys.MANA)
                     }
                 >
-                    <ManaBar entity={entity} />
+                    <ManaBar entity={entity} simEntity={simEntity} />
                 </div>
 
                 {(entity.states[effectKeys.DEPLOYMENT] ||
@@ -284,9 +262,9 @@ function StatsPanel({
                     <>
                         <div
                             onMouseDown={(e) =>
-                                spawnTooltip(
+                                handleSpawnTooltip(
                                     e,
-                                    handleSetTooltip,
+                                    
                                     effectKeys.ENERGY_LEVEL,
                                 )
                             }
@@ -303,9 +281,9 @@ function StatsPanel({
 
                         <div
                             onMouseDown={(e) =>
-                                spawnTooltip(
+                                handleSpawnTooltip(
                                     e,
-                                    handleSetTooltip,
+                                    
                                     effectKeys.OVERHEAT,
                                 )
                             }
@@ -324,9 +302,9 @@ function StatsPanel({
 
                         <div
                             onMouseDown={(e) =>
-                                spawnTooltip(
+                                handleSpawnTooltip(
                                     e,
-                                    handleSetTooltip,
+                                    
                                     effectKeys.DYNAMO,
                                 )
                             }
@@ -349,9 +327,9 @@ function StatsPanel({
             {entity[effectKeys.MOONLIT_TEARS] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(
+                        handleSpawnTooltip(
                             e,
-                            handleSetTooltip,
+                            
                             effectKeys.MOONLIT_TEARS,
                         )
                     }
@@ -373,7 +351,7 @@ function StatsPanel({
             {entity[effectKeys.MANA_BLEED] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.MANA_BLEED)
+                        handleSpawnTooltip(e,  effectKeys.MANA_BLEED)
                     }
                 >
                     <SpecialCounter
@@ -393,9 +371,9 @@ function StatsPanel({
             {entity[effectKeys.PAST_MEMORIES] > 0 && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(
+                        handleSpawnTooltip(
                             e,
-                            handleSetTooltip,
+                            
                             effectKeys.PAST_MEMORIES,
                         )
                     }
@@ -414,52 +392,26 @@ function StatsPanel({
                 </div>
             )}
 
-            <div className="stacks-wrapper">
-                {[...FREE_RESOURCES].reverse().map((key) => {
-                    const counter = stackCounters[key];
-
-                    if (!counter) {
-                        return null;
-                    }
-
-                    return (
-                        <div
-                            key={key}
-                            onMouseDown={(e) =>
-                                spawnTooltip(e, handleSetTooltip, key)
-                            }
-                        >
-                            <StackCounter
-                                label={counter.label}
-                                value={resources[key]}
-                                style={counter.style}
-                            />
-                        </div>
-                    );
-                })}
-            </div>
+            <FreeResourcesTracker
+                entity={entity}
+                simEntity={simEntity}
+            />
 
             <ModifiersTracker
                 entity={entity}
-                handleSetTooltip={handleSetTooltip}
             />
 
             <ConstellationTracker
                 entityKey={entityKey}
-                entity={entity}
-                handleConstellation={handleConstellation}
-                handleSetTooltip={handleSetTooltip}
-                game={game}
             />
 
             <div
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.RUNIC_ARRAY)
+                    handleSpawnTooltip(e,  effectKeys.RUNIC_ARRAY)
                 }
             >
                 <RunicArray
                     entity={entity}
-                    handleSetTooltip={handleSetTooltip}
                 />
             </div>
 
@@ -468,12 +420,10 @@ function StatsPanel({
                     <AttrLine
                         key={attr}
                         battleState={battleState}
-                        handleStatusChange={updateStatsPoints}
                         entity={entity}
                         entityKey={entityKey}
                         attr={attr}
                         modifiable={distributionMode === sdmKeys.CUSTOM}
-                        handleSetTooltip={handleSetTooltip}
                     />
                 ))}
             </div>
@@ -481,7 +431,7 @@ function StatsPanel({
             {states[effectKeys.RESONANT] && (
                 <div
                     onMouseDown={(e) =>
-                        spawnTooltip(e, handleSetTooltip, effectKeys.SONORITY)
+                        handleSpawnTooltip(e,  effectKeys.SONORITY)
                     }
                 >
                     <SonorityCounter sonority={entity.sonority} />

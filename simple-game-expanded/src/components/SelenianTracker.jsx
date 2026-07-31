@@ -1,6 +1,7 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { elementsMap, moonMap } from "../utils/constants";
-import { spawnTooltip } from "../utils/dictionary";
-import { getEntityElement } from "../utils/entities";
+import { canUseCombatInteractions, getEntityElement } from "../utils/entities";
 import { effectKeys, moonKeys, elementalKeys } from "../utils/enums";
 import "./SelenianTracker.css";
 
@@ -24,13 +25,12 @@ const labelClassMap = {
     [elementalKeys.SHATTERED]: "label-shattered",
 };
 
-function SelenianTracker({
-    entity,
-    changeElement,
-    clickable,
-    handleSetTooltip,
-}) {
+function SelenianTracker({ entityKey }) {
+    const { game, handleElementChange } = useGame();
+    const { handleSpawnTooltip } = useUI();
+
     // Mirrored Moon mapping
+    const entity = game.entities[entityKey];
     const phase = entity[effectKeys.MIRRORED_MOON];
     const moonlight = entity[effectKeys.MOONLIGHT];
     const moonLabel = moonMap[phase];
@@ -45,6 +45,8 @@ function SelenianTracker({
 
     // Determine if the crystals are in a shattered state
     const isShattered = currElement === elementalKeys.SHATTERED;
+
+    const clickable = canUseCombatInteractions(game, entityKey);
 
     // Class name constructor helper
     const crystalClass = (elementKey) => {
@@ -64,22 +66,20 @@ function SelenianTracker({
             <div
                 className="graphic-column-cell"
                 onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.MIRRORED_MOON)
+                    handleSpawnTooltip(e, effectKeys.MIRRORED_MOON)
                 }
             >
                 <div className={`moon-sphere ${moonClass}`} />
             </div>
             <span
                 className="panel-text-label label-default"
-                onMouseDown={(e) => spawnTooltip(e, handleSetTooltip, phase)}
+                onMouseDown={(e) => handleSpawnTooltip(e, phase)}
             >
                 {moonLabel}
             </span>
             <span
                 className="moonlight-panel-value"
-                onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, effectKeys.MOONLIGHT)
-                }
+                onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.MOONLIGHT)}
             >
                 {moonlight}
             </span>
@@ -87,39 +87,39 @@ function SelenianTracker({
             <div
                 className="graphic-column-cell"
                 onMouseDown={(e) =>
-                    spawnTooltip(
-                        e,
-                        handleSetTooltip,
-                        effectKeys.ELEMENTAL_CRYSTALS,
-                    )
+                    handleSpawnTooltip(e, effectKeys.ELEMENTAL_CRYSTALS)
                 }
             >
                 <div className="canvas-container">
                     <button
                         className={`box box-green ${crystalClass(elementalKeys.NATURE)}`}
                         onClick={() => {
-                            clickable && changeElement(elementalKeys.NATURE);
+                            clickable &&
+                                handleElementChange(
+                                    entityKey,
+                                    elementalKeys.NATURE,
+                                );
                         }}
                     />
                     <button
                         className={`box box-cyan ${crystalClass(elementalKeys.FROST)}`}
                         onClick={() =>
-                            clickable && changeElement(elementalKeys.FROST)
+                            clickable &&
+                            handleElementChange(entityKey, elementalKeys.FROST)
                         }
                     />
                     <button
                         className={`box box-red ${crystalClass(elementalKeys.SCORCH)}`}
                         onClick={() =>
-                            clickable && changeElement(elementalKeys.SCORCH)
+                            clickable &&
+                            handleElementChange(entityKey, elementalKeys.SCORCH)
                         }
                     />
                 </div>
             </div>
             <span
                 className={`panel-text-label ${labelClass}`}
-                onMouseDown={(e) =>
-                    spawnTooltip(e, handleSetTooltip, currElement)
-                }
+                onMouseDown={(e) => handleSpawnTooltip(e, currElement)}
             >
                 {crystalLabel}
             </span>

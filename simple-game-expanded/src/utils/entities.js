@@ -190,7 +190,7 @@ export function createBaseEntity() {
         [effectKeys.GRAVITATION]: 0,
         [effectKeys.BAD_OMEN]: 0,
         [effectKeys.RECOLLECTION]: 0,
-        [effectKeys.PROPHECY_OF_DOOM]: 0,
+        [effectKeys.PREMONITION]: 0,
 
         // ranked resources
         [effectKeys.MANA_BLEED]: 0,
@@ -217,16 +217,17 @@ export function createBaseEntity() {
         lasersUsedThisTurn: 0,
 
         resources: {
+            // Overflown
             [effectKeys.MANA_OVERFLOW]: 0,
+            [effectKeys.SILVER_BLOOD]: 0,
+
+            // Free
             [effectKeys.BLOOD_SACRIFICE]: 0,
             [effectKeys.RADIANCE]: 0,
-
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
-
             [effectKeys.STARDUST]: 0,
-            [effectKeys.SILVER_BLOOD]: 0,
             [effectKeys.MOONDUST]: 0,
             [effectKeys.DISSONANCE]: 0,
             [effectKeys.PRECOGNITION]: 0,
@@ -247,7 +248,6 @@ export function createBaseEntity() {
             [effectKeys.GUARDING_STATE]: false,
             [effectKeys.SACRIFICIAL_STATE]: false,
             [effectKeys.STARGAZER]: false,
-            [effectKeys.NOVA]: false,
             [effectKeys.SELENIAN]: false,
             [effectKeys.RESONANT]: false,
             [effectKeys.PRISMATIC]: false,
@@ -309,8 +309,8 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
     }
 
-    if (entity[effectKeys.PROPHECY_OF_DOOM] > 0) {
-        drMult *= Math.max(0, 1 - entity[effectKeys.PROPHECY_OF_DOOM] / 100);
+    if (entity[effectKeys.PREMONITION] > 0) {
+        drMult *= Math.max(0, 1 - entity[effectKeys.PREMONITION] / 100);
     }
 
     return drMult;
@@ -1276,10 +1276,7 @@ export function consumeMitigationResources(entity, amount, cause = null) {
             }
 
             // Starlit Dome
-            if (
-                isCauseDamage &&
-                currResourceKey === effectKeys.STARLIT_DOME
-            ) {
+            if (isCauseDamage && currResourceKey === effectKeys.STARLIT_DOME) {
                 draftEntity = {
                     ...draftEntity,
                     resources: {
@@ -2311,10 +2308,9 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
 
     draftTarget = {
         ...draftTarget,
-        [effectKeys.PROPHECY_OF_DOOM]: Math.min(
-            constants.MAX_PROPHECY_OF_DOOM,
-            draftTarget[effectKeys.PROPHECY_OF_DOOM] +
-                constants.SKULD_PROFECY_GAIN,
+        [effectKeys.PREMONITION]: Math.min(
+            constants.MAX_PREMONITION,
+            draftTarget[effectKeys.PREMONITION] + constants.SKULD_PROFECY_GAIN,
         ),
     };
 

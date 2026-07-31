@@ -176,12 +176,6 @@
     box-shadow: 0 0 18px rgba(79, 195, 247, 0.5);
 }
 
-.stats-panel-container.state-nova {
-    border-color: #ba68c8;
-    background: linear-gradient(to bottom, rgba(186, 104, 200, 0.05), rgba(15, 15, 20, 0.92));
-    box-shadow: 0 0 18px rgba(186, 104, 200, 0.45);
-}
-
 .stats-panel-warning {
     color: #ff4d4d;
     font-size: 0.85rem;

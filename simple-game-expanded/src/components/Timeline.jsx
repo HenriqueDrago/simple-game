@@ -1,9 +1,17 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { roundPhasesMap } from "../utils/constants";
-import { spawnTooltip } from "../utils/dictionary";
 import { turnStatus } from "../utils/enums";
 import "./Timeline.css";
 
-export default function Timeline({ status, phases, currIndex, handleSetTooltip }) {
+export default function Timeline() {
+    const { game } = useGame();
+    const { handleSpawnTooltip } = useUI();
+
+    const phases = game.roundQueue;
+    const currIndex = game.roundIndex;
+    const status = game.status;
+
     if (status === turnStatus.SETUP || !phases) {
         return null;
     }
@@ -19,13 +27,13 @@ export default function Timeline({ status, phases, currIndex, handleSetTooltip }
                           : "timeline-curr-phase";
 
                 return (
-                    <div key={p} className={`timeline-item-container ${specialClass}` } onMouseDown={(e) =>
-                                            spawnTooltip(
-                                                e,
-                                                handleSetTooltip,
-                                                roundPhasesMap[p].descKey,
-                                            )
-                                        }>
+                    <div
+                        key={p}
+                        className={`timeline-item-container ${specialClass}`}
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(e, roundPhasesMap[p].descKey)
+                        }
+                    >
                         <span>{roundPhasesMap[p].name}</span>
                     </div>
                 );

@@ -38,18 +38,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
-    // Starflare
-    if (draftTarget[effectKeys.STARFLARE] >= constants.MAX_STARFLARE) {
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.STARFLARE]: 0,
-            states: {
-                ...draftTarget.states,
-                [effectKeys.NOVA]: true,
-            },
-        };
-    }
-    
     // Dome
     if (draftTarget.resources[effectKeys.DOME] > 0) {
         const newStardust =
@@ -312,11 +300,14 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     // Halo
     if (draftTarget.resources[effectKeys.HALO] > 0) {
-        const missingSpark = constants.MAX_DIVINE_SPARK - draftTarget[effectKeys.DIVINE_SPARK];
+        const missingSpark =
+            constants.MAX_DIVINE_SPARK - draftTarget[effectKeys.DIVINE_SPARK];
         const sparkGained = draftTarget.resources[effectKeys.HALO];
 
-        const newSpark = draftTarget[effectKeys.DIVINE_SPARK] + Math.min(sparkGained, missingSpark);
-        
+        const newSpark =
+            draftTarget[effectKeys.DIVINE_SPARK] +
+            Math.min(sparkGained, missingSpark);
+
         draftTarget = {
             ...draftTarget,
             [effectKeys.DIVINE_SPARK]: newSpark,
@@ -326,17 +317,20 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             },
         };
 
-        const toBeRestored = Math.max(0, Math.floor(sparkGained - missingSpark));
+        const toBeRestored = Math.max(
+            0,
+            Math.floor(sparkGained - missingSpark),
+        );
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
     // Bad Omen
-    if (draftTarget[effectKeys.PROPHECY_OF_DOOM] > 0) {
+    if (draftTarget[effectKeys.PREMONITION] > 0) {
         draftTarget = {
             ...draftTarget,
-            [effectKeys.PROPHECY_OF_DOOM]: Math.max(
+            [effectKeys.PREMONITION]: Math.max(
                 0,
-                draftTarget[effectKeys.PROPHECY_OF_DOOM] -
+                draftTarget[effectKeys.PREMONITION] -
                     constants.PROFECY_TURN_END_LOSS,
             ),
         };
@@ -583,16 +577,6 @@ export function processStarfallTurn(prev, masterKey, nonMasterKey) {
             ...prev,
             starQueue: null, // clears the queue
             status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
-            entities: {
-                ...prev.entities,
-                [masterKey]: {
-                    ...prev.entities[masterKey],
-                    states: {
-                        ...prev.entities[masterKey].states,
-                        [effectKeys.NOVA]: false,
-                    },
-                },
-            },
         });
     }
 

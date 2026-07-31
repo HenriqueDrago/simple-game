@@ -336,8 +336,7 @@ export const BASIC_DESCRIPTIONS = {
     [actionKeys.HEAL]: {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
-        description:
-            "Consumes MANA to replenish missing HEALTH.",
+        description: "Consumes MANA to replenish missing HEALTH.",
     },
 };
 
@@ -375,7 +374,8 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
     [effectKeys.SACRIFICIAL_STATE]: {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
-        description: "Raises DAMAGE REDUCTION by 50%. At turn start, exits this state.",
+        description:
+            "Raises DAMAGE REDUCTION by 50%. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
@@ -608,7 +608,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF SKULD",
         type: entryTypes.RUNES,
         description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PROPHECY OF DOOM by 20%.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PREMONITION by 20%.",
     },
 
     [effectKeys.PRECOGNITION]: {
@@ -645,11 +645,11 @@ export const AUGUR_DESCRIPTIONS = {
         description: "Raises STR by its rank.",
     },
 
-    [effectKeys.PROPHECY_OF_DOOM]: {
-        name: "PROPHECY OF DOOM",
+    [effectKeys.PREMONITION]: {
+        name: "PREMONITION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE REDUCTION equal to PROPHECY OF DOOM on self. At turn start, lowers PROPHECY OF DOOM by 20%.",
+            "Capped at 100%. Raises DAMAGE REDUCTION equal to PREMONITION on self. At turn start, lowers PREMONITION by 20%.",
     },
 };
 

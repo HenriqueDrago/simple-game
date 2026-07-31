@@ -4,38 +4,15 @@ import StatsPanel from "./StatsPanel";
 import StarsPanel from "./StarsPanel";
 
 import { effectKeys, entityKeys, turnStatus } from "../utils/enums";
+import { useGame } from "../contexts/GameContext";
 
-function GamePanel({
-    game,
-    updateStatsPoints,
-    handleDistributionModeChange,
-    handleAiChange,
-    handleStarChange,
-    handleRandomizeStats,
-    handleElementChange,
-    handleSetTooltip,
-    handleConstellation,
-    handleClearTooltip,
-    handleAction,
-}) {
+function GamePanel() {
+    const { game } = useGame();
     const isSetupPhase = game.status === turnStatus.SETUP;
 
     return (
         <div className="game-panel-container">
-            {isSetupPhase && (
-                <ControlPanel
-                    handleDistributionModeChange={handleDistributionModeChange}
-                    handleAiChange={handleAiChange}
-                    entityKey={entityKeys.PLAYER_ONE}
-                    statDistributionMode={
-                        game.entities[entityKeys.PLAYER_ONE]
-                            .statDistributionMode
-                    }
-                    controller={game.entities[entityKeys.PLAYER_ONE].controller}
-                    game={game}
-                    handleRandomizeStats={handleRandomizeStats}
-                />
-            )}
+            {isSetupPhase && <ControlPanel entityKey={entityKeys.PLAYER_ONE} />}
 
             <div className="central-game-panel">
                 <div className="game-panel-upper-elements-container">
@@ -48,42 +25,19 @@ function GamePanel({
                             effectKeys.STARGAZER
                         ] && (
                             <StarsPanel
-                                game={game}
                                 entityKey={entityKeys.PLAYER_ONE}
-                                handleStarChange={handleStarChange}
                                 reversed={true}
-                                handleSetTooltip={handleSetTooltip}
                             />
                         )}
                     </div>
 
-                    <div
-                        className={`stats-panels-container`}
-                    >
+                    <div className={`stats-panels-container`}>
                         <div className="player-panel-wrapper">
-                            <StatsPanel
-                                game={game}
-                                updateStatsPoints={updateStatsPoints}
-                                entityKey={entityKeys.PLAYER_ONE}
-                                handleElementChange={handleElementChange}
-                                handleSetTooltip={handleSetTooltip}
-                                handleConstellation={handleConstellation}
-                                handleClearTooltip={handleClearTooltip}
-                                handleAction={handleAction}
-                            />
+                            <StatsPanel entityKey={entityKeys.PLAYER_ONE} />
                         </div>
 
                         <div className="player-panel-wrapper panel-reversed">
-                            <StatsPanel
-                                game={game}
-                                updateStatsPoints={updateStatsPoints}
-                                entityKey={entityKeys.PLAYER_TWO}
-                                handleElementChange={handleElementChange}
-                                handleSetTooltip={handleSetTooltip}
-                                handleConstellation={handleConstellation}
-                                handleClearTooltip={handleClearTooltip}
-                                handleAction={handleAction}
-                            />
+                            <StatsPanel entityKey={entityKeys.PLAYER_TWO} />
                         </div>
                     </div>
 
@@ -92,31 +46,15 @@ function GamePanel({
                             effectKeys.STARGAZER
                         ] && (
                             <StarsPanel
-                                game={game}
                                 entityKey={entityKeys.PLAYER_TWO}
-                                handleStarChange={handleStarChange}
                                 reversed={false}
-                                handleSetTooltip={handleSetTooltip}
                             />
                         )}
                     </div>
                 </div>
             </div>
 
-            {isSetupPhase && (
-                <ControlPanel
-                    handleDistributionModeChange={handleDistributionModeChange}
-                    handleAiChange={handleAiChange}
-                    entityKey={entityKeys.PLAYER_TWO}
-                    statDistributionMode={
-                        game.entities[entityKeys.PLAYER_TWO]
-                            .statDistributionMode
-                    }
-                    controller={game.entities[entityKeys.PLAYER_TWO].controller}
-                    game={game}
-                    handleRandomizeStats={handleRandomizeStats}
-                />
-            )}
+            {isSetupPhase && <ControlPanel entityKey={entityKeys.PLAYER_TWO} />}
         </div>
     );
 }

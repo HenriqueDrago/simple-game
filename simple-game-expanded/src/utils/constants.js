@@ -112,14 +112,12 @@ const MAX_STARBLIGHT = 100;
 
 const GRAVITATION_GAIN = 5;
 const MAX_GRAVITATION = 100;
-const MAX_STARFLARE = 100;
-const STARFLARE_GAIN = 5;
 
 const DIVINE_SPARK_STR_CONVERSION = 5;
 
 const MAX_BAD_OMEN = 100;
 const MAX_RECOLLECTION = 100;
-const MAX_PROPHECY_OF_DOOM = 100;
+const MAX_PREMONITION = 100;
 const CURSE_EMPTY_RUNE_DMG = 5;
 
 // Urd
@@ -140,7 +138,7 @@ const VERDANDI_OMEN_GAIN = 20;
 const BAD_OMEN_TURN_END_LOSS = 20;
 
 export const constants = {
-    MAX_PROPHECY_OF_DOOM,
+    MAX_PREMONITION,
     SKULD_PROFECY_GAIN,
     PROFECY_TURN_END_LOSS,
     BAD_OMEN_TURN_END_LOSS,
@@ -155,9 +153,7 @@ export const constants = {
     URD_HEALTH_REGEN,
     VERDANDI_OMEN_GAIN,
     MAX_BAD_OMEN,
-    STARFLARE_GAIN,
     DIVINE_SPARK_STR_CONVERSION,
-    MAX_STARFLARE,
     GRAVITATION_GAIN,
     MAX_GRAVITATION,
     MAX_STARBLIGHT,
@@ -382,107 +378,6 @@ export const actionsClass = {
     transformativeActions,
 };
 
-export const stackCounters = {
-    [effectKeys.BLOOD_SACRIFICE]: {
-        label: "Blood Sacrifice",
-        style: {
-            color: "#ff3333",
-            borderColor: "#ff3333",
-            backgroundColor: "rgba(255, 51, 51, 0.2)",
-        },
-    },
-
-    [effectKeys.SHADOWFLAME]: {
-        label: "Shadowflame",
-        style: {
-            color: "#d500f9",
-            borderColor: "#d500f9",
-            backgroundColor: "rgba(213, 0, 249, 0.2)",
-        },
-    },
-
-    [effectKeys.UNRELENTING_SHADOWS]: {
-        label: "Unrelenting Shadows",
-        style: {
-            color: "#651fff",
-            borderColor: "#651fff",
-            backgroundColor: "rgba(101, 31, 255, 0.2)",
-        },
-    },
-
-    [effectKeys.LINGERING_EMBER]: {
-        label: "Lingering Ember",
-        style: {
-            color: "#f50057",
-            borderColor: "#f50057",
-            backgroundColor: "rgba(245, 0, 87, 0.2)",
-        },
-    },
-
-    [effectKeys.CINDERS]: {
-        label: "Cinders",
-        style: {
-            color: "#e0e0e0",
-            borderColor: "#9e9e9e",
-            backgroundColor: "rgba(158, 158, 158, 0.2)",
-        },
-    },
-
-    [effectKeys.RADIANCE]: {
-        label: "Radiance",
-        style: {
-            color: "#ffea00",
-            borderColor: "#ffea00",
-            backgroundColor: "rgba(255, 234, 0, 0.2)",
-        },
-    },
-
-    [effectKeys.HALO]: {
-        label: "Halo",
-        style: {
-            color: "#fff59d",
-            borderColor: "#fff59d",
-            backgroundColor: "rgba(255, 245, 157, 0.2)",
-        },
-    },
-
-    [effectKeys.STARDUST]: {
-        label: "Stardust",
-        style: {
-            color: "#ff8a65",
-            borderColor: "#ff8a65",
-            backgroundColor: "rgba(255, 138, 101, 0.2)",
-        },
-    },
-
-    [effectKeys.MOONDUST]: {
-        label: "Moondust",
-        style: {
-            color: "#e1f5fe",
-            borderColor: "#e1f5fe",
-            backgroundColor: "rgba(225, 245, 254, 0.2)",
-        },
-    },
-
-    [effectKeys.DISSONANCE]: {
-        label: "Dissonance",
-        style: {
-            color: "#ff3333",
-            borderColor: "#ff3333",
-            backgroundColor: "rgba(255, 51, 51, 0.2)",
-        },
-    },
-
-    [effectKeys.PRECOGNITION]: {
-        label: "Precognition",
-        style: {
-            color: "#b388ff",
-            borderColor: "#b388ff",
-            backgroundColor: "rgba(179, 136, 255, 0.2)",
-        },
-    },
-};
-
 export const coloredStars = [
     {
         name: "red",
@@ -544,6 +439,8 @@ export const INITIAL_GAME_STATE = {
     whoStarts: whoStartsKeys.PLAYER_ONE,
     startingPlayer: entityKeys.PLAYER_ONE,
     progressMode: false,
+    simGame: null,
+    paused: false,
 
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,

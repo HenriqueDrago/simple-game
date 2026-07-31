@@ -3,16 +3,19 @@ import { turnStatus, whoStartsKeys } from "../utils/enums";
 import Switch from "./Switch";
 
 import { RotateCcw } from "lucide-react";
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 
-function Header({
-    game,
-    handleStart,
-    handleReset,
-    handleWhoStartsChange,
-    handleGlossary,
-    handleProgressToggle,
-    handleResetModal,
-}) {
+function Header() {
+    const {
+        game,
+        handleStart,
+        handleWhoStartsChange,
+        handleResetGame,
+        handleProgressToggle,
+    } = useGame();
+    const { setUIElements } = useUI();
+
     const battleState = game.status;
     const whoStarts = game.whoStarts;
 
@@ -39,13 +42,31 @@ function Header({
                         Start
                     </button>
                 )}
-                <button className="sharp-btn" onClick={handleReset}>
+                <button
+                    className="sharp-btn"
+                    onClick={() => {
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                history: false,
+                                continueModal: false,
+                            };
+                        });
+
+                        handleResetGame();
+                    }}
+                >
                     Reset
                 </button>
                 <button
                     className="sharp-btn"
                     onClick={() => {
-                        handleGlossary(true);
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                glossary: true,
+                            };
+                        });
                     }}
                 >
                     Glossary
@@ -100,7 +121,12 @@ function Header({
                         <button
                             className="sharp-btn-icon"
                             onClick={() => {
-                                handleResetModal(true);
+                                setUIElements((prev) => {
+                                    return {
+                                        ...prev,
+                                        resetModal: true,
+                                    };
+                                });
                             }}
                             title={"Reset Progression Data"}
                         >

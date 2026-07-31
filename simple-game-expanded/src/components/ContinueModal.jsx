@@ -1,10 +1,15 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import "./ContinueModal.css";
 
-export default function ContinueModal({
-    handleReset,
-    setContinueModal,
-    handleHardReset,
-}) {
+export default function ContinueModal() {
+    const { handleResetGame, handleHardResetGame, setGame } = useGame();
+    const { UIElements, setUIElements } = useUI();
+
+    if (!UIElements.continueModal) {
+        return null;
+    }
+
     return (
         <div className="continue-modal-container">
             <div className="continue-modal-section">
@@ -15,11 +20,37 @@ export default function ContinueModal({
                 <div className="continue-modal-buttons">
                     <button
                         className="sharp-btn"
-                        onClick={() => setContinueModal(false)}
+                        onClick={() => {
+                            setUIElements((prev) => {
+                                return {
+                                    ...prev,
+                                    continueModal: false,
+                                };
+                            });
+
+                            setGame((prev) => {
+                                return {
+                                    ...prev,
+                                    paused: false,
+                                }
+                            })
+                        }}
                     >
                         Continue
                     </button>
-                    <button className="sharp-btn" onClick={() => handleReset()}>
+                    <button
+                        className="sharp-btn"
+                        onClick={() => {
+                            setUIElements((prev) => {
+                                return {
+                                    ...prev,
+                                    continueModal: false,
+                                };
+                            });
+
+                            handleResetGame();
+                        }}
+                    >
                         Reset
                     </button>
                 </div>
@@ -37,7 +68,17 @@ export default function ContinueModal({
                 </span>
                 <button
                     className="sharp-btn danger"
-                    onClick={() => handleHardReset()}
+                    onClick={() => {
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                history: false,
+                                continueModal: false,
+                            };
+                        });
+
+                        handleHardResetGame();
+                    }}
                 >
                     Hard Reset
                 </button>

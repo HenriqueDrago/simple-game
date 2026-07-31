@@ -14,15 +14,21 @@ import {
     canUseCombatInteractions,
 } from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 
-function ActionPanel({
-    handleAction,
-    game,
-    playerController,
-    enemyController,
-    handleSetTooltip,
-    handleClearTooltip,
-}) {
+function ActionPanel() {
+    const {
+        game,
+        handleAction,
+        handleClearSimulation,
+        handleCreateSimulatedGame,
+    } = useGame();
+    const { handleClearTooltip, handleSetTooltip } = useUI();
+
+    const p1Controller = game.entities[entityKeys.PLAYER_ONE].controller;
+    const p2Controller = game.entities[entityKeys.PLAYER_TWO].controller;
+
     const battleState = game.status;
 
     const currPhase =
@@ -52,21 +58,21 @@ function ActionPanel({
     const getActorLabel = (controller, isPlayerOne) => {
         if (controller === aiKeys.HUMAN) {
             if (
-                playerController === aiKeys.HUMAN &&
-                enemyController === aiKeys.HUMAN
+                p1Controller === aiKeys.HUMAN &&
+                p2Controller === aiKeys.HUMAN
             ) {
                 return `${isPlayerOne ? "Player One Turn" : "Player Two Turn"}`;
             }
             return `Player Turn`;
         }
-        if (playerController === enemyController) {
+        if (p1Controller === p2Controller) {
             return `${presetAi[controller].name} ${isPlayerOne ? "One" : "Two"}`;
         }
         return `${presetAi[controller].name}`;
     };
 
-    const playerLabel = getActorLabel(playerController, true);
-    const enemyLabel = getActorLabel(enemyController, false);
+    const playerLabel = getActorLabel(p1Controller, true);
+    const enemyLabel = getActorLabel(p2Controller, false);
     const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
 
     let waitLabel = null;
@@ -74,9 +80,9 @@ function ActionPanel({
         waitLabel = "Starfall";
     } else if (battleState !== turnStatus.ONGOING) {
         waitLabel = null;
-    } else if (isPlayerTwoTurn && enemyController !== aiKeys.HUMAN) {
+    } else if (isPlayerTwoTurn && p2Controller !== aiKeys.HUMAN) {
         waitLabel = enemyLabel;
-    } else if (isPlayerOneTurn && playerController !== aiKeys.HUMAN) {
+    } else if (isPlayerOneTurn && p1Controller !== aiKeys.HUMAN) {
         waitLabel = playerLabel;
     } else if (
         currPhase === roundPhases.P1_STARS_TURN ||
@@ -121,7 +127,9 @@ function ActionPanel({
             )}
 
             {showButtons && (
-                <div className={`actions-buttons-text-container ${currEntity.states[effectKeys.VISIONARY] ? "is-visionary" : ""}`}>
+                <div
+                    className={`actions-buttons-text-container ${currEntity.states[effectKeys.VISIONARY] ? "is-visionary" : ""}`}
+                >
                     {showHelperText && (
                         <span className="actions-mouse-wheel-explainer">
                             Tip: You can mouse-wheel click on most things to see
@@ -139,11 +147,13 @@ function ActionPanel({
                                         currEntityKey,
                                         targetEntityKey,
                                     );
+                                    handleClearSimulation();
                                 }}
                                 onMouseDown={(e) => {
                                     if (e.button === 1) {
                                         e.preventDefault();
-                                        const entry = DESCRIPTIONS?.[action.key];
+                                        const entry =
+                                            DESCRIPTIONS?.[action.key];
                                         if (entry) {
                                             handleSetTooltip({
                                                 keyword: entry.name,
@@ -154,6 +164,16 @@ function ActionPanel({
                                             });
                                         }
                                     }
+                                }}
+                                onMouseEnter={() => {
+                                    handleCreateSimulatedGame(
+                                        action.key,
+                                        currEntityKey,
+                                        targetEntityKey,
+                                    );
+                                }}
+                                onMouseLeave={() => {
+                                    handleClearSimulation();
                                 }}
                                 disabled={action.disabled}
                                 className={action.specialClass || ""}

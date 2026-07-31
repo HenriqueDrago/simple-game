@@ -1,4 +1,4 @@
-import { spawnTooltip } from "../utils/dictionary";
+import { useUI } from "../contexts/UIContext";
 import { effectKeys } from "../utils/enums";
 import "./StateBadges.css";
 
@@ -19,11 +19,11 @@ const STATE_MAPPINGS = [
     { key: effectKeys.PRISMATIC, label: "Prismatic" },
     { key: effectKeys.BLEAK_DECEPTION, label: "Bleak Deception" },
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },
-    { key: effectKeys.NOVA, label: "Nova" },
     { key: effectKeys.VISIONARY, label: "Visionary" },
 ];
 
-function StateBadges({ states, handleSetTooltip }) {
+function StateBadges({ states }) {
+    const { handleSpawnTooltip } = useUI();
     const activeBadges = STATE_MAPPINGS.filter(
         (mapping) => states[mapping.key],
     );
@@ -37,9 +37,7 @@ function StateBadges({ states, handleSetTooltip }) {
                     key={mapping.key}
                     className="state-badge"
                     onMouseDown={(e) =>
-                        spawnTooltip(
-                            e,
-                            handleSetTooltip,
+                        handleSpawnTooltip(e,
                             mapping.key,
                         )
                     }
