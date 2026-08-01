@@ -1,24 +1,34 @@
 import "./AttrLine.css";
 
-import { effectKeys, elementalKeys, runeKeys, turnStatus } from "../utils/enums";
-import { countRunes, getEntityDef, getEntityStr, isElementActive } from "../utils/entities";
+import {
+    effectKeys,
+    elementalKeys,
+    runeKeys,
+    sdmKeys,
+    turnStatus,
+} from "../utils/enums";
+import {
+    countRunes,
+    getEntityDef,
+    getEntityStr,
+    isElementActive,
+} from "../utils/entities";
 
 import { constants } from "../utils/constants";
 import { useUI } from "../contexts/UIContext";
+import { useGame } from "../contexts/GameContext";
 
 const gettersMap = {
     str: getEntityStr,
     def: getEntityDef,
 };
 
-function AttrLine({
-    battleState,
-    handleStatusChange,
-    modifiable,
-    attr,
-    entity,
-    entityKey,
-}) {
+function AttrLine({ attr, entityKey }) {
+    const { game, handleUpdateStatsPoints } = useGame();
+
+    const entity = game.entities[entityKey];
+    const battleState = game.status;
+
     const { handleSpawnTooltip } = useUI();
     if (entity.attributes[attr].value == null) {
         return null;
@@ -50,18 +60,21 @@ function AttrLine({
     }
     if (
         attr === "str" &&
-        (entity[effectKeys.PAST_MEMORIES] > 0 || countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0)
+        (entity[effectKeys.PAST_MEMORIES] > 0 ||
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0)
     ) {
         specialClass = "str-value-past-memories";
     }
     if (
         attr === "str" &&
-        (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0)
+        countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0
     ) {
         specialClass = "str-value-verdandi";
     }
 
-    const showControls = modifiable && battleState === turnStatus.SETUP;
+    const showControls =
+        entity.statDistributionMode === sdmKeys.CUSTOM &&
+        battleState === turnStatus.SETUP;
 
     return (
         <div className="status-line-container">
@@ -88,7 +101,7 @@ function AttrLine({
                 <div className="point-assign-container">
                     <button
                         onClick={() => {
-                            handleStatusChange(entityKey, attr, -1);
+                            handleUpdateStatsPoints(entityKey, attr, -1);
                         }}
                         disabled={entity.attributes[attr].points <= 0}
                     >
@@ -99,7 +112,7 @@ function AttrLine({
 
                     <button
                         onClick={() => {
-                            handleStatusChange(entityKey, attr, 1);
+                            handleUpdateStatsPoints(entityKey, attr, 1);
                         }}
                         disabled={entity.unspentPoints <= 0}
                     >

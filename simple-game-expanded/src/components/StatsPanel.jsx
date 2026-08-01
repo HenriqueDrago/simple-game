@@ -5,7 +5,7 @@ import StateBadges from "./StateBadges.jsx";
 import SonorityCounter from "./SonorityCounter.jsx";
 
 import { constants } from "../utils/constants.js";
-import { sdmKeys, effectKeys } from "../utils/enums.js";
+import { effectKeys } from "../utils/enums.js";
 
 import "./StatsPanel.css";
 import GradientBar from "./GradientBar.jsx";
@@ -26,8 +26,6 @@ function StatsPanel({ entityKey }) {
 
     const entity = game.entities[entityKey];
     const simEntity = game?.simGame?.entities?.[entityKey];
-    const battleState = game.status;
-    const distributionMode = entity.statDistributionMode;
 
     const states = entity.states;
 
@@ -419,11 +417,8 @@ function StatsPanel({ entityKey }) {
                 {constants.ATTRIBUTE_NAMES.map((attr) => (
                     <AttrLine
                         key={attr}
-                        battleState={battleState}
-                        entity={entity}
                         entityKey={entityKey}
                         attr={attr}
-                        modifiable={distributionMode === sdmKeys.CUSTOM}
                     />
                 ))}
             </div>

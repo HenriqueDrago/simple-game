@@ -681,7 +681,7 @@ export default function GameProvider({ children }) {
                 }
             };
         }
-    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue, ]);
+    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue]);
 
     // AI turn
     useEffect(() => {
