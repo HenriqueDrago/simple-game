@@ -1,3 +1,4 @@
+import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import { effectKeys } from "../utils/enums";
 import "./StateBadges.css";
@@ -22,8 +23,16 @@ const STATE_MAPPINGS = [
     { key: effectKeys.VISIONARY, label: "Visionary" },
 ];
 
-function StateBadges({ states }) {
+function StateBadges({ entityKey }) {
+    const { game } = useGame();
     const { handleSpawnTooltip } = useUI();
+
+    const states = game?.entities?.[entityKey]?.states;
+
+    if (!states) {
+        return null;
+    }
+
     const activeBadges = STATE_MAPPINGS.filter(
         (mapping) => states[mapping.key],
     );
@@ -36,11 +45,7 @@ function StateBadges({ states }) {
                 <span
                     key={mapping.key}
                     className="state-badge"
-                    onMouseDown={(e) =>
-                        handleSpawnTooltip(e,
-                            mapping.key,
-                        )
-                    }
+                    onMouseDown={(e) => handleSpawnTooltip(e, mapping.key)}
                 >
                     {mapping.label}
                 </span>

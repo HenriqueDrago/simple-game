@@ -827,7 +827,7 @@ export const STARFARER_DESCRIPTIONS = {
         name: "RED STAR",
         type: entryTypes.STAR,
         description:
-            "At RED STARFALL, converts all RED STAR into WHITE STAR. The opponent takes PHYSICAL DAMAGE equal to normal RED STAR converted. The opponent takes PIERCING DAMAGE equal to augmented RED STAR converted. These are considered two separate instances of damage.",
+            "At RED STARFALL, converts all RED STAR into WHITE STAR. All entities take PHYSICAL DAMAGE equal to normal RED STAR converted. All entities take PIERCING DAMAGE equal to augmented RED STAR converted. These are considered two separate instances of damage.",
     },
 
     [effectKeys.ORANGE_STAR]: {

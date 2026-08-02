@@ -1,8 +1,8 @@
 .modifiers-tracker-container {
     display: flex;
-    flex-direction: row; /* Aligns the items in a single horizontal line */
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between; /* Spreads the items evenly across the row */
+    justify-content: space-between;
     width: 100%;
     padding: 4px 0;
 }
@@ -10,7 +10,12 @@
 .modifiers-tracker-container span {
     display: flex;
     align-items: center;
-    gap: 4px; /* Space between the icon and the text */
+    gap: 4px;
     font-size: 0.85rem;
     color: #ffffff;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.modifiers-tracker-container span.is-preview {
+    opacity: 0.75;
 }

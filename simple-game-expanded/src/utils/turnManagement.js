@@ -884,13 +884,13 @@ export function buildHistory(prev, event, info = {}) {
             break;
 
         case eventKeys.USE_ACTION: {
-            const actionName = actionMap[action].name;
+            const actionName = actionMap?.[action]?.name;
             string = `${playerName} used ${actionName}`;
             break;
         }
 
         case eventKeys.FAILED_ACTION: {
-            const actionName = actionMap[action].name;
+            const actionName = actionMap?.[action]?.name;
             string = `${playerName} failed to use ${actionName}!`;
             break;
         }

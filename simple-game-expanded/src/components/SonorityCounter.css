@@ -3,42 +3,46 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-
     gap: 5px;
+    width: 100%;
+    cursor: pointer;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.sonority-counter-upper-labels .is-preview {
+    opacity: 0.75;
 }
 
 .sonority-bar-container {
     border: 1px solid white;
-
     display: flex;
     justify-content: center;
     align-items: stretch;
     flex-direction: row;
-
     width: 100%;
     height: 18px;
-
     background-image: linear-gradient(to right, #ff4500, white, #00bfff);
+    box-sizing: border-box;
 }
 
 .dissonance-non-fill {
     background-color: black;
-    transition: width 0.3s ease-in-out; 
+    transition: width 0.3s ease-in-out;
 }
 
 .dissonance-fill {
     background-color: transparent;
-    transition: width 0.3s ease-in-out; 
+    transition: width 0.3s ease-in-out;
 }
 
 .harmony-fill {
     background-color: transparent;
-    transition: width 0.3s ease-in-out; 
+    transition: width 0.3s ease-in-out;
 }
 
 .harmony-non-fill {
     background-color: black;
-    transition: width 0.3s ease-in-out; 
+    transition: width 0.3s ease-in-out;
 }
 
 .sonority-counter-lower-labels {
@@ -46,6 +50,7 @@
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
-
     width: 100%;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
 }

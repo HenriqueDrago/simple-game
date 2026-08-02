@@ -1,39 +1,38 @@
+import { useUI } from "../contexts/UIContext";
 import { effectKeys } from "../utils/enums";
 import "./ManaBar.css";
 
 function ManaBar({ entity, simEntity }) {
+    const { handleSpawnTooltip } = useUI();
+
     const maxMana = entity.maxMana;
 
     const baseMana = entity.currMana;
     const overflowMana = entity.resources?.manaOverflow ?? 0;
-    const hasOverflow = overflowMana > 0;
-
-    const overflowPercentage =
-        maxMana > 0 && hasOverflow
-            ? Math.min(100, (overflowMana / maxMana) * 100)
-            : 0;
-    const manaPercentage =
-        maxMana > 0 ? Math.min(100, (baseMana / maxMana) * 100) : 0;
-
-    const overTimes = maxMana > 0 ? Math.floor(overflowMana / maxMana) : 0;
 
     const simMana = simEntity ? simEntity.currMana : baseMana;
     const simOverflow = simEntity
-        ? simEntity.resources?.manaOverflow ?? 0
+        ? (simEntity.resources?.manaOverflow ?? 0)
         : overflowMana;
 
     const isSimulating =
         simEntity && (simMana !== baseMana || simOverflow !== overflowMana);
+
     const displayMana = isSimulating ? simMana : baseMana;
     const displayOverflow = isSimulating ? simOverflow : overflowMana;
     const displayHasOverflow = displayOverflow > 0;
     const displayTotal = displayMana + displayOverflow;
 
-    const manaDelta = simMana - baseMana;
-    const manaLossAmount = manaDelta < 0 ? Math.abs(manaDelta) : 0;
-    const manaGainAmount = manaDelta > 0 ? manaDelta : 0;
+    const overTimes = maxMana > 0 ? Math.floor(displayOverflow / maxMana) : 0;
 
-    const manaLossLeft = maxMana > 0 ? (simMana / maxMana) * 100 : 0;
+    const solidMana = Math.min(baseMana, simMana);
+    const manaLossAmount = Math.max(0, baseMana - simMana);
+    const manaGainAmount = Math.max(0, simMana - baseMana);
+
+    const manaPercentage =
+        maxMana > 0 ? Math.min(100, (solidMana / maxMana) * 100) : 0;
+
+    const manaLossLeft = maxMana > 0 ? (solidMana / maxMana) * 100 : 0;
     const manaLossWidth =
         maxMana > 0 ? Math.min(100, (manaLossAmount / maxMana) * 100) : 0;
 
@@ -41,11 +40,14 @@ function ManaBar({ entity, simEntity }) {
     const manaGainWidth =
         maxMana > 0 ? Math.min(100, (manaGainAmount / maxMana) * 100) : 0;
 
-    const overflowDelta = simOverflow - overflowMana;
-    const overflowLossAmount = overflowDelta < 0 ? Math.abs(overflowDelta) : 0;
-    const overflowGainAmount = overflowDelta > 0 ? overflowDelta : 0;
+    const solidOverflow = Math.min(overflowMana, simOverflow);
+    const overflowLossAmount = Math.max(0, overflowMana - simOverflow);
+    const overflowGainAmount = Math.max(0, simOverflow - overflowMana);
 
-    const overflowLossLeft = maxMana > 0 ? (simOverflow / maxMana) * 100 : 0;
+    const overflowPercentage =
+        maxMana > 0 ? Math.min(100, (solidOverflow / maxMana) * 100) : 0;
+
+    const overflowLossLeft = maxMana > 0 ? (solidOverflow / maxMana) * 100 : 0;
     const overflowLossWidth =
         maxMana > 0 ? Math.min(100, (overflowLossAmount / maxMana) * 100) : 0;
 
@@ -58,7 +60,10 @@ function ManaBar({ entity, simEntity }) {
     const textColor = displayHasOverflow ? "cyan" : "inherit";
 
     return (
-        <div className="mana-bar-container">
+        <div
+            className="mana-bar-container"
+            onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.MANA)}
+        >
             <div className="mana-text-wrapper">
                 <span>{`Mana${overTimes > 0 ? ` x${overTimes}` : ""}`}</span>
                 <div className="mana-values">
@@ -101,7 +106,7 @@ function ManaBar({ entity, simEntity }) {
                     />
                 )}
 
-                {hasOverflow && (
+                {overflowPercentage > 0 && (
                     <div
                         className="mana-overflow-fill"
                         style={{ width: `${overflowPercentage}%` }}

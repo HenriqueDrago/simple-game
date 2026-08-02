@@ -29,8 +29,13 @@ function SelenianTracker({ entityKey }) {
     const { game, handleElementChange } = useGame();
     const { handleSpawnTooltip } = useUI();
 
+    const entity = game?.entities?.[entityKey];
+
+    if(!entity || !entity.states[effectKeys.SELENIAN]) {
+        return null;
+    }
+
     // Mirrored Moon mapping
-    const entity = game.entities[entityKey];
     const phase = entity[effectKeys.MIRRORED_MOON];
     const moonlight = entity[effectKeys.MOONLIGHT];
     const moonLabel = moonMap[phase];

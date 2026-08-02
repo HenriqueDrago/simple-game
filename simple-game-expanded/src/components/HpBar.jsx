@@ -1,40 +1,40 @@
+import { useUI } from "../contexts/UIContext";
 import { getEntityMaxHealth, isElementActive } from "../utils/entities";
 import { effectKeys, elementalKeys } from "../utils/enums";
 import "./HpBar.css";
 import MitigationTracker from "./MitigationTracker";
 
 function HpBar({ entity, simEntity }) {
+    const { handleSpawnTooltip } = useUI();
+
     const maxHealth = getEntityMaxHealth(entity);
 
     const baseHp = entity.currHp;
     const silverHp = entity.resources?.[effectKeys.SILVER_BLOOD] ?? 0;
-    const hasSilver = silverHp > 0;
-
-    const silverPercentage =
-        maxHealth > 0 && hasSilver
-            ? Math.min(100, (silverHp / maxHealth) * 100)
-            : 0;
-    const hpPercentage =
-        maxHealth > 0 ? Math.min(100, (baseHp / maxHealth) * 100) : 0;
-
-    const silverTimes = maxHealth > 0 ? Math.floor(silverHp / maxHealth) : 0;
 
     const simHp = simEntity ? simEntity.currHp : baseHp;
     const simSilver = simEntity
-        ? simEntity.resources?.[effectKeys.SILVER_BLOOD] ?? 0
+        ? (simEntity.resources?.[effectKeys.SILVER_BLOOD] ?? 0)
         : silverHp;
 
     const isSimulating =
         simEntity && (simHp !== baseHp || simSilver !== silverHp);
+
     const displayHp = isSimulating ? simHp : baseHp;
     const displaySilver = isSimulating ? simSilver : silverHp;
     const displayHasSilver = displaySilver > 0;
 
-    const hpDelta = simHp - baseHp;
-    const hpLossAmount = hpDelta < 0 ? Math.abs(hpDelta) : 0;
-    const hpGainAmount = hpDelta > 0 ? hpDelta : 0;
+    const silverTimes =
+        maxHealth > 0 ? Math.floor(displaySilver / maxHealth) : 0;
 
-    const hpLossLeft = maxHealth > 0 ? (simHp / maxHealth) * 100 : 0;
+    const solidHp = Math.min(baseHp, simHp);
+    const hpLossAmount = Math.max(0, baseHp - simHp);
+    const hpGainAmount = Math.max(0, simHp - baseHp);
+
+    const hpPercentage =
+        maxHealth > 0 ? Math.min(100, (solidHp / maxHealth) * 100) : 0;
+
+    const hpLossLeft = maxHealth > 0 ? (solidHp / maxHealth) * 100 : 0;
     const hpLossWidth =
         maxHealth > 0 ? Math.min(100, (hpLossAmount / maxHealth) * 100) : 0;
 
@@ -42,29 +42,37 @@ function HpBar({ entity, simEntity }) {
     const hpGainWidth =
         maxHealth > 0 ? Math.min(100, (hpGainAmount / maxHealth) * 100) : 0;
 
-    const silverDelta = simSilver - silverHp;
-    const silverLossAmount = silverDelta < 0 ? Math.abs(silverDelta) : 0;
-    const silverGainAmount = silverDelta > 0 ? silverDelta : 0;
+    const solidSilver = Math.min(silverHp, simSilver);
+    const silverLossAmount = Math.max(0, silverHp - simSilver);
+    const silverGainAmount = Math.max(0, simSilver - silverHp);
 
-    const silverLossLeft = maxHealth > 0 ? (simSilver / maxHealth) * 100 : 0;
+    const silverPercentage =
+        maxHealth > 0 ? Math.min(100, (solidSilver / maxHealth) * 100) : 0;
+
+    const silverLossLeft =
+        maxHealth > 0 ? (solidSilver / maxHealth) * 100 : 0;
     const silverLossWidth =
-        maxHealth > 0 ? Math.min(100, (silverLossAmount / maxHealth) * 100) : 0;
+        maxHealth > 0
+            ? Math.min(100, (silverLossAmount / maxHealth) * 100)
+            : 0;
 
     const silverGainLeft = maxHealth > 0 ? (silverHp / maxHealth) * 100 : 0;
     const silverGainWidth =
-        maxHealth > 0 ? Math.min(100, (silverGainAmount / maxHealth) * 100) : 0;
+        maxHealth > 0
+            ? Math.min(100, (silverGainAmount / maxHealth) * 100)
+            : 0;
 
     return (
-        <div className="hp-bar-container">
+        <div
+            className="hp-bar-container"
+            onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.HEALTH)}
+        >
             <div className="hp-text-wrapper">
                 <div className="hp-label-group">
                     <span className="hp-label">
                         {`Health${silverTimes > 0 ? ` x${silverTimes}` : ""}`}
                     </span>
-                    <MitigationTracker
-                        entity={entity}
-                        simEntity={simEntity}
-                    />
+                    <MitigationTracker entity={entity} simEntity={simEntity} />
                 </div>
                 <div className="hp-values">
                     <span
@@ -119,7 +127,7 @@ function HpBar({ entity, simEntity }) {
                     />
                 )}
 
-                {hasSilver && (
+                {silverPercentage > 0 && (
                     <div
                         className="overgrowth-hp-fill"
                         style={{

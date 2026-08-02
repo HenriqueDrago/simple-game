@@ -647,3 +647,30 @@ export const entryTypeClassMap = {
     [entryTypes.STAR]: "type-star",
     [entryTypes.RUNES]: "type-runes",
 };
+
+export const FIXED_RESOURCES = [
+    [effectKeys.DIVINE_SPARK],
+    [effectKeys.OVERHEAT],
+    [effectKeys.DYNAMO],
+    [effectKeys.SONORITY],
+    [effectKeys.BAD_OMEN],
+    [effectKeys.RECOLLECTION],
+    [effectKeys.PREMONITION],
+    [effectKeys.GRAVITATION],
+    [effectKeys.STARBLIGHT],
+    [effectKeys.LUNACY],
+]
+
+export const RANKED_RESOURCES = [
+    [effectKeys.MANA_BLEED],
+    [effectKeys.PAST_MEMORIES],
+    [effectKeys.CONSTELLATION],
+    [effectKeys.CRIMSON_CONSTELLATION],
+    [effectKeys.AZURE_CONSTELLATION],
+    [effectKeys.MOONLIT_TEARS],
+]
+
+export const FREE_ACTIONS = [
+    actionKeys.LASER,
+    actionKeys.CURSE,
+]

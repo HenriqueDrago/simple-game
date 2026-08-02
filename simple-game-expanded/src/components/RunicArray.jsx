@@ -26,36 +26,67 @@ const runeClassMap = {
     [runeKeys.SKULD]: "rune-skuld",
 };
 
-export default function RunicArray({ entity }) {
+export default function RunicArray({ entity, simEntity }) {
     const { handleSpawnTooltip } = useUI();
-    if (!entity.states[effectKeys.VISIONARY]) {
+
+    if (!entity?.states?.[effectKeys.VISIONARY]) {
         return null;
     }
 
-    const rawRunes = entity[effectKeys.RUNIC_ARRAY] || [];
-    const slots = [
-        rawRunes[0] || runeKeys.EMPTY,
-        rawRunes[1] || runeKeys.EMPTY,
-        rawRunes[2] || runeKeys.EMPTY,
+    const realRunes = entity[effectKeys.RUNIC_ARRAY] || [];
+    const simRunes = simEntity
+        ? (simEntity[effectKeys.RUNIC_ARRAY] || realRunes)
+        : realRunes;
+
+    const realSlots = [
+        realRunes[0] || runeKeys.EMPTY,
+        realRunes[1] || runeKeys.EMPTY,
+        realRunes[2] || runeKeys.EMPTY,
+    ].reverse();
+
+    const simSlots = [
+        simRunes[0] || runeKeys.EMPTY,
+        simRunes[1] || runeKeys.EMPTY,
+        simRunes[2] || runeKeys.EMPTY,
     ].reverse();
 
     return (
-        <div className="runic-array-container">
-            {slots.map((rune, index) => (
-                <div
-                    key={index}
-                    className={`rune-slot ${rune === runeKeys.EMPTY ? "empty" : "active"} ${runeClassMap[rune] || ""}`}
-                    onMouseDown={(e) =>
-                        handleSpawnTooltip(e,
-                            rune !== runeKeys.EMPTY
-                                ? rune
-                                : effectKeys.RUNIC_ARRAY,
-                        )
-                    }
-                >
-                    {runeMap[rune]}
-                </div>
-            ))}
+        <div
+            className="runic-array-container"
+            onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.RUNIC_ARRAY)}
+        >
+            {realSlots.map((realRune, index) => {
+                const simRune = simSlots[index];
+                const isNewRune =
+                    realRune === runeKeys.EMPTY && simRune !== runeKeys.EMPTY;
+                const isRuneChanged = simEntity && realRune !== simRune;
+                const displayRune = simEntity ? simRune : realRune;
+
+                return (
+                    <div
+                        key={index}
+                        className={`rune-slot ${
+                            displayRune === runeKeys.EMPTY ? "empty" : "active"
+                        } ${runeClassMap[displayRune] || ""} ${
+                            isNewRune
+                                ? "is-new-preview"
+                                : isRuneChanged
+                                ? "is-preview"
+                                : ""
+                        }`}
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(
+                                e,
+                                displayRune !== runeKeys.EMPTY
+                                    ? displayRune
+                                    : effectKeys.RUNIC_ARRAY,
+                            )
+                        }
+                    >
+                        {runeMap[displayRune]}
+                    </div>
+                );
+            })}
         </div>
     );
 }

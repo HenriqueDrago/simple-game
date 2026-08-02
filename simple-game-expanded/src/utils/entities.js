@@ -1936,7 +1936,7 @@ export function canUseAction(prev, entityKey, action) {
         return !isProgLocked(aiKeys.HEXER);
     }
 
-    return true;
+    return false;
 }
 
 export function getActions(prev, entityKey) {

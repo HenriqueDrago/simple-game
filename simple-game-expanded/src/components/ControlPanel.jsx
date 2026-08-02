@@ -1,6 +1,12 @@
 import "./ControlPanel.css";
 import { presetAi } from "../utils/constants";
-import { sdmKeys, entityKeys, progKeys, aiKeys } from "../utils/enums";
+import {
+    sdmKeys,
+    entityKeys,
+    progKeys,
+    aiKeys,
+    turnStatus,
+} from "../utils/enums";
 import { RotateCcw } from "lucide-react";
 import { useGame } from "../contexts/GameContext";
 
@@ -12,80 +18,90 @@ function ControlPanel({ entityKey }) {
         handleAiChange,
     } = useGame();
 
-    const entity = game.entities[entityKey];
+    if (game.status !== turnStatus.SETUP) {
+        return null;
+    }
 
-    const playerLabel =
-        entityKey === entityKeys.PLAYER_ONE ? "Player One" : "Player Two";
+    const entity = game.entities[entityKey];
 
     return (
         <div className="control-panel-container">
             {!(game.progressMode && entityKey === entityKeys.PLAYER_TWO) && (
-                <div className="ai-selector">
-                    <label htmlFor={`distribution-mode-${entityKey}`}>
-                        {playerLabel} Stats:
+                <div className="control-box">
+                    <label
+                        className="control-box-label"
+                        htmlFor={`distribution-mode-${entityKey}`}
+                    >
+                        Attributes
                     </label>
-                    <select
-                        id={`distribution-mode-${entityKey}`}
-                        value={entity.statDistributionMode}
-                        onChange={(e) =>
-                            handleDistributionModeChange(
-                                e.target.value,
-                                entityKey,
-                            )
-                        }
-                    >
-                        <option value={sdmKeys.CUSTOM}>Custom</option>
-                        <option
-                            value={sdmKeys.BEST}
-                            disabled={entity.controller === aiKeys.HUMAN}
+                    <div className="control-box-input-group">
+                        <select
+                            id={`distribution-mode-${entityKey}`}
+                            value={entity.statDistributionMode}
+                            onChange={(e) =>
+                                handleDistributionModeChange(
+                                    e.target.value,
+                                    entityKey,
+                                )
+                            }
                         >
-                            "Best"
-                        </option>
-                        <option value={sdmKeys.FULL_DEF}>Full Def</option>
-                        <option value={sdmKeys.FULL_STR}>Full Str</option>
-                        <option value={sdmKeys.BALANCED}>Balanced</option>
-                    </select>
-                    <button
-                        className="sharp-btn-icon"
-                        onClick={() => {
-                            handleRandomizeStats(entityKey);
-                        }}
-                        disabled={
-                            entity.statDistributionMode !== sdmKeys.CUSTOM
-                        }
-                        title="Randomize Stats"
-                    >
-                        <RotateCcw size={18} strokeWidth={2.5} />
-                    </button>
+                            <option value={sdmKeys.CUSTOM}>Custom</option>
+                            <option
+                                value={sdmKeys.BEST}
+                                disabled={entity.controller === aiKeys.HUMAN}
+                            >
+                                "Best"
+                            </option>
+                            <option value={sdmKeys.FULL_DEF}>Full Def</option>
+                            <option value={sdmKeys.FULL_STR}>Full Str</option>
+                            <option value={sdmKeys.BALANCED}>Balanced</option>
+                        </select>
+
+                        <button
+                            className="sharp-btn-icon"
+                            onClick={() => handleRandomizeStats(entityKey)}
+                            disabled={
+                                entity.statDistributionMode !== sdmKeys.CUSTOM
+                            }
+                            title="Randomize Stats"
+                        >
+                            <RotateCcw size={16} strokeWidth={2.5} />
+                        </button>
+                    </div>
                 </div>
             )}
 
             {!(game.progressMode && entityKey === entityKeys.PLAYER_ONE) && (
-                <div className="ai-selector">
-                    <label htmlFor={`player-ai-${entityKey}`}>
-                        {playerLabel} Controller:
-                    </label>
-                    <select
-                        id={`player-ai-${entityKey}`}
-                        value={entity.controller}
-                        onChange={(e) =>
-                            handleAiChange(e.target.value, entityKey)
-                        }
+                <div className="control-box">
+                    <label
+                        className="control-box-label"
+                        htmlFor={`player-ai-${entityKey}`}
                     >
-                        {Object.entries(presetAi).map(([aiKey, aiData]) => (
-                            <option
-                                key={aiKey}
-                                value={aiKey}
-                                disabled={
-                                    game.progressMode &&
-                                    game.progressStatus[aiKey] ===
-                                        progKeys.LOCKED
-                                }
-                            >
-                                {aiData.name}
-                            </option>
-                        ))}
-                    </select>
+                        Controller
+                    </label>
+                    <div className="control-box-input-group">
+                        <select
+                            id={`player-ai-${entityKey}`}
+                            value={entity.controller}
+                            onChange={(e) =>
+                                handleAiChange(e.target.value, entityKey)
+                            }
+                        >
+                            {Object.entries(presetAi).map(([aiKey, aiData]) => (
+                                <option
+                                    key={aiKey}
+                                    value={aiKey}
+                                    disabled={
+                                        game.progressMode &&
+                                        game.progressStatus[aiKey] ===
+                                            progKeys.LOCKED
+                                    }
+                                >
+                                    {aiData.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             )}
         </div>

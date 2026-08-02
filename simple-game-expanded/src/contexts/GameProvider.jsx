@@ -42,6 +42,7 @@ import {
 } from "../utils/turnManagement";
 import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
+import { simulateFullStarfall } from "../utils/starfall";
 
 // Auxiliary Functions
 function resetGameState(prev) {
@@ -488,9 +489,15 @@ export default function GameProvider({ children }) {
 
     function handleCreateSimulatedGame(action, agentKey, nonAgentKey) {
         setGame((prev) => {
+            let sim = processActionUse(prev, agentKey, nonAgentKey, action);
+
+            if(prev?.entities?.[agentKey]?.states?.[effectKeys.STARGAZER]) {
+                sim = simulateFullStarfall(sim, agentKey, nonAgentKey);
+            }
+
             return {
                 ...prev,
-                simGame: processActionUse(prev, agentKey, nonAgentKey, action),
+                simGame: sim,
             };
         });
     }

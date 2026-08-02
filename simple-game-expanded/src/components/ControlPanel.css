@@ -1,49 +1,97 @@
 .control-panel-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     width: 100%;
+    box-sizing: border-box;
 }
 
-.ai-selector {
+.control-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(10, 10, 15, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+}
+
+.control-box-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.control-box-input-group {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     width: 100%;
-    max-width: 450px;
-    gap: 15px;
-    font-family: inherit;
 }
 
-.ai-selector label {
-    font-weight: bold;
-    text-align: left;
-    flex-shrink: 0;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-}
-
-.ai-selector select {
+.control-box-input-group select {
     flex-grow: 1;
-    padding: 8px 12px;
-    
+    padding: 6px 10px;
     background-color: #000000;
     color: #ffffff;
-    border: 1px solid #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 0;
-    font-size: 1rem;
-    cursor: pointer;
+    font-size: 0.9rem;
     font-weight: bold;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
 }
 
-.ai-selector select:focus {
+.control-box-input-group select:focus {
     outline: none;
-    border: 1px solid #ffffff;
+    border-color: #ffffff;
 }
 
-.ai-selector select option {
+.control-box-input-group select option {
     background-color: #000000;
     color: #ffffff;
+}
+
+.control-box-input-group select option:disabled {
+    color: #555555;
+}
+
+.sharp-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    height: 32px;
+    width: 32px;
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.sharp-btn-icon svg {
+    stroke: #ffffff;
+    transition: stroke 0.2s ease;
+}
+
+.sharp-btn-icon:hover:not(:disabled) {
+    background-color: #ffffff;
+    border-color: #ffffff;
+}
+
+.sharp-btn-icon:hover:not(:disabled) svg {
+    stroke: #000000;
+}
+
+.sharp-btn-icon:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.1);
 }

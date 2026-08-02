@@ -1,6 +1,6 @@
 import StarIcon from "./StarIcon";
 import "./StarRow.css";
-import { effectKeys } from "../utils/enums";
+import { effectKeys, entityKeys } from "../utils/enums";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
@@ -15,7 +15,7 @@ function StarRow({
     reversed,
     isPlayerStarfall,
 }) {
-    const { handleStarChange } = useGame();
+    const { handleStarChange, handleCreateSimulatedGame } = useGame();
     const { handleSpawnTooltip } = useUI();
 
     const isStarGlowing = currentPhase === starPhase && isPlayerStarfall;
@@ -25,6 +25,11 @@ function StarRow({
 
     const isMinusDisabled = !showButton || !hasCurrentStars;
     const isPlusDisabled = !showButton || !hasWhiteStars;
+
+    const otherEntityKey =
+        entityKey === entityKeys.PLAYER_ONE
+            ? entityKeys.PLAYER_TWO
+            : entityKeys.PLAYER_ONE;
 
     return (
         <div
@@ -37,6 +42,11 @@ function StarRow({
                 <button
                     onClick={() => {
                         handleStarChange(entityKey, starKey, -1);
+                        handleCreateSimulatedGame(
+                            null,
+                            entityKey,
+                            otherEntityKey,
+                        );
                     }}
                     disabled={isMinusDisabled}
                 >
@@ -48,6 +58,11 @@ function StarRow({
                 <button
                     onClick={() => {
                         handleStarChange(entityKey, starKey, 1);
+                        handleCreateSimulatedGame(
+                            null,
+                            entityKey,
+                            otherEntityKey,
+                        );
                     }}
                     disabled={isPlusDisabled}
                 >

@@ -7,7 +7,7 @@ import {
     effectKeys,
     roundPhases,
 } from "../utils/enums";
-import { presetAi, actionMap } from "../utils/constants";
+import { presetAi, actionMap, FREE_ACTIONS } from "../utils/constants";
 import {
     getActions,
     canUseAction,
@@ -147,7 +147,15 @@ function ActionPanel() {
                                         currEntityKey,
                                         targetEntityKey,
                                     );
-                                    handleClearSimulation();
+                                    if (FREE_ACTIONS.includes(action.key)) {
+                                        handleCreateSimulatedGame(
+                                            action.key,
+                                            currEntityKey,
+                                            targetEntityKey,
+                                        );
+                                    } else {
+                                        handleClearSimulation();
+                                    }
                                 }}
                                 onMouseDown={(e) => {
                                     if (e.button === 1) {
@@ -173,7 +181,11 @@ function ActionPanel() {
                                     );
                                 }}
                                 onMouseLeave={() => {
-                                    handleClearSimulation();
+                                    handleCreateSimulatedGame(
+                                        null,
+                                        currEntityKey,
+                                        targetEntityKey,
+                                    );
                                 }}
                                 disabled={action.disabled}
                                 className={action.specialClass || ""}

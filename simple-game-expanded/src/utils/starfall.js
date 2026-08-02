@@ -1,4 +1,4 @@
-import { constants } from "./constants";
+import { coloredStars, constants } from "./constants";
 import {
     consumeResources,
     restoreResources,
@@ -159,6 +159,12 @@ export function processRedStar(
     };
 
     if (augmentedStars > 0) {
+        draftMaster = takeDamage(
+            draftMaster,
+            augmentedStars,
+            dmgTypes.PIERCING,
+        );
+
         draftNonMaster = takeDamage(
             draftNonMaster,
             augmentedStars,
@@ -167,6 +173,12 @@ export function processRedStar(
     }
 
     if (normalStars > 0) {
+        draftMaster = takeDamage(
+            draftMaster,
+            normalStars,
+            dmgTypes.PHYSICAL,
+        );
+
         draftNonMaster = takeDamage(
             draftNonMaster,
             normalStars,
@@ -430,4 +442,16 @@ export function processVioletStar(
         draftMaster,
         draftNonMaster,
     };
+}
+
+export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
+    let gameState = {
+        ...prev,
+    }
+
+    for(let star of Object.values(coloredStars)) {
+        gameState = processROYGBIVStar(gameState, ownerKey, nonOwnerKey, star.star);
+    }
+
+    return gameState;
 }

@@ -29,8 +29,9 @@ export default function DivineBar({ entityKey }) {
             >
                 <GradientBar
                     label={"Divine Spark"}
-                    currResource={entity[effectKeys.DIVINE_SPARK]}
+                    resourceKey={entity[effectKeys.DIVINE_SPARK]}
                     maxResource={constants.MAX_DIVINE_SPARK}
+                    entityKey={entityKey}
                     trackStyle={{
                         backgroundImage: `linear-gradient(
                                             90deg,
@@ -42,6 +43,7 @@ export default function DivineBar({ entityKey }) {
                                         )`,
                     }}
                     showPercent={true}
+                    isAlwaysActive={true}
                 />
             </div>
             <button
@@ -50,7 +52,7 @@ export default function DivineBar({ entityKey }) {
                     handleAction(actionKeys.ASCEND, entityKey, otherEntityKey);
                 }}
                 onMouseDown={(e) => handleSpawnTooltip(e, actionKeys.ASCEND)}
-                disabled={canUseAction(game, entityKey, actionKeys.ASCEND)}
+                disabled={!canUseAction(game, entityKey, actionKeys.ASCEND)}
             >
                 Ascend
             </button>

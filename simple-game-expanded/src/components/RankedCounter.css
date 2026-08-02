@@ -1,0 +1,25 @@
+.ranked-counter-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 28px;
+    border-radius: 4px;
+    border: 1px solid gray;
+    margin: 4px 0;
+    cursor: pointer;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.ranked-counter-container.is-new-preview {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+.ranked-counter-container span {
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.ranked-counter-container .counter-amount.is-preview {
+    opacity: 0.75;
+}

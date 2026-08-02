@@ -1,17 +1,53 @@
+import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { constants } from "../utils/constants";
+import { effectKeys } from "../utils/enums";
 import "./SonorityCounter.css";
 
-function SonorityCounter({ sonority }) {
-    const disNonFill = Math.max(0, (Math.min(sonority, 0) - constants.SONORITY_LOWER_LIMIT) * 2);
+function SonorityCounter({ entityKey }) {
+    const { game } = useGame();
+    const { handleSpawnTooltip } = useUI();
+
+    const entity = game?.entities?.[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
+
+    if (!entity?.states?.[effectKeys.RESONANT]) {
+        return null;
+    }
+
+    const realSonority = entity?.[effectKeys.SONORITY] ?? 0;
+    const simSonority = simEntity
+        ? (simEntity?.[effectKeys.SONORITY] ?? realSonority)
+        : realSonority;
+
+    const isNumberChanged = simEntity && simSonority !== realSonority;
+    const displaySonority = simEntity ? simSonority : realSonority;
+
+    const disNonFill = Math.max(
+        0,
+        (Math.min(displaySonority, 0) - constants.SONORITY_LOWER_LIMIT) * 2,
+    );
     const disFill = 100 - disNonFill;
 
-    const harFill = Math.max(0, Math.min(sonority, constants.SONORITY_HIGHER_LIMIT) * 2);
+    const harFill = Math.max(
+        0,
+        Math.min(displaySonority, constants.SONORITY_HIGHER_LIMIT) * 2,
+    );
     const harNonFill = 100 - harFill;
 
     return (
-        <div className="sonority-counter-container">
+        <div
+            className={`sonority-counter-container`}
+            onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.SONORITY)}
+        >
             <div className="sonority-counter-upper-labels">
-                <span>{`Sonority: ${sonority}%`}</span>
+                <span
+                    className={`${
+                        isNumberChanged ? "is-preview" : ""
+                    }`}
+                >
+                    {`Sonority: ${displaySonority}%`}
+                </span>
             </div>
             <div className="sonority-bar-container">
                 <div

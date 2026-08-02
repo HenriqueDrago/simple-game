@@ -10,15 +10,17 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     color: white;
     padding: 24px 32px 32px 32px;
+    box-sizing: border-box;
     z-index: 9998;
 
-    /* Layout for header + horizontal scrolling columns */
+    /* Grid layout: Row 1 = Header, Row 2 = Single row of columns */
     display: grid;
     grid-template-rows: auto 1fr;
     grid-auto-flow: column;
+    grid-auto-columns: max-content;
     gap: 24px 32px;
 
-    /* Scrolling for columns horizontally */
+    /* Horizontal scrolling for the column row */
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
@@ -30,15 +32,22 @@
     user-select: text;
 }
 
-/* Header spanning full width */
+/* Header spanning Row 1 */
 .glossary-header-container {
     grid-row: 1;
-    grid-column: 1 / -1;
+    grid-column: 1 / span 100;
+
+    /* Locked to the visible inner modal width */
+    width: calc(90vw - 64px);
+    box-sizing: border-box;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+    /* Pins header to the left while scrolling columns horizontally */
     position: sticky;
     left: 0;
     background-color: black;
@@ -76,18 +85,18 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Individual Columns */
+/* Individual Columns strictly locked to Row 2 */
 .glossary-column-container {
     grid-row: 2;
-    flex-shrink: 0;
     width: 320px;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
     padding-right: 12px;
 }
 
-/* Archetype Column Headers (Converted to span) */
+/* Archetype Column Headers */
 .glossary-column-title {
     display: block;
     font-size: 1.4rem;

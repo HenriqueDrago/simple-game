@@ -1,0 +1,306 @@
+.player-panel-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    box-sizing: border-box;
+
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 15, 20, 0.92);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    transition: all 0.3s ease-in-out;
+}
+
+.player-panel-secondary-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+}
+
+.player-panel-container.horizontal-reversed .player-panel-secondary-container {
+    flex-direction: row-reverse;
+}
+
+/* Left Box */
+/* Flex item that takes space without contributing height */
+.player-panel-left-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+/* Absolute box that matches wrapper height and scrolls internally */
+.player-panel-left {
+    position: absolute;
+    inset: 0; /* top: 0, right: 0, bottom: 0, left: 0 */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    box-sizing: border-box;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
+}
+
+.player-panel-left::-webkit-scrollbar {
+    display: none;
+}
+
+.player-panel-left::after {
+    content: "";
+    display: block;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+/* Resource Section Headers */
+.resource-category-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resource-section-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.resource-category-section.is-empty .resource-section-label {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* Right Box */
+.player-panel-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 300px;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.attributes-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stats-panel-warning {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.counter-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-width: 1px;
+    border-style: solid;
+    box-sizing: border-box;
+    transition:
+        opacity 0.2s ease,
+        filter 0.2s ease;
+}
+
+.counter-item.is-new-preview {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+.counter-amount {
+    font-variant-numeric: tabular-nums;
+}
+
+.counter-amount.is-preview {
+    opacity: 0.75;
+}
+
+.player-panel-container.state-umbral {
+    border-color: #9d00ff;
+    background: linear-gradient(
+        to bottom,
+        rgba(157, 0, 255, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(157, 0, 255, 0.5),
+        inset 0 0 15px rgba(157, 0, 255, 0.15);
+}
+
+.player-panel-container.state-resonant {
+    border-color: var(--resonant-color, cyan);
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 255, 255, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(0, 255, 255, 0.45),
+        inset 0 0 15px rgba(0, 255, 255, 0.12);
+}
+
+.player-panel-container.state-weapons-deployed {
+    border-color: #ff8c00;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 140, 0, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(255, 140, 0, 0.5),
+        inset 0 0 15px rgba(255, 140, 0, 0.15);
+}
+
+.player-panel-container.state-thermal-overload {
+    border-color: #ff3300;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 51, 0, 0.08),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 22px rgba(255, 51, 0, 0.65),
+        inset 0 0 20px rgba(255, 0, 0, 0.25);
+    animation: overload-pulse 1.5s infinite alternate;
+}
+
+.player-panel-container.state-venting {
+    border-color: #87ceeb;
+    background: linear-gradient(
+        to bottom,
+        rgba(135, 206, 235, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(135, 206, 235, 0.45),
+        inset 0 0 15px rgba(135, 206, 235, 0.12);
+}
+
+.player-panel-container.state-guarding {
+    border-color: #a9a9a9;
+    background: linear-gradient(
+        to bottom,
+        rgba(169, 169, 169, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 15px rgba(169, 169, 169, 0.45);
+}
+
+.player-panel-container.state-sacrificial {
+    border-color: #dc143c;
+    background: linear-gradient(
+        to bottom,
+        rgba(220, 20, 60, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 18px rgba(220, 20, 60, 0.55);
+}
+
+.player-panel-container.state-radiant {
+    border-color: #fff9c4;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 249, 196, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 18px rgba(255, 249, 196, 0.5);
+}
+
+.player-panel-container.state-deployment {
+    border-color: #c0c0c0;
+    background: linear-gradient(
+        to bottom,
+        rgba(192, 192, 192, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.45);
+}
+
+.player-panel-container.state-stargazer {
+    border: 2px solid;
+    border-image: linear-gradient(
+            135deg,
+            #ff1744 0%,
+            #ff9100 16%,
+            #ffea00 33%,
+            #00e676 50%,
+            #2979ff 66%,
+            #651fff 83%,
+            #d500f9 100%
+        )
+        1;
+    background: linear-gradient(
+        to bottom,
+        rgba(18, 15, 30, 0.95) 0%,
+        rgba(10, 12, 22, 0.95) 100%
+    );
+    box-shadow:
+        -3px -3px 13px rgba(255, 23, 68, 0.3),
+        3px -3px 13px rgba(255, 234, 0, 0.26),
+        -3px 3px 13px rgba(41, 121, 255, 0.3),
+        3px 3px 13px rgba(213, 0, 249, 0.3),
+        inset 0 0 10px rgba(255, 255, 255, 0.04);
+}
+
+.player-panel-container.state-selenian {
+    border-color: #80d8ff;
+    background: linear-gradient(
+        to bottom,
+        rgba(128, 216, 255, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 18px rgba(128, 216, 255, 0.5);
+}
+
+.player-panel-container.state-visionary {
+    border: 2px solid;
+    border-image: linear-gradient(180deg, #00f0ff 0%, #4caf50 50%, #b388ff 100%)
+        1;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0, 240, 255, 0.04) 0%,
+            rgba(76, 175, 80, 0.04) 50%,
+            rgba(179, 136, 255, 0.04) 100%
+        ),
+        rgba(15, 15, 20, 0.92);
+    box-shadow:
+        0 -4px 14px rgba(0, 240, 255, 0.45),
+        0 0 14px rgba(76, 175, 80, 0.4),
+        0 4px 14px rgba(179, 136, 255, 0.45),
+        inset 0 0 12px rgba(0, 240, 255, 0.1);
+}
+
+@keyframes overload-pulse {
+    from {
+        box-shadow:
+            0 0 10px rgba(255, 51, 0, 0.35),
+            inset 0 0 10px rgba(255, 0, 0, 0.15);
+    }
+    to {
+        box-shadow:
+            0 0 22px rgba(255, 51, 0, 0.75),
+            inset 0 0 20px rgba(255, 0, 0, 0.35);
+    }
+}
