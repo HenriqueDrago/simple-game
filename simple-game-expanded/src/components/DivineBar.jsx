@@ -29,7 +29,7 @@ export default function DivineBar({ entityKey }) {
             >
                 <GradientBar
                     label={"Divine Spark"}
-                    resourceKey={entity[effectKeys.DIVINE_SPARK]}
+                    resourceKey={effectKeys.DIVINE_SPARK}
                     maxResource={constants.MAX_DIVINE_SPARK}
                     entityKey={entityKey}
                     trackStyle={{
