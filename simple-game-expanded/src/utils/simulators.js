@@ -669,10 +669,11 @@ function simulateShatter({ prev, agent, agentKey }) {
 }
 
 function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    const extraDmg = Math.floor(agent[effectKeys.LUNACY] / constants.CHALK_EXTRA_DMG);
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
-        agent[effectKeys.MOONLIGHT],
+        agent[effectKeys.MOONLIGHT] + extraDmg,
         dmgTypes.LUNIC,
     );
 

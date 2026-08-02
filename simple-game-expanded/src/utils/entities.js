@@ -231,6 +231,7 @@ export function createBaseEntity() {
             [effectKeys.MOONDUST]: 0,
             [effectKeys.DISSONANCE]: 0,
             [effectKeys.PRECOGNITION]: 0,
+            [effectKeys.PROPHECY_OF_DOOM]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -934,17 +935,22 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                     2,
             );
 
-            draftAgent = consumeLimitedResources(
+            const result = consumeLimitedResources(
                 draftAgent,
                 toBeConsumed,
                 elementalKeys.ASH,
-            ).draftEntity;
+            );
+
+            draftAgent = result.draftEntity;
 
             draftAgent = {
                 ...draftAgent,
                 resources: {
                     ...draftAgent.resources,
-                    [effectKeys.FUNERARY_URN]: toBeConsumed,
+                    [effectKeys.FUNERARY_URN]:
+                        draftAgent.resources[effectKeys.FUNERARY_URN] +
+                        result.limitedResourcesConsumed
+                            .totalLimitedResourcesConsumption,
                 },
             };
         }
@@ -1026,6 +1032,7 @@ export function processEntityDeathStates(entity) {
     let draftEntity = { ...entity };
 
     draftEntity = processHealth(draftEntity);
+    draftEntity = processPDoom(draftEntity);
     draftEntity = processPrecognition(draftEntity);
 
     return draftEntity;
@@ -2124,7 +2131,9 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
             draftTarget[effectKeys.RECOLLECTION],
             constants.RECOLLECTION_LOSE,
         );
-        const memGain = Math.floor(recConsumed / constants.PAST_MEMORIES_GAIN);
+        const memGain = Math.floor(
+            recConsumed / constants.PAST_MEMORIES_GAIN_RATE,
+        );
 
         draftTarget = {
             ...draftTarget,
@@ -2177,13 +2186,22 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
     switch (newRune) {
         case runeKeys.URD: {
             // Gain Recollection
+            const totalRec =
+                draftTarget[effectKeys.RECOLLECTION] +
+                getEntityDef(draftTarget) * constants.URD_DEF_REC;
+            const excessRec = Math.max(
+                0,
+                totalRec - constants.MAX_RECOLLECTION,
+            );
+
+            const pastMemoriesGain =
+                excessRec / constants.PAST_MEMORIES_GAIN_RATE;
+
             draftTarget = {
                 ...draftTarget,
-                [effectKeys.RECOLLECTION]: Math.min(
-                    draftTarget[effectKeys.RECOLLECTION] +
-                        getEntityDef(draftTarget) * constants.URD_DEF_REC,
-                    constants.MAX_RECOLLECTION,
-                ),
+                [effectKeys.RECOLLECTION]: totalRec - excessRec,
+                [effectKeys.PAST_MEMORIES]:
+                    draftTarget[effectKeys.PAST_MEMORIES] + pastMemoriesGain,
             };
 
             break;
@@ -2275,12 +2293,20 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
+    const totalBadOmen =
+        draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN;
+    const excessBadOmen = Math.max(0, totalBadOmen - constants.MAX_BAD_OMEN);
+    const pdGained = Math.floor(excessBadOmen / 1);
+
     draftNonTarget = {
         ...draftNonTarget,
-        [effectKeys.BAD_OMEN]: Math.min(
-            constants.MAX_BAD_OMEN,
-            draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN,
-        ),
+        [effectKeys.BAD_OMEN]: totalBadOmen - excessBadOmen,
+        resources: {
+            ...draftNonTarget.resources,
+            [effectKeys.PROPHECY_OF_DOOM]:
+                draftNonTarget.resources[effectKeys.PROPHECY_OF_DOOM] +
+                pdGained,
+        },
     };
 
     return {
@@ -2306,12 +2332,19 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
+    const totalPremo =
+        draftTarget[effectKeys.PREMONITION] + constants.SKULD_PREMONITION_GAIN;
+    const excessPremo = Math.max(0, totalPremo - constants.MAX_PREMONITION);
+    const precogGained = Math.floor(excessPremo / 1);
+
     draftTarget = {
         ...draftTarget,
-        [effectKeys.PREMONITION]: Math.min(
-            constants.MAX_PREMONITION,
-            draftTarget[effectKeys.PREMONITION] + constants.SKULD_PROFECY_GAIN,
-        ),
+        [effectKeys.PREMONITION]: totalPremo - excessPremo,
+        resources: {
+            ...draftTarget.resources,
+            [effectKeys.PRECOGNITION]:
+                draftTarget.resources[effectKeys.PRECOGNITION] + precogGained,
+        },
     };
 
     return {
@@ -2330,4 +2363,41 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
 
 export function countRunes(array, targetRune) {
     return array.filter((rune) => rune === targetRune).length;
+}
+
+export function processPDoom(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    // Consume Precognition
+    const consumedPrecog = Math.min(
+        draftEntity.resources[effectKeys.PRECOGNITION],
+        draftEntity.resources[effectKeys.PROPHECY_OF_DOOM],
+    );
+    draftEntity = {
+        ...draftEntity,
+        resources: {
+            ...draftEntity.resources,
+            [effectKeys.PROPHECY_OF_DOOM]: draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] - consumedPrecog,
+            [effectKeys.PRECOGNITION]: draftEntity.resources[effectKeys.PRECOGNITION] - consumedPrecog,
+        }
+    }
+
+    // Consume Mana
+    const consumedMana = Math.min(
+        getEntityTotalMana(draftEntity),
+        draftEntity.resources[effectKeys.PROPHECY_OF_DOOM],
+    );
+    draftEntity = {
+        ...draftEntity,
+        resources: {
+            ...draftEntity.resources,
+            [effectKeys.PROPHECY_OF_DOOM]: draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] - consumedMana,
+        }
+    }
+
+    draftEntity = loseMana(draftEntity, consumedMana);
+
+    return draftEntity;
 }

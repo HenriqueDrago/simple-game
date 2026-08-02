@@ -101,6 +101,7 @@ const LUNAR_GROWTH_MULT = 1;
 const HIDDEN_MOON_ML_GAIN = 3;
 const LUNAR_VEIL_TEARS_GAIN = 1;
 const GIBBOUS_TEARS_GAIN = 1;
+const CHALK_EXTRA_DMG = 10;
 
 const MAX_LUNACY = 100;
 
@@ -124,28 +125,33 @@ const CURSE_EMPTY_RUNE_DMG = 5;
 const URD_HEALTH_REGEN = 0.3;
 const URD_DEF_REC = 2;
 const RECOLLECTION_LOSE = 20;
-const PAST_MEMORIES_GAIN = 5;
+const PAST_MEMORIES_GAIN_RATE = 5;
 
 // Skuld
 const SKULD_WEAK = 0.3;
 const SKULD_MANA_REGEN = 0.3;
 const SKULD_PRECOGNITION_GAIN = 0.3;
-const SKULD_PROFECY_GAIN = 20;
-const PROFECY_TURN_END_LOSS = 20;
+const SKULD_PREMONITION_GAIN = 20;
+const PREMONITION_TURN_END_LOSS = 20;
+const PRECOG_GAIN_RATE = 10;
 
 // Verdandi
 const VERDANDI_OMEN_GAIN = 20;
 const BAD_OMEN_TURN_END_LOSS = 20;
+const PROPHECY_GAIN_RATE = 10;
 
 export const constants = {
+    CHALK_EXTRA_DMG,
+    PRECOG_GAIN_RATE,
+    PROPHECY_GAIN_RATE,
     MAX_PREMONITION,
-    SKULD_PROFECY_GAIN,
-    PROFECY_TURN_END_LOSS,
+    SKULD_PREMONITION_GAIN,
+    PREMONITION_TURN_END_LOSS,
     BAD_OMEN_TURN_END_LOSS,
     CURSE_EMPTY_RUNE_DMG,
     SKULD_MANA_REGEN,
     SKULD_WEAK,
-    PAST_MEMORIES_GAIN,
+    PAST_MEMORIES_GAIN_RATE,
     URD_DEF_REC,
     RECOLLECTION_LOSE,
     SKULD_PRECOGNITION_GAIN,
@@ -221,6 +227,7 @@ export const FREE_RESOURCES = [
     effectKeys.CINDERS,
     effectKeys.DISSONANCE,
     effectKeys.PRECOGNITION,
+    effectKeys.PROPHECY_OF_DOOM,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
     effectKeys.MOONDUST,
@@ -649,28 +656,25 @@ export const entryTypeClassMap = {
 };
 
 export const FIXED_RESOURCES = [
-    [effectKeys.DIVINE_SPARK],
-    [effectKeys.OVERHEAT],
-    [effectKeys.DYNAMO],
-    [effectKeys.SONORITY],
-    [effectKeys.BAD_OMEN],
-    [effectKeys.RECOLLECTION],
-    [effectKeys.PREMONITION],
-    [effectKeys.GRAVITATION],
-    [effectKeys.STARBLIGHT],
-    [effectKeys.LUNACY],
-]
+    effectKeys.DIVINE_SPARK,
+    effectKeys.OVERHEAT,
+    effectKeys.DYNAMO,
+    effectKeys.SONORITY,
+    effectKeys.BAD_OMEN,
+    effectKeys.RECOLLECTION,
+    effectKeys.PREMONITION,
+    effectKeys.GRAVITATION,
+    effectKeys.STARBLIGHT,
+    effectKeys.LUNACY,
+];
 
 export const RANKED_RESOURCES = [
-    [effectKeys.MANA_BLEED],
-    [effectKeys.PAST_MEMORIES],
-    [effectKeys.CONSTELLATION],
-    [effectKeys.CRIMSON_CONSTELLATION],
-    [effectKeys.AZURE_CONSTELLATION],
-    [effectKeys.MOONLIT_TEARS],
-]
+    effectKeys.MANA_BLEED,
+    effectKeys.PAST_MEMORIES,
+    effectKeys.CONSTELLATION,
+    effectKeys.CRIMSON_CONSTELLATION,
+    effectKeys.AZURE_CONSTELLATION,
+    effectKeys.MOONLIT_TEARS,
+];
 
-export const FREE_ACTIONS = [
-    actionKeys.LASER,
-    actionKeys.CURSE,
-]
+export const FREE_ACTIONS = [actionKeys.LASER, actionKeys.CURSE];

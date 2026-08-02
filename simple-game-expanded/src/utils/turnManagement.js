@@ -56,8 +56,8 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     // Starlit Dome
     if (draftTarget.resources[effectKeys.STARLIT_DOME] > 0) {
-        const newDome =
-            draftTarget.resources[effectKeys.DOME] +
+        const newStardust =
+            draftTarget.resources[effectKeys.STARDUST] +
             draftTarget.resources[effectKeys.STARLIT_DOME];
 
         draftTarget = {
@@ -65,7 +65,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             resources: {
                 ...draftTarget.resources,
                 [effectKeys.STARLIT_DOME]: 0,
-                [effectKeys.DOME]: newDome,
+                [effectKeys.STARDUST]: newStardust,
             },
         };
     }
@@ -238,6 +238,15 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
+    // Dynamo
+    if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.DYNAMO]: 0,
+            [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
+        };
+    }
+
     // Venting
     if (draftTarget.states[effectKeys.VENTING]) {
         const overheatConsumed = Math.min(
@@ -260,15 +269,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 [effectKeys.VENTING]: newOverheat > 0,
                 [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
             },
-        };
-    }
-
-    // Dynamo
-    if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.DYNAMO]: 0,
-            [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
         };
     }
 
@@ -324,15 +324,25 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
-    // Bad Omen
+    // Premonition
     if (draftTarget[effectKeys.PREMONITION] > 0) {
+        const premoLost = Math.min(
+            constants.PREMONITION_TURN_END_LOSS,
+            draftTarget[effectKeys.PREMONITION],
+        );
+        const precogGained = Math.floor(premoLost / constants.PRECOG_GAIN_RATE);
+
         draftTarget = {
             ...draftTarget,
-            [effectKeys.PREMONITION]: Math.max(
-                0,
-                draftTarget[effectKeys.PREMONITION] -
-                    constants.PROFECY_TURN_END_LOSS,
-            ),
+            [effectKeys.PREMONITION]:
+                draftTarget[effectKeys.PREMONITION] - premoLost,
+
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftTarget.resources[effectKeys.PRECOGNITION] +
+                    precogGained,
+            },
         };
     }
 
@@ -377,13 +387,22 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
 
     // Bad Omen
     if (draftCurrActor[effectKeys.BAD_OMEN] > 0) {
+        const badOmenLost = Math.min(
+            constants.BAD_OMEN_TURN_END_LOSS,
+            draftCurrActor[effectKeys.BAD_OMEN],
+        );
+        const pdGained = Math.floor(badOmenLost / constants.PROPHECY_GAIN_RATE);
+
         draftCurrActor = {
             ...draftCurrActor,
-            [effectKeys.BAD_OMEN]: Math.max(
-                0,
-                draftCurrActor[effectKeys.BAD_OMEN] -
-                    constants.BAD_OMEN_TURN_END_LOSS,
-            ),
+            [effectKeys.BAD_OMEN]:
+                draftCurrActor[effectKeys.BAD_OMEN] - badOmenLost,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.PROPHECY_OF_DOOM]:
+                    draftCurrActor.resources[effectKeys.PROPHECY_OF_DOOM] +
+                    pdGained,
+            },
         };
     }
 
@@ -437,6 +456,23 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
             resources: {
                 ...draftCurrActor.resources,
                 [effectKeys.RADIANCE]: 0,
+            },
+        };
+    }
+
+    // Moondust
+    if (draftCurrActor.resources[effectKeys.MOONDUST] > 0) {
+        draftCurrActor = takeDamage(
+            draftCurrActor,
+            draftCurrActor.resources[effectKeys.MOONDUST],
+            dmgTypes.TRUE,
+        );
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.MOONDUST]: 0,
             },
         };
     }

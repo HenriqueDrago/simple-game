@@ -629,14 +629,21 @@ export const AUGUR_DESCRIPTIONS = {
         name: "BAD OMEN",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. At turn end, lowers BAD OMEN by 20%.",
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. When raising BAD OMEN above 100%, gains PROPHECY OF DOOM for every 1% excess. At turn end, lowers BAD OMEN by 20% and gains PROPHECY OF DOOM for every 10% lowered.",
+    },
+
+    [effectKeys.PROPHECY_OF_DOOM]: {
+        name: "PROPHECY OF DOOM",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When this entity has MANA or PRECOGNITION, spend PROPHECY OF DOOM to consume MANA or PRECOGNITION on them.",
     },
 
     [effectKeys.RECOLLECTION]: {
         name: "RECOLLECTION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When RUNES detonate, lose 20% RECOLLECTION and raises PAST MEMORIES rank by 1 for every 5% RECOLLECTION lost.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When raising RECOLLECTION above 100%, raises PAST MEMORIES rank for every 5% excess. When RUNES detonate, lose 20% RECOLLECTION and raises PAST MEMORIES rank for every 5% RECOLLECTION lost.",
     },
 
     [effectKeys.PAST_MEMORIES]: {
@@ -649,7 +656,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "PREMONITION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE REDUCTION equal to PREMONITION on self. At turn start, lowers PREMONITION by 20%.",
+            "Capped at 100%. Raises DAMAGE REDUCTION equal to PREMONITION on self. When raising PREMONITION above 100%, gains PRECOGNITION for every 1% excess. At turn start, lowers PREMONITION by 20% and gains PRECOGNITION for every 10% lowered.",
     },
 };
 
@@ -938,7 +945,7 @@ export const STARFARER_DESCRIPTIONS = {
         name: "STARLIT DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken, then gains STARDUST equal to the amount lost this way. At turn start, converts all STARLIT DOME into DOME.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken, then gains GRAY STAR equal to the amount lost this way. At turn start, converts all STARLIT DOME into STARDUST.",
     },
 };
 
@@ -1056,7 +1063,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "MOONDUST",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using LUNAR STRIKE, consumes MOONDUST to increase the damage dealt.",
+            "When using LUNAR STRIKE, consumes MOONDUST to increase the damage dealt. At turn end, lose all MOONDUST and take TRUE DAMAGE equal to the amount lost.",
     },
 
     [effectKeys.LUNACY]: {

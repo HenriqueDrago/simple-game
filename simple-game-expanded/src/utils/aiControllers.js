@@ -181,7 +181,12 @@ export function selectElementAI(context) {
             nonAgentKey,
             agentKey,
         ) ||
-        willEntityEffectivelyDieByNextUpkeep(attackSim, nonAgentKey, agentKey)
+        willEntityEffectivelyDieByNextUpkeep(
+            attackSim,
+            nonAgentKey,
+            agentKey,
+        ) ||
+        agent.resources[effectKeys.MOONDUST] > getEntityTotalHealth(agent) * 0.5
     ) {
         return elementalKeys.SCORCH;
     }
@@ -288,7 +293,8 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         nonAgent,
         nonAgentKey,
         hasManaForSpecial:
-            getEntityTotalMana(agent) >= constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+            getEntityTotalMana(agent) >=
+            constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
     };
 
     let caller = presetAi[agent.controller].caller || simpleAI;
@@ -364,8 +370,7 @@ export function simpleAI(context) {
 - Heal if at low health
 */
 export function warlockAI(context) {
-    const { agent, agentKey, nonAgentKey, hasManaForSpecial } =
-        context;
+    const { agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
 
     const simulate = createSimulator(context);
 
@@ -411,13 +416,8 @@ export function warlockAI(context) {
 }
 
 export function bloodknightAI(context) {
-    const {
-        agent,
-        agentKey,
-        nonAgentKey,
-        nonAgent,
-        hasManaForSpecial,
-    } = context;
+    const { agent, agentKey, nonAgentKey, nonAgent, hasManaForSpecial } =
+        context;
 
     const simulate = createSimulator(context);
 
@@ -542,16 +542,24 @@ export function paladinAI(context) {
     const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
 
     // Use Special Attack if it kills
-    if (willEntityEffectivelyDieByNextUpkeep(simSpecial, nonAgentKey, agentKey)) {
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simSpecial, nonAgentKey, agentKey)
+    ) {
         return actionKeys.SPECIAL_ATTACK;
     }
 
-    if(agent.resources[effectKeys.RADIANCE] >= getEntityTotalHealth(agent) * 0.5) {
+    if (
+        agent.resources[effectKeys.RADIANCE] >=
+        getEntityTotalHealth(agent) * 0.5
+    ) {
         return actionKeys.ATTACK;
     }
 
     // If cannot use Aegis or at Max Divine Spark, use Warlock AI
-    if(!canUseAction(prev, agentKey, actionKeys.AEGIS) || agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK) {
+    if (
+        !canUseAction(prev, agentKey, actionKeys.AEGIS) ||
+        agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK
+    ) {
         return warlockAI(context);
     }
 
@@ -560,17 +568,11 @@ export function paladinAI(context) {
 }
 
 export function augurAI(context) {
-   return simpleAI(context);
+    return simpleAI(context);
 }
 
 export function shadowSorcererAI(context) {
-    const {
-        prev,
-        agent,
-        agentKey,
-        nonAgentKey,
-        hasManaForSpecial,
-    } = context;
+    const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
 
     const simulate = createSimulator(context);
 
@@ -939,7 +941,10 @@ export function lunaticAI(context) {
                 simAttack.entities[nonAgentKey],
             );
 
-            if (enemyHpStrike <= enemyHpAttack) {
+            if (
+                enemyHpStrike >= enemyHpAttack ||
+                (agent.resources[effectKeys.MOONDUST] > 0 && enemyHpAttack > 0)
+            ) {
                 return actionKeys.LUNAR_STRIKE;
             } else {
                 return actionKeys.ATTACK;
