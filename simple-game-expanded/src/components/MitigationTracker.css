@@ -46,6 +46,5 @@
 }
 
 .mitigation-amount.is-preview {
-    font-style: italic;
     opacity: 0.75;
 }

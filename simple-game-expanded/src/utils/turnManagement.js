@@ -143,6 +143,20 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
+    // Conjecture
+    if (draftTarget.resources[effectKeys.CONJECTURE] > 0) {
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftTarget.resources[effectKeys.PRECOGNITION] +
+                    draftTarget.resources[effectKeys.CONJECTURE],
+                [effectKeys.CONJECTURE]: 0,
+            },
+        };
+    }
+
     // Shadowflame
     if (
         draftTarget.resources.shadowflame > 0 &&

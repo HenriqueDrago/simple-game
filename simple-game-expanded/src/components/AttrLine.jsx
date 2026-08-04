@@ -23,54 +23,74 @@ const gettersMap = {
     def: getEntityDef,
 };
 
-function AttrLine({ attr, entityKey }) {
+function getStatClass(attr, entity) {
+    if (!entity) {
+        return "";
+    }
+
+    if (attr === "str") {
+        if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0) {
+            return "str-value-verdandi";
+        }
+        if (
+            entity[effectKeys.PAST_MEMORIES] > 0
+        ) {
+            return "str-value-past-memories";
+        }
+        if (
+            isElementActive(entity, elementalKeys.SCORCH) ||
+            entity[effectKeys.CRIMSON_CONSTELLATION] > 0
+        ) {
+            return "stat-value-str";
+        }
+        if (
+            (entity[effectKeys.CONSTELLATION] > 0 &&
+                getEntityStr(entity) > entity.attributes.str.points) ||
+            entity[effectKeys.DIVINE_SPARK] >
+                constants.DIVINE_SPARK_STR_CONVERSION
+        ) {
+            return "constellation-value-increase";
+        }
+    }
+
+    if (attr === "def") {
+        if (
+            isElementActive(entity, elementalKeys.FROST) ||
+            entity[effectKeys.AZURE_CONSTELLATION] > 0
+        ) {
+            return "stat-value-def";
+        }
+        if (
+            entity[effectKeys.CONSTELLATION] > 0 &&
+            getEntityDef(entity) > entity.attributes.def.points
+        ) {
+            return "constellation-value-increase";
+        }
+        if (
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0
+        ) {
+            return "str-value-past-memories";
+        }
+    }
+
+    return "";
+}
+
+export default function AttrLine({ attr, entityKey }) {
     const { game, handleUpdateStatsPoints } = useGame();
+    const { handleSpawnTooltip } = useUI();
 
     const entity = game.entities[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
     const battleState = game.status;
 
-    const { handleSpawnTooltip } = useUI();
-    if (entity.attributes[attr].value == null) {
-        return null;
-    }
+    const realVal = gettersMap[attr](entity);
+    const simVal = simEntity ? gettersMap[attr](simEntity) : realVal;
+    const isValChanged = simEntity && simVal !== realVal;
+    const displayVal = simEntity ? simVal : realVal;
 
-    let specialClass = "";
-    if (
-        (entity[effectKeys.CONSTELLATION] > 0 &&
-            gettersMap[attr](entity) > entity.attributes[attr].points) ||
-        (attr === "str" &&
-            entity[effectKeys.DIVINE_SPARK] >
-                constants.DIVINE_SPARK_STR_CONVERSION)
-    ) {
-        specialClass = "constellation-value-increase";
-    }
-    if (
-        attr === "str" &&
-        (isElementActive(entity, elementalKeys.SCORCH) ||
-            entity[effectKeys.CRIMSON_CONSTELLATION] > 0)
-    ) {
-        specialClass = "stat-value-str";
-    }
-    if (
-        attr === "def" &&
-        (isElementActive(entity, elementalKeys.FROST) ||
-            entity[effectKeys.AZURE_CONSTELLATION] > 0)
-    ) {
-        specialClass = "stat-value-def";
-    }
-    if (
-        attr === "str" &&
-        (entity[effectKeys.PAST_MEMORIES] > 0 ||
-            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0)
-    ) {
-        specialClass = "str-value-past-memories";
-    }
-    if (
-        attr === "str" &&
-        countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0
-    ) {
-        specialClass = "str-value-verdandi";
-    }
+    const activeEntity = simEntity || entity;
+    const specialClass = getStatClass(attr, activeEntity);
 
     const showControls =
         entity.statDistributionMode === sdmKeys.CUSTOM &&
@@ -83,16 +103,20 @@ function AttrLine({ attr, entityKey }) {
                     className="changeable-status"
                     onMouseDown={(e) => handleSpawnTooltip(e, attr)}
                 >
-                    {attr.toUpperCase() + ": " + gettersMap[attr](entity)}
+                    {`${attr.toUpperCase()}: ${displayVal}`}
                 </p>
             ) : (
                 <p
                     className="non-changeable-status"
                     onMouseDown={(e) => handleSpawnTooltip(e, attr)}
                 >
-                    {attr.toUpperCase() + ": "}
-                    <span className={specialClass}>
-                        {gettersMap[attr](entity)}
+                    {`${attr.toUpperCase()}: `}
+                    <span
+                        className={`${specialClass} ${
+                            isValChanged ? "is-preview" : ""
+                        }`}
+                    >
+                        {displayVal}
                     </span>
                 </p>
             )}
@@ -123,5 +147,3 @@ function AttrLine({ attr, entityKey }) {
         </div>
     );
 }
-
-export default AttrLine;

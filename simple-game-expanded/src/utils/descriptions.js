@@ -594,7 +594,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF URD",
         type: entryTypes.RUNES,
         description:
-            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 2% for every point of the user's DEF. While on RUNIC ARRAY: Raises the user's STR by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 3% for every point of the user's DEF. While on RUNIC ARRAY: Lowers the user's DEF by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
     },
 
     [runeKeys.VERDANDI]: {
@@ -622,7 +622,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "CONJECTURE",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. Then, gain PRECOGNITION equal to the CONJECTURE consumed this way.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. At turn start, convert all CONJECTURE into PRECOGNITION.",
     },
 
     [effectKeys.BAD_OMEN]: {

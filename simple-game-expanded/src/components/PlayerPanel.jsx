@@ -51,21 +51,21 @@ const FIXED_BARS_CONFIG = {
     },
     [effectKeys.PREMONITION]: {
         label: "Premonition",
-        maxResource: constants.MAX_PREMONITION || 100,
+        maxResource: constants.MAX_PREMONITION,
         trackStyle: {
             backgroundImage: `linear-gradient(90deg, #4c0519 0%, #881337 25%, #e11d48 50%, #881337 75%, #4c0519 100%)`,
         },
     },
     [effectKeys.RECOLLECTION]: {
         label: "Recollection",
-        maxResource: constants.MAX_RECOLLECTION || 100,
+        maxResource: constants.MAX_RECOLLECTION,
         trackStyle: {
             backgroundImage: `linear-gradient(90deg, #00838f 0%, #00f0ff 35%, #80deea 50%, #00f0ff 65%, #00838f 100%)`,
         },
     },
     [effectKeys.BAD_OMEN]: {
         label: "Bad Omen",
-        maxResource: constants.MAX_BAD_OMEN || 100,
+        maxResource: constants.MAX_BAD_OMEN,
         trackStyle: {
             backgroundImage: `linear-gradient(90deg, #3e2723 0%, #6d4c41 35%, #a1887f 50%, #6d4c41 65%, #3e2723 100%)`,
         },
@@ -109,6 +109,14 @@ const FREE_STACKS_CONFIG = {
             color: "#ff3333",
             borderColor: "#ff3333",
             backgroundColor: "rgba(255, 51, 51, 0.2)",
+        },
+    },
+    [effectKeys.PROPHECY_OF_DOOM]: {
+        label: "Prophecy of Doom",
+        style: {
+            color: "#a855f7",
+            borderColor: "#a855f7",
+            backgroundColor: "rgba(168, 85, 247, 0.2)",
         },
     },
     [effectKeys.SHADOWFLAME]: {

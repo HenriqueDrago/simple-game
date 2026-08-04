@@ -367,6 +367,10 @@ export function processEntityFragility(entity) {
         frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
     }
 
+    if (entity[effectKeys.RECOLLECTION] > 0) {
+        frail *= 1 + entity[effectKeys.RECOLLECTION] / 100;
+    }
+
     return frail;
 }
 
@@ -374,20 +378,20 @@ export function processEntityWeakness(entity) {
     let weak = 1.0;
 
     if (entity[effectKeys.SONORITY] < 0) {
-        weak *= 1 + entity[effectKeys.SONORITY] / 100;
+        weak *= 1 - entity[effectKeys.SONORITY] / 100;
     }
 
     if (entity.states[effectKeys.VISIONARY]) {
         weak *=
-            1 +
+            1 -
             countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
                 constants.SKULD_WEAK;
     }
 
     if (entity[effectKeys.BAD_OMEN] > 0) {
-        weak *= 1 + entity[effectKeys.BAD_OMEN] / 100;
+        weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
     }
-
+    
     return weak;
 }
 
@@ -463,6 +467,8 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
         1,
         Math.floor((dmgPostMults - flatDr) * drMult * frailMult),
     );
+
+    console.log(`weak: ${weakMult}, baseDmg: ${baseDmg}, dmgPostMults: ${dmgPostMults}`)
 
     // Mitigation
     let damagePostMitigation = dmgPostReduction;
@@ -1105,18 +1111,27 @@ export function getEntityDef(entity) {
         ...entity,
     };
 
+    let bonusDEF = 0;
+
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
     }
 
-    return Math.max(
-        0,
-        draftEntity.attributes.def.value +
-            (isElementActive(draftEntity, elementalKeys.FROST)
-                ? draftEntity[effectKeys.MOONLIGHT]
-                : 0) +
-            draftEntity[effectKeys.AZURE_CONSTELLATION],
-    );
+    if (draftEntity[effectKeys.AZURE_CONSTELLATION] > 0) {
+        bonusDEF += draftEntity[effectKeys.AZURE_CONSTELLATION];
+    }
+
+    if (isElementActive(draftEntity, elementalKeys.FROST)) {
+        bonusDEF += draftEntity[effectKeys.MOONLIGHT];
+    }
+
+    if (draftEntity.states[effectKeys.VISIONARY]) {
+        bonusDEF -=
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
+            3;
+    }
+
+    return Math.max(0, draftEntity.attributes.def.value + bonusDEF);
 }
 
 export function getEntityStr(entity) {
@@ -1150,8 +1165,8 @@ export function getEntityStr(entity) {
     }
 
     if (draftEntity.states[effectKeys.VISIONARY]) {
-        bonusSTR +=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
+        // bonusSTR +=
+        //     countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
         bonusSTR -=
             countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
             3;
@@ -1249,19 +1264,6 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                     resources: {
                         ...draftEntity.resources,
                         [effectKeys.RADIANCE]: currentRadiance + consumption,
-                    },
-                };
-            }
-
-            // Conjecture
-            if (isCauseDamage && currResourceKey === effectKeys.CONJECTURE) {
-                draftEntity = {
-                    ...draftEntity,
-                    resources: {
-                        ...draftEntity.resources,
-                        [effectKeys.PRECOGNITION]:
-                            draftEntity.resources[effectKeys.PRECOGNITION] +
-                            consumption,
                     },
                 };
             }
@@ -2194,8 +2196,9 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
                 totalRec - constants.MAX_RECOLLECTION,
             );
 
-            const pastMemoriesGain =
-                excessRec / constants.PAST_MEMORIES_GAIN_RATE;
+            const pastMemoriesGain = Math.floor(
+                excessRec / constants.PAST_MEMORIES_GAIN_RATE,
+            );
 
             draftTarget = {
                 ...draftTarget,
@@ -2379,10 +2382,13 @@ export function processPDoom(entity) {
         ...draftEntity,
         resources: {
             ...draftEntity.resources,
-            [effectKeys.PROPHECY_OF_DOOM]: draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] - consumedPrecog,
-            [effectKeys.PRECOGNITION]: draftEntity.resources[effectKeys.PRECOGNITION] - consumedPrecog,
-        }
-    }
+            [effectKeys.PROPHECY_OF_DOOM]:
+                draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] -
+                consumedPrecog,
+            [effectKeys.PRECOGNITION]:
+                draftEntity.resources[effectKeys.PRECOGNITION] - consumedPrecog,
+        },
+    };
 
     // Consume Mana
     const consumedMana = Math.min(
@@ -2393,9 +2399,11 @@ export function processPDoom(entity) {
         ...draftEntity,
         resources: {
             ...draftEntity.resources,
-            [effectKeys.PROPHECY_OF_DOOM]: draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] - consumedMana,
-        }
-    }
+            [effectKeys.PROPHECY_OF_DOOM]:
+                draftEntity.resources[effectKeys.PROPHECY_OF_DOOM] -
+                consumedMana,
+        },
+    };
 
     draftEntity = loseMana(draftEntity, consumedMana);
 

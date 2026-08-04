@@ -123,9 +123,10 @@ const CURSE_EMPTY_RUNE_DMG = 5;
 
 // Urd
 const URD_HEALTH_REGEN = 0.3;
-const URD_DEF_REC = 2;
+const URD_DEF_REC = 3;
 const RECOLLECTION_LOSE = 20;
 const PAST_MEMORIES_GAIN_RATE = 5;
+const URD_STR_PAIN = 2;
 
 // Skuld
 const SKULD_WEAK = 0.3;
@@ -141,6 +142,7 @@ const BAD_OMEN_TURN_END_LOSS = 20;
 const PROPHECY_GAIN_RATE = 10;
 
 export const constants = {
+    URD_STR_PAIN,
     CHALK_EXTRA_DMG,
     PRECOG_GAIN_RATE,
     PROPHECY_GAIN_RATE,

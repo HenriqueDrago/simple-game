@@ -491,7 +491,7 @@ export default function GameProvider({ children }) {
         setGame((prev) => {
             let sim = processActionUse(prev, agentKey, nonAgentKey, action);
 
-            if(prev?.entities?.[agentKey]?.states?.[effectKeys.STARGAZER]) {
+            if (prev?.entities?.[agentKey]?.states?.[effectKeys.STARGAZER]) {
                 sim = simulateFullStarfall(sim, agentKey, nonAgentKey);
             }
 
@@ -507,6 +507,15 @@ export default function GameProvider({ children }) {
             return {
                 ...prev,
                 simGame: null,
+            };
+        });
+    }
+
+    function handlePause() {
+        setGame((prev) => {
+            return {
+                ...prev,
+                paused: !prev?.paused,
             };
         });
     }
@@ -688,7 +697,13 @@ export default function GameProvider({ children }) {
                 }
             };
         }
-    }, [game.status, game.roundIndex, game.playerQueue, game.starQueue]);
+    }, [
+        game.status,
+        game.roundIndex,
+        game.playerQueue,
+        game.starQueue,
+        game.paused,
+    ]);
 
     // AI turn
     useEffect(() => {
@@ -981,6 +996,27 @@ export default function GameProvider({ children }) {
         }
     }, [game]);
 
+    // Pause shortcut
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (
+                (e.code === "Space" || e.key === " ") &&
+                game.status !== turnStatus.SETUP
+            ) {
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        paused: !prev?.paused,
+                    };
+                });
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [game.status]);
+
     return (
         <GameContext.Provider
             value={{
@@ -1001,6 +1037,7 @@ export default function GameProvider({ children }) {
                 handleStart,
                 handleUpdateStatsPoints,
                 handleWhoStartsChange,
+                handlePause,
             }}
         >
             {children}
