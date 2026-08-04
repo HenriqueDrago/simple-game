@@ -378,7 +378,7 @@ export function processEntityWeakness(entity) {
     let weak = 1.0;
 
     if (entity[effectKeys.SONORITY] < 0) {
-        weak *= 1 - entity[effectKeys.SONORITY] / 100;
+        weak *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
     if (entity.states[effectKeys.VISIONARY]) {

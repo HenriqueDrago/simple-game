@@ -825,6 +825,7 @@ export function processMoonPhase(prev) {
 }
 
 export function processActionUse(prev, agentKey, nonAgentKey, action) {
+    // Cancel action if it cannot be used
     if (!canUseAction(prev, agentKey, action)) {
         return buildHistory(prev, eventKeys.FAILED_ACTION, {
             player: agentKey,
@@ -844,7 +845,7 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
         prev,
     };
 
-    const sim = simulators[action];
+    const sim = simulators?.[action];
     const simulationResult = sim ? sim(context) : prev;
 
     // Process effects on Action Type

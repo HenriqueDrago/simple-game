@@ -1,5 +1,4 @@
 import { constants, presetAi } from "./constants.js";
-import { simulators } from "./simulators.js";
 import {
     canUseAction,
     getEntityDef,
@@ -8,25 +7,21 @@ import {
     getEntityTotalMana,
     getEntityUsableStars,
     isEntityDead,
-    processActionTypeUsed,
     restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
 import { actionKeys, effectKeys, elementalKeys, moonKeys } from "./enums.js";
-import { commitTurn, processUpkeep } from "./turnManagement.js";
+import {
+    commitTurn,
+    processActionUse,
+    processUpkeep,
+} from "./turnManagement.js";
 
 // Auxiliary Functions
-function createSimulator({ agent, agentKey, nonAgent, nonAgentKey, prev }) {
+function createSimulator({ agentKey, nonAgentKey, prev }) {
     return (actionKey, overrides = {}) =>
-        processActionTypeUsed(
-            simulators[actionKey]({
-                agent,
-                agentKey,
-                nonAgent,
-                nonAgentKey,
-                prev,
-                ...overrides,
-            }),
+        processActionUse(
+            { ...prev, ...overrides },
             agentKey,
             nonAgentKey,
             actionKey,
@@ -686,7 +681,7 @@ export function shadowSorcererAI(context) {
 }
 
 export function cyborgAI(context) {
-    const { agent, agentKey, nonAgentKey } = context;
+    const { agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
     const simulate = createSimulator(context);
 
     // Extract stats and states
@@ -701,6 +696,30 @@ export function cyborgAI(context) {
     // 1. Thermal Overload -> Meltdown
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         return actionKeys.MELTDOWN;
+    }
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (hasManaForSpecial) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
     }
 
     // 2. !venting/weaponsdeployed/thermaloverload/deployment -> Deploy
@@ -736,8 +755,6 @@ export function cyborgAI(context) {
         // 5.1 check if meltdown kills the opponent -> laser
         // Passes post-laser simulation states into the meltdown simulator
         const simMeltdown = simulate(actionKeys.MELTDOWN, {
-            agent: simLaser.entities[agentKey],
-            nonAgent: simLaser.entities[nonAgentKey],
             prev: simLaser,
         });
 
