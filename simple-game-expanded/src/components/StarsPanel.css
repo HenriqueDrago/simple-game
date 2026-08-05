@@ -1,26 +1,20 @@
 .star-panel-container {
     display: flex;
-    flex-direction: row;
-    gap: 12px;
-    
-    /* This forces both boxes to sit flush at the bottom */
-    align-items: flex-end; 
-}
-
-/* Group the shared background and border styles together */
-.star-panel-main-container,
-.star-panel-side-container {
-    display: flex;
     flex-direction: column;
-    padding: 12px;
-
-    border: 2px solid white;
-    background: rgba(10, 10, 15, 0.6);
-    transition: all 0.2s ease;
+    align-self: stretch;
 }
 
 .star-panel-main-container {
-    gap: 12px; /* Keeps the gap between the top header and the stars */
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    height: 100%;
+    box-sizing: border-box;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(10, 10, 15, 0.4);
+    transition: all 0.2s ease;
+    gap: 12px;
 }
 
 .white-and-gray-container {

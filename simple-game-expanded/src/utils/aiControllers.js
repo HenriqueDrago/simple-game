@@ -154,12 +154,17 @@ export function selectElementAI(context) {
             [effectKeys.ELEMENTAL_CRYSTALS]:
                 translateElementIntoCrystals(element),
         };
+        const tempPrev = {
+            ...prev,
+            entities: {
+                ...prev.entities,
+                [agentKey]: tempAgent,
+            },
+        };
         return createSimulator({
-            agent: tempAgent,
             agentKey,
-            nonAgent,
             nonAgentKey,
-            prev,
+            prev: tempPrev,
         })(actionKey);
     };
 
@@ -248,6 +253,12 @@ export function selectElementAI(context) {
     if (chalkDamage >= getEntityMaxHealth(nonAgent) * 0.5) {
         return elementalKeys.ALBEDO;
     }
+
+    console.log(chalkSim);
+    console.log(chalkDamage);
+    console.log(getEntityMaxHealth(nonAgent) * 0.5);
+    console.log(getEntityMaxHealth(nonAgent));
+    console.log(getEntityMaxHealth(chalkSim.entities[nonAgentKey]));
 
     // Default elements
     const moon = agent[effectKeys.MIRRORED_MOON];

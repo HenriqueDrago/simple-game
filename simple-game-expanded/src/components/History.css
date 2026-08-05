@@ -5,8 +5,8 @@
 /* --- CLOSED STATE (Button Top-Right Corner) --- */
 .history-button-container {
     position: fixed;
-    right: 20px;
-    top: 20px;
+    left: 20px;
+    bottom: 20px;
     z-index: 1000;
     transition: opacity 0.3s ease;
 }
@@ -44,7 +44,7 @@
 /* --- OPEN STATE (Fixed Right-Side Sidebar Panel) --- */
 .history-list-container {
     position: fixed;
-    right: 20px;
+    left: 20px;
     top: 20px;
     bottom: 20px;
     width: 320px; 

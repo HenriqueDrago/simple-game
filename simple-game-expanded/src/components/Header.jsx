@@ -1,52 +1,129 @@
 import "./Header.css";
-import { turnStatus } from "../utils/enums";
-
+import Switch from "./Switch";
+import { RotateCcw } from "lucide-react";
+import { turnStatus, whoStartsKeys } from "../utils/enums";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
 function Header() {
-    const { game, handleStart, handleResetGame, handlePause } = useGame();
+    const {
+        game,
+        handleStart,
+        handleResetGame,
+        handlePause,
+        handleWhoStartsChange,
+        handleProgressToggle,
+    } = useGame();
     const { setUIElements } = useUI();
 
     const battleState = game.status;
+    const isSetup = battleState === turnStatus.SETUP;
 
     let announcement = null;
     if (battleState === turnStatus.VICTORY) {
-        announcement = "Player One Wins!";
+        announcement = "P1 WINS!";
     } else if (battleState === turnStatus.DEFEAT) {
-        announcement = "Player Two Wins!";
+        announcement = "P2 WINS!";
     } else if (battleState === turnStatus.DRAW) {
-        announcement = "Draw!";
-    } else if (battleState !== turnStatus.SETUP) {
-        announcement = `Round ${game.roundCount}`;
+        announcement = "DRAW!";
+    } else if (!isSetup) {
+        announcement = `ROUND ${game.roundCount}`;
     }
 
     return (
-        <div className="header-container">
-            <div className="header-announcement-container">
-                <h1 className="main-header-text">Simple Game</h1>
-                {announcement && (
-                    <h2 className="sub-announcer-text">{announcement}</h2>
+        <header className="header-scoreboard-bar">
+            {/* Left Section: Subdued Title */}
+            <div className="header-left">
+                <span className="main-title">Simple Game</span>
+            </div>
+
+            {/* Center Section: Config Options during Setup, Scoreboard Badge during Battle */}
+            <div className="header-center">
+                {isSetup ? (
+                    <div className="header-settings-container">
+                        <div
+                            className={`sharp-setting-box ${
+                                game.progressMode ? "disabled" : ""
+                            }`}
+                        >
+                            <label htmlFor="who-starts-select">
+                                Who goes first:
+                            </label>
+                            <select
+                                id="who-starts-select"
+                                className="sharp-select"
+                                value={game.whoStarts}
+                                onChange={(e) =>
+                                    handleWhoStartsChange(e.target.value)
+                                }
+                            >
+                                <option value={whoStartsKeys.PLAYER_ONE}>
+                                    Player One
+                                </option>
+                                <option value={whoStartsKeys.PLAYER_TWO}>
+                                    Player Two
+                                </option>
+                                <option value={whoStartsKeys.RANDOM}>
+                                    Random
+                                </option>
+                            </select>
+                        </div>
+
+                        <div className="sharp-setting-box">
+                            <label>Progression Mode:</label>
+                            <div className="switch-help-container">
+                                <Switch
+                                    checked={game.progressMode}
+                                    handleToggle={handleProgressToggle}
+                                    disabled={game.status !== turnStatus.SETUP}
+                                />
+                                <span
+                                    className="hover-help"
+                                    title={`Progression Mode: Disables most customisation features, enemies and actions. In this mode, the enemy always starts the battle and always has the "best" stats. Furthermore, to access new enemies and see their glossary entries you must first defeat the preceding one. Some actions are locked until you defeat the corresponding enemy.`}
+                                >
+                                    [?]
+                                </span>
+                            </div>
+                            <button
+                                className="sharp-btn-icon"
+                                onClick={() => {
+                                    setUIElements((prev) => {
+                                        return {
+                                            ...prev,
+                                            resetModal: true,
+                                        };
+                                    });
+                                }}
+                                title={"Reset Progression Data"}
+                            >
+                                <RotateCcw size={16} strokeWidth={2.5} />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    announcement && (
+                        <div className="scoreboard-badge">
+                            <span>{announcement}</span>
+                        </div>
+                    )
                 )}
             </div>
 
-            <div className="header-button-container">
-                {battleState === turnStatus.SETUP ? (
-                    <button className="sharp-btn" onClick={handleStart}>
+            {/* Right Section: Utility Controls */}
+            <div className="header-right">
+                {isSetup ? (
+                    <button className="sharp-btn-header" onClick={handleStart}>
                         Start
                     </button>
                 ) : (
                     <button
-                        className="sharp-btn"
+                        className="sharp-btn-header"
                         onClick={() => {
-                            setUIElements((prev) => {
-                                return {
-                                    ...prev,
-                                    history: false,
-                                    continueModal: false,
-                                };
-                            });
-
+                            setUIElements((prev) => ({
+                                ...prev,
+                                history: false,
+                                continueModal: false,
+                            }));
                             handleResetGame();
                         }}
                     >
@@ -54,45 +131,25 @@ function Header() {
                     </button>
                 )}
 
-                {battleState !== turnStatus.SETUP && (
-                    <button
-                        className="sharp-btn"
-                        onClick={() => {
-                            handlePause()
-                        }}
-                    >
+                {!isSetup && (
+                    <button className="sharp-btn-header" onClick={handlePause}>
                         {game?.paused ? "Unpause" : "Pause"}
                     </button>
                 )}
 
                 <button
-                    className="sharp-btn"
+                    className="sharp-btn-header"
                     onClick={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                glossary: true,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            glossary: true,
+                        }));
                     }}
                 >
                     Glossary
                 </button>
-                {/* <button
-                    className={`sharp-btn ${battleState === turnStatus.SETUP ? "disabled" : ""}`}
-                    onClick={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                timeline: !prev.timeline,
-                            };
-                        });
-                    }}
-                >
-                    Timeline
-                </button> */}
             </div>
-        </div>
+        </header>
     );
 }
 

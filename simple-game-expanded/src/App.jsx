@@ -47,7 +47,6 @@ function App() {
 
     return (
         <div className="app-container">
-            <Timeline />
             <History />
 
             {tooltipStack.length > 0 && (

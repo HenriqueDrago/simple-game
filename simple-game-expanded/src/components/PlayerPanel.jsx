@@ -22,9 +22,10 @@ import RunicArray from "./RunicArray";
 import SelenianTracker from "./SelenianTracker";
 import SonorityCounter from "./SonorityCounter";
 import StateBadges from "./StateBadges";
+import StarsPanel from "./StarsPanel";
+import RankedCounter from "./RankedCounter";
 
 import "./PlayerPanel.css";
-import RankedCounter from "./RankedCounter";
 
 /* Resource Configuration Maps */
 const FIXED_BARS_CONFIG = {
@@ -218,6 +219,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
     const simEntity = game?.simGame?.entities?.[entityKey];
     const states = entity.states;
 
+    const isStargazer = states?.[effectKeys.STARGAZER];
     const showWarning =
         canUseCombatInteractions(game, entityKey) && isEntityDead(entity);
 
@@ -279,6 +281,10 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
             <ControlPanel entityKey={entityKey} />
 
             <div className="player-panel-secondary-container">
+                {isStargazer && (
+                    <StarsPanel entityKey={entityKey} reversed={reversed} />
+                )}
+
                 {showLeftPanel && (
                     <div className="player-panel-left-wrapper">
                         <div className="player-panel-left">

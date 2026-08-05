@@ -43,7 +43,6 @@ import {
 } from "../utils/turnManagement";
 import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
-import { simulateFullStarfall } from "../utils/starfall";
 
 // Auxiliary Functions
 function resetGameState(prev) {
@@ -123,10 +122,7 @@ export default function GameProvider({ children }) {
                 ? processSingularity(processedAction, agentKey, action)
                 : processPlan(processedAction, action);
 
-            return buildHistory(newGameState, eventKeys.USE_ACTION, {
-                player: agentKey,
-                action: action,
-            });
+            return newGameState;
         });
     }
 
@@ -881,11 +877,6 @@ export default function GameProvider({ children }) {
                     newGame = isSingularity
                         ? processSingularity(newGame, targetKey, action)
                         : processPlan(newGame, action);
-
-                    newGame = buildHistory(newGame, eventKeys.USE_ACTION, {
-                        player: targetKey,
-                        action: action,
-                    });
 
                     return newGame;
                 });
