@@ -4,6 +4,7 @@ import {
     distributePoints,
     getEntityElement,
     isElementActive,
+    processDeathCheck,
     processSilverBlood,
     resetPlayerEntity,
     translateElementIntoCrystals,
@@ -489,11 +490,11 @@ export default function GameProvider({ children }) {
 
     function handleCreateSimulatedGame(action, agentKey, nonAgentKey) {
         setGame((prev) => {
-            let sim = processActionUse(prev, agentKey, nonAgentKey, action);
-
-            if (prev?.entities?.[agentKey]?.states?.[effectKeys.STARGAZER]) {
-                sim = simulateFullStarfall(sim, agentKey, nonAgentKey);
-            }
+            let sim = processDeathCheck(
+                buildRoundQueue(
+                    processActionUse(prev, agentKey, nonAgentKey, action),
+                ),
+            );
 
             return {
                 ...prev,

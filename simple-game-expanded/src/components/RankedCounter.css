@@ -6,7 +6,6 @@
     border-radius: 4px;
     border: 1px solid gray;
     margin: 4px 0;
-    cursor: pointer;
     transition: opacity 0.2s ease, filter 0.2s ease;
 }
 

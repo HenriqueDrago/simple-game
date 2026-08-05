@@ -181,11 +181,7 @@ function ActionPanel() {
                                     );
                                 }}
                                 onMouseLeave={() => {
-                                    handleCreateSimulatedGame(
-                                        null,
-                                        currEntityKey,
-                                        targetEntityKey,
-                                    );
+                                    handleClearSimulation();
                                 }}
                                 disabled={action.disabled}
                                 className={action.specialClass || ""}

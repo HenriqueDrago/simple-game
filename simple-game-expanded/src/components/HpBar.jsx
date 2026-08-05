@@ -7,7 +7,12 @@ import MitigationTracker from "./MitigationTracker";
 function HpBar({ entity, simEntity }) {
     const { handleSpawnTooltip } = useUI();
 
-    const maxHealth = getEntityMaxHealth(entity);
+    const baseMaxHp = getEntityMaxHealth(entity);
+    const simMaxHp = simEntity ? getEntityMaxHealth(simEntity) : baseMaxHp;
+    const isMaxHpSimulating = simEntity && simMaxHp !== baseMaxHp;
+
+    const displayMaxHp = isMaxHpSimulating ? simMaxHp : baseMaxHp;
+    const maxHealth = displayMaxHp;
 
     const baseHp = entity.currHp;
     const silverHp = entity.resources?.[effectKeys.SILVER_BLOOD] ?? 0;
@@ -17,50 +22,41 @@ function HpBar({ entity, simEntity }) {
         ? (simEntity.resources?.[effectKeys.SILVER_BLOOD] ?? 0)
         : silverHp;
 
-    const isSimulating =
+    const isHpSimulating =
         simEntity && (simHp !== baseHp || simSilver !== silverHp);
 
-    const displayHp = isSimulating ? simHp : baseHp;
-    const displaySilver = isSimulating ? simSilver : silverHp;
+    const displayHp = isHpSimulating ? simHp : baseHp;
+    const displaySilver = isHpSimulating ? simSilver : silverHp;
     const displayHasSilver = displaySilver > 0;
 
     const silverTimes =
         maxHealth > 0 ? Math.floor(displaySilver / maxHealth) : 0;
 
-    const solidHp = Math.min(baseHp, simHp);
-    const hpLossAmount = Math.max(0, baseHp - simHp);
-    const hpGainAmount = Math.max(0, simHp - baseHp);
-
     const hpPercentage =
-        maxHealth > 0 ? Math.min(100, (solidHp / maxHealth) * 100) : 0;
-
-    const hpLossLeft = maxHealth > 0 ? (solidHp / maxHealth) * 100 : 0;
-    const hpLossWidth =
-        maxHealth > 0 ? Math.min(100, (hpLossAmount / maxHealth) * 100) : 0;
-
-    const hpGainLeft = maxHealth > 0 ? (baseHp / maxHealth) * 100 : 0;
+        maxHealth > 0 ? Math.min(100, (baseHp / maxHealth) * 100) : 0;
+    const hpLossRatio =
+        baseHp > 0 ? Math.max(0, (baseHp - simHp) / baseHp) : 0;
+    const hpGainLeft = hpPercentage;
     const hpGainWidth =
-        maxHealth > 0 ? Math.min(100, (hpGainAmount / maxHealth) * 100) : 0;
-
-    const solidSilver = Math.min(silverHp, simSilver);
-    const silverLossAmount = Math.max(0, silverHp - simSilver);
-    const silverGainAmount = Math.max(0, simSilver - silverHp);
+        maxHealth > 0
+            ? Math.min(100, (Math.max(0, simHp - baseHp) / maxHealth) * 100)
+            : 0;
 
     const silverPercentage =
-        maxHealth > 0 ? Math.min(100, (solidSilver / maxHealth) * 100) : 0;
-
-    const silverLossLeft =
-        maxHealth > 0 ? (solidSilver / maxHealth) * 100 : 0;
-    const silverLossWidth =
-        maxHealth > 0
-            ? Math.min(100, (silverLossAmount / maxHealth) * 100)
-            : 0;
-
-    const silverGainLeft = maxHealth > 0 ? (silverHp / maxHealth) * 100 : 0;
+        maxHealth > 0 ? Math.min(100, (silverHp / maxHealth) * 100) : 0;
+    const silverLossRatio =
+        silverHp > 0 ? Math.max(0, (silverHp - simSilver) / silverHp) : 0;
+    const silverGainLeft = silverPercentage;
     const silverGainWidth =
         maxHealth > 0
-            ? Math.min(100, (silverGainAmount / maxHealth) * 100)
+            ? Math.min(
+                  100,
+                  (Math.max(0, simSilver - silverHp) / maxHealth) * 100,
+              )
             : 0;
+
+    const activeEntity = isMaxHpSimulating ? simEntity : entity;
+    const isNatureActive = isElementActive(activeEntity, elementalKeys.NATURE);
 
     return (
         <div
@@ -77,7 +73,7 @@ function HpBar({ entity, simEntity }) {
                 <div className="hp-values">
                     <span
                         className={`hp-value-display ${
-                            isSimulating ? "is-preview" : ""
+                            isHpSimulating ? "is-preview" : ""
                         }`}
                     >
                         {displayHasSilver ? (
@@ -90,13 +86,11 @@ function HpBar({ entity, simEntity }) {
                     </span>
                     <span> / </span>
                     <span
-                        className={
-                            isElementActive(entity, elementalKeys.NATURE)
-                                ? "label-nature"
-                                : ""
-                        }
+                        className={`${
+                            isNatureActive ? "label-nature" : ""
+                        } ${isMaxHpSimulating ? "is-preview" : ""}`.trim()}
                     >
-                        {maxHealth}
+                        {displayMaxHp}
                     </span>
                 </div>
             </div>
@@ -106,17 +100,17 @@ function HpBar({ entity, simEntity }) {
                     style={{
                         width: `${hpPercentage}%`,
                     }}
-                />
+                >
+                    {hpLossRatio > 0 && (
+                        <div
+                            className="preview-chunk hp-loss"
+                            style={{
+                                width: `${hpLossRatio * 100}%`,
+                            }}
+                        />
+                    )}
+                </div>
 
-                {hpLossWidth > 0 && (
-                    <div
-                        className="preview-chunk hp-loss"
-                        style={{
-                            left: `${hpLossLeft}%`,
-                            width: `${hpLossWidth}%`,
-                        }}
-                    />
-                )}
                 {hpGainWidth > 0 && (
                     <div
                         className="preview-chunk hp-gain"
@@ -133,18 +127,18 @@ function HpBar({ entity, simEntity }) {
                         style={{
                             width: `${silverPercentage}%`,
                         }}
-                    />
+                    >
+                        {silverLossRatio > 0 && (
+                            <div
+                                className="preview-chunk silver-loss"
+                                style={{
+                                    width: `${silverLossRatio * 100}%`,
+                                }}
+                            />
+                        )}
+                    </div>
                 )}
 
-                {silverLossWidth > 0 && (
-                    <div
-                        className="preview-chunk silver-loss"
-                        style={{
-                            left: `${silverLossLeft}%`,
-                            width: `${silverLossWidth}%`,
-                        }}
-                    />
-                )}
                 {silverGainWidth > 0 && (
                     <div
                         className="preview-chunk silver-gain"

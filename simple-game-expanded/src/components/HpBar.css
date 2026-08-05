@@ -37,7 +37,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-.hp-value-display.is-preview {
+.is-preview {
     opacity: 0.75;
 }
 
@@ -87,21 +87,33 @@
 }
 
 .preview-chunk.hp-loss {
-    background-color: rgba(180, 0, 0, 0.5);
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65);
+    transition: width 0.2s ease-out;
     z-index: 2;
 }
 
 .preview-chunk.hp-gain {
     background-color: rgba(255, 255, 255, 0.4);
     z-index: 2;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
 .preview-chunk.silver-loss {
-    background-color: rgba(120, 130, 140, 0.5);
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65);
+    transition: width 0.2s ease-out;
     z-index: 4;
 }
 
 .preview-chunk.silver-gain {
     background-color: rgba(255, 255, 255, 0.4);
     z-index: 4;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
 }

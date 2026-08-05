@@ -42,11 +42,11 @@ const FIXED_BARS_CONFIG = {
             backgroundImage: `linear-gradient(90deg, #311b92 0%, #512da8 25%, #673ab7 50%, #512da8 75%, #311b92 100%)`,
         },
     },
-    [effectKeys.STARBLIGHT]: {
-        label: "Starblight",
-        maxResource: constants.MAX_STARBLIGHT,
+    [effectKeys.ACCRETION]: {
+        label: "Accretion",
+        maxResource: constants.MAX_ACCRETION,
         trackStyle: {
-            backgroundImage: `linear-gradient(90deg, #9aa4b0 0%, #c2c9d2 35%, #e6eaf0 50%, #c2c9d2 65%, #9aa4b0 100%)`,
+            backgroundImage: `linear-gradient(90deg, #3e2723 0%, #d84315 35%, #ffb300 50%, #d84315 65%, #3e2723 100%)`,
         },
     },
     [effectKeys.PREMONITION]: {
@@ -98,6 +98,15 @@ const RANKED_COUNTERS_CONFIG = {
             borderColor: "#80deea",
             backgroundColor: "rgba(0, 240, 255, 0.15)",
             boxShadow: "inset 0 0 8px rgba(0, 240, 255, 0.3)",
+        },
+    },
+    [effectKeys.STARBLIGHT]: {
+        label: "STARBLIGHT",
+        style: {
+            color: "#ea80fc",
+            borderColor: "#e040fb",
+            backgroundColor: "rgba(224, 64, 251, 0.15)",
+            boxShadow: "inset 0 0 8px rgba(234, 128, 252, 0.3)",
         },
     },
 };

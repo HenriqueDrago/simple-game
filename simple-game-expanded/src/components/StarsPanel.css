@@ -38,6 +38,16 @@
     gap: 6px;
 }
 
+.special-star span {
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.2s ease;
+}
+
+.special-star span.is-preview {
+    opacity: 0.75;
+}
+
 .colored-star-container {
     display: flex;
     flex-direction: column;

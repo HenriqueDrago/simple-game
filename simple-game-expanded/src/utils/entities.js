@@ -186,11 +186,11 @@ export function createBaseEntity() {
         [effectKeys.DYNAMO]: 0,
         [effectKeys.OVERHEAT]: 0,
         [effectKeys.LUNACY]: 0,
-        [effectKeys.STARBLIGHT]: 0,
         [effectKeys.GRAVITATION]: 0,
         [effectKeys.BAD_OMEN]: 0,
         [effectKeys.RECOLLECTION]: 0,
         [effectKeys.PREMONITION]: 0,
+        [effectKeys.ACCRETION]: 0,
 
         // ranked resources
         [effectKeys.MANA_BLEED]: 0,
@@ -199,6 +199,7 @@ export function createBaseEntity() {
         [effectKeys.AZURE_CONSTELLATION]: 0,
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
         [effectKeys.PAST_MEMORIES]: 0,
+        [effectKeys.STARBLIGHT]: 0,
 
         // alternate stats
         [effectKeys.REVELATION]: 0,
@@ -254,6 +255,7 @@ export function createBaseEntity() {
             [effectKeys.PRISMATIC]: false,
             [effectKeys.MOON_DEW]: false,
             [effectKeys.VISIONARY]: false,
+            [effectKeys.EVENT_HORIZON]: false,
 
             // Shadowflame
             [effectKeys.DARK_EMBRACE]: false,
@@ -341,8 +343,8 @@ export function processEntityDamageBonus(entity) {
     if (entity[effectKeys.GRAVITATION] > 0) {
         dmgBonus *= 1 + entity[effectKeys.GRAVITATION] / 100;
     }
-    if (entity[effectKeys.STARBLIGHT] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.STARBLIGHT] / 100;
+    if (entity[effectKeys.ACCRETION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.ACCRETION] / 100;
     }
     if (entity[effectKeys.SONORITY] > 0) {
         dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
@@ -391,7 +393,7 @@ export function processEntityWeakness(entity) {
     if (entity[effectKeys.BAD_OMEN] > 0) {
         weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
     }
-    
+
     return weak;
 }
 
@@ -420,8 +422,11 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
 
     const additionalDmg =
         dmgType === dmgTypes.PHYSICAL
-            ? draftAttacker.resources[effectKeys.BLOOD_SACRIFICE]
-            : 0;
+            ? draftAttacker.resources[effectKeys.BLOOD_SACRIFICE] +
+              draftAttacker[effectKeys.STARBLIGHT]
+            : dmgType === dmgTypes.PIERCING
+              ? draftAttacker[effectKeys.STARBLIGHT]
+              : 0;
 
     // Flat reduction
     const effectiveDef =
@@ -468,7 +473,9 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
         Math.floor((dmgPostMults - flatDr) * drMult * frailMult),
     );
 
-    console.log(`weak: ${weakMult}, baseDmg: ${baseDmg}, dmgPostMults: ${dmgPostMults}`)
+    console.log(
+        `weak: ${weakMult}, baseDmg: ${baseDmg}, dmgPostMults: ${dmgPostMults}`,
+    );
 
     // Mitigation
     let damagePostMitigation = dmgPostReduction;
@@ -1040,6 +1047,7 @@ export function processEntityDeathStates(entity) {
     draftEntity = processHealth(draftEntity);
     draftEntity = processPDoom(draftEntity);
     draftEntity = processPrecognition(draftEntity);
+    draftEntity = processGravitaton(draftEntity);
 
     return draftEntity;
 }
@@ -1127,8 +1135,7 @@ export function getEntityDef(entity) {
 
     if (draftEntity.states[effectKeys.VISIONARY]) {
         bonusDEF -=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
-            3;
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
     }
 
     return Math.max(0, draftEntity.attributes.def.value + bonusDEF);
@@ -1176,13 +1183,11 @@ export function getEntityStr(entity) {
 }
 
 export function getEntityMaxHealth(entity) {
-    const starblightMult = 1 - entity[effectKeys.STARBLIGHT] / 100;
     return Math.ceil(
-        (entity[effectKeys.MAX_HEALTH] +
+        entity[effectKeys.MAX_HEALTH] +
             (isElementActive(entity, elementalKeys.NATURE)
                 ? entity[effectKeys.MOONLIGHT]
-                : 0)) *
-            starblightMult,
+                : 0),
     );
 }
 
@@ -2406,6 +2411,25 @@ export function processPDoom(entity) {
     };
 
     draftEntity = loseMana(draftEntity, consumedMana);
+
+    return draftEntity;
+}
+
+export function processGravitaton(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    if (entity[effectKeys.GRAVITATION] >= constants.MAX_GRAVITATION) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.GRAVITATION]: 0,
+            states: {
+                ...draftEntity.states,
+                [effectKeys.EVENT_HORIZON]: true,
+            },
+        };
+    }
 
     return draftEntity;
 }

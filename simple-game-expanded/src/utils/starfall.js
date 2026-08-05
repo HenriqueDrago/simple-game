@@ -1,9 +1,5 @@
 import { coloredStars, constants } from "./constants";
-import {
-    consumeResources,
-    restoreResources,
-    takeDamage,
-} from "./entities";
+import { consumeResources, restoreResources, takeDamage } from "./entities";
 import { dmgTypes, effectKeys } from "./enums";
 
 export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
@@ -20,17 +16,16 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
     let augmentedStars = 0;
     let normalStars = totalStars;
     if (starKey !== effectKeys.VIOLET_STAR) {
-
-        augmentedStars = 
-
-            Math.min(totalStars, draftMaster.stars[effectKeys.VIOLET_STAR]);
+        augmentedStars = Math.min(
+            totalStars,
+            draftMaster.stars[effectKeys.VIOLET_STAR],
+        );
 
         normalStars = totalStars - augmentedStars;
 
         // Augment Logic
         const newViolet =
-            draftMaster.stars[effectKeys.VIOLET_STAR] -
-             augmentedStars;
+            draftMaster.stars[effectKeys.VIOLET_STAR] - augmentedStars;
 
         // Convert all into White Star
         draftMaster = {
@@ -141,7 +136,7 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
             ...prev.entities,
             [masterkey]: draftMaster,
             [nonMasterKey]: draftNonMaster,
-        }
+        },
     };
 }
 
@@ -173,11 +168,7 @@ export function processRedStar(
     }
 
     if (normalStars > 0) {
-        draftMaster = takeDamage(
-            draftMaster,
-            normalStars,
-            dmgTypes.PHYSICAL,
-        );
+        draftMaster = takeDamage(draftMaster, normalStars, dmgTypes.PHYSICAL);
 
         draftNonMaster = takeDamage(
             draftNonMaster,
@@ -289,10 +280,7 @@ export function processGreenStar(
     };
 
     // Restores resources
-    draftMaster = restoreResources(
-        draftMaster,
-        normalStars + augmentedStars,
-    );
+    draftMaster = restoreResources(draftMaster, normalStars + augmentedStars);
 
     // lose normal stars used
     draftMaster = {
@@ -334,9 +322,11 @@ export function processBlueStar(
         },
         stars: {
             ...draftMaster.stars,
-            [effectKeys.WHITE_STAR]: draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
-            [effectKeys.GRAY_STAR]: draftMaster.stars[effectKeys.GRAY_STAR] + normalStars,
-        }
+            [effectKeys.WHITE_STAR]:
+                draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
+            [effectKeys.GRAY_STAR]:
+                draftMaster.stars[effectKeys.GRAY_STAR] + normalStars,
+        },
     };
 
     return {
@@ -364,9 +354,13 @@ export function processYellowStar(
         totalRaise,
         constants.MAX_GRAVITATION - draftMaster[effectKeys.GRAVITATION],
     );
-    const starblightRaised = Math.min(
+    const accretionRaised = Math.min(
         totalRaise - gravRaised,
-        constants.MAX_STARBLIGHT - draftMaster[effectKeys.STARBLIGHT],
+        constants.MAX_ACCRETION - draftMaster[effectKeys.ACCRETION],
+    );
+    const starblightRaised = Math.floor(
+        (totalRaise - gravRaised - accretionRaised) /
+            constants.ACC_STARBLIGHT_CONVERSION,
     );
 
     draftMaster = {
@@ -374,6 +368,10 @@ export function processYellowStar(
         [effectKeys.GRAVITATION]: Math.max(
             0,
             draftMaster[effectKeys.GRAVITATION] + gravRaised,
+        ),
+        [effectKeys.ACCRETION]: Math.max(
+            0,
+            draftMaster[effectKeys.ACCRETION] + accretionRaised,
         ),
         [effectKeys.STARBLIGHT]: Math.max(
             0,
@@ -427,16 +425,21 @@ export function processVioletStar(
     };
 
     // Convert Gray Star into White Star
-    const grayConsumed = Math.min(draftMaster.stars[effectKeys.GRAY_STAR], normalStars + augmentedStars);
+    const grayConsumed = Math.min(
+        draftMaster.stars[effectKeys.GRAY_STAR],
+        normalStars + augmentedStars,
+    );
 
     draftMaster = {
         ...draftMaster,
         stars: {
             ...draftMaster.stars,
-            [effectKeys.WHITE_STAR]: draftMaster.stars[effectKeys.WHITE_STAR] + grayConsumed,
-            [effectKeys.GRAY_STAR]: draftMaster.stars[effectKeys.GRAY_STAR] - grayConsumed,
-        }
-    }
+            [effectKeys.WHITE_STAR]:
+                draftMaster.stars[effectKeys.WHITE_STAR] + grayConsumed,
+            [effectKeys.GRAY_STAR]:
+                draftMaster.stars[effectKeys.GRAY_STAR] - grayConsumed,
+        },
+    };
 
     return {
         draftMaster,
@@ -447,10 +450,15 @@ export function processVioletStar(
 export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
     let gameState = {
         ...prev,
-    }
+    };
 
-    for(let star of Object.values(coloredStars)) {
-        gameState = processROYGBIVStar(gameState, ownerKey, nonOwnerKey, star.star);
+    for (let star of Object.values(coloredStars)) {
+        gameState = processROYGBIVStar(
+            gameState,
+            ownerKey,
+            nonOwnerKey,
+            star.star,
+        );
     }
 
     return gameState;

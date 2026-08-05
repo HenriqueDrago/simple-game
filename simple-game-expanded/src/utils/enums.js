@@ -233,6 +233,10 @@ export const effectKeys = Object.freeze({
     PAST_MEMORIES: "pastMemories",
     PREMONITION: "premonition",
     PROPHECY_OF_DOOM: "prophecyOfDoom",
+
+    EVENT_HORIZON: "eventHorizon",
+    ACCRETION: "accretion",
+    
 });
 
 export const runeKeys = Object.freeze({

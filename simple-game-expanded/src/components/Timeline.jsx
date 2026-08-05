@@ -8,9 +8,13 @@ export default function Timeline() {
     const { game } = useGame();
     const { handleSpawnTooltip } = useUI();
 
-    const phases = game.roundQueue;
-    const currIndex = game.roundIndex;
-    const status = game.status;
+    const usedGame = game?.simGame ? game?.simGame : game;
+
+    console.log(game?.simGame)
+
+    const phases = usedGame.roundQueue;
+    const currIndex = usedGame.roundIndex;
+    const status = usedGame.status;
 
     if (status === turnStatus.SETUP || !phases) {
         return null;

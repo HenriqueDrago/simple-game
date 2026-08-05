@@ -693,7 +693,7 @@ export function cyborgAI(context) {
         agent[effectKeys.MANA] >= 5 &&
         getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5;
 
-    // 1. Thermal Overload -> Meltdown
+    // Thermal Overload -> Meltdown
     if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
         return actionKeys.MELTDOWN;
     }
@@ -722,7 +722,7 @@ export function cyborgAI(context) {
         return actionKeys.ATTACK;
     }
 
-    // 2. !venting/weaponsdeployed/thermaloverload/deployment -> Deploy
+    // Not on the Cyborg states -> Deploy
     const inAnyStance =
         agent.states[effectKeys.VENTING] ||
         agent.states[effectKeys.WEAPONS_DEPLOYED] ||
@@ -733,7 +733,7 @@ export function cyborgAI(context) {
         return actionKeys.DEPLOY;
     }
 
-    // 3. if venting then healWorth -> heal else guard
+    // On Venting, use defensive
     if (agent.states[effectKeys.VENTING]) {
         if (healWorth) {
             return actionKeys.HEAL;
@@ -742,17 +742,17 @@ export function cyborgAI(context) {
         }
     }
 
-    // Generate baseline simulation for steps 4 & 5
+    // Generate baseline simulation for next steps
     const simLaser = simulate(actionKeys.LASER);
 
-    // 4. check if laser kills -> laser
+    // laser kills -> laser
     if (willEntityEffectivelyDieByNextUpkeep(simLaser, nonAgentKey, agentKey)) {
         return actionKeys.LASER;
     }
 
-    // 5. check if laser sets us to >= 100 overheat (100% or above threshold)
+    // Check if laser sets us to >= 100 overheat (100% or above threshold)
     if (simLaser.entities[agentKey][effectKeys.OVERHEAT] >= 100) {
-        // 5.1 check if meltdown kills the opponent -> laser
+        // Check if meltdown kills the opponent -> laser
         // Passes post-laser simulation states into the meltdown simulator
         const simMeltdown = simulate(actionKeys.MELTDOWN, {
             prev: simLaser,
@@ -769,7 +769,7 @@ export function cyborgAI(context) {
         ) {
             return actionKeys.LASER;
         } else {
-            // 5.2 else: healWorth -> heal else guard
+            // Else, use defensive
             if (healWorth) {
                 return actionKeys.HEAL;
             } else {
@@ -779,7 +779,7 @@ export function cyborgAI(context) {
     }
 
     // 6. overheat > 30 and dynamo >= 70 and dynamo < 100 then
-    if (overheat > 30 && dynamo >= 70 && dynamo < 100) {
+    if (overheat >= 30 && dynamo >= 70 && dynamo < 100) {
         // 6.1 healWorth -> heal / 6.2 else guard
         if (healWorth) {
             return actionKeys.HEAL;

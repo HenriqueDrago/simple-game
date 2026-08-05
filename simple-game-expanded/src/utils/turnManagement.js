@@ -371,6 +371,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.DARK_EMBRACE]: false,
             [effectKeys.DIMMING_DARKNESS]: false,
             [effectKeys.PRISMATIC]: false,
+            [effectKeys.EVENT_HORIZON]: false,
         },
     };
 
@@ -499,6 +500,38 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
+    // Accretion
+    if (draftCurrActor[effectKeys.ACCRETION] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.ACCRETION]: 0,
+        };
+    }
+
+    // Constellation
+    if (draftCurrActor[effectKeys.CONSTELLATION] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.CONSTELLATION]: 0,
+        };
+    }
+
+    // Azure Constellation
+    if (draftCurrActor[effectKeys.AZURE_CONSTELLATION] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.AZURE_CONSTELLATION]: 0,
+        };
+    }
+
+    // Crimson Constellation
+    if (draftCurrActor[effectKeys.CRIMSON_CONSTELLATION] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.CRIMSON_CONSTELLATION]: 0,
+        };
+    }
+
     // Laser used
     draftCurrActor = {
         ...draftCurrActor,
@@ -559,7 +592,7 @@ export function buildRoundQueue(prev) {
         // Singularity
         if (
             !newQueue.includes(singularityKey) &&
-            player[effectKeys.GRAVITATION] >= constants.MAX_GRAVITATION
+            player.states[effectKeys.EVENT_HORIZON]
         ) {
             newQueue.push(singularityKey);
         }

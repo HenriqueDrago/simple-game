@@ -7,14 +7,27 @@ import { canUseCombatInteractions } from "../utils/entities";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
-function StarsPanel({
-    entityKey,
-    reversed,
-}) {
-    const {game} = useGame();
-    const {handleSpawnTooltip} = useUI();
+function StarsPanel({ entityKey, reversed }) {
+    const { game } = useGame();
+    const { handleSpawnTooltip } = useUI();
 
     const entity = game.entities[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
+
+    const baseGray = entity.stars[effectKeys.GRAY_STAR];
+    const simGray = simEntity
+        ? simEntity.stars[effectKeys.GRAY_STAR]
+        : baseGray;
+    const isGraySimulating = simEntity && simGray !== baseGray;
+    const displayGray = isGraySimulating ? simGray : baseGray;
+
+    const baseWhite = entity.stars[effectKeys.WHITE_STAR];
+    const simWhite = simEntity
+        ? simEntity.stars[effectKeys.WHITE_STAR]
+        : baseWhite;
+    const isWhiteSimulating = simEntity && simWhite !== baseWhite;
+    const displayWhite = isWhiteSimulating ? simWhite : baseWhite;
+
     const currPhase = game.starQueue ? game.starQueue[0] : null;
 
     const currRoundPhase =
@@ -26,7 +39,8 @@ function StarsPanel({
         currRoundPhase === roundPhases.P1_SINGULARITY ||
         currRoundPhase === roundPhases.P2_SINGULARITY;
 
-    const showButton = canUseCombatInteractions(game, entityKey) && !isSingularity;
+    const showButton =
+        canUseCombatInteractions(game, entityKey) && !isSingularity;
 
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE
@@ -40,13 +54,12 @@ function StarsPanel({
                     <div
                         className="special-star"
                         onMouseDown={(e) =>
-                            handleSpawnTooltip(
-                                e,
-                                effectKeys.GRAY_STAR,
-                            )
+                            handleSpawnTooltip(e, effectKeys.GRAY_STAR)
                         }
                     >
-                        <span>{entity.stars[effectKeys.GRAY_STAR]}</span>
+                        <span className={isGraySimulating ? "is-preview" : ""}>
+                            {displayGray}
+                        </span>
                         <StarIcon
                             size={24}
                             fill="gray"
@@ -59,13 +72,12 @@ function StarsPanel({
                     <div
                         className="special-star"
                         onMouseDown={(e) =>
-                            handleSpawnTooltip(
-                                e,
-                                effectKeys.WHITE_STAR,
-                            )
+                            handleSpawnTooltip(e, effectKeys.WHITE_STAR)
                         }
                     >
-                        <span>{entity.stars[effectKeys.WHITE_STAR]}</span>
+                        <span className={isWhiteSimulating ? "is-preview" : ""}>
+                            {displayWhite}
+                        </span>
                         <StarIcon
                             size={24}
                             fill="white"

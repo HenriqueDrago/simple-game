@@ -86,7 +86,7 @@ const SONORITY_ON_OFFENSE = -5;
 
 const MAX_DIVINE_SPARK = 100;
 
-const CHART_STAR_GAIN = 3;
+const CHART_STAR_GAIN = 300;
 const STARDUST_RATE_CONVERSION = 3;
 
 const MAX_DYNAMO = 100;
@@ -109,10 +109,11 @@ const LUNAR_TIDE_MULT = 2;
 const SMITE_MULT = 5;
 const WITHER_LUNACY_MULT = 2;
 
-const MAX_STARBLIGHT = 100;
+const MAX_ACCRETION = 100;
 
 const GRAVITATION_GAIN = 5;
 const MAX_GRAVITATION = 100;
+const ACC_STARBLIGHT_CONVERSION = 5;
 
 const DIVINE_SPARK_STR_CONVERSION = 5;
 
@@ -142,6 +143,7 @@ const BAD_OMEN_TURN_END_LOSS = 20;
 const PROPHECY_GAIN_RATE = 10;
 
 export const constants = {
+    ACC_STARBLIGHT_CONVERSION,
     URD_STR_PAIN,
     CHALK_EXTRA_DMG,
     PRECOG_GAIN_RATE,
@@ -164,7 +166,7 @@ export const constants = {
     DIVINE_SPARK_STR_CONVERSION,
     GRAVITATION_GAIN,
     MAX_GRAVITATION,
-    MAX_STARBLIGHT,
+    MAX_ACCRETION,
     SONORITY_ON_DEFENSE,
     SONORITY_ON_OFFENSE,
     WITHER_LUNACY_MULT,
@@ -666,13 +668,14 @@ export const FIXED_RESOURCES = [
     effectKeys.RECOLLECTION,
     effectKeys.PREMONITION,
     effectKeys.GRAVITATION,
-    effectKeys.STARBLIGHT,
+    effectKeys.ACCRETION,
     effectKeys.LUNACY,
 ];
 
 export const RANKED_RESOURCES = [
     effectKeys.MANA_BLEED,
     effectKeys.PAST_MEMORIES,
+    effectKeys.STARBLIGHT,
     effectKeys.CONSTELLATION,
     effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.AZURE_CONSTELLATION,

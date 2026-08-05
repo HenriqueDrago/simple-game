@@ -125,7 +125,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "DAMAGE TYPE",
         type: entryTypes.CATEGORY,
         description:
-            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE.",
+            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE. Final damage dealt is rounded down. All damage taken has a minimum of 1.",
     },
 
     [entryTypes.FREE_RESOURCE]: {
@@ -889,42 +889,56 @@ export const STARFARER_DESCRIPTIONS = {
         name: "GRAVITATION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. When raising GRAVITATION above 100%, raises STARBLIGHT instead. Raises DAMAGE BONUS equal to GRAVITATION. At 100% GRAVITATION, enables SINGULARITY. At turn end, lose all GRAVITATION.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to GRAVITATION on self. When raising GRAVITATION above 100%, raises ACCRETION instead. At 100% GRAVITATION, loses all GRAVITATION and enters EVENT HORIZON. At turn end, lose all GRAVITATION.",
     },
 
-    [effectKeys.STARBLIGHT]: {
-        name: "STARBLIGHT",
-        type: entryTypes.FIXED_RESOURCE,
+    [effectKeys.EVENT_HORIZON]: {
+        name: "EVENT HORIZON",
+        type: entryTypes.STATE,
         description:
-            "Lowers MAX HEALTH equal to STARBLIGHT on self. Raises DAMAGE BONUS equal to STARBLIGHT on self.",
+            "Enables this player's SINGULARITY. At turn start, remove this state.",
     },
 
     [effectKeys.SINGULARITY]: {
         name: "SINGULARITY",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "Special phase equivalent to a player's PLAN subphase. Added to the round queue after STARFALL. Does not trigger UPKEEP or COMMIT subphases.",
+            "Added to ROUND QUEUE after the corresponding player's STARFALL. Allows the use of ACTIONS and other combat interactions. Cannot assign STARS on this phase.",
+    },
+
+    [effectKeys.ACCRETION]: {
+        name: "ACCRETION",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. Raises DAMAGE BONUS equal to ACCRETION on self. When raising ACCRETION above 100%, raises STARBLIGHT rank for every 5% excess instead. At turn end, lose all ACCRETION.",
+    },
+
+    [effectKeys.STARBLIGHT]: {
+        name: "STARBLIGHT",
+        type: entryTypes.RANKED_RESOURCE,
+        description:
+            "Increases PHYSICAL DAMAGE and PIERCING DAMAGE dealt equal to STARBLIGHT rank. When using an OFFENSIVE ACTION, takes TRUE DAMAGE equal to STARBLIGHT rank. At turn end, lowers MAX HEALTH equal to STARBLIGHT on self, then lowers STARBLIGHT rank to 0.",
     },
 
     [effectKeys.CONSTELLATION]: {
         name: "CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION.",
+            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all CONSTELLATION.",
     },
 
     [effectKeys.AZURE_CONSTELLATION]: {
         name: "AZURE CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION.",
+            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all AZURE CONSTELLATION.",
     },
 
     [effectKeys.CRIMSON_CONSTELLATION]: {
         name: "CRIMSON CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION.",
+            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At turn end, lose all CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.STARDUST]: {

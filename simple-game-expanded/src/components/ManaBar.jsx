@@ -5,7 +5,12 @@ import "./ManaBar.css";
 function ManaBar({ entity, simEntity }) {
     const { handleSpawnTooltip } = useUI();
 
-    const maxMana = entity.maxMana;
+    const baseMaxMana = entity.maxMana;
+    const simMaxMana = simEntity ? simEntity.maxMana : baseMaxMana;
+    const isMaxManaSimulating = simEntity && simMaxMana !== baseMaxMana;
+
+    const displayMaxMana = isMaxManaSimulating ? simMaxMana : baseMaxMana;
+    const maxMana = displayMaxMana;
 
     const baseMana = entity.currMana;
     const overflowMana = entity.resources?.manaOverflow ?? 0;
@@ -15,48 +20,44 @@ function ManaBar({ entity, simEntity }) {
         ? (simEntity.resources?.manaOverflow ?? 0)
         : overflowMana;
 
-    const isSimulating =
+    const isManaSimulating =
         simEntity && (simMana !== baseMana || simOverflow !== overflowMana);
 
-    const displayMana = isSimulating ? simMana : baseMana;
-    const displayOverflow = isSimulating ? simOverflow : overflowMana;
+    const displayMana = isManaSimulating ? simMana : baseMana;
+    const displayOverflow = isManaSimulating ? simOverflow : overflowMana;
     const displayHasOverflow = displayOverflow > 0;
     const displayTotal = displayMana + displayOverflow;
 
     const overTimes = maxMana > 0 ? Math.floor(displayOverflow / maxMana) : 0;
 
-    const solidMana = Math.min(baseMana, simMana);
-    const manaLossAmount = Math.max(0, baseMana - simMana);
-    const manaGainAmount = Math.max(0, simMana - baseMana);
-
     const manaPercentage =
-        maxMana > 0 ? Math.min(100, (solidMana / maxMana) * 100) : 0;
-
-    const manaLossLeft = maxMana > 0 ? (solidMana / maxMana) * 100 : 0;
-    const manaLossWidth =
-        maxMana > 0 ? Math.min(100, (manaLossAmount / maxMana) * 100) : 0;
-
-    const manaGainLeft = maxMana > 0 ? (baseMana / maxMana) * 100 : 0;
+        maxMana > 0 ? Math.min(100, (baseMana / maxMana) * 100) : 0;
+    const manaLossRatio =
+        baseMana > 0 ? Math.max(0, (baseMana - simMana) / baseMana) : 0;
+    const manaGainLeft = manaPercentage;
     const manaGainWidth =
-        maxMana > 0 ? Math.min(100, (manaGainAmount / maxMana) * 100) : 0;
-
-    const solidOverflow = Math.min(overflowMana, simOverflow);
-    const overflowLossAmount = Math.max(0, overflowMana - simOverflow);
-    const overflowGainAmount = Math.max(0, simOverflow - overflowMana);
+        maxMana > 0
+            ? Math.min(100, (Math.max(0, simMana - baseMana) / maxMana) * 100)
+            : 0;
 
     const overflowPercentage =
-        maxMana > 0 ? Math.min(100, (solidOverflow / maxMana) * 100) : 0;
-
-    const overflowLossLeft = maxMana > 0 ? (solidOverflow / maxMana) * 100 : 0;
-    const overflowLossWidth =
-        maxMana > 0 ? Math.min(100, (overflowLossAmount / maxMana) * 100) : 0;
-
-    const overflowGainLeft = maxMana > 0 ? (overflowMana / maxMana) * 100 : 0;
+        maxMana > 0 ? Math.min(100, (overflowMana / maxMana) * 100) : 0;
+    const overflowLossRatio =
+        overflowMana > 0
+            ? Math.max(0, (overflowMana - simOverflow) / overflowMana)
+            : 0;
+    const overflowGainLeft = overflowPercentage;
     const overflowGainWidth =
-        maxMana > 0 ? Math.min(100, (overflowGainAmount / maxMana) * 100) : 0;
+        maxMana > 0
+            ? Math.min(
+                  100,
+                  (Math.max(0, simOverflow - overflowMana) / maxMana) * 100,
+              )
+            : 0;
 
+    const activeEntity = isManaSimulating || isMaxManaSimulating ? simEntity : entity;
     const backgroundColor =
-        entity[effectKeys.MANA_BLEED] > 0 ? "purple" : "blue";
+        activeEntity[effectKeys.MANA_BLEED] > 0 ? "purple" : "blue";
     const textColor = displayHasOverflow ? "cyan" : "inherit";
 
     return (
@@ -69,13 +70,15 @@ function ManaBar({ entity, simEntity }) {
                 <div className="mana-values">
                     <span
                         className={`mana-value-display ${
-                            isSimulating ? "is-preview" : ""
+                            isManaSimulating ? "is-preview" : ""
                         }`}
                     >
                         <span style={{ color: textColor }}>{displayTotal}</span>
                     </span>
                     <span> / </span>
-                    <span>{maxMana}</span>
+                    <span className={isMaxManaSimulating ? "is-preview" : ""}>
+                        {displayMaxMana}
+                    </span>
                 </div>
             </div>
             <div className="mana-track">
@@ -85,17 +88,17 @@ function ManaBar({ entity, simEntity }) {
                         width: `${manaPercentage}%`,
                         backgroundColor: `${backgroundColor}`,
                     }}
-                />
+                >
+                    {manaLossRatio > 0 && (
+                        <div
+                            className="preview-chunk mana-loss"
+                            style={{
+                                width: `${manaLossRatio * 100}%`,
+                            }}
+                        />
+                    )}
+                </div>
 
-                {manaLossWidth > 0 && (
-                    <div
-                        className="preview-chunk mana-loss"
-                        style={{
-                            left: `${manaLossLeft}%`,
-                            width: `${manaLossWidth}%`,
-                        }}
-                    />
-                )}
                 {manaGainWidth > 0 && (
                     <div
                         className="preview-chunk mana-gain"
@@ -110,18 +113,18 @@ function ManaBar({ entity, simEntity }) {
                     <div
                         className="mana-overflow-fill"
                         style={{ width: `${overflowPercentage}%` }}
-                    />
+                    >
+                        {overflowLossRatio > 0 && (
+                            <div
+                                className="preview-chunk overflow-loss"
+                                style={{
+                                    width: `${overflowLossRatio * 100}%`,
+                                }}
+                            />
+                        )}
+                    </div>
                 )}
 
-                {overflowLossWidth > 0 && (
-                    <div
-                        className="preview-chunk overflow-loss"
-                        style={{
-                            left: `${overflowLossLeft}%`,
-                            width: `${overflowLossWidth}%`,
-                        }}
-                    />
-                )}
                 {overflowGainWidth > 0 && (
                     <div
                         className="preview-chunk overflow-gain"
