@@ -21,6 +21,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.BLEAK_DECEPTION, label: "Bleak Deception" },
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },
     { key: effectKeys.VISIONARY, label: "Visionary" },
+    { key: effectKeys.EVENT_HORIZON, label: "Event Horizon" },
 ];
 
 function StateBadges({ entityKey }) {

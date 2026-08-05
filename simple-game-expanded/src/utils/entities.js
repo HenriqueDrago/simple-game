@@ -369,10 +369,6 @@ export function processEntityFragility(entity) {
         frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
     }
 
-    if (entity[effectKeys.RECOLLECTION] > 0) {
-        frail *= 1 + entity[effectKeys.RECOLLECTION] / 100;
-    }
-
     return frail;
 }
 
@@ -471,10 +467,6 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
     const dmgPostReduction = Math.max(
         1,
         Math.floor((dmgPostMults - flatDr) * drMult * frailMult),
-    );
-
-    console.log(
-        `weak: ${weakMult}, baseDmg: ${baseDmg}, dmgPostMults: ${dmgPostMults}`,
     );
 
     // Mitigation

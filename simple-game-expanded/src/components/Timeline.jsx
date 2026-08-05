@@ -10,8 +10,6 @@ export default function Timeline() {
 
     const usedGame = game?.simGame ? game?.simGame : game;
 
-    console.log(game?.simGame)
-
     const phases = usedGame.roundQueue;
     const currIndex = usedGame.roundIndex;
     const status = usedGame.status;
