@@ -1,9 +1,10 @@
 import "./Header.css";
 import Switch from "./Switch";
 import { RotateCcw } from "lucide-react";
-import { turnStatus, whoStartsKeys } from "../utils/enums";
+import { effectKeys, turnStatus, whoStartsKeys } from "../utils/enums";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
+import { DESCRIPTIONS } from "../utils/descriptions";
 
 function Header() {
     const {
@@ -14,7 +15,7 @@ function Header() {
         handleWhoStartsChange,
         handleProgressToggle,
     } = useGame();
-    const { setUIElements } = useUI();
+    const { setUIElements, handleSpawnTooltip } = useUI();
 
     const battleState = game.status;
     const isSetup = battleState === turnStatus.SETUP;
@@ -43,7 +44,9 @@ function Header() {
                     <div className="header-settings-container">
                         <div
                             className={`sharp-setting-box ${
-                                game.progressMode ? "disabled" : ""
+                                game[effectKeys.PROGRESSION_MODE]
+                                    ? "disabled"
+                                    : ""
                             }`}
                         >
                             <label htmlFor="who-starts-select">
@@ -69,17 +72,29 @@ function Header() {
                             </select>
                         </div>
 
-                        <div className="sharp-setting-box">
+                        <div
+                            className="sharp-setting-box"
+                            onClick={(e) => {
+                                handleSpawnTooltip(
+                                    e,
+                                    effectKeys.PROGRESSION_MODE,
+                                );
+                            }}
+                        >
                             <label>Progression Mode:</label>
                             <div className="switch-help-container">
                                 <Switch
-                                    checked={game.progressMode}
+                                    checked={game[effectKeys.PROGRESSION_MODE]}
                                     handleToggle={handleProgressToggle}
                                     disabled={game.status !== turnStatus.SETUP}
                                 />
                                 <span
                                     className="hover-help"
-                                    title={`Progression Mode: Disables most customisation features, enemies and actions. In this mode, the enemy always starts the battle and always has the "best" stats. Furthermore, to access new enemies and see their glossary entries you must first defeat the preceding one. Some actions are locked until you defeat the corresponding enemy.`}
+                                    title={
+                                        DESCRIPTIONS[
+                                            effectKeys.PROGRESSION_MODE
+                                        ].desc
+                                    }
                                 >
                                     [?]
                                 </span>
@@ -147,6 +162,18 @@ function Header() {
                     }}
                 >
                     Glossary
+                </button>
+
+                <button
+                    className="sharp-btn-header"
+                    onClick={() => {
+                        setUIElements((prev) => ({
+                            ...prev,
+                            hardResetModal: true,
+                        }));
+                    }}
+                >
+                    Hard Reset
                 </button>
             </div>
         </header>

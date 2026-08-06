@@ -86,13 +86,13 @@ const SONORITY_ON_OFFENSE = -5;
 
 const MAX_DIVINE_SPARK = 100;
 
-const CHART_STAR_GAIN = 300;
+const CHART_STAR_GAIN = 3;
 const STARDUST_RATE_CONVERSION = 3;
 
 const MAX_DYNAMO = 100;
 const STARTING_ENERGY = 1;
 
-const RESOURCES_CINDERS_MULT = 2;
+const RESOURCES_CINDERS_MULT = 1;
 
 const ALBEDO_ML_GAIN = 2;
 const BLOOD_CORONA_ML_GAIN = 1;
@@ -142,7 +142,10 @@ const VERDANDI_OMEN_GAIN = 20;
 const BAD_OMEN_TURN_END_LOSS = 20;
 const PROPHECY_GAIN_RATE = 10;
 
+const SPARK_RESTORE_RATE = 2;
+
 export const constants = {
+    SPARK_RESTORE_RATE,
     ACC_STARBLIGHT_CONVERSION,
     URD_STR_PAIN,
     CHALK_EXTRA_DMG,
@@ -234,7 +237,7 @@ export const FREE_RESOURCES = [
     effectKeys.PROPHECY_OF_DOOM,
     effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
-    effectKeys.MOONDUST,
+    effectKeys.MOONSHINE,
     effectKeys.RADIANCE,
 ];
 
@@ -284,6 +287,15 @@ export const presetAi = {
         caller: paladinAI,
         desc: [...Object.keys(PALADIN_DESCRIPTIONS)],
     },
+    [aiKeys.SHADOW_SORCERER]: {
+        name: "Shadow Sorcerer",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: shadowSorcererAI,
+        desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
+    },
     [aiKeys.CYBORG]: {
         name: "Cyborg",
         best: {
@@ -302,7 +314,7 @@ export const presetAi = {
         caller: maestroAI,
         desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
     },
-    [aiKeys.HEXER]: {
+    [aiKeys.AUGUR]: {
         name: "Augur (Broken AI)",
         best: {
             str: 10,
@@ -310,15 +322,6 @@ export const presetAi = {
         },
         caller: augurAI,
         desc: [...Object.keys(AUGUR_DESCRIPTIONS)],
-    },
-    [aiKeys.SHADOW_SORCERER]: {
-        name: "Shadow Sorcerer",
-        best: {
-            str: 0,
-            def: 10,
-        },
-        caller: shadowSorcererAI,
-        desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
     },
     [aiKeys.STARFARER]: {
         name: "Starfarer (Broken AI)",
@@ -458,7 +461,7 @@ export const INITIAL_GAME_STATE = {
         [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,
         [aiKeys.WARLOCK]: progKeys.LOCKED,
         [aiKeys.BLOODKNIGHT]: progKeys.LOCKED,
-        [aiKeys.HEXER]: progKeys.LOCKED,
+        [aiKeys.AUGUR]: progKeys.LOCKED,
         [aiKeys.CYBORG]: progKeys.LOCKED,
         [aiKeys.MAESTRO]: progKeys.LOCKED,
         [aiKeys.LUNATIC]: progKeys.LOCKED,
@@ -586,6 +589,8 @@ export const entryTypesMap = {
     [entryTypes.OFFENSIVE_ACTION]: "OFFENSIVE ACTION",
     [entryTypes.DEFENSIVE_ACTION]: "DEFENSIVE ACTION",
     [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
+    [entryTypes.RUNES]: "RUNES",
+    [entryTypes.CONTROLLER]: "CONTROLLER",
 };
 
 export const actionMap = {

@@ -229,7 +229,7 @@ export function createBaseEntity() {
             [effectKeys.CINDERS]: 0,
             [effectKeys.UNRELENTING_SHADOWS]: 0,
             [effectKeys.STARDUST]: 0,
-            [effectKeys.MOONDUST]: 0,
+            [effectKeys.MOONSHINE]: 0,
             [effectKeys.DISSONANCE]: 0,
             [effectKeys.PRECOGNITION]: 0,
             [effectKeys.PROPHECY_OF_DOOM]: 0,
@@ -1040,6 +1040,7 @@ export function processEntityDeathStates(entity) {
     draftEntity = processPDoom(draftEntity);
     draftEntity = processPrecognition(draftEntity);
     draftEntity = processGravitaton(draftEntity);
+    draftEntity = processLunacy(draftEntity);
 
     return draftEntity;
 }
@@ -1271,12 +1272,12 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 currResourceKey === effectKeys.REFRACTED_DIVINITY
             ) {
                 const currentMoondust =
-                    draftEntity.resources[effectKeys.MOONDUST];
+                    draftEntity.resources[effectKeys.MOONSHINE];
                 draftEntity = {
                     ...draftEntity,
                     resources: {
                         ...draftEntity.resources,
-                        [effectKeys.MOONDUST]: currentMoondust + consumption,
+                        [effectKeys.MOONSHINE]: currentMoondust + consumption,
                     },
                 };
             }
@@ -1536,6 +1537,9 @@ export function processSilverBlood(entity) {
 export function translateElementIntoCrystals(element) {
     let crystals;
     switch (element) {
+        case elementalKeys.SHATTERED: 
+            crystals = [elementalKeys.SHATTERED];
+            break;
         case elementalKeys.ALBEDO:
             crystals = [
                 elementalKeys.FROST,
@@ -1774,10 +1778,10 @@ export function canUseAction(prev, entityKey, action) {
 
     // Helper to evaluate progression lock status for base actions only
     const isProgLocked = (bossKey) => {
-        if (!prev.progMode) {
+        if (!prev[effectKeys.PROGRESSION_MODE] || entity.controller !== aiKeys.HUMAN) {
             return false;
         }
-        const status = prev.progStatus[bossKey];
+        const status = prev.progressStatus[bossKey];
         return !(
             status === progKeys.DEFEATED || status === progKeys.ALWAYS_OPEN
         );
@@ -1939,7 +1943,7 @@ export function canUseAction(prev, entityKey, action) {
         if (states[effectKeys.VISIONARY]) {
             return false;
         }
-        return !isProgLocked(aiKeys.HEXER);
+        return !isProgLocked(aiKeys.AUGUR);
     }
 
     return false;
@@ -2009,12 +2013,8 @@ export function getActions(prev, entityKey) {
         actions.push(actionKeys.AEGIS);
     }
 
-    // Carve / Curse
-    if (states[effectKeys.VISIONARY]) {
-        actions.push(actionKeys.CURSE);
-    } else {
-        actions.push(actionKeys.CARVE);
-    }
+    // Shadow Pact
+    actions.push(actionKeys.SHADOW_PACT);
 
     // Deploy / Laser
     if (states[effectKeys.WEAPONS_DEPLOYED]) {
@@ -2038,8 +2038,12 @@ export function getActions(prev, entityKey) {
         }
     }
 
-    // Shadow Pact
-    actions.push(actionKeys.SHADOW_PACT);
+    // Carve / Curse
+    if (states[effectKeys.VISIONARY]) {
+        actions.push(actionKeys.CURSE);
+    } else {
+        actions.push(actionKeys.CARVE);
+    }
 
     // Chart
     actions.push(actionKeys.CHART);
@@ -2420,6 +2424,21 @@ export function processGravitaton(entity) {
                 ...draftEntity.states,
                 [effectKeys.EVENT_HORIZON]: true,
             },
+        };
+    }
+
+    return draftEntity;
+}
+
+export function processLunacy(entity) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    if (entity[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(elementalKeys.SHATTERED),
         };
     }
 

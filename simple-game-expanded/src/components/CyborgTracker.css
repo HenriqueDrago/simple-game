@@ -49,14 +49,3 @@
     box-sizing: border-box;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-/* Custom Accents */
-.overheat-card:hover {
-    border-color: rgba(255, 68, 0, 0.5);
-    box-shadow: 0 0 8px rgba(255, 68, 0, 0.2);
-}
-
-.dynamo-card:hover {
-    border-color: rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
-}

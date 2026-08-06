@@ -24,6 +24,8 @@
     letter-spacing: 1px;
     white-space: nowrap;
     transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+
+    min-height: 35px;
 }
 
 .timeline-item-container.timeline-curr-phase {
@@ -38,4 +40,8 @@
 .timeline-item-container.timeline-future-phase {
     opacity: 0.3;
     border-style: dashed;
+}
+
+.timeline-empty-box {
+    min-height: 35px;
 }

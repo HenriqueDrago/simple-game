@@ -34,12 +34,13 @@ export const aiKeys = Object.freeze({
     BLOODKNIGHT: "bloodknight",
     WARLOCK: "warlock",
     PALADIN: "paladin",
-    HEXER: "hexer",
+    AUGUR: "AUGUR",
     SHADOW_SORCERER: "shadowSorcerer",
     CYBORG: "cyborg",
     MAESTRO: "maestro",
     LUNATIC: "lunatic",
     STARFARER: "starfarer",
+    SERAPH: "seraph",
 });
 
 export const sdmKeys = Object.freeze({
@@ -185,7 +186,7 @@ export const effectKeys = Object.freeze({
     REFRACTED_DIVINITY: "refractedDivinity",
     PRISMATIC: "prismatic",
     MYCELIUM: "mycelium",
-    MOONDUST: "moondust",
+    MOONSHINE: "moonshine",
     MOONLIT_TEARS: "moonlitTears",
     SILVER_BLOOD: "silverBlood",
     MOON_DEW: "moonDew",
@@ -236,7 +237,12 @@ export const effectKeys = Object.freeze({
 
     EVENT_HORIZON: "eventHorizon",
     ACCRETION: "accretion",
-    
+
+    SIMPLE_GAME: "simpleGame",
+    CONTROLLER: "controller",
+    PROGRESSION_MODE: "progressMode",
+    MATCH: "match",
+    CONDITION: "condition",
 });
 
 export const runeKeys = Object.freeze({
@@ -277,6 +283,7 @@ export const entryTypes = Object.freeze({
     BASE_ATTRIBUTES: "baseStats",
     SPECIAL_ATTRIBUTES: "alternateStats",
     RUNES: "runes",
+    CONTROLLER: "controller",
 });
 
 export const starfallPhases = Object.freeze({

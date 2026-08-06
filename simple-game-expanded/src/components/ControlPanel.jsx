@@ -6,6 +6,7 @@ import {
     progKeys,
     aiKeys,
     turnStatus,
+    effectKeys,
 } from "../utils/enums";
 import { RotateCcw } from "lucide-react";
 import { useGame } from "../contexts/GameContext";
@@ -26,7 +27,10 @@ function ControlPanel({ entityKey }) {
 
     return (
         <div className="control-panel-container">
-            {!(game.progressMode && entityKey === entityKeys.PLAYER_TWO) && (
+            {!(
+                game[effectKeys.PROGRESSION_MODE] &&
+                entityKey === entityKeys.PLAYER_TWO
+            ) && (
                 <div className="control-box">
                     <label
                         className="control-box-label"
@@ -71,7 +75,10 @@ function ControlPanel({ entityKey }) {
                 </div>
             )}
 
-            {!(game.progressMode && entityKey === entityKeys.PLAYER_ONE) && (
+            {!(
+                game[effectKeys.PROGRESSION_MODE] &&
+                entityKey === entityKeys.PLAYER_ONE
+            ) && (
                 <div className="control-box">
                     <label
                         className="control-box-label"
@@ -92,7 +99,7 @@ function ControlPanel({ entityKey }) {
                                     key={aiKey}
                                     value={aiKey}
                                     disabled={
-                                        game.progressMode &&
+                                        game[effectKeys.PROGRESSION_MODE] &&
                                         game.progressStatus[aiKey] ===
                                             progKeys.LOCKED
                                     }

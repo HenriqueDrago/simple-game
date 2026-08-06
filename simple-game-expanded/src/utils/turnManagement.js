@@ -333,7 +333,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
         const toBeRestored = Math.max(
             0,
-            Math.floor(sparkGained - missingSpark),
+            Math.floor((sparkGained - missingSpark) / constants.SPARK_RESTORE_RATE),
         );
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
@@ -475,11 +475,11 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
-    // Moondust
-    if (draftCurrActor.resources[effectKeys.MOONDUST] > 0) {
+    // Moonshine
+    if (draftCurrActor.resources[effectKeys.MOONSHINE] > 0) {
         draftCurrActor = takeDamage(
             draftCurrActor,
-            draftCurrActor.resources[effectKeys.MOONDUST],
+            draftCurrActor.resources[effectKeys.MOONSHINE],
             dmgTypes.TRUE,
         );
 
@@ -487,7 +487,7 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
             ...draftCurrActor,
             resources: {
                 ...draftCurrActor.resources,
-                [effectKeys.MOONDUST]: 0,
+                [effectKeys.MOONSHINE]: 0,
             },
         };
     }

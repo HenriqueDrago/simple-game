@@ -185,8 +185,8 @@ const FREE_STACKS_CONFIG = {
             backgroundColor: "rgba(255, 138, 101, 0.2)",
         },
     },
-    [effectKeys.MOONDUST]: {
-        label: "Moondust",
+    [effectKeys.MOONSHINE]: {
+        label: "Moonshine",
         style: {
             color: "#e1f5fe",
             borderColor: "#e1f5fe",

@@ -2,7 +2,7 @@ import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import { entryTypesMap, presetAi } from "../utils/constants";
 import { DESCRIPTIONS } from "../utils/descriptions";
-import { aiKeys, progKeys } from "../utils/enums";
+import { aiKeys, effectKeys, progKeys } from "../utils/enums";
 import "./Glossary.css";
 
 function Glossary() {
@@ -38,7 +38,7 @@ function Glossary() {
 
                 if (
                     !aiObj.desc ||
-                    (game.progressMode &&
+                    (game[effectKeys.PROGRESSION_MODE] &&
                         game.progressStatus[aiKey] === progKeys.LOCKED)
                 ) {
                     return null;

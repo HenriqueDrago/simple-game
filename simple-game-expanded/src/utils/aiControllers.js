@@ -186,7 +186,8 @@ export function selectElementAI(context) {
             nonAgentKey,
             agentKey,
         ) ||
-        agent.resources[effectKeys.MOONDUST] > getEntityTotalHealth(agent) * 0.5
+        agent.resources[effectKeys.MOONSHINE] >
+            getEntityTotalHealth(agent) * 0.5
     ) {
         return elementalKeys.SCORCH;
     }
@@ -971,7 +972,7 @@ export function lunaticAI(context) {
 
             if (
                 enemyHpStrike >= enemyHpAttack ||
-                (agent.resources[effectKeys.MOONDUST] > 0 && enemyHpAttack > 0)
+                (agent.resources[effectKeys.MOONSHINE] > 0 && enemyHpAttack > 0)
             ) {
                 return actionKeys.LUNAR_STRIKE;
             } else {

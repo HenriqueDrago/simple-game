@@ -18,7 +18,7 @@ import { INITIAL_GAME_STATE } from "./utils/constants.js";
 
 // App Component
 function App() {
-    const { game, setGame } = useGame();
+    const { game, setGame, handleHardResetGame } = useGame();
     const { UIElements, setUIElements, tooltipStack, handleClearTooltip } =
         useUI();
 
@@ -108,6 +108,34 @@ function App() {
                             return {
                                 ...prev,
                                 resetModal: false,
+                            };
+                        });
+                    }}
+                    confirmText="Continue"
+                    rejectText={"Cancel"}
+                />
+            )}
+
+            {UIElements.hardResetModal && (
+                <Modal
+                    mainText={"Are you sure you wish to proceed?"}
+                    subText={"*This action will delete all game data. This action is irreversible."}
+                    isConfirmOnly={false}
+                    rejectAction={() => {
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                resetModal: false,
+                            };
+                        });
+                    }}
+                    confirmAction={() => {
+                        handleHardResetGame();
+
+                        setUIElements((prev) => {
+                            return {
+                                ...prev,
+                                hardResetModal: false,
                             };
                         });
                     }}

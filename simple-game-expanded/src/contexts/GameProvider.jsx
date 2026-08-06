@@ -258,7 +258,7 @@ export default function GameProvider({ children }) {
                 return prev;
             }
 
-            if (prev.progressMode) {
+            if (prev[effectKeys.PROGRESSION_MODE]) {
                 return {
                     ...prev,
                     progressMode: false,
@@ -652,7 +652,8 @@ export default function GameProvider({ children }) {
                         const willTriggerRevelevantTurnEndEffects =
                             currEntity &&
                             (currEntity.resources[effectKeys.RADIANCE] > 0 ||
-                                currEntity.resources[effectKeys.MOONDUST] > 0 ||
+                                currEntity.resources[effectKeys.MOONSHINE] >
+                                    0 ||
                                 currEntity.resources[effectKeys.MANA_OVERFLOW] >
                                     0);
 
@@ -935,7 +936,7 @@ export default function GameProvider({ children }) {
         if (
             game.paused ||
             game.status !== turnStatus.VICTORY ||
-            !game.progressMode
+            !game[effectKeys.PROGRESSION_MODE]
         )
             return;
 
@@ -970,7 +971,7 @@ export default function GameProvider({ children }) {
                 },
             };
         });
-    }, [game.status, game.progressMode, game.paused]);
+    }, [game.status, game[effectKeys.PROGRESSION_MODE], game.paused]);
 
     // Save game
     useEffect(() => {

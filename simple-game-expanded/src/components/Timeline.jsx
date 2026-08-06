@@ -15,7 +15,7 @@ export default function Timeline() {
     const status = usedGame.status;
 
     if (status === turnStatus.SETUP || !phases) {
-        return null;
+        return <div className={`timeline-empty-box`}></div>;
     }
 
     return (

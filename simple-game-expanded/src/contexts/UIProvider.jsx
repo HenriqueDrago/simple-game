@@ -7,6 +7,7 @@ export default function UIProvider({children}) {
     const [UIElements, setUIElements] = useState({
         continueModal: false,
         resetModal: false,
+        hardResetModal: false,
         
         glossary: false,
         history: false,

@@ -16,6 +16,7 @@ import {
     getEntityMaxHealth,
     getEntityTotalMana,
     addRune,
+    translateElementIntoCrystals,
 } from "./entities.js";
 import {
     actionKeys,
@@ -662,14 +663,16 @@ function simulateShatter({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
+                [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(elementalKeys.SHATTERED),
             },
         },
     };
 }
 
 function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const extraDmg = Math.floor(agent[effectKeys.LUNACY] / constants.CHALK_EXTRA_DMG);
+    const extraDmg = Math.floor(
+        agent[effectKeys.LUNACY] / constants.CHALK_EXTRA_DMG,
+    );
     const { attacker, defender } = dealDamage(
         agent,
         nonAgent,
@@ -735,7 +738,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         agent,
         nonAgent,
         Math.floor(getEntityStr(agent) / 2) +
-            agent.resources[effectKeys.MOONDUST],
+            agent.resources[effectKeys.MOONSHINE],
         dmgTypes.PIERCING,
     );
 
@@ -743,7 +746,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         ...attacker,
         resources: {
             ...attacker.resources,
-            [effectKeys.MOONDUST]: 0,
+            [effectKeys.MOONSHINE]: 0,
         },
     };
 
