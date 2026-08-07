@@ -102,10 +102,10 @@ export const GENERAL_DESCRIPTIONS = {
     },
 
     [entryTypes.ACTION]: {
-        name: "ACTION",
+        name: "ACTIONS",
         type: entryTypes.CATEGORY,
         description:
-            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT. A player's base actions include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, CARVE, DEPLOY, ATTUNE, REFRACT, CHART, SHADOW PACT and AEGIS.",
+            "Abilities a player may choose to use during the PLAN subphase of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS and TRANSFORMATIVE ACTIONS. Most actions automatically advance the turn phase to COMMIT. A player's base actions include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, AEGIS, SHADOW PACT, DEPLOY, ATTUNE, CARVE, CHART and REFRACT.",
     },
 
     [entryTypes.OFFENSIVE_ACTION]: {
@@ -133,7 +133,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "HEALTH",
         type: entryTypes.LIMITED_RESOURCE,
         description:
-            "Capped at MAX HEALTH. Cannot restore HEALTH above the limit. When HEALTH reaches 0, loses the battle.",
+            "Capped at MAX HEALTH. Starts at max capacity. Cannot restore HEALTH above the limit. When HEALTH reaches 0, loses the battle.",
     },
 
     [effectKeys.MAX_HEALTH]: {
@@ -147,7 +147,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MANA",
         type: entryTypes.LIMITED_RESOURCE,
         description:
-            "Capped at MAX MANA. When replenishing MANA above the limit, gains MANA OVERFLOW instead.",
+            "Capped at MAX MANA. Starts at max capacity. When replenishing MANA above the limit, gains MANA OVERFLOW instead.",
     },
 
     [effectKeys.MAX_MANA]: {

@@ -44,9 +44,7 @@ function Header() {
                     <div className="header-settings-container">
                         <div
                             className={`sharp-setting-box ${
-                                game[effectKeys.PROGRESSION_MODE]
-                                    ? "disabled"
-                                    : ""
+                                game.progressMode ? "disabled" : ""
                             }`}
                         >
                             <label htmlFor="who-starts-select">
@@ -74,7 +72,7 @@ function Header() {
 
                         <div
                             className="sharp-setting-box"
-                            onClick={(e) => {
+                            onMouseDown={(e) => {
                                 handleSpawnTooltip(
                                     e,
                                     effectKeys.PROGRESSION_MODE,
@@ -84,7 +82,7 @@ function Header() {
                             <label>Progression Mode:</label>
                             <div className="switch-help-container">
                                 <Switch
-                                    checked={game[effectKeys.PROGRESSION_MODE]}
+                                    checked={game.progressMode}
                                     handleToggle={handleProgressToggle}
                                     disabled={game.status !== turnStatus.SETUP}
                                 />
@@ -93,7 +91,7 @@ function Header() {
                                     title={
                                         DESCRIPTIONS[
                                             effectKeys.PROGRESSION_MODE
-                                        ].desc
+                                        ].description
                                     }
                                 >
                                     [?]

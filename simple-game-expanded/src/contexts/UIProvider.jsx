@@ -70,6 +70,8 @@ export default function UIProvider({children}) {
             e.stopPropagation(); // Prevents the event from trigerring other effects
 
             const entry = DESCRIPTIONS[itemKey];
+            console.log(itemKey);
+            console.log(entry)
             if (itemKey && entry) {
                 handleSetTooltip({
                     keyword: entry.name,

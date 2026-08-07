@@ -1,5 +1,6 @@
 import {
     actionsClass,
+    ATTRIBUTE_NAMES,
     coloredStars,
     constants,
     FREE_RESOURCES,
@@ -66,7 +67,7 @@ export function distributePoints(
         attributes: {},
     };
 
-    for (let attr of constants.ATTRIBUTE_NAMES) {
+    for (let attr of ATTRIBUTE_NAMES) {
         newEntity.attributes[attr] = { ...entity.attributes[attr] };
     }
 
@@ -75,18 +76,15 @@ export function distributePoints(
             if (randomize) {
                 // Reset points before rolling
                 newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-                for (let attr of constants.ATTRIBUTE_NAMES) {
+                for (let attr of ATTRIBUTE_NAMES) {
                     newEntity.attributes[attr].points = 0;
                 }
 
                 // Roll random stats
                 for (let i = 0; i < constants.INITIAL_POINTS_AVAILABLE; i++) {
                     let random_stat =
-                        constants.ATTRIBUTE_NAMES[
-                            Math.floor(
-                                Math.random() *
-                                    constants.ATTRIBUTE_NAMES.length,
-                            )
+                        ATTRIBUTE_NAMES[
+                            Math.floor(Math.random() * ATTRIBUTE_NAMES.length)
                         ];
                     newEntity.attributes[random_stat].points += 1;
                     newEntity.unspentPoints -= 1;
@@ -99,7 +97,7 @@ export function distributePoints(
                 break;
             }
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-            for (let attr of constants.ATTRIBUTE_NAMES) {
+            for (let attr of ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: bestStats[attr],
@@ -110,7 +108,7 @@ export function distributePoints(
 
         case sdmKeys.FULL_DEF:
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-            for (let attr of constants.ATTRIBUTE_NAMES) {
+            for (let attr of ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: 0,
@@ -122,7 +120,7 @@ export function distributePoints(
 
         case sdmKeys.FULL_STR:
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-            for (let attr of constants.ATTRIBUTE_NAMES) {
+            for (let attr of ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: 0,
@@ -134,7 +132,7 @@ export function distributePoints(
 
         case sdmKeys.BALANCED:
             newEntity.unspentPoints = constants.INITIAL_POINTS_AVAILABLE;
-            for (let attr of constants.ATTRIBUTE_NAMES) {
+            for (let attr of ATTRIBUTE_NAMES) {
                 newEntity.attributes[attr] = {
                     ...newEntity.attributes[attr],
                     points: 0,
@@ -154,11 +152,8 @@ export function distributePoints(
     }
 
     // Builds values from points
-    for (let attr of constants.ATTRIBUTE_NAMES) {
-        newEntity.attributes[attr].value =
-            constants.BASE_STATS[attr] +
-            newEntity.attributes[attr].points *
-                constants.STAT_MULTIPLIERS[attr];
+    for (let attr of ATTRIBUTE_NAMES) {
+        newEntity.attributes[attr].value = newEntity.attributes[attr].points;
     }
 
     return newEntity;
@@ -167,19 +162,19 @@ export function distributePoints(
 export function createBaseEntity() {
     let baseAttributes = {};
 
-    for (let attr of constants.ATTRIBUTE_NAMES) {
+    for (let attr of ATTRIBUTE_NAMES) {
         baseAttributes[attr] = {
-            value: constants.BASE_STATS[attr],
+            value: 0,
             points: 0,
         };
     }
 
     return {
         // Limited Resources
-        maxHp: constants.BASE_STATS.hp,
-        currHp: constants.BASE_STATS.hp,
-        maxMana: constants.BASE_STATS.mana,
-        currMana: constants.BASE_STATS.mana,
+        maxHp: constants.BASE_HEALTH,
+        currHp: constants.BASE_HEALTH,
+        maxMana: constants.BASE_MANA,
+        currMana: constants.BASE_MANA,
 
         // fixed resources
         [effectKeys.DIVINE_SPARK]: 0,
@@ -583,7 +578,7 @@ export function resetPlayerEntity(prev, entityKey) {
     baseEntity.statDistributionMode = currentEntity.statDistributionMode;
     baseEntity.unspentPoints = currentEntity.unspentPoints;
 
-    for (let attr of constants.ATTRIBUTE_NAMES) {
+    for (let attr of ATTRIBUTE_NAMES) {
         baseEntity.attributes[attr].points =
             currentEntity.attributes[attr].points;
     }
@@ -1537,7 +1532,7 @@ export function processSilverBlood(entity) {
 export function translateElementIntoCrystals(element) {
     let crystals;
     switch (element) {
-        case elementalKeys.SHATTERED: 
+        case elementalKeys.SHATTERED:
             crystals = [elementalKeys.SHATTERED];
             break;
         case elementalKeys.ALBEDO:
@@ -1653,7 +1648,7 @@ export function raiseStats(entity, amount) {
     let attributes = {};
 
     // Initialization
-    for (let attr of constants.ATTRIBUTE_NAMES) {
+    for (let attr of ATTRIBUTE_NAMES) {
         attributes = {
             ...attributes,
             [attr]: {
@@ -1665,7 +1660,7 @@ export function raiseStats(entity, amount) {
 
     // Distribution
     while (amount > 0) {
-        for (let attr of constants.ATTRIBUTE_NAMES) {
+        for (let attr of ATTRIBUTE_NAMES) {
             attributes = {
                 ...attributes,
                 [attr]: {
@@ -1692,7 +1687,7 @@ export function lowerStats(entity, amount) {
     let attrConsumed = {};
 
     // Initialization
-    for (let attr of constants.ATTRIBUTE_NAMES) {
+    for (let attr of ATTRIBUTE_NAMES) {
         attributes = {
             ...attributes,
             [attr]: {
@@ -1704,7 +1699,7 @@ export function lowerStats(entity, amount) {
 
     // Distribution
     while (amount > 0) {
-        for (let attr of constants.ATTRIBUTE_NAMES) {
+        for (let attr of ATTRIBUTE_NAMES) {
             attributes = {
                 ...attributes,
                 [attr]: {
@@ -1778,7 +1773,10 @@ export function canUseAction(prev, entityKey, action) {
 
     // Helper to evaluate progression lock status for base actions only
     const isProgLocked = (bossKey) => {
-        if (!prev[effectKeys.PROGRESSION_MODE] || entity.controller !== aiKeys.HUMAN) {
+        if (
+            !prev[effectKeys.PROGRESSION_MODE] ||
+            entity.controller !== aiKeys.HUMAN
+        ) {
             return false;
         }
         const status = prev.progressStatus[bossKey];
@@ -2300,7 +2298,7 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
     const totalBadOmen =
         draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN;
     const excessBadOmen = Math.max(0, totalBadOmen - constants.MAX_BAD_OMEN);
-    const pdGained = Math.floor(excessBadOmen / 1);
+    const pdGained = Math.floor(excessBadOmen / constants.BAD_OMEN_EXCESS_CONVERT_RATE);
 
     draftNonTarget = {
         ...draftNonTarget,
@@ -2339,7 +2337,7 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
     const totalPremo =
         draftTarget[effectKeys.PREMONITION] + constants.SKULD_PREMONITION_GAIN;
     const excessPremo = Math.max(0, totalPremo - constants.MAX_PREMONITION);
-    const precogGained = Math.floor(excessPremo / 1);
+    const precogGained = Math.floor(excessPremo / constants.PREMONITION_EXCESS_CONVERT_RATE);
 
     draftTarget = {
         ...draftTarget,
@@ -2438,9 +2436,31 @@ export function processLunacy(entity) {
     if (entity[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
         draftEntity = {
             ...draftEntity,
-            [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(elementalKeys.SHATTERED),
+            [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
+                elementalKeys.SHATTERED,
+            ),
         };
     }
 
     return draftEntity;
+}
+
+export function getCurrActivePlayer(prev) {
+    const currPhase = prev?.roundQueue?.[prev?.roundIndex];
+
+    const isPlayerOneTurn =
+        currPhase === roundPhases.PLAYER_ONE_TURN ||
+        currPhase === roundPhases.P1_SINGULARITY;
+    const isPlayerTwoTurn =
+        currPhase === roundPhases.PLAYER_TWO_TURN ||
+        currPhase === roundPhases.P2_SINGULARITY;
+
+    if(isPlayerOneTurn) {
+        return entityKeys.PLAYER_ONE
+    }
+    if(isPlayerTwoTurn) {
+        return entityKeys.PLAYER_TWO
+    }
+
+    return null;
 }

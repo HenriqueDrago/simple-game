@@ -22,6 +22,7 @@ import {
     SHADOW_SORCERER_DESCRIPTIONS,
     STARFARER_DESCRIPTIONS,
     WARLOCK_DESCRIPTIONS,
+    SERAPH_DESCRIPTIONS,
 } from "./descriptions.js";
 import { createBaseEntity, distributePoints } from "./entities.js";
 
@@ -41,180 +42,77 @@ import {
     moonKeys,
 } from "./enums.js";
 
-const INITIAL_POINTS_AVAILABLE = 10;
+export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
-const ATTRIBUTE_NAMES = ["str", "def"];
-const BASE_STATS = {
-    str: 0,
-    def: 0,
-    hp: 20,
-    mana: 10,
-};
-const STAT_MULTIPLIERS = {
-    str: 1,
-    def: 1,
-};
-
-const STANDARD_DR_INCREASE = 0.5;
-const STANDARD_DEF_EFFECT_INCREASE = 1.5;
-const GUARD_MANA_REGEN = 0.3;
-
-const SP_ATTACK_COST = 0.6;
-
-const MANA_BLEED_MULT = 0.5;
-const BLOOD_SACRIFICE_MULT = 1.0;
-
-const ARRAY_DURATION = 3;
-const MANA_SHACKLE_TURN_GAIN = 5;
-
-const MAX_OVERHEAT = 100;
-const VENTING_OVERHEAT_LOSS = 50;
-const NATURAL_OVERHEAT_LOSS = 30;
-
-const HALO_GEN_MULT = 2;
-const SAC_HP_CONSUMPTION = 0.5;
-
-const SHADOW_PACT_BURN = 5;
-
-const RADIANT_DEF_EFFECT_MULTIPLIER = 0;
-
-const STARTING_SONORITY = 0;
-const SONORITY_LOWER_LIMIT = -50;
-const SONORITY_HIGHER_LIMIT = 50;
-const SONORITY_ON_DEFENSE = 5;
-const SONORITY_ON_OFFENSE = -5;
-
-const MAX_DIVINE_SPARK = 100;
-
-const CHART_STAR_GAIN = 3;
-const STARDUST_RATE_CONVERSION = 3;
-
-const MAX_DYNAMO = 100;
-const STARTING_ENERGY = 1;
-
-const RESOURCES_CINDERS_MULT = 1;
-
-const ALBEDO_ML_GAIN = 2;
-const BLOOD_CORONA_ML_GAIN = 1;
-const MIRROR_ML_GAIN = 3;
-const LUNAR_GROWTH_MULT = 1;
-const HIDDEN_MOON_ML_GAIN = 3;
-const LUNAR_VEIL_TEARS_GAIN = 1;
-const GIBBOUS_TEARS_GAIN = 1;
-const CHALK_EXTRA_DMG = 10;
-
-const MAX_LUNACY = 100;
-
-const LUNAR_TIDE_MULT = 2;
-const SMITE_MULT = 5;
-const WITHER_LUNACY_MULT = 2;
-
-const MAX_ACCRETION = 100;
-
-const GRAVITATION_GAIN = 5;
-const MAX_GRAVITATION = 100;
-const ACC_STARBLIGHT_CONVERSION = 5;
-
-const DIVINE_SPARK_STR_CONVERSION = 5;
-
-const MAX_BAD_OMEN = 100;
-const MAX_RECOLLECTION = 100;
-const MAX_PREMONITION = 100;
-const CURSE_EMPTY_RUNE_DMG = 5;
-
-// Urd
-const URD_HEALTH_REGEN = 0.3;
-const URD_DEF_REC = 3;
-const RECOLLECTION_LOSE = 20;
-const PAST_MEMORIES_GAIN_RATE = 5;
-const URD_STR_PAIN = 2;
-
-// Skuld
-const SKULD_WEAK = 0.3;
-const SKULD_MANA_REGEN = 0.3;
-const SKULD_PRECOGNITION_GAIN = 0.3;
-const SKULD_PREMONITION_GAIN = 20;
-const PREMONITION_TURN_END_LOSS = 20;
-const PRECOG_GAIN_RATE = 10;
-
-// Verdandi
-const VERDANDI_OMEN_GAIN = 20;
-const BAD_OMEN_TURN_END_LOSS = 20;
-const PROPHECY_GAIN_RATE = 10;
-
-const SPARK_RESTORE_RATE = 2;
-
-export const constants = {
-    SPARK_RESTORE_RATE,
-    ACC_STARBLIGHT_CONVERSION,
-    URD_STR_PAIN,
-    CHALK_EXTRA_DMG,
-    PRECOG_GAIN_RATE,
-    PROPHECY_GAIN_RATE,
-    MAX_PREMONITION,
-    SKULD_PREMONITION_GAIN,
-    PREMONITION_TURN_END_LOSS,
-    BAD_OMEN_TURN_END_LOSS,
-    CURSE_EMPTY_RUNE_DMG,
-    SKULD_MANA_REGEN,
-    SKULD_WEAK,
-    PAST_MEMORIES_GAIN_RATE,
-    URD_DEF_REC,
-    RECOLLECTION_LOSE,
-    SKULD_PRECOGNITION_GAIN,
-    MAX_RECOLLECTION,
-    URD_HEALTH_REGEN,
-    VERDANDI_OMEN_GAIN,
-    MAX_BAD_OMEN,
-    DIVINE_SPARK_STR_CONVERSION,
-    GRAVITATION_GAIN,
-    MAX_GRAVITATION,
-    MAX_ACCRETION,
-    SONORITY_ON_DEFENSE,
-    SONORITY_ON_OFFENSE,
-    WITHER_LUNACY_MULT,
-    LUNAR_TIDE_MULT,
-    MAX_LUNACY,
-    GIBBOUS_TEARS_GAIN,
-    LUNAR_VEIL_TEARS_GAIN,
-    INITIAL_POINTS_AVAILABLE,
-    ATTRIBUTE_NAMES,
-    BASE_STATS,
-    STAT_MULTIPLIERS,
-    SP_ATTACK_COST,
-    MANA_BLEED_MULT,
-    BLOOD_SACRIFICE_MULT,
-    ARRAY_DURATION,
-    MANA_SHACKLE_TURN_GAIN,
-    MAX_OVERHEAT,
-    STANDARD_DR_INCREASE,
-    STANDARD_DEF_EFFECT_INCREASE,
-    GUARD_MANA_REGEN,
-    HALO_GEN_MULT,
-    SAC_HP_CONSUMPTION,
-    SHADOW_PACT_BURN,
-    RADIANT_DEF_EFFECT_MULTIPLIER,
-    STARTING_SONORITY,
-    SONORITY_LOWER_LIMIT,
-    SONORITY_HIGHER_LIMIT,
-    VENTING_OVERHEAT_LOSS,
-    CHART_STAR_GAIN,
-    STARDUST_RATE_CONVERSION,
-    MAX_DIVINE_SPARK,
-    NATURAL_OVERHEAT_LOSS,
-    MAX_DYNAMO,
-    STARTING_ENERGY,
-
-    RESOURCES_CINDERS_MULT,
-
-    ALBEDO_ML_GAIN,
-    MIRROR_ML_GAIN,
-    BLOOD_CORONA_ML_GAIN,
-    LUNAR_GROWTH_MULT,
-
-    HIDDEN_MOON_ML_GAIN,
-    SMITE_MULT,
-};
+export const constants = Object.freeze({
+    BAD_OMEN_EXCESS_CONVERT_RATE: 10,
+    PREMONITION_EXCESS_CONVERT_RATE: 10,
+    BASE_HEALTH: 20,
+    BASE_MANA: 10,
+    SPARK_RESTORE_RATE: 2,
+    ACC_STARBLIGHT_CONVERSION: 5,
+    URD_STR_PAIN: 2,
+    CHALK_EXTRA_DMG: 10,
+    PRECOG_GAIN_RATE: 10,
+    PROPHECY_GAIN_RATE: 10,
+    MAX_PREMONITION: 100,
+    SKULD_PREMONITION_GAIN: 20,
+    PREMONITION_TURN_END_LOSS: 20,
+    BAD_OMEN_TURN_END_LOSS: 20,
+    CURSE_EMPTY_RUNE_DMG: 5,
+    SKULD_MANA_REGEN: 0.3,
+    SKULD_WEAK: 0.3,
+    PAST_MEMORIES_GAIN_RATE: 5,
+    URD_DEF_REC: 3,
+    RECOLLECTION_LOSE: 20,
+    SKULD_PRECOGNITION_GAIN: 0.3,
+    MAX_RECOLLECTION: 100,
+    URD_HEALTH_REGEN: 0.3,
+    VERDANDI_OMEN_GAIN: 20,
+    MAX_BAD_OMEN: 100,
+    DIVINE_SPARK_STR_CONVERSION: 5,
+    GRAVITATION_GAIN: 5,
+    MAX_GRAVITATION: 100,
+    MAX_ACCRETION: 100,
+    SONORITY_ON_DEFENSE: 5,
+    SONORITY_ON_OFFENSE: -5,
+    WITHER_LUNACY_MULT: 2,
+    LUNAR_TIDE_MULT: 2,
+    MAX_LUNACY: 100,
+    GIBBOUS_TEARS_GAIN: 1,
+    LUNAR_VEIL_TEARS_GAIN: 1,
+    INITIAL_POINTS_AVAILABLE: 10,
+    SP_ATTACK_COST: 0.6,
+    MANA_BLEED_MULT: 0.5,
+    BLOOD_SACRIFICE_MULT: 1.0,
+    ARRAY_DURATION: 3,
+    MANA_SHACKLE_TURN_GAIN: 5,
+    MAX_OVERHEAT: 100,
+    STANDARD_DR_INCREASE: 0.5,
+    STANDARD_DEF_EFFECT_INCREASE: 1.5,
+    GUARD_MANA_REGEN: 0.3,
+    HALO_GEN_MULT: 2,
+    SAC_HP_CONSUMPTION: 0.5,
+    SHADOW_PACT_BURN: 5,
+    RADIANT_DEF_EFFECT_MULTIPLIER: 0,
+    STARTING_SONORITY: 0,
+    SONORITY_LOWER_LIMIT: -50,
+    SONORITY_HIGHER_LIMIT: 50,
+    VENTING_OVERHEAT_LOSS: 50,
+    CHART_STAR_GAIN: 3,
+    STARDUST_RATE_CONVERSION: 3,
+    MAX_DIVINE_SPARK: 100,
+    NATURAL_OVERHEAT_LOSS: 30,
+    MAX_DYNAMO: 100,
+    STARTING_ENERGY: 1,
+    RESOURCES_CINDERS_MULT: 1,
+    ALBEDO_ML_GAIN: 2,
+    MIRROR_ML_GAIN: 3,
+    BLOOD_CORONA_ML_GAIN: 1,
+    LUNAR_GROWTH_MULT: 1,
+    HIDDEN_MOON_ML_GAIN: 3,
+    SMITE_MULT: 5,
+});
 
 export const MITIGATION_RESOURCES = [
     effectKeys.STARLIT_DOME,
@@ -315,7 +213,7 @@ export const presetAi = {
         desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
     },
     [aiKeys.AUGUR]: {
-        name: "Augur (Broken AI)",
+        name: "Augur (Missing AI)",
         best: {
             str: 10,
             def: 0,
@@ -324,7 +222,7 @@ export const presetAi = {
         desc: [...Object.keys(AUGUR_DESCRIPTIONS)],
     },
     [aiKeys.STARFARER]: {
-        name: "Starfarer (Broken AI)",
+        name: "Starfarer (Missing AI)",
         best: {
             str: 0,
             def: 10,
@@ -340,6 +238,15 @@ export const presetAi = {
         },
         caller: lunaticAI,
         desc: [...Object.keys(LUNATIC_DESCRIPTIONS)],
+    },
+    [aiKeys.SERAPH]: {
+        name: "Seraph (Unimplemented)",
+        best: {
+            str: 0,
+            def: 10,
+        },
+        caller: simpleAI,
+        desc: [...Object.keys(SERAPH_DESCRIPTIONS)],
     },
 };
 
@@ -468,6 +375,7 @@ export const INITIAL_GAME_STATE = {
         [aiKeys.STARFARER]: progKeys.LOCKED,
         [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
         [aiKeys.PALADIN]: progKeys.LOCKED,
+        [aiKeys.SERAPH]: progKeys.LOCKED,
     },
     entities: {
         [entityKeys.PLAYER_ONE]: {
@@ -589,7 +497,7 @@ export const entryTypesMap = {
     [entryTypes.OFFENSIVE_ACTION]: "OFFENSIVE ACTION",
     [entryTypes.DEFENSIVE_ACTION]: "DEFENSIVE ACTION",
     [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
-    [entryTypes.RUNES]: "RUNES",
+    [entryTypes.RUNES]: "RUNE",
     [entryTypes.CONTROLLER]: "CONTROLLER",
 };
 

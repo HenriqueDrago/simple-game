@@ -125,7 +125,7 @@ function App() {
                         setUIElements((prev) => {
                             return {
                                 ...prev,
-                                resetModal: false,
+                                hardResetModal: false,
                             };
                         });
                     }}

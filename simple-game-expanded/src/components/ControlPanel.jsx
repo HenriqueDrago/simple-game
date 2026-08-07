@@ -27,10 +27,7 @@ function ControlPanel({ entityKey }) {
 
     return (
         <div className="control-panel-container">
-            {!(
-                game[effectKeys.PROGRESSION_MODE] &&
-                entityKey === entityKeys.PLAYER_TWO
-            ) && (
+            {!(game.progressMode && entityKey === entityKeys.PLAYER_TWO) && (
                 <div className="control-box">
                     <label
                         className="control-box-label"
@@ -75,10 +72,7 @@ function ControlPanel({ entityKey }) {
                 </div>
             )}
 
-            {!(
-                game[effectKeys.PROGRESSION_MODE] &&
-                entityKey === entityKeys.PLAYER_ONE
-            ) && (
+            {!(game.progressMode && entityKey === entityKeys.PLAYER_ONE) && (
                 <div className="control-box">
                     <label
                         className="control-box-label"
@@ -99,7 +93,7 @@ function ControlPanel({ entityKey }) {
                                     key={aiKey}
                                     value={aiKey}
                                     disabled={
-                                        game[effectKeys.PROGRESSION_MODE] &&
+                                        game.progressMode &&
                                         game.progressStatus[aiKey] ===
                                             progKeys.LOCKED
                                     }

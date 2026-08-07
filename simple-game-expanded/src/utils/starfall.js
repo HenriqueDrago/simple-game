@@ -448,6 +448,10 @@ export function processVioletStar(
 }
 
 export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
+    if(!prev?.entities?.[ownerKey]?.states?.[effectKeys.STARGAZER]) {
+        return prev;
+    }
+
     let gameState = {
         ...prev,
     };

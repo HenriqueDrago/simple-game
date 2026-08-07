@@ -15,7 +15,7 @@ function StarRow({
     reversed,
     isPlayerStarfall,
 }) {
-    const { handleStarChange, handleClearSimulation } = useGame();
+    const { handleStarChange } = useGame();
     const { handleSpawnTooltip } = useUI();
 
     const isStarGlowing = currentPhase === starPhase && isPlayerStarfall;
@@ -37,7 +37,6 @@ function StarRow({
                 <button
                     onClick={() => {
                         handleStarChange(entityKey, starKey, -1);
-                        handleClearSimulation();
                     }}
                     disabled={isMinusDisabled}
                 >
@@ -49,7 +48,6 @@ function StarRow({
                 <button
                     onClick={() => {
                         handleStarChange(entityKey, starKey, 1);
-                        handleClearSimulation();
                     }}
                     disabled={isPlusDisabled}
                 >

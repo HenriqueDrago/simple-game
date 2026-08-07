@@ -1,6 +1,7 @@
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import {
+    ATTRIBUTE_NAMES,
     constants,
     FIXED_RESOURCES,
     FREE_RESOURCES,
@@ -408,7 +409,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
                     <RunicArray entity={entity} simEntity={simEntity} />
 
                     <div className="attributes-wrapper">
-                        {constants.ATTRIBUTE_NAMES.map((attr) => (
+                        {ATTRIBUTE_NAMES.map((attr) => (
                             <AttrLine
                                 key={attr}
                                 entityKey={entityKey}

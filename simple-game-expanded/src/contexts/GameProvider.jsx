@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
     createBaseEntity,
     distributePoints,
+    getCurrActivePlayer,
     getEntityElement,
     isElementActive,
     processDeathCheck,
@@ -26,7 +27,6 @@ import {
 import {
     CHECKPOINT_STATES,
     coloredStars,
-    constants,
     INITIAL_GAME_STATE,
     presetAi,
 } from "../utils/constants";
@@ -43,6 +43,7 @@ import {
 } from "../utils/turnManagement";
 import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
+import { simulateFullStarfall } from "../utils/starfall";
 
 // Auxiliary Functions
 function resetGameState(prev) {
@@ -273,6 +274,12 @@ export default function GameProvider({ children }) {
                         [entityKeys.PLAYER_ONE]: {
                             ...prev.entities[entityKeys.PLAYER_ONE],
                             controller: aiKeys.HUMAN,
+                            statDistributionMode:
+                                prev.entities[entityKeys.PLAYER_ONE]
+                                    .statDistributionMode === sdmKeys.BEST
+                                    ? sdmKeys.CUSTOM
+                                    : prev.entities[entityKeys.PLAYER_ONE]
+                                          .statDistributionMode,
                         },
                         [entityKeys.PLAYER_TWO]: {
                             ...distributePoints(
@@ -383,10 +390,7 @@ export default function GameProvider({ children }) {
                                 ...prev.entities[targetKey].attributes[
                                     statusKey
                                 ],
-                                value:
-                                    constants.BASE_STATS[statusKey] +
-                                    newAttributePoints *
-                                        constants.STAT_MULTIPLIERS[statusKey],
+                                value: newAttributePoints,
                                 points: newAttributePoints,
                             },
                         },
@@ -480,30 +484,6 @@ export default function GameProvider({ children }) {
                         ...draftEntity,
                     },
                 },
-            };
-        });
-    }
-
-    function handleCreateSimulatedGame(action, agentKey, nonAgentKey) {
-        setGame((prev) => {
-            let sim = processDeathCheck(
-                buildRoundQueue(
-                    processActionUse(prev, agentKey, nonAgentKey, action),
-                ),
-            );
-
-            return {
-                ...prev,
-                simGame: sim,
-            };
-        });
-    }
-
-    function handleClearSimulation() {
-        setGame((prev) => {
-            return {
-                ...prev,
-                simGame: null,
             };
         });
     }
@@ -936,7 +916,7 @@ export default function GameProvider({ children }) {
         if (
             game.paused ||
             game.status !== turnStatus.VICTORY ||
-            !game[effectKeys.PROGRESSION_MODE]
+            !game.progressMode
         )
             return;
 
@@ -971,7 +951,7 @@ export default function GameProvider({ children }) {
                 },
             };
         });
-    }, [game.status, game[effectKeys.PROGRESSION_MODE], game.paused]);
+    }, [game.status, game.progressMode, game.paused]);
 
     // Save game
     useEffect(() => {
@@ -989,7 +969,7 @@ export default function GameProvider({ children }) {
         }
     }, [game]);
 
-    // Pause shortcut
+    // Event Listeners
     useEffect(() => {
         function handleKeyDown(e) {
             if (
@@ -1004,11 +984,125 @@ export default function GameProvider({ children }) {
                     };
                 });
             }
+
+            if (e.key === "Shift") {
+                if (e.repeat) {
+                    return;
+                }
+
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        simSpecs: {
+                            ...prev.simSpecs,
+                            commit: true,
+                            starfall: true,
+                        },
+                    };
+                });
+            }
         }
 
+        function handleKeyUp(e) {
+            if (e.key === "Shift") {
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        simSpecs: {
+                            ...prev.simSpecs,
+                            commit: false,
+                            starfall: false,
+                        },
+                    };
+                });
+            }
+        }
+
+        function handleBlur() {
+            setGame((prev) => ({
+                ...prev,
+                paused: game.status !== turnStatus.SETUP ? true : prev.paused,
+                simSpecs: {
+                    ...prev.simSpecs,
+                    commit: false,
+                    starfall: false,
+                },
+            }));
+        }
+
+        // Add listeners
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
+        };
     }, [game.status]);
+
+    // Update simulation
+    useEffect(() => {
+        setGame((prev) => {
+            let sim = null;
+
+            const agentKey = getCurrActivePlayer(prev);
+            const nonAgentKey = !agentKey
+                ? null
+                : agentKey === entityKeys.PLAYER_ONE
+                  ? entityKeys.PLAYER_TWO
+                  : entityKeys.PLAYER_ONE;
+
+            if (
+                !agentKey ||
+                !nonAgentKey ||
+                !(
+                    prev?.entities?.[agentKey]?.[effectKeys.CONTROLLER] ===
+                    aiKeys.HUMAN
+                ) ||
+                !(prev?.playerQueue?.[0] === playerTurnPhases.PLAN)
+            ) {
+                return prev;
+            }
+
+            if (game?.simSpecs?.action) {
+                sim = processDeathCheck(
+                    buildRoundQueue(
+                        processActionUse(
+                            sim ? sim : prev,
+                            agentKey,
+                            nonAgentKey,
+                            game.simSpecs.action,
+                        ),
+                    ),
+                );
+            }
+
+            if (game?.simSpecs?.commit) {
+                sim = buildRoundQueue(
+                    commitTurn(sim ? sim : prev, agentKey, nonAgentKey),
+                );
+            }
+
+            if (game?.simSpecs?.starfall) {
+                sim = buildRoundQueue(
+                    simulateFullStarfall(
+                        sim ? sim : prev,
+                        agentKey,
+                        nonAgentKey,
+                    ),
+                );
+            }
+
+            return {
+                ...prev,
+                simGame: sim,
+            };
+        });
+    }, [game.entities, game.simSpecs]);
 
     return (
         <GameContext.Provider
@@ -1017,9 +1111,7 @@ export default function GameProvider({ children }) {
                 setGame,
                 handleAction,
                 handleAiChange,
-                handleClearSimulation,
                 handleConstellation,
-                handleCreateSimulatedGame,
                 handleDistributionModeChange,
                 handleElementChange,
                 handleHardResetGame,

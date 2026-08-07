@@ -18,12 +18,7 @@ import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
 function ActionPanel() {
-    const {
-        game,
-        handleAction,
-        handleClearSimulation,
-        handleCreateSimulatedGame,
-    } = useGame();
+    const { game, handleAction, setGame } = useGame();
     const { handleClearTooltip, handleSetTooltip } = useUI();
 
     const p1Controller = game.entities[entityKeys.PLAYER_ONE].controller;
@@ -148,13 +143,25 @@ function ActionPanel() {
                                         targetEntityKey,
                                     );
                                     if (FREE_ACTIONS.includes(action.key)) {
-                                        handleCreateSimulatedGame(
-                                            action.key,
-                                            currEntityKey,
-                                            targetEntityKey,
-                                        );
+                                        setGame((prev) => {
+                                            return {
+                                                ...prev,
+                                                simSpecs: {
+                                                    ...prev.simSpecs,
+                                                    action: action.key,
+                                                },
+                                            };
+                                        });
                                     } else {
-                                        handleClearSimulation();
+                                        setGame((prev) => {
+                                            return {
+                                                ...prev,
+                                                simSpecs: {
+                                                    ...prev.simSpecs,
+                                                    action: null,
+                                                },
+                                            };
+                                        });
                                     }
                                 }}
                                 onMouseDown={(e) => {
@@ -174,14 +181,26 @@ function ActionPanel() {
                                     }
                                 }}
                                 onMouseEnter={() => {
-                                    handleCreateSimulatedGame(
-                                        action.key,
-                                        currEntityKey,
-                                        targetEntityKey,
-                                    );
+                                    setGame((prev) => {
+                                        return {
+                                            ...prev,
+                                            simSpecs: {
+                                                ...prev.simSpecs,
+                                                action: action.key,
+                                            },
+                                        };
+                                    });
                                 }}
                                 onMouseLeave={() => {
-                                    handleClearSimulation();
+                                    setGame((prev) => {
+                                        return {
+                                            ...prev,
+                                            simSpecs: {
+                                                ...prev.simSpecs,
+                                                action: null,
+                                            },
+                                        };
+                                    });
                                 }}
                                 disabled={action.disabled}
                                 className={action.specialClass || ""}

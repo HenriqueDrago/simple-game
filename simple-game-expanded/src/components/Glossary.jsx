@@ -38,7 +38,7 @@ function Glossary() {
 
                 if (
                     !aiObj.desc ||
-                    (game[effectKeys.PROGRESSION_MODE] &&
+                    (game.progressMode &&
                         game.progressStatus[aiKey] === progKeys.LOCKED)
                 ) {
                     return null;
