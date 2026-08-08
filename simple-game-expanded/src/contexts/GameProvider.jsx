@@ -41,7 +41,7 @@ import {
     processStarfallTurn,
     processUpkeep,
 } from "../utils/turnManagement";
-import { centralAIManagement } from "../utils/aiControllers";
+import { centralAIManagement, setConstellation } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
 import { simulateFullStarfall } from "../utils/starfall";
 
@@ -693,17 +693,19 @@ export default function GameProvider({ children }) {
             game.roundQueue && game.roundQueue.length > 0
                 ? game.roundQueue[game.roundIndex]
                 : null;
+
+        const isSingularity =
+            currPhase === roundPhases.P1_SINGULARITY ||
+            currPhase === roundPhases.P2_SINGULARITY;
         if (
             currPhase !== roundPhases.PLAYER_ONE_TURN &&
-            currPhase !== roundPhases.PLAYER_TWO_TURN
+            currPhase !== roundPhases.PLAYER_TWO_TURN &&
+            !isSingularity
         ) {
             return;
         }
 
-        const targetKey =
-            currPhase === roundPhases.PLAYER_ONE_TURN
-                ? entityKeys.PLAYER_ONE
-                : entityKeys.PLAYER_TWO;
+        const targetKey = getCurrActivePlayer(game);
         const nonTargetKey =
             targetKey === entityKeys.PLAYER_ONE
                 ? entityKeys.PLAYER_TWO
@@ -716,7 +718,7 @@ export default function GameProvider({ children }) {
                 : null;
 
         if (
-            currentSubPhase === playerTurnPhases.PLAN &&
+            (currentSubPhase === playerTurnPhases.PLAN || isSingularity) &&
             activePlayer.controller !== aiKeys.HUMAN
         ) {
             const aiTimer = setTimeout(() => {
@@ -729,8 +731,12 @@ export default function GameProvider({ children }) {
                         ...prev.entities[targetKey],
                     };
 
-                    const { assignedStars, selectedElement, action } =
-                        centralAIManagement(prev, targetKey, nonTargetKey);
+                    const {
+                        assignedStars,
+                        selectedElement,
+                        action,
+                        selectedConstellation,
+                    } = centralAIManagement(prev, targetKey, nonTargetKey);
 
                     console.log(`${targetKey} has used ${action}`);
 
@@ -833,6 +839,13 @@ export default function GameProvider({ children }) {
                             },
                         },
                     };
+
+                    // Process Constellation
+                    newGame = setConstellation(
+                        newGame,
+                        targetKey,
+                        selectedConstellation,
+                    );
 
                     // History
                     if (getEntityElement(activePlayer) !== selectedElement) {

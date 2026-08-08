@@ -38,20 +38,39 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
+    if (draftTarget[effectKeys.IRRADIATION] > 0) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.IRRADIATION]: 0,
+        };
+    }
+
     // Dome
     if (draftTarget.resources[effectKeys.DOME] > 0) {
-        const newStardust =
-            draftTarget.resources[effectKeys.STARDUST] +
-            draftTarget.resources[effectKeys.DOME];
+        const totalIrrad =
+            draftTarget[effectKeys.IRRADIATION] +
+            Math.floor(
+                draftTarget.resources[effectKeys.DOME] *
+                    constants.IRRADIATION_GAIN_RATE,
+            );
+        const excessIrrad = Math.max(0, totalIrrad - constants.MAX_IRRADIATION);
 
         draftTarget = {
             ...draftTarget,
+            [effectKeys.IRRADIATION]: totalIrrad - excessIrrad,
             resources: {
                 ...draftTarget.resources,
                 [effectKeys.DOME]: 0,
-                [effectKeys.STARDUST]: newStardust,
             },
         };
+
+        if (excessIrrad >= constants.IRRAD_DMG_EXCESS) {
+            draftTarget = takeDamage(
+                draftTarget,
+                Math.floor(excessIrrad / constants.IRRAD_DMG_EXCESS),
+                dmgTypes.TRUE,
+            );
+        }
     }
 
     // Starlit Dome
@@ -333,7 +352,9 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
         const toBeRestored = Math.max(
             0,
-            Math.floor((sparkGained - missingSpark) / constants.SPARK_RESTORE_RATE),
+            Math.floor(
+                (sparkGained - missingSpark) / constants.SPARK_RESTORE_RATE,
+            ),
         );
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }

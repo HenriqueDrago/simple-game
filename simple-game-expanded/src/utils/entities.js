@@ -186,6 +186,7 @@ export function createBaseEntity() {
         [effectKeys.RECOLLECTION]: 0,
         [effectKeys.PREMONITION]: 0,
         [effectKeys.ACCRETION]: 0,
+        [effectKeys.IRRADIATION]: 0,
 
         // ranked resources
         [effectKeys.MANA_BLEED]: 0,
@@ -290,7 +291,14 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
     if (entity.states.sacrificial) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+        const missingHealth = Math.max(
+            0,
+            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
+        );
+        drMult *=
+            getEntityMaxHealth(entity) > 0
+                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                : 1;
     }
     if (entity.states.darkEmbrace) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
@@ -364,6 +372,10 @@ export function processEntityFragility(entity) {
         frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
     }
 
+    if (entity[effectKeys.IRRADIATION] > 0) {
+        frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
+    }
+
     return frail;
 }
 
@@ -383,6 +395,10 @@ export function processEntityWeakness(entity) {
 
     if (entity[effectKeys.BAD_OMEN] > 0) {
         weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
+    }
+
+    if (entity[effectKeys.IRRADIATION] > 0) {
+        weak *= 1 - entity[effectKeys.IRRADIATION] / 100;
     }
 
     return weak;
@@ -837,16 +853,16 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
 
     // Process special removals
     if (originalStates[effectKeys.VISIONARY]) {
-        newGameState = processExitVisionary(prev, targetKey, nonTargetKey);
+        newGameState = processExitVisionary(newGameState, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.STARGAZER]) {
-        newGameState = processExitStargazer(prev, targetKey, nonTargetKey);
+        newGameState = processExitStargazer(newGameState, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.RESONANT]) {
-        newGameState = processExitResonant(prev, targetKey, nonTargetKey);
+        newGameState = processExitResonant(newGameState, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.SELENIAN]) {
-        newGameState = processExitSelenian(prev, targetKey, nonTargetKey);
+        newGameState = processExitSelenian(newGameState, targetKey, nonTargetKey);
     }
 
     return newGameState;
@@ -1273,19 +1289,6 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                     resources: {
                         ...draftEntity.resources,
                         [effectKeys.MOONSHINE]: currentMoondust + consumption,
-                    },
-                };
-            }
-
-            // Starlit Dome
-            if (isCauseDamage && currResourceKey === effectKeys.STARLIT_DOME) {
-                draftEntity = {
-                    ...draftEntity,
-                    resources: {
-                        ...draftEntity.resources,
-                        [effectKeys.STARDUST]:
-                            draftEntity.resources[effectKeys.STARDUST] +
-                            consumption,
                     },
                 };
             }
@@ -2298,7 +2301,9 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
     const totalBadOmen =
         draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN;
     const excessBadOmen = Math.max(0, totalBadOmen - constants.MAX_BAD_OMEN);
-    const pdGained = Math.floor(excessBadOmen / constants.BAD_OMEN_EXCESS_CONVERT_RATE);
+    const pdGained = Math.floor(
+        excessBadOmen / constants.BAD_OMEN_EXCESS_CONVERT_RATE,
+    );
 
     draftNonTarget = {
         ...draftNonTarget,
@@ -2337,7 +2342,9 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
     const totalPremo =
         draftTarget[effectKeys.PREMONITION] + constants.SKULD_PREMONITION_GAIN;
     const excessPremo = Math.max(0, totalPremo - constants.MAX_PREMONITION);
-    const precogGained = Math.floor(excessPremo / constants.PREMONITION_EXCESS_CONVERT_RATE);
+    const precogGained = Math.floor(
+        excessPremo / constants.PREMONITION_EXCESS_CONVERT_RATE,
+    );
 
     draftTarget = {
         ...draftTarget,
@@ -2455,11 +2462,11 @@ export function getCurrActivePlayer(prev) {
         currPhase === roundPhases.PLAYER_TWO_TURN ||
         currPhase === roundPhases.P2_SINGULARITY;
 
-    if(isPlayerOneTurn) {
-        return entityKeys.PLAYER_ONE
+    if (isPlayerOneTurn) {
+        return entityKeys.PLAYER_ONE;
     }
-    if(isPlayerTwoTurn) {
-        return entityKeys.PLAYER_TWO
+    if (isPlayerTwoTurn) {
+        return entityKeys.PLAYER_TWO;
     }
 
     return null;

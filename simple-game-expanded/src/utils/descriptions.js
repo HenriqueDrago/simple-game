@@ -23,7 +23,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES set to 'BEST'. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI and it's GLOSSARY entry can only be unlocked upon defeating the preceding enemy.",
+            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to 'CHALLENGE'. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI and it's GLOSSARY entry can only be unlocked upon defeating the preceding enemy.",
+    },
+
+    [effectKeys.SHORTCUTS]: {
+        name: "PROGRESSION MODE",
+        type: entryTypes.MECHANIC,
+        description:
+            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations.",
     },
 
     [turnStatus.SETUP]: {
@@ -143,6 +150,13 @@ export const GENERAL_DESCRIPTIONS = {
             "Starts at 20. Limits how much HEALTH you can hold. If MAX HEALTH is 0 or lower, loses the battle.",
     },
 
+    [effectKeys.MISSING_HEALTH]: {
+        name: "MISSING HEALTH",
+        type: entryTypes.MECHANIC,
+        description:
+            "The difference between MAX HEALTH and current HEALTH.",
+    },
+
     [effectKeys.MANA]: {
         name: "MANA",
         type: entryTypes.LIMITED_RESOURCE,
@@ -154,6 +168,13 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MAX MANA",
         type: entryTypes.MECHANIC,
         description: "Starts at 10. Limits how much MANA you can hold.",
+    },
+
+    [effectKeys.MISSING_MANA]: {
+        name: "MISSING MANA",
+        type: entryTypes.MECHANIC,
+        description:
+            "The difference between MAX MANA and current MANA.",
     },
 
     [effectKeys.STR]: {
@@ -379,7 +400,7 @@ export const BASIC_DESCRIPTIONS = {
     [actionKeys.HEAL]: {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
-        description: "Consumes MANA to replenish missing HEALTH.",
+        description: "Consumes MANA to replenish MISSING HEALTH.",
     },
 };
 
@@ -432,7 +453,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. At turn start, exits this state.",
+            "Raises DAMAGE REDUCTION based on the ratio of MISSING HEALTH to MAX HEALTH. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
@@ -804,7 +825,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "PRECOGNITION",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish missing MANA.",
+            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish MISSING MANA.",
     },
 
     [effectKeys.BAD_OMEN]: {
@@ -848,7 +869,7 @@ export const STARFARER_DESCRIPTIONS = {
         name: "STARFARER",
         type: entryTypes.CONTROLLER,
         description:
-            "The eighth challenge. ??? (Unimplemented, currently has a MUNDANE placeholder). In PROGRESSION MODE, defeat this enemy to unlock the CHART action, the LUNATIC enemy and it's GLOSSARY entry.",
+            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS and VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects and OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action, the LUNATIC enemy and it's GLOSSARY entry.",
     },
 
     [actionKeys.CHART]: {
@@ -1030,14 +1051,21 @@ export const STARFARER_DESCRIPTIONS = {
         name: "DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, converts all DOME into STARDUST.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, loses all DOME, then raises IRRADIATION by 5% for every DOME lost this way.",
+    },
+
+    [effectKeys.IRRADIATION]: {
+        name: "IRRADIATION",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 5% excess. At turn start, loses all IRRADIATION.",
     },
 
     [effectKeys.STARLIT_DOME]: {
         name: "STARLIT DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken, then gains GRAY STAR equal to the amount lost this way. At turn start, converts all STARLIT DOME into STARDUST.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken. At turn start, converts all STARLIT DOME into STARDUST.",
     },
 
     [effectKeys.STARDUST]: {
@@ -1197,7 +1225,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "NATURE",
         type: entryTypes.MECHANIC,
         description:
-            "While active, raises MAX HEALTH by MOONLIGHT on self. Additionally, replaces GUARD with LUNAR GROWTH. When entering NATURE, consumes SILVER BLOOD to replenish missing HEALTH. When exiting NATURE, converts all excess HEALTH into SILVER BLOOD.",
+            "While active, raises MAX HEALTH by MOONLIGHT on self. Additionally, replaces GUARD with LUNAR GROWTH. When entering NATURE, consumes SILVER BLOOD to replenish MISSING HEALTH. When exiting NATURE, converts all excess HEALTH into SILVER BLOOD.",
     },
 
     [effectKeys.SILVER_BLOOD]: {
@@ -1252,7 +1280,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "WITHER",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 2% for every 1 HEALTH or SILVER BLOOD lost. Additionally, when taking any damage, raises MOONLIT TEARS rank by 1. Replaces SACRIFICE with LUNAR SHED.",
+            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 1% for every HEALTH or SILVER BLOOD lost. Additionally, when taking any damage, raises MOONLIT TEARS rank by 1. Replaces SACRIFICE with LUNAR SHED.",
     },
 
     [effectKeys.MOONLIT_TEARS]: {
@@ -1294,7 +1322,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNAR SMITE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Deals PIERCING DAMAGE equal to the user's MOONLIGHT. Increases the damage dealt by 5% for every missing LIMITED RESOURCES on self.",
+            "Deals PIERCING DAMAGE equal to the user's MOONLIGHT. Increases the damage dealt by 5% for every MISSING LIMITED RESOURCES on self.",
     },
 
     [elementalKeys.ALBEDO]: {

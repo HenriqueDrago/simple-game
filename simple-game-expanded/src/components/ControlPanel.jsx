@@ -6,7 +6,6 @@ import {
     progKeys,
     aiKeys,
     turnStatus,
-    effectKeys,
 } from "../utils/enums";
 import { RotateCcw } from "lucide-react";
 import { useGame } from "../contexts/GameContext";
@@ -51,7 +50,7 @@ function ControlPanel({ entityKey }) {
                                 value={sdmKeys.BEST}
                                 disabled={entity.controller === aiKeys.HUMAN}
                             >
-                                "Best"
+                                "Challenge"
                             </option>
                             <option value={sdmKeys.FULL_DEF}>Full Def</option>
                             <option value={sdmKeys.FULL_STR}>Full Str</option>
@@ -93,9 +92,14 @@ function ControlPanel({ entityKey }) {
                                     key={aiKey}
                                     value={aiKey}
                                     disabled={
-                                        game.progressMode &&
-                                        game.progressStatus[aiKey] ===
-                                            progKeys.LOCKED
+                                        (game.progressMode &&
+                                            game.progressStatus[aiKey] ===
+                                                progKeys.LOCKED) ||
+                                        aiKey === aiKeys.SERAPH ||
+                                        (game.progressMode &&
+                                            entityKey ===
+                                                entityKeys.PLAYER_TWO &&
+                                            aiKey === aiKeys.HUMAN)
                                     }
                                 >
                                     {aiData.name}

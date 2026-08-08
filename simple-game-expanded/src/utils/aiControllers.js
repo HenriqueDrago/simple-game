@@ -1,16 +1,25 @@
 import { constants, presetAi } from "./constants.js";
 import {
     canUseAction,
+    consumeResources,
     getEntityDef,
     getEntityMaxHealth,
     getEntityTotalHealth,
     getEntityTotalMana,
     getEntityUsableStars,
     isEntityDead,
+    processDeathCheck,
     restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
-import { actionKeys, effectKeys, elementalKeys, moonKeys } from "./enums.js";
+import {
+    actionKeys,
+    effectKeys,
+    elementalKeys,
+    moonKeys,
+    roundPhases,
+} from "./enums.js";
+import { simulateFullStarfall } from "./starfall.js";
 import {
     commitTurn,
     processActionUse,
@@ -20,11 +29,13 @@ import {
 // Auxiliary Functions
 function createSimulator({ agentKey, nonAgentKey, prev }) {
     return (actionKey, overrides = {}) =>
-        processActionUse(
-            { ...prev, ...overrides },
-            agentKey,
-            nonAgentKey,
-            actionKey,
+        processDeathCheck(
+            processActionUse(
+                { ...prev, ...overrides },
+                agentKey,
+                nonAgentKey,
+                actionKey,
+            ),
         );
 }
 
@@ -99,9 +110,75 @@ function willEntityEffectivelyDieByNextCommitPostUpkeep(
     );
 }
 
+function simulateStarsHelper(
+    sim,
+    agentKey,
+    nonAgentKey,
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet,
+) {
+    const newSim = {
+        ...sim,
+        entities: {
+            ...sim.entities,
+            [agentKey]: {
+                ...sim.entities[agentKey],
+                stars: {
+                    ...sim.entities[agentKey].stars,
+                    [effectKeys.RED_STAR]: red,
+                    [effectKeys.ORANGE_STAR]: orange,
+                    [effectKeys.YELLOW_STAR]: yellow,
+                    [effectKeys.GREEN_STAR]: green,
+                    [effectKeys.BLUE_STAR]: blue,
+                    [effectKeys.INDIGO_STAR]: indigo,
+                    [effectKeys.VIOLET_STAR]: violet,
+                },
+            },
+        },
+    };
+
+    return simulateFullStarfall(newSim, agentKey, nonAgentKey);
+}
+
+export function setConstellation(sim, targetkey, constellation) {
+    const totalConst =
+        sim.entities[targetkey][effectKeys.CONSTELLATION] +
+        sim.entities[targetkey][effectKeys.AZURE_CONSTELLATION] +
+        sim.entities[targetkey][effectKeys.CRIMSON_CONSTELLATION];
+    return {
+        ...sim,
+        entities: {
+            ...sim.entities,
+            [targetkey]: {
+                ...sim.entities[targetkey],
+                [effectKeys.CONSTELLATION]:
+                    constellation === effectKeys.CONSTELLATION ? totalConst : 0,
+                [effectKeys.AZURE_CONSTELLATION]:
+                    constellation === effectKeys.AZURE_CONSTELLATION
+                        ? totalConst
+                        : 0,
+                [effectKeys.CRIMSON_CONSTELLATION]:
+                    constellation === effectKeys.CRIMSON_CONSTELLATION
+                        ? totalConst
+                        : 0,
+            },
+        },
+    };
+}
+
+// Select Constellation
+export function selectConstellationAI() {
+    return effectKeys.CRIMSON_CONSTELLATION;
+}
+
 // Star Assignment
 export function assignStarsAI(context) {
-    const { agent } = context;
+    const { prev, agentKey, nonAgentKey, agent, isSingularity } = context;
 
     // Initial allocations
     let allocations = {
@@ -114,11 +191,439 @@ export function assignStarsAI(context) {
         [effectKeys.VIOLET_STAR]: 0,
     };
 
-    let totalStars = getEntityUsableStars(agent);
+    let remainingWhite = getEntityUsableStars(agent);
 
     // Early return if no stars
-    if (totalStars <= 0) {
+    if (remainingWhite <= 0 || isSingularity) {
         return allocations;
+    }
+
+    const relevantActions = [
+        actionKeys.SPECIAL_ATTACK,
+        actionKeys.ATTACK,
+        actionKeys.AEGIS,
+        actionKeys.GUARD,
+        actionKeys.HEAL,
+        actionKeys.CHART,
+    ];
+
+    let simulations = {};
+    for (let action of relevantActions) {
+        simulations = {
+            ...simulations,
+            [action]: processDeathCheck(
+                commitTurn(
+                    processDeathCheck(
+                        processActionUse(prev, agentKey, nonAgentKey, action),
+                    ),
+                    agentKey,
+                    nonAgentKey,
+                ),
+            ),
+        };
+    }
+
+    // === Death Checks ===
+
+    // Normal Red Star
+    for (let action of relevantActions) {
+        const simStar = simulateStarsHelper(
+            simulations[action],
+            agentKey,
+            nonAgentKey,
+            remainingWhite,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        );
+
+        if (
+            !willEntityDieImmediately(simStar.entities[agentKey]) &&
+            willEntityEffectivelyDieByNextUpkeep(
+                simStar,
+                nonAgentKey,
+                agentKey,
+            ) &&
+            canUseAction(prev, agentKey, action)
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.RED_STAR]: remainingWhite,
+            };
+
+            return allocations;
+        }
+    }
+
+    // Augmented Red Star
+    for (let action of relevantActions) {
+        const simStar = simulateStarsHelper(
+            simulations[action],
+            agentKey,
+            nonAgentKey,
+            Math.ceil(remainingWhite / 2),
+            0,
+            0,
+            0,
+            0,
+            0,
+            Math.floor(remainingWhite / 2),
+        );
+
+        if (
+            !willEntityDieImmediately(simStar.entities[agentKey]) &&
+            willEntityEffectivelyDieByNextUpkeep(
+                simStar,
+                nonAgentKey,
+                agentKey,
+            ) &&
+            canUseAction(prev, agentKey, action)
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.RED_STAR]: Math.ceil(remainingWhite / 2),
+                [effectKeys.VIOLET_STAR]: Math.floor(remainingWhite / 2),
+            };
+
+            return allocations;
+        }
+    }
+
+    // Augmented Orange Star
+    for (let action of relevantActions) {
+        const maxConsume = Math.max(
+            0,
+            consumeResources(
+                simulations[action].entities[agentKey],
+                Infinity,
+                effectKeys.ORANGE_STAR,
+            ).resourcesConsumed.totalConsumption - 1,
+        );
+
+        const orangeAssign = Math.min(
+            maxConsume,
+            Math.ceil(remainingWhite / 2),
+        );
+        const violetAssign = Math.min(
+            orangeAssign,
+            Math.floor(remainingWhite / 2),
+        );
+
+        const simStar = simulateStarsHelper(
+            simulations[action],
+            agentKey,
+            nonAgentKey,
+            0,
+            orangeAssign,
+            0,
+            0,
+            0,
+            0,
+            violetAssign,
+        );
+
+        if (
+            !willEntityDieImmediately(simStar.entities[agentKey]) &&
+            willEntityEffectivelyDieByNextUpkeep(
+                simStar,
+                nonAgentKey,
+                agentKey,
+            ) &&
+            canUseAction(prev, agentKey, action)
+        ) {
+            allocations = {
+                ...allocations,
+                [effectKeys.ORANGE_STAR]: orangeAssign,
+                [effectKeys.VIOLET_STAR]: violetAssign,
+            };
+
+            return allocations;
+        }
+    }
+
+    // Yellow Star: Variant A (Max Starblight then Constellation)
+    const starsForMaxGrav =
+        constants.MAX_GRAVITATION / constants.GRAVITATION_GAIN; // 20
+    const starsForMaxAcc =
+        (constants.MAX_GRAVITATION + constants.MAX_ACCRETION) /
+        constants.GRAVITATION_GAIN; // 40
+    if (remainingWhite >= starsForMaxGrav) {
+        for (let action of relevantActions) {
+            const normalYellow = Math.min(
+                starsForMaxAcc +
+                    getEntityTotalHealth(
+                        simulations[action].entities[agentKey],
+                    ) -
+                    1,
+                remainingWhite,
+            );
+            const augmentedYellow = Math.floor(
+                (remainingWhite - normalYellow) / 2,
+            );
+            const violetAssign = augmentedYellow;
+
+            let simStar = simulateStarsHelper(
+                simulations[action],
+                agentKey,
+                nonAgentKey,
+                0,
+                0,
+                normalYellow + augmentedYellow,
+                0,
+                0,
+                0,
+                violetAssign,
+            );
+
+            simStar = setConstellation(
+                simStar,
+                agentKey,
+                effectKeys.CRIMSON_CONSTELLATION,
+            );
+
+            for (let singAction of relevantActions) {
+                const singSim = processDeathCheck(
+                    processActionUse(
+                        simStar,
+                        agentKey,
+                        nonAgentKey,
+                        singAction,
+                    ),
+                );
+
+                if (
+                    !willEntityDieImmediately(singSim.entities[agentKey]) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        singSim,
+                        nonAgentKey,
+                        agentKey,
+                    ) &&
+                    canUseAction(simStar, agentKey, singAction) &&
+                    canUseAction(prev, agentKey, action)
+                ) {
+                    allocations = {
+                        ...allocations,
+                        [effectKeys.YELLOW_STAR]:
+                            normalYellow + augmentedYellow,
+                        [effectKeys.VIOLET_STAR]: violetAssign,
+                    };
+
+                    return allocations;
+                }
+            }
+        }
+    }
+
+    // Yellow Star: Variant B (Singularity +  Full Constellation)
+    if (remainingWhite >= starsForMaxGrav) {
+        for (let action of relevantActions) {
+            const normalYellow = Math.min(starsForMaxGrav, remainingWhite);
+            const augmentedYellow = Math.ceil(
+                (remainingWhite - normalYellow) / 2,
+            );
+            const violetAssign = Math.floor(
+                (remainingWhite - normalYellow) / 2,
+            );
+
+            let simStar = simulateStarsHelper(
+                simulations[action],
+                agentKey,
+                nonAgentKey,
+                0,
+                0,
+                normalYellow + augmentedYellow,
+                0,
+                0,
+                0,
+                violetAssign,
+            );
+
+            simStar = setConstellation(
+                simStar,
+                agentKey,
+                effectKeys.CRIMSON_CONSTELLATION,
+            );
+
+            for (let singAction of relevantActions) {
+                const singSim = processDeathCheck(
+                    processActionUse(
+                        simStar,
+                        agentKey,
+                        nonAgentKey,
+                        singAction,
+                    ),
+                );
+
+                if (
+                    !willEntityDieImmediately(singSim.entities[agentKey]) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        singSim,
+                        nonAgentKey,
+                        agentKey,
+                    ) &&
+                    canUseAction(simStar, agentKey, singAction) &&
+                    canUseAction(prev, agentKey, action)
+                ) {
+                    allocations = {
+                        ...allocations,
+                        [effectKeys.YELLOW_STAR]:
+                            normalYellow + augmentedYellow,
+                        [effectKeys.VIOLET_STAR]: violetAssign,
+                    };
+
+                    return allocations;
+                }
+            }
+        }
+    }
+
+    // Yellow Star: Variant C (Singularity +  Half Constellation / Half Accretion + Starblight)
+    if (remainingWhite >= starsForMaxGrav) {
+        for (let action of relevantActions) {
+            const normalYellow = Math.min(
+                starsForMaxGrav +
+                    Math.min(
+                        (remainingWhite - starsForMaxGrav) / 2,
+                        starsForMaxAcc -
+                            starsForMaxGrav +
+                            getEntityTotalHealth(
+                                simulations[action].entities[agentKey],
+                            ) -
+                            1,
+                    ),
+                remainingWhite,
+            );
+            const augmentedYellow = Math.ceil(
+                (remainingWhite - normalYellow) / 2,
+            );
+            const violetAssign = Math.floor(
+                (remainingWhite - normalYellow) / 2,
+            );
+
+            let simStar = simulateStarsHelper(
+                simulations[action],
+                agentKey,
+                nonAgentKey,
+                0,
+                0,
+                normalYellow + augmentedYellow,
+                0,
+                0,
+                0,
+                violetAssign,
+            );
+
+            simStar = setConstellation(
+                simStar,
+                agentKey,
+                effectKeys.CRIMSON_CONSTELLATION,
+            );
+
+            for (let singAction of relevantActions) {
+                const singSim = processDeathCheck(
+                    processActionUse(
+                        simStar,
+                        agentKey,
+                        nonAgentKey,
+                        singAction,
+                    ),
+                );
+
+                if (
+                    !willEntityDieImmediately(singSim.entities[agentKey]) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        singSim,
+                        nonAgentKey,
+                        agentKey,
+                    ) &&
+                    canUseAction(simStar, agentKey, singAction) &&
+                    canUseAction(prev, agentKey, action)
+                ) {
+                    allocations = {
+                        ...allocations,
+                        [effectKeys.YELLOW_STAR]:
+                            normalYellow + augmentedYellow,
+                        [effectKeys.VIOLET_STAR]: violetAssign,
+                    };
+
+                    return allocations;
+                }
+            }
+        }
+    }
+
+    // === Survival ===
+    const postCommitAgent = commitTurn(prev, agentKey, nonAgentKey).entities[
+        agentKey
+    ];
+    const missingHp =
+        getEntityMaxHealth(postCommitAgent) -
+        postCommitAgent[effectKeys.HEALTH];
+    const spAtkCost =
+        postCommitAgent[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST;
+    const missingRelevantMana = spAtkCost - getEntityTotalMana(postCommitAgent);
+
+    if ((missingHp > 0 || missingRelevantMana > 0) && remainingWhite > 0) {
+        const greenAssign = Math.min(
+            missingHp + Math.max(missingRelevantMana, 0),
+            Math.floor(remainingWhite / 2),
+        );
+        const violetAssign = greenAssign;
+
+        allocations = {
+            ...allocations,
+            [effectKeys.GREEN_STAR]: greenAssign,
+            [effectKeys.VIOLET_STAR]:
+                allocations[effectKeys.VIOLET_STAR] + violetAssign,
+        };
+
+        remainingWhite -= greenAssign + violetAssign;
+    }
+
+    // === Engine ===
+    if (remainingWhite > 0) {
+        const maxConsume = Math.max(
+            0,
+            consumeResources(postCommitAgent, Infinity, effectKeys.ORANGE_STAR)
+                .resourcesConsumed.totalConsumption -
+                getEntityTotalHealth(postCommitAgent) -
+                spAtkCost,
+        );
+
+        const orangeAssign = Math.min(
+            maxConsume,
+            allocations[effectKeys.GREEN_STAR] > 0
+                ? Math.floor(remainingWhite / 2)
+                : Math.ceil(remainingWhite / 2),
+        );
+        const violetAssign = Math.min(
+            orangeAssign,
+            Math.floor(remainingWhite / 2),
+        );
+
+        allocations = {
+            ...allocations,
+            [effectKeys.ORANGE_STAR]: orangeAssign,
+            [effectKeys.VIOLET_STAR]:
+                allocations[effectKeys.VIOLET_STAR] + violetAssign,
+        };
+
+        remainingWhite -= orangeAssign + violetAssign;
+    }
+
+    if (remainingWhite > 0) {
+        const indigoAssign = Math.ceil(remainingWhite / 2);
+        const violetAssign = Math.floor(remainingWhite / 2);
+
+        allocations = {
+            ...allocations,
+            [effectKeys.INDIGO_STAR]: indigoAssign,
+            [effectKeys.VIOLET_STAR]:
+                allocations[effectKeys.VIOLET_STAR] + violetAssign,
+        };
     }
 
     return allocations;
@@ -142,7 +647,7 @@ export function selectElementAI(context) {
         return elementalKeys.SHATTERED;
     }
 
-    // If not on Selenian, if forced on dulled
+    // If not on Selenian, forced on dulled
     if (!agent.states[effectKeys.SELENIAN]) {
         return elementalKeys.DULLED;
     }
@@ -255,12 +760,6 @@ export function selectElementAI(context) {
         return elementalKeys.ALBEDO;
     }
 
-    console.log(chalkSim);
-    console.log(chalkDamage);
-    console.log(getEntityMaxHealth(nonAgent) * 0.5);
-    console.log(getEntityMaxHealth(nonAgent));
-    console.log(getEntityMaxHealth(chalkSim.entities[nonAgentKey]));
-
     // Default elements
     const moon = agent[effectKeys.MIRRORED_MOON];
     const isWaxing = moon === moonKeys.WAXING;
@@ -293,6 +792,15 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     const agent = prev.entities[agentKey];
     const nonAgent = prev.entities[nonAgentKey];
 
+    const currPhase =
+        prev.roundQueue && prev.roundQueue.length > 0
+            ? prev.roundQueue[prev.roundIndex]
+            : null;
+
+    const isSingularity =
+        currPhase === roundPhases.P1_SINGULARITY ||
+        currPhase === roundPhases.P2_SINGULARITY;
+
     let context = {
         prev,
         agent,
@@ -302,6 +810,7 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         hasManaForSpecial:
             getEntityTotalMana(agent) >=
             constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+        isSingularity,
     };
 
     let caller = presetAi[agent.controller].caller || simpleAI;
@@ -318,10 +827,14 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     // Process Element
     const selectedElement = selectElementAI(context);
 
+    // Process Constellation
+    const selectedConstellation = selectConstellationAI();
+
     context = {
         ...context,
         assignedStars,
         selectedElement,
+        selectedConstellation,
         agent: {
             ...agent,
             [effectKeys.ELEMENTAL_CRYSTALS]:
@@ -341,6 +854,7 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
     return {
         assignedStars,
         selectedElement,
+        selectedConstellation,
         action,
     };
 }
@@ -536,7 +1050,7 @@ export function bloodknightAI(context) {
 }
 
 export function paladinAI(context) {
-    const { prev, agent, agentKey, nonAgentKey } = context;
+    const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
 
     const simulate = createSimulator(context);
     const simAtk = simulate(actionKeys.ATTACK);
@@ -562,11 +1076,16 @@ export function paladinAI(context) {
         return actionKeys.ATTACK;
     }
 
-    // If cannot use Aegis or at Max Divine Spark, use Warlock AI
+    // Logic when divine spark is  near full
     if (
-        !canUseAction(prev, agentKey, actionKeys.AEGIS) ||
-        agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK
+        agent[effectKeys.DIVINE_SPARK] > constants.MAX_DIVINE_SPARK * 0.9 &&
+        hasManaForSpecial
     ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // If cannot use Aegis, use Warlock AI
+    if (!canUseAction(prev, agentKey, actionKeys.AEGIS)) {
         return warlockAI(context);
     }
 
@@ -892,7 +1411,33 @@ export function maestroAI(context) {
 - Use Chart otherwise
 */
 export function starfarerAI(context) {
-    const { hasManaForSpecial, nonAgentKey, agentKey } = context;
+    const { hasManaForSpecial, prev, nonAgentKey, agentKey, assignedStars } =
+        context;
+
+    function simulateActionStarfallHelper(action) {
+        return simulateStarsHelper(
+            processDeathCheck(
+                commitTurn(
+                    processDeathCheck(
+                        processActionUse(prev, agentKey, nonAgentKey, action),
+                    ),
+                    agentKey,
+                    nonAgentKey,
+                ),
+            ),
+            agentKey,
+            nonAgentKey,
+            assignedStars[effectKeys.RED_STAR],
+            assignedStars[effectKeys.ORANGE_STAR],
+            assignedStars[effectKeys.YELLOW_STAR],
+            assignedStars[effectKeys.GREEN_STAR],
+            assignedStars[effectKeys.BLUE_STAR],
+            assignedStars[effectKeys.INDIGO_STAR],
+            assignedStars[effectKeys.VIOLET_STAR],
+        );
+    }
+
+    // === Immediate Kill Sims ===
 
     const simulate = createSimulator(context);
 
@@ -900,13 +1445,7 @@ export function starfarerAI(context) {
     // If it kills, use it
     if (hasManaForSpecial) {
         const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
+        if (willEntityDieImmediately(simSpecial.entities[nonAgentKey])) {
             return actionKeys.SPECIAL_ATTACK;
         }
     }
@@ -914,10 +1453,29 @@ export function starfarerAI(context) {
     // Simulate Attack
     // If it kills, use it
     const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
-    ) {
+    if (willEntityDieImmediately(simAttack.entities[nonAgentKey])) {
         return actionKeys.ATTACK;
+    }
+
+    const relevantActions = [
+        actionKeys.SPECIAL_ATTACK,
+        actionKeys.ATTACK,
+        actionKeys.AEGIS,
+        actionKeys.GUARD,
+        actionKeys.HEAL,
+        actionKeys.CHART,
+    ];
+
+    // Death checks taking starfall into consideration
+    for (let action of relevantActions) {
+        const sim = simulateActionStarfallHelper(action);
+
+        if (
+            !willEntityDieImmediately(sim.entities[agentKey]) &&
+            willEntityEffectivelyDieByNextUpkeep(sim, nonAgentKey, agentKey)
+        ) {
+            return action;
+        }
     }
 
     // default: CHART
@@ -940,7 +1498,7 @@ export function lunaticAI(context) {
 
     switch (selectedElement) {
         case elementalKeys.FROST: {
-            if (getEntityDef(agent) >= 15) {
+            if (getEntityDef(agent) >= 15 && agent[effectKeys.MOONLIGHT] > 5) {
                 return actionKeys.LUNAR_SHROUD;
             }
 
@@ -983,7 +1541,11 @@ export function lunaticAI(context) {
             return actionKeys.LUNAR_TIDE;
         }
         case elementalKeys.WITHER: {
-            return actionKeys.LUNAR_SHED;
+            if (agent[effectKeys.MOONLIGHT] > 5) {
+                return actionKeys.LUNAR_SHED;
+            }
+
+            return actionKeys.MIRROR;
         }
         case elementalKeys.ASH: {
             return actionKeys.LUNAR_SMITE;

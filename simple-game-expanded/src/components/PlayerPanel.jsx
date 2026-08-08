@@ -72,6 +72,13 @@ const FIXED_BARS_CONFIG = {
             backgroundImage: `linear-gradient(90deg, #3e2723 0%, #6d4c41 35%, #a1887f 50%, #6d4c41 65%, #3e2723 100%)`,
         },
     },
+    [effectKeys.IRRADIATION]: {
+        label: "Irradiation",
+        maxResource: constants.MAX_IRRADIATION,
+        trackStyle: {
+            backgroundImage: `linear-gradient(90deg, #002171 0%, #0d47a1 35%, #29b6f6 50%, #0d47a1 65%, #002171 100%)`,
+        },
+    },
 };
 
 const RANKED_COUNTERS_CONFIG = {

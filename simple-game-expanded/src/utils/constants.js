@@ -45,6 +45,9 @@ import {
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
 export const constants = Object.freeze({
+    IRRAD_DMG_EXCESS: 5,
+    MAX_IRRADIATION: 100,
+    IRRADIATION_GAIN_RATE: 5,
     BAD_OMEN_EXCESS_CONVERT_RATE: 10,
     PREMONITION_EXCESS_CONVERT_RATE: 10,
     BASE_HEALTH: 20,
@@ -76,7 +79,7 @@ export const constants = Object.freeze({
     MAX_ACCRETION: 100,
     SONORITY_ON_DEFENSE: 5,
     SONORITY_ON_OFFENSE: -5,
-    WITHER_LUNACY_MULT: 2,
+    WITHER_LUNACY_MULT: 1,
     LUNAR_TIDE_MULT: 2,
     MAX_LUNACY: 100,
     GIBBOUS_TEARS_GAIN: 1,
@@ -99,7 +102,7 @@ export const constants = Object.freeze({
     SONORITY_LOWER_LIMIT: -50,
     SONORITY_HIGHER_LIMIT: 50,
     VENTING_OVERHEAT_LOSS: 50,
-    CHART_STAR_GAIN: 3,
+    CHART_STAR_GAIN: 300,
     STARDUST_RATE_CONVERSION: 3,
     MAX_DIVINE_SPARK: 100,
     NATURAL_OVERHEAT_LOSS: 30,
@@ -161,8 +164,8 @@ export const presetAi = {
     [aiKeys.WARLOCK]: {
         name: "Warlock",
         best: {
-            str: 10,
-            def: 0,
+            str: 5,
+            def: 5,
         },
         caller: warlockAI,
         desc: [...Object.keys(WARLOCK_DESCRIPTIONS)],
@@ -170,8 +173,8 @@ export const presetAi = {
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
         best: {
-            str: 0,
-            def: 10,
+            str: 5,
+            def: 5,
         },
         caller: bloodknightAI,
         desc: [...Object.keys(BLOODKNIGHT_DESCRIPTIONS)],
@@ -222,7 +225,7 @@ export const presetAi = {
         desc: [...Object.keys(AUGUR_DESCRIPTIONS)],
     },
     [aiKeys.STARFARER]: {
-        name: "Starfarer (Missing AI)",
+        name: "Starfarer",
         best: {
             str: 0,
             def: 10,
@@ -233,8 +236,8 @@ export const presetAi = {
     [aiKeys.LUNATIC]: {
         name: "Lunatic",
         best: {
-            str: 5,
-            def: 5,
+            str: 0,
+            def: 10,
         },
         caller: lunaticAI,
         desc: [...Object.keys(LUNATIC_DESCRIPTIONS)],
@@ -580,6 +583,7 @@ export const FIXED_RESOURCES = [
     effectKeys.BAD_OMEN,
     effectKeys.RECOLLECTION,
     effectKeys.PREMONITION,
+    effectKeys.IRRADIATION,
     effectKeys.GRAVITATION,
     effectKeys.ACCRETION,
     effectKeys.LUNACY,

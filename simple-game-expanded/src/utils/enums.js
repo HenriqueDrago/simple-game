@@ -243,6 +243,11 @@ export const effectKeys = Object.freeze({
     PROGRESSION_MODE: "progressMode",
     MATCH: "match",
     CONDITION: "condition",
+    SHORTCUTS: "shorcuts",
+
+    MISSING_HEALTH: "missingHealth",
+    MISSING_MANA: "missingMana",
+    IRRADIATION: "irradiation",
 });
 
 export const runeKeys = Object.freeze({

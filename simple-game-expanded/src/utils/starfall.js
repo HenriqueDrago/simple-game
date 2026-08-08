@@ -1,5 +1,10 @@
 import { coloredStars, constants } from "./constants";
-import { consumeResources, restoreResources, takeDamage } from "./entities";
+import {
+    consumeResources,
+    processDeathCheck,
+    restoreResources,
+    takeDamage,
+} from "./entities";
 import { dmgTypes, effectKeys } from "./enums";
 
 export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
@@ -448,7 +453,7 @@ export function processVioletStar(
 }
 
 export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
-    if(!prev?.entities?.[ownerKey]?.states?.[effectKeys.STARGAZER]) {
+    if (!prev?.entities?.[ownerKey]?.states?.[effectKeys.STARGAZER]) {
         return prev;
     }
 
@@ -457,11 +462,8 @@ export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
     };
 
     for (let star of Object.values(coloredStars)) {
-        gameState = processROYGBIVStar(
-            gameState,
-            ownerKey,
-            nonOwnerKey,
-            star.star,
+        gameState = processDeathCheck(
+            processROYGBIVStar(gameState, ownerKey, nonOwnerKey, star.star),
         );
     }
 
