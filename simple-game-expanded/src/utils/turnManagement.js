@@ -38,6 +38,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
+    // Irradiation
     if (draftTarget[effectKeys.IRRADIATION] > 0) {
         draftTarget = {
             ...draftTarget,
@@ -280,31 +281,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Venting
-    if (draftTarget.states[effectKeys.VENTING]) {
-        const overheatConsumed = Math.min(
-            constants.VENTING_OVERHEAT_LOSS,
-            draftTarget[effectKeys.OVERHEAT],
-        );
-
-        const newOverheat = draftTarget[effectKeys.OVERHEAT] - overheatConsumed;
-        const newDynamo = Math.min(
-            constants.MAX_DYNAMO,
-            draftTarget[effectKeys.DYNAMO] + overheatConsumed,
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.OVERHEAT]: newOverheat,
-            [effectKeys.DYNAMO]: newDynamo,
-            states: {
-                ...draftTarget.states,
-                [effectKeys.VENTING]: newOverheat > 0,
-                [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
-            },
-        };
-    }
-
     // Refracted Divinity
     if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
         const newLunacy = Math.min(
@@ -359,28 +335,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
-    // Premonition
-    if (draftTarget[effectKeys.PREMONITION] > 0) {
-        const premoLost = Math.min(
-            constants.PREMONITION_TURN_END_LOSS,
-            draftTarget[effectKeys.PREMONITION],
-        );
-        const precogGained = Math.floor(premoLost / constants.PRECOG_GAIN_RATE);
-
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.PREMONITION]:
-                draftTarget[effectKeys.PREMONITION] - premoLost,
-
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.PRECOGNITION]:
-                    draftTarget.resources[effectKeys.PRECOGNITION] +
-                    precogGained,
-            },
-        };
-    }
-
     // States cleared at turn start
     draftTarget = {
         ...draftTarget,
@@ -421,18 +375,41 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         ...prev.entities[nextActorKey],
     };
 
-    // Bad Omen
-    if (draftCurrActor[effectKeys.BAD_OMEN] > 0) {
-        const badOmenLost = Math.min(
-            constants.BAD_OMEN_TURN_END_LOSS,
-            draftCurrActor[effectKeys.BAD_OMEN],
+    // Venting
+    if (draftCurrActor.states[effectKeys.VENTING]) {
+        const overheatConsumed = Math.min(
+            constants.VENTING_OVERHEAT_LOSS,
+            draftCurrActor[effectKeys.OVERHEAT],
         );
-        const pdGained = Math.floor(badOmenLost / constants.PROPHECY_GAIN_RATE);
+
+        const newOverheat =
+            draftCurrActor[effectKeys.OVERHEAT] - overheatConsumed;
+        const newDynamo = Math.min(
+            constants.MAX_DYNAMO,
+            draftCurrActor[effectKeys.DYNAMO] + overheatConsumed,
+        );
 
         draftCurrActor = {
             ...draftCurrActor,
-            [effectKeys.BAD_OMEN]:
-                draftCurrActor[effectKeys.BAD_OMEN] - badOmenLost,
+            [effectKeys.OVERHEAT]: newOverheat,
+            [effectKeys.DYNAMO]: newDynamo,
+            states: {
+                ...draftCurrActor.states,
+                [effectKeys.VENTING]: newOverheat > 0,
+                [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
+            },
+        };
+    }
+
+    // Bad Omen
+    if (draftCurrActor[effectKeys.BAD_OMEN] > 0) {
+        const pdGained = Math.floor(
+            draftCurrActor[effectKeys.BAD_OMEN] / constants.PROPHECY_GAIN_RATE,
+        );
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.BAD_OMEN]: 0,
             resources: {
                 ...draftCurrActor.resources,
                 [effectKeys.PROPHECY_OF_DOOM]:

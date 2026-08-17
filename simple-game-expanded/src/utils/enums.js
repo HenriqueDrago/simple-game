@@ -39,7 +39,7 @@ export const aiKeys = Object.freeze({
     CYBORG: "cyborg",
     MAESTRO: "maestro",
     LUNATIC: "lunatic",
-    STARFARER: "starfarer",
+    VOYAGER: "voyager",
     SERAPH: "seraph",
 });
 
@@ -231,8 +231,6 @@ export const effectKeys = Object.freeze({
     PRECOGNITION: "precognition",
     CONJECTURE: "conjecture",
     BAD_OMEN: "badOmen",
-    PAST_MEMORIES: "pastMemories",
-    PREMONITION: "premonition",
     PROPHECY_OF_DOOM: "prophecyOfDoom",
 
     EVENT_HORIZON: "eventHorizon",

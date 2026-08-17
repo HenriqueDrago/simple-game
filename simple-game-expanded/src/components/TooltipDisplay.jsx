@@ -2,13 +2,16 @@ import { useEffect, useRef } from "react";
 import Parser from "./Parser";
 import "./TooltipDisplay.css";
 import { DESCRIPTIONS } from "../utils/descriptions";
-import { entryTypesMap } from "../utils/constants";
+import { entryTypesMap, presetAi } from "../utils/constants";
 import { useUI } from "../contexts/UIContext";
+import { useGame } from "../contexts/GameContext";
+import { progKeys } from "../utils/enums";
 
 function TooltipDisplay() {
     const scrollRef = useRef(null);
 
     const { tooltipStack, handleSetTooltip } = useUI();
+    const { game } = useGame();
 
     // Auto-scroll to the bottom when a new definition is added
     useEffect(() => {
@@ -46,6 +49,20 @@ function TooltipDisplay() {
                         e.preventDefault(); // Stops auto-scroll icons
                         e.stopPropagation(); // Prevents closing the tooltip chain
 
+                        if (game.progressMode) {
+                            for (let ai of Object.entries(presetAi)) {
+                                if (
+                                    ai[1].desc.includes(activeTooltip.type) &&
+                                    game.progressStatus[ai[0]] !==
+                                        progKeys.ALWAYS_OPEN &&
+                                    game.progressStatus[ai[0]] !==
+                                        progKeys.OPEN_UNDEFEATED
+                                ) {
+                                    return;
+                                }
+                            }
+                        }
+
                         const entry = DESCRIPTIONS[activeTooltip.type];
                         if (entry) {
                             handleSetTooltip(
@@ -79,7 +96,6 @@ function TooltipDisplay() {
                         <div className="tooltip-body">
                             <Parser
                                 rawText={activeTooltip.description}
-                                handleSetTooltip={handleSetTooltip}
                                 depth={depth}
                             />
                         </div>

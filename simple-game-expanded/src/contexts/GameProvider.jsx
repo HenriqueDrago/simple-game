@@ -976,6 +976,7 @@ export default function GameProvider({ children }) {
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
                 localStorage.setItem("gameCheckpoint", JSON.stringify(game));
+                console.log("Game Saved!")
             } catch (error) {
                 console.error("Failed to save game checkpoint:", error);
             }

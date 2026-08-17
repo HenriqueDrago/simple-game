@@ -72,23 +72,22 @@ export const simulators = {
     [actionKeys.CURSE]: simulateCurse,
 };
 
-function simulateGuard({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateGuard({ prev, agent, agentKey }) {
     const newMana = Math.min(
-        agent.maxMana,
-        Math.floor(agent.currMana + agent.maxMana * constants.GUARD_MANA_REGEN),
+        agent[effectKeys.MAX_MANA],
+        Math.floor(agent[effectKeys.MANA] + agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN),
     );
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
-            [nonAgentKey]: { ...nonAgent },
             [agentKey]: {
                 ...agent,
-                currMana: newMana,
+                [effectKeys.MANA]: newMana,
                 states: {
                     ...agent.states,
-                    guarding: true,
+                    [effectKeys.GUARDING_STATE]: true,
                 },
             },
         },
@@ -346,37 +345,45 @@ function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+    let draftAgent = {
+        ...agent,
+    };
+
+    let draftNonAgent = {
+        ...nonAgent,
+    };
+
     const toBeRestored =
-        agent.resources.shadowflame +
-        Math.floor(agent.resources.lingeringEmber / 2);
+        draftAgent.resources[effectKeys.SHADOWFLAME] +
+        Math.floor(draftAgent.resources[effectKeys.LINGERING_EMBER] / 2);
+
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.SHADOWFLAME]: 0,
+            [effectKeys.LINGERING_EMBER]: 0,
+            [effectKeys.CINDERS]: 0,
+        },
+        states: {
+            ...draftAgent.states,
+            [effectKeys.UMBRAL_CORE]: false,
+            [effectKeys.DIMMING_DARKNESS]: true,
+        },
+    };
+
+    draftAgent = restoreResources(draftAgent, toBeRestored);
+    draftNonAgent = restoreResources(draftNonAgent, toBeRestored);
 
     return {
         ...prev,
         entities: {
             ...prev.entities,
-            [nonAgentKey]: {
-                ...nonAgent,
-                resources: {
-                    ...nonAgent.resources,
-                    unrelentingShadows:
-                        nonAgent.resources.unrelentingShadows + toBeRestored,
-                },
-            },
             [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    shadowflame: 0,
-                    lingeringEmber: 0,
-                    cinders: 0,
-                    unrelentingShadows:
-                        agent.resources.unrelentingShadows + toBeRestored,
-                },
-                states: {
-                    ...agent.states,
-                    umbralCore: false,
-                    dimmingDarkness: true,
-                },
+                ...draftAgent,
+            },
+            [nonAgentKey]: {
+                ...draftNonAgent,
             },
         },
     };
@@ -663,7 +670,9 @@ function simulateShatter({ prev, agent, agentKey }) {
             ...prev.entities,
             [agentKey]: {
                 ...agent,
-                [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(elementalKeys.SHATTERED),
+                [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
+                    elementalKeys.SHATTERED,
+                ),
             },
         },
     };
@@ -893,7 +902,10 @@ function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
                     [agentKey]: {
                         ...takeDamage(
                             newGameState.entities[agentKey],
-                            constants.CURSE_EMPTY_RUNE_DMG,
+                            constants.CURSE_EMPTY_RUNE_DMG *
+                                getEntityMaxHealth(
+                                    newGameState.entities[agentKey],
+                                ),
                             dmgTypes.TRUE,
                         ),
                     },

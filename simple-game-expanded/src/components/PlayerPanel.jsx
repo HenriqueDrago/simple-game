@@ -51,13 +51,6 @@ const FIXED_BARS_CONFIG = {
             backgroundImage: `linear-gradient(90deg, #3e2723 0%, #d84315 35%, #ffb300 50%, #d84315 65%, #3e2723 100%)`,
         },
     },
-    [effectKeys.PREMONITION]: {
-        label: "Premonition",
-        maxResource: constants.MAX_PREMONITION,
-        trackStyle: {
-            backgroundImage: `linear-gradient(90deg, #4c0519 0%, #881337 25%, #e11d48 50%, #881337 75%, #4c0519 100%)`,
-        },
-    },
     [effectKeys.RECOLLECTION]: {
         label: "Recollection",
         maxResource: constants.MAX_RECOLLECTION,
@@ -69,7 +62,7 @@ const FIXED_BARS_CONFIG = {
         label: "Bad Omen",
         maxResource: constants.MAX_BAD_OMEN,
         trackStyle: {
-            backgroundImage: `linear-gradient(90deg, #3e2723 0%, #6d4c41 35%, #a1887f 50%, #6d4c41 65%, #3e2723 100%)`,
+            backgroundImage: `linear-gradient(90deg, #291508 0%, #78350f 35%, #b45309 50%, #78350f 65%, #291508 100%)`,
         },
     },
     [effectKeys.IRRADIATION]: {
@@ -100,15 +93,6 @@ const RANKED_COUNTERS_CONFIG = {
             boxShadow: "inset 0 0 8px rgba(41, 121, 255, 0.25)",
         },
     },
-    [effectKeys.PAST_MEMORIES]: {
-        label: "PAST MEMORIES",
-        style: {
-            color: "#00f0ff",
-            borderColor: "#80deea",
-            backgroundColor: "rgba(0, 240, 255, 0.15)",
-            boxShadow: "inset 0 0 8px rgba(0, 240, 255, 0.3)",
-        },
-    },
     [effectKeys.STARBLIGHT]: {
         label: "STARBLIGHT",
         style: {
@@ -132,9 +116,9 @@ const FREE_STACKS_CONFIG = {
     [effectKeys.PROPHECY_OF_DOOM]: {
         label: "Prophecy of Doom",
         style: {
-            color: "#a855f7",
-            borderColor: "#a855f7",
-            backgroundColor: "rgba(168, 85, 247, 0.2)",
+            color: "#fb923c",
+            borderColor: "#c2410c",
+            backgroundColor: "rgba(251, 146, 60, 0.18)",
         },
     },
     [effectKeys.SHADOWFLAME]: {
@@ -212,9 +196,9 @@ const FREE_STACKS_CONFIG = {
     [effectKeys.PRECOGNITION]: {
         label: "Precognition",
         style: {
-            color: "#b388ff",
-            borderColor: "#b388ff",
-            backgroundColor: "rgba(179, 136, 255, 0.2)",
+            color: "#00e5ff",
+            borderColor: "#00b4d8",
+            backgroundColor: "rgba(0, 229, 255, 0.18)",
         },
     },
 };

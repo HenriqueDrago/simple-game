@@ -23,7 +23,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to 'CHALLENGE'. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI and it's GLOSSARY entry can only be unlocked upon defeating the preceding enemy.",
+            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to 'CHALLENGE'. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI, it's GLOSSARY entry and related tooltips can only be unlocked upon defeating the preceding enemy.",
     },
 
     [effectKeys.SHORTCUTS]: {
@@ -44,7 +44,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "CONTROLLER",
         type: entryTypes.MECHANIC,
         description:
-            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, MUNDANE, WARLOCK, BLOODKNIGHT, PALADIN, CYBORG, MAESTRO, AUGUR, SHADOW SORCERER, STARFARER, SELENIAN and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves the control at the hands of an AI.",
+            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, MUNDANE, WARLOCK, BLOODKNIGHT, PALADIN, CYBORG, MAESTRO, AUGUR, SHADOW SORCERER, VOYAGER, SELENIAN and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves the control at the hands of an AI.",
     },
 
     [aiKeys.HUMAN]: {
@@ -150,13 +150,6 @@ export const GENERAL_DESCRIPTIONS = {
             "Starts at 20. Limits how much HEALTH you can hold. If MAX HEALTH is 0 or lower, loses the battle.",
     },
 
-    [effectKeys.MISSING_HEALTH]: {
-        name: "MISSING HEALTH",
-        type: entryTypes.MECHANIC,
-        description:
-            "The difference between MAX HEALTH and current HEALTH.",
-    },
-
     [effectKeys.MANA]: {
         name: "MANA",
         type: entryTypes.LIMITED_RESOURCE,
@@ -168,13 +161,6 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MAX MANA",
         type: entryTypes.MECHANIC,
         description: "Starts at 10. Limits how much MANA you can hold.",
-    },
-
-    [effectKeys.MISSING_MANA]: {
-        name: "MISSING MANA",
-        type: entryTypes.MECHANIC,
-        description:
-            "The difference between MAX MANA and current MANA.",
     },
 
     [effectKeys.STR]: {
@@ -319,7 +305,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, PREMONITION, GRAVITATION, ACCRETION and LUNACY.",
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, ACCRETION and LUNACY.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
@@ -333,7 +319,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, PAST MEMORIES, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION and MOONLIT TEARS.",
+            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION and MOONLIT TEARS.",
     },
 
     [entryTypes.ATTRIBUTES]: {
@@ -375,7 +361,7 @@ export const BASIC_DESCRIPTIONS = {
         name: "MUNDANE",
         type: entryTypes.CONTROLLER,
         description:
-            "A tutorial enemy. Repeatedly uses ATTACK, switching to GUARD or HEAL when in danger. In PROGRESSION MODE, defeat this enemy to unlock the WARLOCK enemy and it's GLOSSARY entry.",
+            "A tutorial enemy. Repeatedly uses ATTACK, switching to GUARD or HEAL when in danger. In PROGRESSION MODE, defeat this enemy to unlock the WARLOCK enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.ATTACK]: {
@@ -400,7 +386,7 @@ export const BASIC_DESCRIPTIONS = {
     [actionKeys.HEAL]: {
         name: "HEAL",
         type: entryTypes.DEFENSIVE_ACTION,
-        description: "Consumes MANA to replenish MISSING HEALTH.",
+        description: "Consumes MANA to replenish missing HEALTH.",
     },
 };
 
@@ -409,7 +395,7 @@ export const WARLOCK_DESCRIPTIONS = {
         name: "WARLOCK",
         type: entryTypes.CONTROLLER,
         description:
-            "The first challenge. Focuses on the use of SPECIAL ATTACK and on replenishing MANA for maximizing it's damage. In PROGRESSION MODE, defeat this enemy to unlock the BLOODKNIGHT enemy and it's GLOSSARY entry.",
+            "The first challenge. Focuses on the use of SPECIAL ATTACK and on replenishing MANA for maximizing it's damage. In PROGRESSION MODE, defeat this enemy to unlock the BLOODKNIGHT enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.SPECIAL_ATTACK]: {
@@ -439,7 +425,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "BLOODKNIGHT",
         type: entryTypes.CONTROLLER,
         description:
-            "The second challenge. Focuses on the use of SACRIFICE to increase the PHYSICAL DAMAGE dealt, utilizing of the MANA BLEED mechanics to turn GUARD into delayed healing. In PROGRESSION MODE, defeat this enemy to unlock the SACRIFICE action, the PALADIN enemy and it's GLOSSARY entry.",
+            "The second challenge. Focuses on the use of SACRIFICE to increase the PHYSICAL DAMAGE dealt, utilizing of the MANA BLEED mechanics to turn GUARD into delayed healing. In PROGRESSION MODE, defeat this enemy to unlock the SACRIFICE action and the PALADIN enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.SACRIFICE]: {
@@ -453,7 +439,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION based on the ratio of MISSING HEALTH to MAX HEALTH. At turn start, exits this state.",
+            "Raises DAMAGE REDUCTION based on the ratio of missing HEALTH to MAX HEALTH. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
@@ -476,7 +462,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "PALADIN",
         type: entryTypes.CONTROLLER,
         description:
-            "The third challenge. Focuses on the use of AEGIS to build up DIVINE SPARK, utilizing of ATTACK to deal damage and dispose of harmful RADIANCE when suitable; after building enough DIVINE SPARK, shifts focus to SPECIAL ATTACK, utilizing of AEGIS to restore RESOURCES via DIVINE SPARK overflow rules. In PROGRESSION MODE, defeat this enemy to unlock the AEGIS action, the SHADOW SORCERER enemy and it's GLOSSARY entry.",
+            "The third challenge. Focuses on the use of AEGIS to build up DIVINE SPARK, utilizing of ATTACK to deal damage and dispose of harmful RADIANCE when suitable; after building enough DIVINE SPARK, shifts focus to SPECIAL ATTACK, utilizing of AEGIS to restore RESOURCES via DIVINE SPARK overflow rules. In PROGRESSION MODE, defeat this enemy to unlock the AEGIS action and the SHADOW SORCERER enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.AEGIS]: {
@@ -519,7 +505,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW SORCERER",
         type: entryTypes.CONTROLLER,
         description:
-            "The fourth challenge. Focuses on managing SHADOWFLAME, utilizing of SHADOW MANTLE when at low RESOURCES and RITUAL OF ASH when risking losing control; eventually finishing battle with BLACK MAYHEM consumption or DARK PROMISE restoration bomb. In PROGRESSION MODE, defeat this enemy to unlock the SHADOW PACT action, the CYBORG enemy and it's GLOSSARY entry.",
+            "The fourth challenge. Focuses on managing SHADOWFLAME, utilizing of SHADOW MANTLE when at low RESOURCES and RITUAL OF ASH when risking losing control; eventually finishing battle with BLACK MAYHEM consumption or DARK PROMISE restoration bomb. In PROGRESSION MODE, defeat this enemy to unlock the SHADOW PACT action and the CYBORG enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.SHADOW_PACT]: {
@@ -601,7 +587,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "DARK PROMISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits UMBRAL CORE and enters DIMMING DARKNESS. Loses all SHADOWFLAME, LINGERING EMBER and CINDERS on self, then grants UNRELENTING SHADOWS to all entities equal to the SHADOWFLAME lost plus half the LINGERING EMBER lost.",
+            "Loses all SHADOWFLAME, LINGERING EMBER and CINDERS on self, then restores RESOURCES on all entities equal to the SHADOWFLAME lost plus half the LINGERING EMBER lost. Afterwards, exits UMBRAL CORE and enters DIMMING DARKNESS. ",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
@@ -617,7 +603,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "CYBORG",
         type: entryTypes.CONTROLLER,
         description:
-            "The fifth challenge. Focuses on the use of LASER, ending turns with a DEFENSIVE ACTION for maximizing DYNAMO generation; avoids THERMAL OVERLOAD unless its enemy can be killed via MELTDOWN. In PROGRESSION MODE, defeat this enemy to unlock the DEPLOY action, the MAESTRO enemy and it's GLOSSARY entry.",
+            "The fifth challenge. Focuses on the use of LASER, ending turns with a DEFENSIVE ACTION for maximizing DYNAMO generation; avoids THERMAL OVERLOAD unless its enemy can be killed via MELTDOWN. In PROGRESSION MODE, defeat this enemy to unlock the DEPLOY action and the MAESTRO enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.DEPLOY]: {
@@ -664,7 +650,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD or VENTING states. Can go over 100%. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30% and raises DYNAMO by the amount lowered this way.",
+            "Enabled when in DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD or VENTING states. Can go over 100%. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30% and raises DYNAMO by the amount lowered this way. Raises FRAGILITY by OVERHEAT on self.",
     },
 
     [effectKeys.THERMAL_OVERLOAD]: {
@@ -684,7 +670,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "VENTING",
         type: entryTypes.STATE,
         description:
-            "Cannot use DEPLOY, LASER or MELTDOWN. At turn start, lowers OVERHEAT by 50% and raises DYNAMO equal to the amount lowered. Additionally, if at 0% OVERHEAT, exits VENTING state and enters WEAPONS DEPLOYED.",
+            "Cannot use DEPLOY, LASER or MELTDOWN. At turn end, lowers OVERHEAT by 50% and raises DYNAMO equal to the amount lowered. Additionally, if at 0% OVERHEAT, exits VENTING state and enters WEAPONS DEPLOYED. Raises DAMAGE REDUCTION by missing OVERHEAT on self.",
     },
 };
 
@@ -693,7 +679,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "MAESTRO",
         type: entryTypes.CONTROLLER,
         description:
-            "The sixth challenge. Focuses on the use of LASER to lower SONORITY; shifting focus to BABEL and THE SOUND OF SILENCE when LASER is unavailable or enough SONORITY has been built. In PROGRESSION MODE, defeat this enemy to unlock the ATTUNE action, the AUGUR enemy and it's GLOSSARY entry.",
+            "The sixth challenge. Focuses on the use of LASER to lower SONORITY; shifting focus to BABEL and THE SOUND OF SILENCE when LASER is unavailable or enough SONORITY has been built. In PROGRESSION MODE, defeat this enemy to unlock the ATTUNE action and the AUGUR enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.ATTUNE]: {
@@ -757,7 +743,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "AUGUR",
         type: entryTypes.CONTROLLER,
         description:
-            "The seventh challenge. ??? (Unimplemented, currently has a MUNDANE placeholder). In PROGRESSION MODE, defeat this enemy to unlock the CARVE action, the STARFARER enemy and it's GLOSSARY entry.",
+            "The seventh challenge. Cycles through the use of GUARD to buff itself or SPECIAL ATTACK to deal direct PIERCING DAMAGE, while utilizing of HEAL to maintain survivability; eventually detonating RUNES via CURSE to clear debuffs and trigger special effects. In PROGRESSION MODE, defeat this enemy to unlock the CARVE action and the VOYAGER enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.CARVE]: {
@@ -791,27 +777,28 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF URD",
         type: entryTypes.RUNES,
         description:
-            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 3% for every point of the user's DEF. While on RUNIC ARRAY: Lowers the user's DEF by 3. Upon detonation: Restores HEALTH equal to 30% MAX HEALTH.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 50%. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Restores HEALTH equal to 15% MAX HEALTH.",
     },
 
     [effectKeys.RECOLLECTION]: {
         name: "RECOLLECTION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. When raising RECOLLECTION above 100%, raises PAST MEMORIES rank for every 5% excess. When RUNES detonate, lose 20% RECOLLECTION and raises PAST MEMORIES rank for every 5% RECOLLECTION lost.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. Raises STR by a percentage of DEF equivalent to RECOLLECTION on self. When raising RECOLLECTION above 100%, gains PRECOGNITION for every 10% excess. When using an OFFENSIVE ACTION, lose all RECOLLECTION.",
     },
 
-    [effectKeys.PAST_MEMORIES]: {
-        name: "PAST MEMORIES",
-        type: entryTypes.RANKED_RESOURCE,
-        description: "Raises STR by its rank.",
+    [effectKeys.PRECOGNITION]: {
+        name: "PRECOGNITION",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish missing MANA.",
     },
 
     [runeKeys.VERDANDI]: {
         name: "RUNE OF VERDANDI",
         type: entryTypes.RUNES,
         description:
-            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's STR. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Raises the opponent's BAD OMEN by 20%.",
+            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's DEF. While on RUNIC ARRAY: Lowers the user's DEF by 3. Upon detonation: Replenishes 60% missing MANA.",
     },
 
     [effectKeys.CONJECTURE]: {
@@ -821,18 +808,18 @@ export const AUGUR_DESCRIPTIONS = {
             "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes CONJECTURE to reduce the damage taken. At turn start, converts all CONJECTURE into PRECOGNITION.",
     },
 
-    [effectKeys.PRECOGNITION]: {
-        name: "PRECOGNITION",
-        type: entryTypes.FREE_RESOURCE,
+    [runeKeys.SKULD]: {
+        name: "RUNE OF SKULD",
+        type: entryTypes.RUNES,
         description:
-            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish MISSING MANA.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Replenishes 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS and DAMAGE REDUCTION by 30%. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
     },
 
     [effectKeys.BAD_OMEN]: {
         name: "BAD OMEN",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. When raising BAD OMEN above 100%, gains PROPHECY OF DOOM for every 1% excess. At turn end, lowers BAD OMEN by 20% and gains PROPHECY OF DOOM for every 10% lowered.",
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to BAD OMEN on self. When raising BAD OMEN above 100%, gains PROPHECY OF DOOM for every 5% excess. At turn end, loses all BAD OMEN and gains PROPHECY OF DOOM for every 5% lost.",
     },
 
     [effectKeys.PROPHECY_OF_DOOM]: {
@@ -842,34 +829,20 @@ export const AUGUR_DESCRIPTIONS = {
             "When this entity has MANA or PRECOGNITION, spends PROPHECY OF DOOM to consume MANA or PRECOGNITION on them.",
     },
 
-    [runeKeys.SKULD]: {
-        name: "RUNE OF SKULD",
-        type: entryTypes.RUNES,
-        description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Restores 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS by 30%. Upon detonation: Raises PREMONITION by 20%.",
-    },
-
-    [effectKeys.PREMONITION]: {
-        name: "PREMONITION",
-        type: entryTypes.FIXED_RESOURCE,
-        description:
-            "Capped at 100%. Raises DAMAGE REDUCTION equal to PREMONITION on self. When raising PREMONITION above 100%, gains PRECOGNITION for every 1% excess. At turn start, lowers PREMONITION by 20% and gains PRECOGNITION for every 10% lowered.",
-    },
-
     [actionKeys.CURSE]: {
         name: "CURSE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Detonates all RUNES, starting from the oldest. Takes 5 TRUE DAMAGE when detonating an empty socket. This action does not end advance your TURN phase to COMMIT. Cannot be used when RUNIC ARRAY is empty.",
+            "Detonates all RUNES, starting from the oldest. Takes TRUE DAMAGE equal to 30% of MAX HEALTH when detonating an empty socket. This action does not end advance your TURN phase to COMMIT. Cannot be used when RUNIC ARRAY is empty.",
     },
 };
 
-export const STARFARER_DESCRIPTIONS = {
-    [aiKeys.STARFARER]: {
-        name: "STARFARER",
+export const VOYAGER_DESCRIPTIONS = {
+    [aiKeys.VOYAGER]: {
+        name: "VOYAGER",
         type: entryTypes.CONTROLLER,
         description:
-            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS and VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects and OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action, the LUNATIC enemy and it's GLOSSARY entry.",
+            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS and VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects and OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action and the LUNATIC enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.CHART]: {
@@ -1087,7 +1060,7 @@ export const STARFARER_DESCRIPTIONS = {
         type: entryTypes.STAR,
         description:
             "When other colored STARS are converted, converts equivalent VIOLET STAR into WHITE STAR and augments that STARS effects. Cannot augment VIOLET STAR. At VIOLET STARFALL, converts all VIOLET STAR into WHITE STAR. Converts GRAY STAR into WHITE STAR equal to VIOLET STAR converted at this phase.",
-    },    
+    },
 };
 
 export const LUNATIC_DESCRIPTIONS = {
@@ -1095,7 +1068,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNATIC",
         type: entryTypes.CONTROLLER,
         description:
-            "The ninth challenge. Focuses on the use of MIRROR, LUNAR SHROUD and LUNAR SHED to build LUNACY and MOONLIGHT according to the current ATTRIBUTES, MOONLIGHT and MIRRORED MOON phase; utilizing of LUNAR TIDE or LUNAR GROWTH when in danger, and LUNAR SMITE or LUNAR STRIKE when it can finish the enemy; eventually using SHATTER to finish the fight with CHALK once enough MOONLIGHT and LUNACY have been accumulated. In PROGRESSION MODE, defeat this enemy to unlock the REFRACT action, the SERAPH enemy and it's GLOSSARY entry.",
+            "The ninth challenge. Focuses on the use of MIRROR, LUNAR SHROUD and LUNAR SHED to build LUNACY and MOONLIGHT according to the current ATTRIBUTES, MOONLIGHT and MIRRORED MOON phase; utilizing of LUNAR TIDE or LUNAR GROWTH when in danger, and LUNAR SMITE or LUNAR STRIKE when it can finish the enemy; eventually using SHATTER to finish the fight with CHALK once enough MOONLIGHT and LUNACY have been accumulated. In PROGRESSION MODE, defeat this enemy to unlock the REFRACT action and the SERAPH enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.REFRACT]: {
@@ -1225,7 +1198,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "NATURE",
         type: entryTypes.MECHANIC,
         description:
-            "While active, raises MAX HEALTH by MOONLIGHT on self. Additionally, replaces GUARD with LUNAR GROWTH. When entering NATURE, consumes SILVER BLOOD to replenish MISSING HEALTH. When exiting NATURE, converts all excess HEALTH into SILVER BLOOD.",
+            "While active, raises MAX HEALTH by MOONLIGHT on self. Additionally, replaces GUARD with LUNAR GROWTH. When entering NATURE, consumes SILVER BLOOD to replenish missing HEALTH. When exiting NATURE, converts all excess HEALTH into SILVER BLOOD.",
     },
 
     [effectKeys.SILVER_BLOOD]: {
@@ -1258,15 +1231,14 @@ export const LUNATIC_DESCRIPTIONS = {
     [actionKeys.LUNAR_STRIKE]: {
         name: "LUNAR STRIKE",
         type: entryTypes.OFFENSIVE_ACTION,
-        description:
-            "Deals PIERCING DAMAGE equal to half the user's STR.",
+        description: "Deals PIERCING DAMAGE equal to half the user's STR.",
     },
 
     [elementalKeys.OCEAN]: {
         name: "OCEAN",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of FROST and SCORCH. While active, when restoring HEALTH above the limit, restores SILVER BLOOD instead. Replaces HEAL with LUNAR TIDE.",
+            "Combination of FROST and SCORCH. While active, when restoring HEALTH above the limit, restores SILVER BLOOD instead. Additionally, LUNACY does not grant FRAGILITY. Replaces HEAL with LUNAR TIDE.",
     },
 
     [actionKeys.LUNAR_TIDE]: {
@@ -1322,7 +1294,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNAR SMITE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Deals PIERCING DAMAGE equal to the user's MOONLIGHT. Increases the damage dealt by 5% for every MISSING LIMITED RESOURCES on self.",
+            "Deals PIERCING DAMAGE equal to the user's MOONLIGHT. Increases the damage dealt by 5% for every missing LIMITED RESOURCES on self.",
     },
 
     [elementalKeys.ALBEDO]: {
@@ -1364,10 +1336,9 @@ export const SERAPH_DESCRIPTIONS = {
     [aiKeys.SERAPH]: {
         name: "SERAPH",
         type: entryTypes.CONTROLLER,
-        description:
-            "The tenth and final challenge. Coming soon.",
+        description: "The tenth and final challenge. Coming soon.",
     },
-}
+};
 
 export const DESCRIPTIONS = {
     ...GENERAL_DESCRIPTIONS,
@@ -1379,6 +1350,6 @@ export const DESCRIPTIONS = {
     ...MAESTRO_DESCRIPTIONS,
     ...AUGUR_DESCRIPTIONS,
     ...SHADOW_SORCERER_DESCRIPTIONS,
-    ...STARFARER_DESCRIPTIONS,
+    ...VOYAGER_DESCRIPTIONS,
     ...LUNATIC_DESCRIPTIONS,
 };

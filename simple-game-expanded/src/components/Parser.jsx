@@ -5,7 +5,7 @@ import './Parser.css';
 // Regex to capture and list the keys found
 const keywordRegex = new RegExp(`\\b(${sortedKeywordList.join("|")})\\b`, "g");
 
-function Parser({ rawText, handleSetTooltip, depth }) {
+function Parser({ rawText, depth }) {
     if (!rawText) {
         return null;
     }
@@ -23,9 +23,9 @@ function Parser({ rawText, handleSetTooltip, depth }) {
                     return (
                         <KeywordTooltip
                             key={index}
+                            originalKey={dictionaryEntry.originalKey}
                             keyword={textChunk}
                             type={dictionaryEntry.type}
-                            handleSetTooltip={handleSetTooltip}
                             depth={depth} 
                         />
                     );

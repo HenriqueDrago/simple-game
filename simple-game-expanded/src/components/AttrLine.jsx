@@ -23,57 +23,78 @@ const gettersMap = {
     def: getEntityDef,
 };
 
-function getStatClass(attr, entity) {
+const EFFECT_COLORS = {
+    URD: "var(--color-rune-urd)",
+    VERDANDI: "var(--color-rune-verdandi)",
+    SKULD: "var(--color-rune-skuld)",
+    SCORCH: "var(--scorch-color)",
+    FROST: "var(--frost-color)",
+    CRIMSON_CONSTELLATION: "#dc143c",
+    AZURE_CONSTELLATION: "#00bfff",
+    CONSTELLATION: "#DAA520",
+    DIVINE_SPARK: "#ffd93b",
+};
+
+function getStatColors(attr, entity) {
     if (!entity) {
-        return "";
+        return [];
     }
 
+    const colors = [];
+
     if (attr === "str") {
-        if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0) {
-            return "str-value-verdandi";
+        if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0) {
+            colors.push(EFFECT_COLORS.URD);
         }
         if (
-            entity[effectKeys.PAST_MEMORIES] > 0
+            entity[effectKeys.RECOLLECTION] > 0 &&
+            Math.floor(
+                (getEntityDef(entity) * entity[effectKeys.RECOLLECTION]) / 100,
+            ) > 0
         ) {
-            return "str-value-past-memories";
+            if (!colors.includes(EFFECT_COLORS.URD)) {
+                colors.push(EFFECT_COLORS.URD);
+            }
         }
         if (
-            isElementActive(entity, elementalKeys.SCORCH) ||
-            entity[effectKeys.CRIMSON_CONSTELLATION] > 0
+            isElementActive(entity, elementalKeys.SCORCH) &&
+            entity[effectKeys.MOONLIGHT] > 0
         ) {
-            return "stat-value-str";
+            colors.push(EFFECT_COLORS.SCORCH);
+        }
+        if (entity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
+            colors.push(EFFECT_COLORS.CRIMSON_CONSTELLATION);
+        }
+        if (entity[effectKeys.CONSTELLATION] > 0) {
+            colors.push(EFFECT_COLORS.CONSTELLATION);
         }
         if (
-            (entity[effectKeys.CONSTELLATION] > 0 &&
-                getEntityStr(entity) > entity.attributes.str.points) ||
-            entity[effectKeys.DIVINE_SPARK] >
-                constants.DIVINE_SPARK_STR_CONVERSION
+            entity[effectKeys.DIVINE_SPARK] >=
+            constants.DIVINE_SPARK_STR_CONVERSION
         ) {
-            return "constellation-value-increase";
+            colors.push(EFFECT_COLORS.DIVINE_SPARK);
         }
     }
 
     if (attr === "def") {
-        if (
-            isElementActive(entity, elementalKeys.FROST) ||
-            entity[effectKeys.AZURE_CONSTELLATION] > 0
-        ) {
-            return "stat-value-def";
+        if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0) {
+            colors.push(EFFECT_COLORS.VERDANDI);
         }
         if (
-            entity[effectKeys.CONSTELLATION] > 0 &&
-            getEntityDef(entity) > entity.attributes.def.points
+            isElementActive(entity, elementalKeys.FROST) &&
+            entity[effectKeys.MOONLIGHT] > 0
         ) {
-            return "constellation-value-increase";
+            colors.push(EFFECT_COLORS.FROST);
         }
-        if (
-            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0
-        ) {
-            return "str-value-past-memories";
+        if (entity[effectKeys.AZURE_CONSTELLATION] > 0) {
+            colors.push(EFFECT_COLORS.AZURE_CONSTELLATION);
+        }
+        if (entity[effectKeys.CONSTELLATION] > 1) {
+            colors.push(EFFECT_COLORS.CONSTELLATION);
         }
     }
 
-    return "";
+    return colors;
 }
 
 export default function AttrLine({ attr, entityKey }) {
@@ -90,7 +111,19 @@ export default function AttrLine({ attr, entityKey }) {
     const displayVal = simEntity ? simVal : realVal;
 
     const activeEntity = simEntity || entity;
-    const specialClass = getStatClass(attr, activeEntity);
+    const activeColors = getStatColors(attr, activeEntity);
+
+    let specialClass = "";
+    let customStyle = undefined;
+
+    if (activeColors.length === 1) {
+        customStyle = { color: activeColors[0] };
+    } else if (activeColors.length > 1) {
+        specialClass = "attr-multi-gradient";
+        customStyle = {
+            backgroundImage: `linear-gradient(90deg, ${activeColors.join(", ")})`,
+        };
+    }
 
     const showControls =
         entity.statDistributionMode === sdmKeys.CUSTOM &&
@@ -115,6 +148,7 @@ export default function AttrLine({ attr, entityKey }) {
                         className={`${specialClass} ${
                             isValChanged ? "is-preview" : ""
                         }`}
+                        style={customStyle}
                     >
                         {displayVal}
                     </span>

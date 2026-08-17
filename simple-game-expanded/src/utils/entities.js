@@ -184,7 +184,6 @@ export function createBaseEntity() {
         [effectKeys.GRAVITATION]: 0,
         [effectKeys.BAD_OMEN]: 0,
         [effectKeys.RECOLLECTION]: 0,
-        [effectKeys.PREMONITION]: 0,
         [effectKeys.ACCRETION]: 0,
         [effectKeys.IRRADIATION]: 0,
 
@@ -194,7 +193,6 @@ export function createBaseEntity() {
         [effectKeys.CONSTELLATION]: 0,
         [effectKeys.AZURE_CONSTELLATION]: 0,
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
-        [effectKeys.PAST_MEMORIES]: 0,
         [effectKeys.STARBLIGHT]: 0,
 
         // alternate stats
@@ -287,10 +285,10 @@ export function createBaseEntity() {
 
 export function processEntityDR(entity) {
     let drMult = 1.0;
-    if (entity.states.guarding) {
+    if (entity.states[effectKeys.GUARDING_STATE]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
-    if (entity.states.sacrificial) {
+    if (entity.states[effectKeys.SACRIFICIAL_STATE]) {
         const missingHealth = Math.max(
             0,
             getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
@@ -300,10 +298,10 @@ export function processEntityDR(entity) {
                 ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
                 : 1;
     }
-    if (entity.states.darkEmbrace) {
+    if (entity.states[effectKeys.DARK_EMBRACE]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
-    if (entity.states.deployment) {
+    if (entity.states[effectKeys.DEPLOYMENT]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
 
@@ -315,8 +313,19 @@ export function processEntityDR(entity) {
         drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
     }
 
-    if (entity[effectKeys.PREMONITION] > 0) {
-        drMult *= Math.max(0, 1 - entity[effectKeys.PREMONITION] / 100);
+    if (entity.states[effectKeys.VENTING]) {
+        const missingOverheat = Math.max(
+            0,
+            entity[effectKeys.OVERHEAT] - constants.MAX_OVERHEAT,
+        );
+        drMult *= Math.max(0, 1 - missingOverheat / constants.MAX_OVERHEAT);
+    }
+
+    if (entity.states[effectKeys.VISIONARY]) {
+        drMult *=
+            1 -
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
+                constants.SKULD_WEAK;
     }
 
     return drMult;
@@ -362,7 +371,12 @@ export function processEntityDamageBonus(entity) {
 export function processEntityFragility(entity) {
     let frail = 1.0;
 
-    frail *= 1 + entity[effectKeys.LUNACY] / 100;
+    if (
+        entity[effectKeys.LUNACY] > 0 &&
+        !isElementActive(entity, elementalKeys.OCEAN)
+    ) {
+        frail *= 1 + entity[effectKeys.LUNACY] / 100;
+    }
 
     if (entity[effectKeys.SONORITY] > 0) {
         frail *= 1 + entity[effectKeys.SONORITY] / 100;
@@ -376,6 +390,10 @@ export function processEntityFragility(entity) {
         frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
     }
 
+    if (entity[effectKeys.OVERHEAT] > 0) {
+        frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
+    }
+
     return frail;
 }
 
@@ -386,19 +404,19 @@ export function processEntityWeakness(entity) {
         weak *= 1 + entity[effectKeys.SONORITY] / 100;
     }
 
-    if (entity.states[effectKeys.VISIONARY]) {
-        weak *=
-            1 -
-            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
-                constants.SKULD_WEAK;
-    }
-
     if (entity[effectKeys.BAD_OMEN] > 0) {
         weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
     }
 
     if (entity[effectKeys.IRRADIATION] > 0) {
         weak *= 1 - entity[effectKeys.IRRADIATION] / 100;
+    }
+
+    if (entity.states[effectKeys.VISIONARY]) {
+        weak *=
+            1 -
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
+                constants.SKULD_WEAK;
     }
 
     return weak;
@@ -853,16 +871,32 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
 
     // Process special removals
     if (originalStates[effectKeys.VISIONARY]) {
-        newGameState = processExitVisionary(newGameState, targetKey, nonTargetKey);
+        newGameState = processExitVisionary(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
     }
     if (originalStates[effectKeys.STARGAZER]) {
-        newGameState = processExitStargazer(newGameState, targetKey, nonTargetKey);
+        newGameState = processExitStargazer(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
     }
     if (originalStates[effectKeys.RESONANT]) {
-        newGameState = processExitResonant(newGameState, targetKey, nonTargetKey);
+        newGameState = processExitResonant(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
     }
     if (originalStates[effectKeys.SELENIAN]) {
-        newGameState = processExitSelenian(newGameState, targetKey, nonTargetKey);
+        newGameState = processExitSelenian(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
     }
 
     return newGameState;
@@ -968,6 +1002,14 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                         result.limitedResourcesConsumed
                             .totalLimitedResourcesConsumption,
                 },
+            };
+        }
+
+        // Recollection
+        if (draftAgent[effectKeys.RECOLLECTION] > 0) {
+            draftAgent = {
+                ...draftAgent,
+                [effectKeys.RECOLLECTION]: 0,
             };
         }
     }
@@ -1139,7 +1181,8 @@ export function getEntityDef(entity) {
 
     if (draftEntity.states[effectKeys.VISIONARY]) {
         bonusDEF -=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
+            3;
     }
 
     return Math.max(0, draftEntity.attributes.def.value + bonusDEF);
@@ -1163,6 +1206,12 @@ export function getEntityStr(entity) {
         );
     }
 
+    if (entity[effectKeys.RECOLLECTION] > 0) {
+        bonusSTR += Math.floor(
+            (getEntityDef(entity) * entity[effectKeys.RECOLLECTION]) / 100,
+        );
+    }
+
     if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
         bonusSTR += draftEntity[effectKeys.CRIMSON_CONSTELLATION];
     }
@@ -1171,16 +1220,9 @@ export function getEntityStr(entity) {
         bonusSTR += draftEntity[effectKeys.MOONLIGHT];
     }
 
-    if (draftEntity[effectKeys.PAST_MEMORIES] > 0) {
-        bonusSTR += draftEntity[effectKeys.PAST_MEMORIES];
-    }
-
     if (draftEntity.states[effectKeys.VISIONARY]) {
-        // bonusSTR +=
-        //     countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
         bonusSTR -=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
-            3;
+            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
     }
 
     return Math.max(0, draftEntity.attributes.str.value + bonusSTR);
@@ -1932,7 +1974,7 @@ export function canUseAction(prev, entityKey, action) {
         return !isProgLocked(aiKeys.LUNATIC);
     }
     if (action === actionKeys.CHART) {
-        return !isProgLocked(aiKeys.STARFARER);
+        return !isProgLocked(aiKeys.VOYAGER);
     }
     if (action === actionKeys.SHADOW_PACT) {
         if (states[effectKeys.BLEAK_DECEPTION]) {
@@ -2129,25 +2171,6 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
     const disposedRune =
         draftTarget[effectKeys.RUNIC_ARRAY][0] || runeKeys.EMPTY;
 
-    // Recollection on detonation
-    if (disposedRune !== runeKeys.EMPTY) {
-        const recConsumed = Math.min(
-            draftTarget[effectKeys.RECOLLECTION],
-            constants.RECOLLECTION_LOSE,
-        );
-        const memGain = Math.floor(
-            recConsumed / constants.PAST_MEMORIES_GAIN_RATE,
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.RECOLLECTION]:
-                draftTarget[effectKeys.RECOLLECTION] - recConsumed,
-            [effectKeys.PAST_MEMORIES]:
-                draftTarget[effectKeys.PAST_MEMORIES] + memGain,
-        };
-    }
-
     let newGameState = {
         ...prev,
         entities: {
@@ -2191,22 +2214,25 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
         case runeKeys.URD: {
             // Gain Recollection
             const totalRec =
-                draftTarget[effectKeys.RECOLLECTION] +
-                getEntityDef(draftTarget) * constants.URD_DEF_REC;
+                draftTarget[effectKeys.RECOLLECTION] + constants.URD_DEF_REC;
             const excessRec = Math.max(
                 0,
                 totalRec - constants.MAX_RECOLLECTION,
             );
 
-            const pastMemoriesGain = Math.floor(
-                excessRec / constants.PAST_MEMORIES_GAIN_RATE,
+            const precogGain = Math.floor(
+                excessRec / constants.RECOLLECTION_EXCESS_RATE,
             );
 
             draftTarget = {
                 ...draftTarget,
                 [effectKeys.RECOLLECTION]: totalRec - excessRec,
-                [effectKeys.PAST_MEMORIES]:
-                    draftTarget[effectKeys.PAST_MEMORIES] + pastMemoriesGain,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.PRECOGNITION]:
+                        draftTarget.resources[effectKeys.PRECOGNITION] +
+                        precogGain,
+                },
             };
 
             break;
@@ -2219,7 +2245,7 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
                     ...draftTarget.resources,
                     [effectKeys.CONJECTURE]:
                         draftTarget.resources[effectKeys.CONJECTURE] +
-                        getEntityStr(draftTarget),
+                        getEntityDef(draftTarget),
                 },
             };
 
@@ -2298,23 +2324,15 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
-    const totalBadOmen =
-        draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN;
-    const excessBadOmen = Math.max(0, totalBadOmen - constants.MAX_BAD_OMEN);
-    const pdGained = Math.floor(
-        excessBadOmen / constants.BAD_OMEN_EXCESS_CONVERT_RATE,
+    const missingMana = Math.max(
+        0,
+        draftTarget[effectKeys.MAX_MANA] - getEntityTotalMana(draftTarget),
     );
 
-    draftNonTarget = {
-        ...draftNonTarget,
-        [effectKeys.BAD_OMEN]: totalBadOmen - excessBadOmen,
-        resources: {
-            ...draftNonTarget.resources,
-            [effectKeys.PROPHECY_OF_DOOM]:
-                draftNonTarget.resources[effectKeys.PROPHECY_OF_DOOM] +
-                pdGained,
-        },
-    };
+    draftTarget = gainMana(
+        draftTarget,
+        Math.floor(missingMana * constants.VERDANDI_MANA_RESTORE),
+    );
 
     return {
         ...prev,
@@ -2339,20 +2357,21 @@ export function detonateSkuld(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
-    const totalPremo =
-        draftTarget[effectKeys.PREMONITION] + constants.SKULD_PREMONITION_GAIN;
-    const excessPremo = Math.max(0, totalPremo - constants.MAX_PREMONITION);
-    const precogGained = Math.floor(
-        excessPremo / constants.PREMONITION_EXCESS_CONVERT_RATE,
+    const totalBadOmen =
+        draftNonTarget[effectKeys.BAD_OMEN] + constants.VERDANDI_OMEN_GAIN;
+    const excessBadOmen = Math.max(0, totalBadOmen - constants.MAX_BAD_OMEN);
+    const pdGained = Math.floor(
+        excessBadOmen / constants.BAD_OMEN_EXCESS_CONVERT_RATE,
     );
 
-    draftTarget = {
-        ...draftTarget,
-        [effectKeys.PREMONITION]: totalPremo - excessPremo,
+    draftNonTarget = {
+        ...draftNonTarget,
+        [effectKeys.BAD_OMEN]: totalBadOmen - excessBadOmen,
         resources: {
-            ...draftTarget.resources,
-            [effectKeys.PRECOGNITION]:
-                draftTarget.resources[effectKeys.PRECOGNITION] + precogGained,
+            ...draftNonTarget.resources,
+            [effectKeys.PROPHECY_OF_DOOM]:
+                draftNonTarget.resources[effectKeys.PROPHECY_OF_DOOM] +
+                pdGained,
         },
     };
 

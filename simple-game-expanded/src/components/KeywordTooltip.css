@@ -42,3 +42,14 @@
 
 .type-star { color: #fde047; }
 .type-runes { color: #00e676; }
+
+.keyword-text.locked {
+    text-decoration: none;
+    cursor: default;
+    opacity: 0.9;
+}
+
+.keyword-text.locked:hover {
+    text-decoration: none;
+    opacity: 0.9;
+}

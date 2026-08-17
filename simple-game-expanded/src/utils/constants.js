@@ -20,7 +20,7 @@ import {
     BASIC_DESCRIPTIONS,
     PALADIN_DESCRIPTIONS,
     SHADOW_SORCERER_DESCRIPTIONS,
-    STARFARER_DESCRIPTIONS,
+    VOYAGER_DESCRIPTIONS,
     WARLOCK_DESCRIPTIONS,
     SERAPH_DESCRIPTIONS,
 } from "./descriptions.js";
@@ -48,31 +48,30 @@ export const constants = Object.freeze({
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
     IRRADIATION_GAIN_RATE: 5,
-    BAD_OMEN_EXCESS_CONVERT_RATE: 10,
-    PREMONITION_EXCESS_CONVERT_RATE: 10,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
     SPARK_RESTORE_RATE: 2,
     ACC_STARBLIGHT_CONVERSION: 5,
-    URD_STR_PAIN: 2,
     CHALK_EXTRA_DMG: 10,
-    PRECOG_GAIN_RATE: 10,
-    PROPHECY_GAIN_RATE: 10,
-    MAX_PREMONITION: 100,
-    SKULD_PREMONITION_GAIN: 20,
-    PREMONITION_TURN_END_LOSS: 20,
-    BAD_OMEN_TURN_END_LOSS: 20,
-    CURSE_EMPTY_RUNE_DMG: 5,
+
+    // Verdandi
+    VERDANDI_MANA_RESTORE: 0.6,
+
+    // Skuld
     SKULD_MANA_REGEN: 0.3,
     SKULD_WEAK: 0.3,
-    PAST_MEMORIES_GAIN_RATE: 5,
-    URD_DEF_REC: 3,
-    RECOLLECTION_LOSE: 20,
-    SKULD_PRECOGNITION_GAIN: 0.3,
-    MAX_RECOLLECTION: 100,
-    URD_HEALTH_REGEN: 0.3,
-    VERDANDI_OMEN_GAIN: 20,
+    BAD_OMEN_EXCESS_CONVERT_RATE: 5,
+    VERDANDI_OMEN_GAIN: 30,
     MAX_BAD_OMEN: 100,
+    PROPHECY_GAIN_RATE: 5,
+
+    // URD
+    URD_DEF_REC: 50,
+    MAX_RECOLLECTION: 100,
+    URD_HEALTH_REGEN: 0.15,
+    RECOLLECTION_EXCESS_RATE: 10,
+
+    CURSE_EMPTY_RUNE_DMG: 0.3,
     DIVINE_SPARK_STR_CONVERSION: 5,
     GRAVITATION_GAIN: 5,
     MAX_GRAVITATION: 100,
@@ -164,8 +163,8 @@ export const presetAi = {
     [aiKeys.WARLOCK]: {
         name: "Warlock",
         best: {
-            str: 5,
-            def: 5,
+            str: 10,
+            def: 0,
         },
         caller: warlockAI,
         desc: [...Object.keys(WARLOCK_DESCRIPTIONS)],
@@ -216,7 +215,7 @@ export const presetAi = {
         desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
     },
     [aiKeys.AUGUR]: {
-        name: "Augur (Missing AI)",
+        name: "Augur",
         best: {
             str: 10,
             def: 0,
@@ -224,14 +223,14 @@ export const presetAi = {
         caller: augurAI,
         desc: [...Object.keys(AUGUR_DESCRIPTIONS)],
     },
-    [aiKeys.STARFARER]: {
-        name: "Starfarer",
+    [aiKeys.VOYAGER]: {
+        name: "Voyager",
         best: {
             str: 0,
             def: 10,
         },
         caller: starfarerAI,
-        desc: [...Object.keys(STARFARER_DESCRIPTIONS)],
+        desc: [...Object.keys(VOYAGER_DESCRIPTIONS)],
     },
     [aiKeys.LUNATIC]: {
         name: "Lunatic",
@@ -375,7 +374,7 @@ export const INITIAL_GAME_STATE = {
         [aiKeys.CYBORG]: progKeys.LOCKED,
         [aiKeys.MAESTRO]: progKeys.LOCKED,
         [aiKeys.LUNATIC]: progKeys.LOCKED,
-        [aiKeys.STARFARER]: progKeys.LOCKED,
+        [aiKeys.VOYAGER]: progKeys.LOCKED,
         [aiKeys.SHADOW_SORCERER]: progKeys.LOCKED,
         [aiKeys.PALADIN]: progKeys.LOCKED,
         [aiKeys.SERAPH]: progKeys.LOCKED,
@@ -582,7 +581,6 @@ export const FIXED_RESOURCES = [
     effectKeys.SONORITY,
     effectKeys.BAD_OMEN,
     effectKeys.RECOLLECTION,
-    effectKeys.PREMONITION,
     effectKeys.IRRADIATION,
     effectKeys.GRAVITATION,
     effectKeys.ACCRETION,
@@ -591,7 +589,6 @@ export const FIXED_RESOURCES = [
 
 export const RANKED_RESOURCES = [
     effectKeys.MANA_BLEED,
-    effectKeys.PAST_MEMORIES,
     effectKeys.STARBLIGHT,
     effectKeys.CONSTELLATION,
     effectKeys.CRIMSON_CONSTELLATION,

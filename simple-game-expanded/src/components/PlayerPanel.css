@@ -140,6 +140,7 @@
 
 .player-panel-container.state-umbral {
     border-color: #9d00ff;
+    border-image: none;
     background: linear-gradient(
         to bottom,
         rgba(157, 0, 255, 0.05),
@@ -167,83 +168,6 @@
         0 0 12px rgba(255, 255, 255, 0.25),
         4px 4px 14px rgba(0, 191, 255, 0.4),
         inset 0 0 12px rgba(255, 255, 255, 0.05);
-}
-
-.player-panel-container.state-weapons-deployed {
-    border-color: #ff8c00;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 140, 0, 0.05),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow:
-        0 0 18px rgba(255, 140, 0, 0.5),
-        inset 0 0 15px rgba(255, 140, 0, 0.15);
-}
-
-.player-panel-container.state-thermal-overload {
-    border-color: #ff3300;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 51, 0, 0.08),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow:
-        0 0 22px rgba(255, 51, 0, 0.65),
-        inset 0 0 20px rgba(255, 0, 0, 0.25);
-    animation: overload-pulse 1.5s infinite alternate;
-}
-
-.player-panel-container.state-venting {
-    border-color: #87ceeb;
-    background: linear-gradient(
-        to bottom,
-        rgba(135, 206, 235, 0.04),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow:
-        0 0 18px rgba(135, 206, 235, 0.45),
-        inset 0 0 15px rgba(135, 206, 235, 0.12);
-}
-
-.player-panel-container.state-guarding {
-    border-color: #a9a9a9;
-    background: linear-gradient(
-        to bottom,
-        rgba(169, 169, 169, 0.04),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow: 0 0 15px rgba(169, 169, 169, 0.45);
-}
-
-.player-panel-container.state-sacrificial {
-    border-color: #dc143c;
-    background: linear-gradient(
-        to bottom,
-        rgba(220, 20, 60, 0.05),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow: 0 0 18px rgba(220, 20, 60, 0.55);
-}
-
-.player-panel-container.state-radiant {
-    border-color: #fff9c4;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 249, 196, 0.05),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow: 0 0 18px rgba(255, 249, 196, 0.5);
-}
-
-.player-panel-container.state-deployment {
-    border-color: #c0c0c0;
-    background: linear-gradient(
-        to bottom,
-        rgba(192, 192, 192, 0.04),
-        rgba(15, 15, 20, 0.92)
-    );
-    box-shadow: 0 0 15px rgba(192, 192, 192, 0.45);
 }
 
 .player-panel-container.state-stargazer {
@@ -274,6 +198,7 @@
 
 .player-panel-container.state-selenian {
     border-color: #80d8ff;
+    border-image: none;
     background: linear-gradient(
         to bottom,
         rgba(128, 216, 255, 0.05),
@@ -294,9 +219,9 @@
     background:
         linear-gradient(
             180deg,
-            rgba(0, 240, 255, 0.03) 0%,
-            rgba(76, 175, 80, 0.08) 50%,
-            rgba(179, 136, 255, 0.08) 100%
+            rgba(0, 240, 255, 0.015) 0%,
+            rgba(76, 175, 80, 0.04) 50%,
+            rgba(179, 136, 255, 0.04) 100%
         ),
         rgba(15, 15, 20, 0.92);
     box-shadow:
@@ -304,6 +229,92 @@
         0 0 16px rgba(76, 175, 80, 0.65),
         0 4px 16px rgba(179, 136, 255, 0.65),
         inset 0 0 12px rgba(255, 255, 255, 0.05);
+}
+
+/* Temporary States */
+
+.player-panel-container.state-weapons-deployed {
+    border-color: #ff8c00;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 140, 0, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(255, 140, 0, 0.5),
+        inset 0 0 15px rgba(255, 140, 0, 0.15);
+}
+
+.player-panel-container.state-thermal-overload {
+    border-color: #ff3300;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 51, 0, 0.08),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 22px rgba(255, 51, 0, 0.65),
+        inset 0 0 20px rgba(255, 0, 0, 0.25);
+    animation: overload-pulse 1.5s infinite alternate;
+}
+
+.player-panel-container.state-venting {
+    border-color: #87ceeb;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(135, 206, 235, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 18px rgba(135, 206, 235, 0.45),
+        inset 0 0 15px rgba(135, 206, 235, 0.12);
+}
+
+.player-panel-container.state-guarding {
+    border-color: #a9a9a9;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(169, 169, 169, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 15px rgba(169, 169, 169, 0.45);
+}
+
+.player-panel-container.state-sacrificial {
+    border-color: #dc143c;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(220, 20, 60, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 18px rgba(220, 20, 60, 0.55);
+}
+
+.player-panel-container.state-radiant {
+    border-color: #fff9c4;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 249, 196, 0.05),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 18px rgba(255, 249, 196, 0.5);
+}
+
+.player-panel-container.state-deployment {
+    border-color: #c0c0c0;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(192, 192, 192, 0.04),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.45);
 }
 
 @keyframes overload-pulse {
