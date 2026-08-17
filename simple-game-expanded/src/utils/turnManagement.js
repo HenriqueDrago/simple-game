@@ -798,7 +798,7 @@ export function processMoonPhase(prev) {
 
         // Moonlight gain
         if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.CORONAL) {
-            newMoonlight += constants.BLOOD_CORONA_ML_GAIN;
+            newMoonlight += constants.BLOOD_CORONA_ML_GAIN + draftEntity[effectKeys.MOONLIT_TEARS];
         }
         if (moon === moonKeys.HIDDEN) {
             newMoonlight += constants.HIDDEN_MOON_ML_GAIN;
@@ -812,16 +812,6 @@ export function processMoonPhase(prev) {
             [effectKeys.MOONLIGHT]: newMoonlight,
             [effectKeys.MIRRORED_MOON]: newMoon,
         };
-
-        // Tears converison
-        if (draftEntity[effectKeys.MOONLIT_TEARS] > 0) {
-            draftEntity = {
-                ...draftEntity,
-                [effectKeys.MOONLIGHT]: draftEntity[effectKeys.MOONLIGHT] + 1,
-                [effectKeys.MOONLIT_TEARS]:
-                    draftEntity[effectKeys.MOONLIT_TEARS] - 1,
-            };
-        }
 
         // Mycelium restore
         // Mycelium

@@ -6,7 +6,7 @@ import {
     getEntityElement,
     isElementActive,
     processDeathCheck,
-    processSilverBlood,
+    processHealth,
     resetPlayerEntity,
     translateElementIntoCrystals,
 } from "../utils/entities";
@@ -123,7 +123,10 @@ export default function GameProvider({ children }) {
                 ? processSingularity(processedAction, agentKey, action)
                 : processPlan(processedAction, action);
 
-            return newGameState;
+            return {
+                ...newGameState,
+                paused: false,
+            };
         });
     }
 
@@ -343,7 +346,8 @@ export default function GameProvider({ children }) {
                 });
             }
 
-            draftEntity = processSilverBlood({
+            // Process Health after possible Max Health alterations
+            draftEntity = processHealth({
                 ...draftEntity,
                 [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
             });
@@ -752,25 +756,13 @@ export default function GameProvider({ children }) {
                         const crystals =
                             translateElementIntoCrystals(selectedElement);
 
-                        const wasNature = isElementActive(
-                            draftTarget,
-                            elementalKeys.NATURE,
-                        );
-
                         draftTarget = {
                             ...draftTarget,
                             [effectKeys.ELEMENTAL_CRYSTALS]: crystals,
                         };
 
-                        const isNature = isElementActive(
-                            draftTarget,
-                            elementalKeys.NATURE,
-                        );
-
-                        // Run processSilverBlood on exit or entry of Nature
-                        if (wasNature || isNature) {
-                            draftTarget = processSilverBlood(draftTarget);
-                        }
+                        // Run processHealth
+                        draftTarget = processHealth(draftTarget);
 
                         newGame = {
                             ...newGame,
@@ -976,7 +968,7 @@ export default function GameProvider({ children }) {
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
                 localStorage.setItem("gameCheckpoint", JSON.stringify(game));
-                console.log("Game Saved!")
+                console.log("Game Saved!");
             } catch (error) {
                 console.error("Failed to save game checkpoint:", error);
             }

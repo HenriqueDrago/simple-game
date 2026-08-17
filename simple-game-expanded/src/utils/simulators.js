@@ -75,7 +75,10 @@ export const simulators = {
 function simulateGuard({ prev, agent, agentKey }) {
     const newMana = Math.min(
         agent[effectKeys.MAX_MANA],
-        Math.floor(agent[effectKeys.MANA] + agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN),
+        Math.floor(
+            agent[effectKeys.MANA] +
+                agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN,
+        ),
     );
 
     return {
@@ -842,6 +845,8 @@ function simulateLunarShed({ prev, agent, agentKey }) {
 
     draftAgent = {
         ...draftAgent,
+        [effectKeys.MOONLIT_TEARS]:
+            draftAgent[effectKeys.MOONLIT_TEARS] + constants.GIBBOUS_TEARS_GAIN,
         resources: {
             ...draftAgent.resources,
             [effectKeys.MYCELIUM]: draftAgent[effectKeys.MOONLIGHT],

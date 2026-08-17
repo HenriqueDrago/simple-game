@@ -298,6 +298,16 @@ export function processEntityDR(entity) {
                 ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
                 : 1;
     }
+    if (isElementActive(entity, elementalKeys.WITHER)) {
+        const missingHealth = Math.max(
+            0,
+            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
+        );
+        drMult *=
+            getEntityMaxHealth(entity) > 0
+                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                : 1;
+    }
     if (entity.states[effectKeys.DARK_EMBRACE]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
@@ -339,9 +349,6 @@ export function processEntityDefEffect(entity) {
     if (entity.states.radiant) {
         defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
     }
-    if (entity.states[effectKeys.PRISMATIC]) {
-        defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
-    }
 
     return defEffect;
 }
@@ -371,10 +378,7 @@ export function processEntityDamageBonus(entity) {
 export function processEntityFragility(entity) {
     let frail = 1.0;
 
-    if (
-        entity[effectKeys.LUNACY] > 0 &&
-        !isElementActive(entity, elementalKeys.OCEAN)
-    ) {
+    if (entity[effectKeys.LUNACY] > 0) {
         frail *= 1 + entity[effectKeys.LUNACY] / 100;
     }
 
@@ -453,6 +457,13 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
               ? draftAttacker[effectKeys.STARBLIGHT]
               : 0;
 
+    if (
+        dmgType === dmgTypes.PHYSICAL &&
+        draftDefender.states[effectKeys.PRISMATIC]
+    ) {
+        dmgType = dmgTypes.PIERCING;
+    }
+
     // Flat reduction
     const effectiveDef =
         dmgType === dmgTypes.PHYSICAL
@@ -514,16 +525,6 @@ export function dealDamage(attacker, defender, baseDmg, dmgType) {
 
     draftDefender = loseHp(draftDefender, damagePostMitigation);
 
-    // Wither Moonlit Gain
-    if (isElementActive(draftDefender, elementalKeys.WITHER)) {
-        draftDefender = {
-            ...draftDefender,
-            [effectKeys.MOONLIT_TEARS]:
-                draftDefender[effectKeys.MOONLIT_TEARS] +
-                constants.GIBBOUS_TEARS_GAIN,
-        };
-    }
-
     return {
         attacker: {
             ...draftAttacker,
@@ -542,6 +543,13 @@ export function takeDamage(entity, baseDmg, dmgType) {
     // Lunic override
     if (dmgType === dmgTypes.LUNIC) {
         return takeLunicDamage(draftEntity, baseDmg);
+    }
+
+    if (
+        dmgType === dmgTypes.PHYSICAL &&
+        draftEntity.states[effectKeys.PRISMATIC]
+    ) {
+        dmgType = dmgTypes.PIERCING;
     }
 
     // Flat reduction
@@ -588,16 +596,6 @@ export function takeDamage(entity, baseDmg, dmgType) {
     }
 
     draftEntity = loseHp(draftEntity, damagePostMitigation);
-
-    // Wither Moonlit Gain
-    if (isElementActive(draftEntity, elementalKeys.WITHER)) {
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.MOONLIT_TEARS]:
-                draftEntity[effectKeys.MOONLIT_TEARS] +
-                constants.GIBBOUS_TEARS_GAIN,
-        };
-    }
 
     return {
         ...draftEntity,
@@ -1517,63 +1515,6 @@ export function consumeResources(entity, amount, cause = null) {
     };
 }
 
-export function processSilverBlood(entity) {
-    let draftEntity = {
-        ...entity,
-    };
-
-    // Converts excess Health into Silver Blood
-    if (draftEntity[effectKeys.HEALTH] > draftEntity[effectKeys.MAX_HEALTH]) {
-        const excessHealth = Math.max(
-            0,
-            draftEntity[effectKeys.HEALTH] - getEntityMaxHealth(draftEntity),
-        );
-        const newHp = Math.min(
-            draftEntity[effectKeys.HEALTH],
-            getEntityMaxHealth(draftEntity),
-        );
-        const silverBlood =
-            draftEntity.resources[effectKeys.SILVER_BLOOD] + excessHealth;
-
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.HEALTH]: newHp,
-            resources: {
-                ...draftEntity.resources,
-                [effectKeys.SILVER_BLOOD]: silverBlood,
-            },
-        };
-    }
-
-    // Convert Silver Blood into Health
-    if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
-        const missingHp = Math.max(
-            0,
-            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
-        );
-
-        const silverConsumed = Math.min(
-            missingHp,
-            draftEntity.resources[effectKeys.SILVER_BLOOD],
-        );
-
-        const newHp = draftEntity[effectKeys.HEALTH] + silverConsumed;
-        const silverBlood =
-            draftEntity.resources[effectKeys.SILVER_BLOOD] - silverConsumed;
-
-        draftEntity = {
-            ...draftEntity,
-            [effectKeys.HEALTH]: newHp,
-            resources: {
-                ...draftEntity.resources,
-                [effectKeys.SILVER_BLOOD]: silverBlood,
-            },
-        };
-    }
-
-    return draftEntity;
-}
-
 export function translateElementIntoCrystals(element) {
     let crystals;
     switch (element) {
@@ -1619,27 +1560,63 @@ export function processHealth(entity) {
         ...entity,
     };
 
-    if (getEntityMaxHealth(entity) < entity[effectKeys.HEALTH]) {
-        if (entity.states[effectKeys.SELENIAN]) {
-            const extraBlood =
-                entity[effectKeys.HEALTH] - getEntityMaxHealth(entity);
+    if (draftEntity[effectKeys.HEALTH] > getEntityMaxHealth(draftEntity)) {
+        // Converts excess Health into Silver Blood
+        if (draftEntity.states[effectKeys.SELENIAN]) {
+            const excessHealth = Math.max(
+                0,
+                draftEntity[effectKeys.HEALTH] -
+                    getEntityMaxHealth(draftEntity),
+            );
+            const newHp = Math.min(
+                draftEntity[effectKeys.HEALTH],
+                getEntityMaxHealth(draftEntity),
+            );
+            const silverBlood =
+                draftEntity.resources[effectKeys.SILVER_BLOOD] + excessHealth;
 
             draftEntity = {
                 ...draftEntity,
-                [effectKeys.HEALTH]: getEntityMaxHealth(entity),
+                [effectKeys.HEALTH]: newHp,
                 resources: {
                     ...draftEntity.resources,
-                    [effectKeys.SILVER_BLOOD]:
-                        draftEntity.resources[effectKeys.SILVER_BLOOD] +
-                        extraBlood,
+                    [effectKeys.SILVER_BLOOD]: silverBlood,
                 },
             };
-        } else {
+        }
+        // Removes excess Health
+        else {
             draftEntity = {
                 ...draftEntity,
                 [effectKeys.HEALTH]: getEntityMaxHealth(entity),
             };
         }
+    }
+
+    // Convert Silver Blood into Health
+    if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
+        const missingHp = Math.max(
+            0,
+            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
+        );
+
+        const silverConsumed = Math.min(
+            missingHp,
+            draftEntity.resources[effectKeys.SILVER_BLOOD],
+        );
+
+        const newHp = draftEntity[effectKeys.HEALTH] + silverConsumed;
+        const silverBlood =
+            draftEntity.resources[effectKeys.SILVER_BLOOD] - silverConsumed;
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.HEALTH]: newHp,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.SILVER_BLOOD]: silverBlood,
+            },
+        };
     }
 
     return draftEntity;

@@ -684,8 +684,8 @@ export function selectElementAI(context) {
             nonAgentKey,
             agentKey,
         ) ||
-        agent.resources[effectKeys.MOONSHINE] >
-            getEntityTotalHealth(agent) * 0.3
+        agent.resources[effectKeys.MOONSHINE] >=
+            getEntityTotalHealth(agent) * 0.7
     ) {
         return elementalKeys.SCORCH;
     }
@@ -790,10 +790,7 @@ export function selectElementAI(context) {
             actionKeys.LUNAR_SHED,
         );
 
-        if (
-            getEntityTotalHealth(simWither.entities[agentKey]) >=
-            getEntityMaxHealth(agent) * 0.5
-        ) {
+        if (getEntityTotalHealth(simWither.entities[agentKey]) > 0) {
             return elementalKeys.WITHER;
         } else {
             return elementalKeys.FROST;
@@ -1461,7 +1458,7 @@ export function maestroAI(context) {
 }
 
 export function starfarerAI(context) {
-    const { hasManaForSpecial, prev, nonAgentKey, agentKey, assignedStars } =
+    const { prev, nonAgentKey, agentKey, assignedStars } =
         context;
 
     function simulateActionStarfallHelper(action) {
@@ -1491,22 +1488,6 @@ export function starfarerAI(context) {
 
     const simulate = createSimulator(context);
 
-    // Simulate Special Attack
-    // If it kills, use it
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (willEntityDieImmediately(simSpecial.entities[nonAgentKey])) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (willEntityDieImmediately(simAttack.entities[nonAgentKey])) {
-        return actionKeys.ATTACK;
-    }
-
     const relevantActions = [
         actionKeys.SPECIAL_ATTACK,
         actionKeys.ATTACK,
@@ -1515,6 +1496,16 @@ export function starfarerAI(context) {
         actionKeys.HEAL,
         actionKeys.CHART,
     ];
+
+    for (let action of relevantActions) {
+        const sim = simulate(action);
+        if (
+            canUseAction(prev, agentKey, action) &&
+            willEntityDieImmediately(sim.entities[nonAgentKey])
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
 
     // Death checks taking starfall into consideration
     for (let action of relevantActions) {
@@ -1525,6 +1516,25 @@ export function starfarerAI(context) {
             willEntityEffectivelyDieByNextUpkeep(sim, nonAgentKey, agentKey)
         ) {
             return action;
+        }
+
+        // Singularity Check
+        if (sim.entities[agentKey].states[effectKeys.EVENT_HORIZON]) {
+            for (let subAction of relevantActions) {
+                const newSim = simulate(subAction, { prev: sim });
+
+                if (
+                    !willEntityDieImmediately(sim.entities[agentKey]) &&
+                    !willEntityDieImmediately(newSim.entities[agentKey]) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        newSim,
+                        nonAgentKey,
+                        agentKey,
+                    )
+                ) {
+                    return action;
+                }
+            }
         }
     }
 
@@ -1587,11 +1597,7 @@ export function lunaticAI(context) {
             return actionKeys.LUNAR_TIDE;
         }
         case elementalKeys.WITHER: {
-            if (agent[effectKeys.MOONLIGHT] > 5) {
-                return actionKeys.LUNAR_SHED;
-            }
-
-            return actionKeys.MIRROR;
+            return actionKeys.LUNAR_SHED;
         }
         case elementalKeys.ASH: {
             return actionKeys.LUNAR_SMITE;
