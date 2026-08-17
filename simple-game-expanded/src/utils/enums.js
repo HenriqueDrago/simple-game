@@ -333,4 +333,5 @@ export const eventKeys = Object.freeze({
     DRAW: "draw",
     STARFALL_START: "starfallStart",
     FAILED_ACTION: "failedAction",
+    TOOK_DMG: "tookDmg",
 });

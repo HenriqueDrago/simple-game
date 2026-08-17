@@ -21,7 +21,9 @@ import {
     roundPhases,
     playerTurnPhases,
     runeKeys,
+    eventKeys,
 } from "./enums.js";
+import { buildHistory } from "./turnManagement.js";
 
 export function restoreResources(entity, amount) {
     let draftEntity = {
@@ -195,7 +197,7 @@ export function createBaseEntity() {
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
         [effectKeys.STARBLIGHT]: 0,
 
-        // alternate stats
+        // special attributes
         [effectKeys.REVELATION]: 0,
         [effectKeys.ENERGY_LEVEL]: constants.STARTING_ENERGY,
         [effectKeys.MOONLIGHT]: 0,
@@ -280,325 +282,6 @@ export function createBaseEntity() {
         },
         unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
         attributes: baseAttributes,
-    };
-}
-
-export function processEntityDR(entity) {
-    let drMult = 1.0;
-    if (entity.states[effectKeys.GUARDING_STATE]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-    if (entity.states[effectKeys.SACRIFICIAL_STATE]) {
-        const missingHealth = Math.max(
-            0,
-            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
-        );
-        drMult *=
-            getEntityMaxHealth(entity) > 0
-                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
-                : 1;
-    }
-    if (isElementActive(entity, elementalKeys.WITHER)) {
-        const missingHealth = Math.max(
-            0,
-            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
-        );
-        drMult *=
-            getEntityMaxHealth(entity) > 0
-                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
-                : 1;
-    }
-    if (entity.states[effectKeys.DARK_EMBRACE]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-    if (entity.states[effectKeys.DEPLOYMENT]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-
-    if (entity.states[effectKeys.MOON_DEW]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-
-    if (entity[effectKeys.SONORITY] < 0) {
-        drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
-    }
-
-    if (entity.states[effectKeys.VENTING]) {
-        const missingOverheat = Math.max(
-            0,
-            entity[effectKeys.OVERHEAT] - constants.MAX_OVERHEAT,
-        );
-        drMult *= Math.max(0, 1 - missingOverheat / constants.MAX_OVERHEAT);
-    }
-
-    if (entity.states[effectKeys.VISIONARY]) {
-        drMult *=
-            1 -
-            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
-                constants.SKULD_WEAK;
-    }
-
-    return drMult;
-}
-
-export function processEntityDefEffect(entity) {
-    let defEffect = 1.0;
-    if (entity.states.guarding) {
-        defEffect *= constants.STANDARD_DEF_EFFECT_INCREASE;
-    }
-    if (entity.states.radiant) {
-        defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
-    }
-
-    return defEffect;
-}
-
-export function processEntityDamageBonus(entity) {
-    let dmgBonus = 1.0;
-
-    if (entity[effectKeys.LUNACY] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
-    }
-    if (entity[effectKeys.GRAVITATION] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.GRAVITATION] / 100;
-    }
-    if (entity[effectKeys.ACCRETION] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.ACCRETION] / 100;
-    }
-    if (entity[effectKeys.SONORITY] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
-    }
-    if (entity[effectKeys.RECOLLECTION] > 0) {
-        dmgBonus *= 1 + entity[effectKeys.RECOLLECTION] / 100;
-    }
-
-    return dmgBonus;
-}
-
-export function processEntityFragility(entity) {
-    let frail = 1.0;
-
-    if (entity[effectKeys.LUNACY] > 0) {
-        frail *= 1 + entity[effectKeys.LUNACY] / 100;
-    }
-
-    if (entity[effectKeys.SONORITY] > 0) {
-        frail *= 1 + entity[effectKeys.SONORITY] / 100;
-    }
-
-    if (entity[effectKeys.BAD_OMEN] > 0) {
-        frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
-    }
-
-    if (entity[effectKeys.IRRADIATION] > 0) {
-        frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
-    }
-
-    if (entity[effectKeys.OVERHEAT] > 0) {
-        frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
-    }
-
-    return frail;
-}
-
-export function processEntityWeakness(entity) {
-    let weak = 1.0;
-
-    if (entity[effectKeys.SONORITY] < 0) {
-        weak *= 1 + entity[effectKeys.SONORITY] / 100;
-    }
-
-    if (entity[effectKeys.BAD_OMEN] > 0) {
-        weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
-    }
-
-    if (entity[effectKeys.IRRADIATION] > 0) {
-        weak *= 1 - entity[effectKeys.IRRADIATION] / 100;
-    }
-
-    if (entity.states[effectKeys.VISIONARY]) {
-        weak *=
-            1 -
-            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
-                constants.SKULD_WEAK;
-    }
-
-    return weak;
-}
-
-export function dealDamage(attacker, defender, baseDmg, dmgType) {
-    let draftAttacker = {
-        ...attacker,
-    };
-
-    let draftDefender = {
-        ...defender,
-    };
-
-    // Lunic override
-    if (dmgType === dmgTypes.LUNIC) {
-        draftDefender = takeLunicDamage(draftDefender, baseDmg);
-
-        return {
-            attacker: {
-                ...draftAttacker,
-            },
-            defender: {
-                ...draftDefender,
-            },
-        };
-    }
-
-    const additionalDmg =
-        dmgType === dmgTypes.PHYSICAL
-            ? draftAttacker.resources[effectKeys.BLOOD_SACRIFICE] +
-              draftAttacker[effectKeys.STARBLIGHT]
-            : dmgType === dmgTypes.PIERCING
-              ? draftAttacker[effectKeys.STARBLIGHT]
-              : 0;
-
-    if (
-        dmgType === dmgTypes.PHYSICAL &&
-        draftDefender.states[effectKeys.PRISMATIC]
-    ) {
-        dmgType = dmgTypes.PIERCING;
-    }
-
-    // Flat reduction
-    const effectiveDef =
-        dmgType === dmgTypes.PHYSICAL
-            ? getEntityDef(draftDefender) *
-              processEntityDefEffect(draftDefender)
-            : 0;
-
-    const effectiveRevelation =
-        dmgType === dmgTypes.PHYSICAL
-            ? draftDefender[effectKeys.REVELATION]
-            : 0;
-
-    const flatDr =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? effectiveDef + effectiveRevelation
-            : 0;
-
-    // Multiplicative effects
-    const drMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityDR(draftDefender)
-            : 1.0;
-
-    const weakMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityWeakness(draftAttacker)
-            : 1.0;
-
-    const bonusMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityDamageBonus(draftAttacker)
-            : 1.0;
-
-    const frailMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityFragility(draftDefender)
-            : 1.0;
-
-    const dmgPostMults = (baseDmg + additionalDmg) * bonusMult * weakMult;
-
-    const dmgPostReduction = Math.max(
-        1,
-        Math.floor((dmgPostMults - flatDr) * drMult * frailMult),
-    );
-
-    // Mitigation
-    let damagePostMitigation = dmgPostReduction;
-    if (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) {
-        const consumptionResult = consumeMitigationResources(
-            draftDefender,
-            damagePostMitigation,
-            dmgType,
-        );
-
-        draftDefender = consumptionResult.draftEntity;
-        damagePostMitigation =
-            consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
-    }
-
-    draftDefender = loseHp(draftDefender, damagePostMitigation);
-
-    return {
-        attacker: {
-            ...draftAttacker,
-        },
-        defender: {
-            ...draftDefender,
-        },
-    };
-}
-
-export function takeDamage(entity, baseDmg, dmgType) {
-    let draftEntity = {
-        ...entity,
-    };
-
-    // Lunic override
-    if (dmgType === dmgTypes.LUNIC) {
-        return takeLunicDamage(draftEntity, baseDmg);
-    }
-
-    if (
-        dmgType === dmgTypes.PHYSICAL &&
-        draftEntity.states[effectKeys.PRISMATIC]
-    ) {
-        dmgType = dmgTypes.PIERCING;
-    }
-
-    // Flat reduction
-    const effectiveDef =
-        dmgType === dmgTypes.PHYSICAL
-            ? getEntityDef(draftEntity) * processEntityDefEffect(draftEntity)
-            : 0;
-
-    const effectiveRevelation =
-        dmgType === dmgTypes.PHYSICAL ? draftEntity[effectKeys.REVELATION] : 0;
-
-    const flatDr =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? effectiveDef + effectiveRevelation
-            : 0;
-
-    // Multiplicative effects
-    const drMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityDR(entity)
-            : 1.0;
-
-    const frailMult =
-        dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING
-            ? processEntityFragility(draftEntity)
-            : 1.0;
-
-    const finalDmg = Math.max(
-        1,
-        Math.floor((baseDmg - flatDr) * drMult * frailMult),
-    );
-
-    let damagePostMitigation = finalDmg;
-    if (dmgType === dmgTypes.PHYSICAL || dmgType === dmgTypes.PIERCING) {
-        const consumptionResult = consumeMitigationResources(
-            draftEntity,
-            finalDmg,
-            dmgType,
-        );
-
-        draftEntity = consumptionResult.draftEntity;
-        damagePostMitigation =
-            consumptionResult.mitigationResourcesConsumed.mitigationNotConsumed;
-    }
-
-    draftEntity = loseHp(draftEntity, damagePostMitigation);
-
-    return {
-        ...draftEntity,
     };
 }
 
@@ -784,15 +467,17 @@ export function processExitResonant(prev, targetKey) {
 }
 
 export function processExitSelenian(prev, targetKey) {
+    const post = newDealDmg(
+        prev,
+        prev.entities[targetKey][effectKeys.MOONLIGHT],
+        targetKey,
+        dmgTypes.TRUE,
+        null,
+    );
+
     let draftEntity = {
         ...prev.entities[targetKey],
     };
-
-    draftEntity = takeDamage(
-        draftEntity,
-        draftEntity[effectKeys.MOONLIGHT],
-        dmgTypes.LUNIC,
-    );
 
     draftEntity = {
         ...draftEntity,
@@ -808,9 +493,9 @@ export function processExitSelenian(prev, targetKey) {
     };
 
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [targetKey]: draftEntity,
         },
     };
@@ -1073,7 +758,7 @@ export function processDeathCheck(prev) {
         status = turnStatus.VICTORY;
     }
 
-    return {
+    const post = processProgUnlock({
         ...prev,
         status: status,
         entities: {
@@ -1081,7 +766,9 @@ export function processDeathCheck(prev) {
             [entityKeys.PLAYER_ONE]: p1,
             [entityKeys.PLAYER_TWO]: p2,
         },
-    };
+    });
+
+    return post;
 }
 
 export function processEntityDeathStates(entity) {
@@ -2466,4 +2153,393 @@ export function getCurrActivePlayer(prev) {
     }
 
     return null;
+}
+
+export function newDealDmg(
+    prev,
+    baseDmg,
+    takerKeys,
+    dmgType,
+    dealerKey = null,
+) {
+    const dmgDealt = dealerKey
+        ? calcDmgDealt(prev, baseDmg, dealerKey, dmgType)
+        : baseDmg;
+
+    const processedGame = newTakeDmg(prev, dmgDealt, takerKeys, dmgType);
+
+    return processedGame;
+}
+
+export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType) {
+    let processedGame = {
+        ...prev,
+    };
+
+    const keys = Array.isArray(takerKeys) ? takerKeys : [takerKeys];
+
+    for (let entityKey of keys) {
+        let draftTaker = {
+            ...prev.entities[entityKey],
+        };
+
+        // Prismatic Override
+        let dmgTypeTaken = dmgType;
+        if (
+            dmgType === dmgTypes.PHYSICAL &&
+            draftTaker.states[effectKeys.PRISMATIC]
+        ) {
+            dmgTypeTaken = dmgTypes.PIERCING;
+        }
+
+        const dmgTaken = calcDmgTaken(prev, dmgDealt, entityKey, dmgTypeTaken);
+
+        switch (dmgTypeTaken) {
+            case dmgTypes.PHYSICAL:
+            case dmgTypes.PIERCING: {
+                const consumeResult = consumeMitigationResources(
+                    draftTaker,
+                    dmgTaken,
+                    dmgTypeTaken,
+                );
+
+                draftTaker = consumeResult.draftEntity;
+                let remainingDmg =
+                    dmgTaken -
+                    consumeResult.mitigationResourcesConsumed
+                        .totalMitigationResourcesConsumption;
+
+                draftTaker = loseHp(draftTaker, remainingDmg);
+
+                break;
+            }
+            case dmgTypes.TRUE: {
+                draftTaker = loseHp(draftTaker, dmgTaken);
+                break;
+            }
+            case dmgTypes.LUNIC: {
+                const maxHpConsumed = Math.min(
+                    dmgTaken,
+                    draftTaker[effectKeys.MAX_HEALTH],
+                );
+                const moonlightConsumed = Math.min(
+                    dmgTaken - maxHpConsumed,
+                    draftTaker[effectKeys.MOONLIGHT],
+                );
+
+                draftTaker = {
+                    ...draftTaker,
+                    [effectKeys.MAX_HEALTH]:
+                        draftTaker[effectKeys.MAX_HEALTH] - maxHpConsumed,
+                    [effectKeys.MOONLIGHT]:
+                        draftTaker[effectKeys.MOONLIGHT] - moonlightConsumed,
+                };
+
+                break;
+            }
+        }
+
+        processedGame = buildHistory(
+            {
+                ...processedGame,
+                entities: {
+                    ...processedGame.entities,
+                    [entityKey]: draftTaker,
+                },
+            },
+            eventKeys.TOOK_DMG,
+            {
+                player: entityKey,
+                damage: dmgTaken,
+                dmgType: dmgTypeTaken,
+            },
+        );
+    }
+
+    return processedGame;
+}
+
+export function calcDmgDealt(prev, baseDmg, dealerKey, dmgType) {
+    const dealer = {
+        ...prev.entities[dealerKey],
+    };
+
+    let dmgDealt = baseDmg;
+
+    // Weakness
+    const weakMult = getEntityWeakness(prev, dealerKey);
+
+    // Dmg Bonus
+    const dmgBonusMult = getEntityDamageBonus(prev, dealerKey);
+
+    switch (dmgType) {
+        case dmgTypes.PHYSICAL: {
+            dmgDealt +=
+                dealer.resources[effectKeys.BLOOD_SACRIFICE] +
+                dealer[effectKeys.STARBLIGHT];
+
+            dmgDealt = Math.floor(dmgDealt * weakMult * dmgBonusMult);
+
+            break;
+        }
+        case dmgTypes.PIERCING: {
+            dmgDealt += dealer[effectKeys.STARBLIGHT];
+
+            dmgDealt = Math.floor(dmgDealt * weakMult * dmgBonusMult);
+
+            break;
+        }
+        case dmgTypes.TRUE:
+        case dmgTypes.LUNIC:
+        default: {
+            break;
+        }
+    }
+
+    return dmgDealt;
+}
+
+export function calcDmgTaken(prev, dmgDealt, takerKey, dmgType) {
+    const taker = {
+        ...prev.entities[takerKey],
+    };
+
+    let dmgTaken = dmgDealt;
+
+    // Prismatic Override
+    if (dmgType === dmgTypes.PHYSICAL && taker.states[effectKeys.PRISMATIC]) {
+        dmgType = dmgTypes.PIERCING;
+    }
+
+    // Damage Reduction
+    const drMult = getEntityDR(prev, takerKey);
+
+    // Fragility
+    const frailMult = getEntityFragility(prev, takerKey);
+
+    // Flat Reduction
+    const flatDR = getEntityDef(taker) * getEntityDefEffect(prev, takerKey);
+
+    switch (dmgType) {
+        case dmgTypes.PHYSICAL: {
+            dmgTaken -= flatDR;
+
+            dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
+
+            break;
+        }
+        case dmgTypes.PIERCING: {
+            dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
+
+            break;
+        }
+        case dmgTypes.TRUE:
+        case dmgTypes.LUNIC:
+        default: {
+            break;
+        }
+    }
+
+    return Math.max(1, dmgTaken);
+}
+
+export function getEntityDR(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+
+    let drMult = 1.0;
+    if (entity.states[effectKeys.GUARDING_STATE]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
+    if (entity.states[effectKeys.SACRIFICIAL_STATE]) {
+        const missingHealth = Math.max(
+            0,
+            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
+        );
+        drMult *=
+            getEntityMaxHealth(entity) > 0
+                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                : 1;
+    }
+    if (isElementActive(entity, elementalKeys.WITHER)) {
+        const missingHealth = Math.max(
+            0,
+            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
+        );
+        drMult *=
+            getEntityMaxHealth(entity) > 0
+                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                : 1;
+    }
+    if (entity.states[effectKeys.DARK_EMBRACE]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
+    if (entity.states[effectKeys.DEPLOYMENT]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
+
+    if (entity.states[effectKeys.MOON_DEW]) {
+        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+    }
+
+    if (entity[effectKeys.SONORITY] < 0) {
+        drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
+    }
+
+    if (entity.states[effectKeys.VENTING]) {
+        const missingOverheat = Math.max(
+            0,
+            entity[effectKeys.OVERHEAT] - constants.MAX_OVERHEAT,
+        );
+        drMult *= Math.max(0, 1 - missingOverheat / constants.MAX_OVERHEAT);
+    }
+
+    if (entity.states[effectKeys.VISIONARY]) {
+        drMult *=
+            1 -
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
+                constants.SKULD_WEAK;
+    }
+
+    return drMult;
+}
+
+export function getEntityDefEffect(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+    let defEffect = 1.0;
+    if (entity.states[effectKeys.GUARDING_STATE]) {
+        defEffect *= constants.STANDARD_DEF_EFFECT_INCREASE;
+    }
+    if (entity.states[effectKeys.RADIANT]) {
+        defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
+    }
+
+    return defEffect;
+}
+
+export function getEntityDamageBonus(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+
+    let dmgBonus = 1.0;
+
+    if (entity[effectKeys.LUNACY] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.LUNACY] / 100;
+    }
+    if (entity[effectKeys.GRAVITATION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.GRAVITATION] / 100;
+    }
+    if (entity[effectKeys.ACCRETION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.ACCRETION] / 100;
+    }
+    if (entity[effectKeys.SONORITY] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.SONORITY] / 100;
+    }
+    if (entity[effectKeys.RECOLLECTION] > 0) {
+        dmgBonus *= 1 + entity[effectKeys.RECOLLECTION] / 100;
+    }
+
+    return dmgBonus;
+}
+
+export function getEntityFragility(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+
+    let frail = 1.0;
+
+    if (entity[effectKeys.LUNACY] > 0) {
+        frail *= 1 + entity[effectKeys.LUNACY] / 100;
+    }
+
+    if (entity[effectKeys.SONORITY] > 0) {
+        frail *= 1 + entity[effectKeys.SONORITY] / 100;
+    }
+
+    if (entity[effectKeys.BAD_OMEN] > 0) {
+        frail *= 1 + entity[effectKeys.BAD_OMEN] / 100;
+    }
+
+    if (entity[effectKeys.IRRADIATION] > 0) {
+        frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
+    }
+
+    if (entity[effectKeys.OVERHEAT] > 0) {
+        frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
+    }
+
+    return frail;
+}
+
+export function getEntityWeakness(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+
+    let weak = 1.0;
+
+    if (entity[effectKeys.SONORITY] < 0) {
+        weak *= 1 + entity[effectKeys.SONORITY] / 100;
+    }
+
+    if (entity[effectKeys.BAD_OMEN] > 0) {
+        weak *= 1 - entity[effectKeys.BAD_OMEN] / 100;
+    }
+
+    if (entity[effectKeys.IRRADIATION] > 0) {
+        weak *= 1 - entity[effectKeys.IRRADIATION] / 100;
+    }
+
+    if (entity.states[effectKeys.VISIONARY]) {
+        weak *=
+            1 -
+            countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.SKULD) *
+                constants.SKULD_WEAK;
+    }
+
+    return weak;
+}
+
+function processProgUnlock(prev) {
+    if (prev.status === turnStatus.VICTORY && prev.progressMode) {
+        const currController = prev.entities[entityKeys.PLAYER_TWO].controller;
+
+        const keys = Object.keys(presetAi);
+        const currIndex = keys.indexOf(currController);
+
+        // If index is not found or human
+        if (currIndex === -1 || currController === aiKeys.HUMAN) {
+            return prev;
+        }
+
+        const nextKey = keys?.[currIndex + 1];
+
+        if (!nextKey) {
+            return prev;
+        }
+
+        // If next enemy is already defeated or is always open
+        if (
+            prev.progressStatus[nextKey] === progKeys.DEFEATED ||
+            prev.progressStatus[nextKey] === progKeys.ALWAYS_OPEN
+        ) {
+            return prev;
+        }
+
+        return {
+            ...prev,
+            progressStatus: {
+                ...prev.progressStatus,
+                [currController]: progKeys.DEFEATED,
+                [nextKey]: progKeys.OPEN_UNDEFEATED,
+            },
+        };
+    }
+
+    return prev;
 }

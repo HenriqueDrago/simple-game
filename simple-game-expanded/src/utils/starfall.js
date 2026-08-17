@@ -3,17 +3,13 @@ import {
     consumeResources,
     processDeathCheck,
     restoreResources,
-    takeDamage,
+    newDealDmg,
 } from "./entities";
 import { dmgTypes, effectKeys } from "./enums";
 
-export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
+export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
     let draftMaster = {
-        ...prev.entities[masterkey],
-    };
-
-    let draftNonMaster = {
-        ...prev.entities[nonMasterKey],
+        ...prev.entities[masterKey],
     };
 
     // Calculate augmented amount
@@ -57,148 +53,122 @@ export function processROYGBIVStar(prev, masterkey, nonMasterKey, starKey) {
         };
     }
 
-    // Process star action
-    const newContext = { master: draftMaster, nonMaster: draftNonMaster };
-
-    switch (starKey) {
-        case effectKeys.RED_STAR: {
-            const newEntities = processRedStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.ORANGE_STAR: {
-            const newEntities = processOrangeStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.YELLOW_STAR: {
-            const newEntities = processYellowStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.GREEN_STAR: {
-            const newEntities = processGreenStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.BLUE_STAR: {
-            const newEntities = processBlueStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.INDIGO_STAR: {
-            const newEntities = processIndigoStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        case effectKeys.VIOLET_STAR: {
-            const newEntities = processVioletStar(
-                newContext,
-                normalStars,
-                augmentedStars,
-            );
-            draftMaster = newEntities.draftMaster;
-            draftNonMaster = newEntities.draftNonMaster;
-            break;
-        }
-        default:
-            break;
-    }
-
-    return {
+    const currentGameState = {
         ...prev,
         entities: {
             ...prev.entities,
-            [masterkey]: draftMaster,
-            [nonMasterKey]: draftNonMaster,
+            [masterKey]: draftMaster,
         },
     };
+
+    switch (starKey) {
+        case effectKeys.RED_STAR:
+            return processRedStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.ORANGE_STAR:
+            return processOrangeStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.YELLOW_STAR:
+            return processYellowStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.GREEN_STAR:
+            return processGreenStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.BLUE_STAR:
+            return processBlueStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.INDIGO_STAR:
+            return processIndigoStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        case effectKeys.VIOLET_STAR:
+            return processVioletStar(
+                currentGameState,
+                masterKey,
+                nonMasterKey,
+                normalStars,
+                augmentedStars,
+            );
+        default:
+            return currentGameState;
+    }
 }
 
 export function processRedStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
-    let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
-    };
+    let currentGameState = prev;
+    const targetKeys = [masterKey, nonMasterKey];
 
     if (augmentedStars > 0) {
-        draftMaster = takeDamage(
-            draftMaster,
+        currentGameState = newDealDmg(
+            currentGameState,
             augmentedStars,
+            targetKeys,
             dmgTypes.PIERCING,
-        );
-
-        draftNonMaster = takeDamage(
-            draftNonMaster,
-            augmentedStars,
-            dmgTypes.PIERCING,
+            null,
         );
     }
 
     if (normalStars > 0) {
-        draftMaster = takeDamage(draftMaster, normalStars, dmgTypes.PHYSICAL);
-
-        draftNonMaster = takeDamage(
-            draftNonMaster,
+        currentGameState = newDealDmg(
+            currentGameState,
             normalStars,
+            targetKeys,
             dmgTypes.PHYSICAL,
+            null,
         );
     }
 
-    return {
-        draftMaster,
-        draftNonMaster,
-    };
+    return currentGameState;
 }
 
 export function processOrangeStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
+        ...prev.entities[masterKey],
     };
 
     let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[nonMasterKey],
     };
 
     // Consume resources on self
@@ -233,22 +203,24 @@ export function processOrangeStar(
     };
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+            [nonMasterKey]: draftNonMaster,
+        },
     };
 }
 
 export function processIndigoStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[masterKey],
     };
 
     draftMaster = {
@@ -266,22 +238,23 @@ export function processIndigoStar(
     };
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+        },
     };
 }
 
 export function processGreenStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[masterKey],
     };
 
     // Restores resources
@@ -298,22 +271,23 @@ export function processGreenStar(
     };
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+        },
     };
 }
 
 export function processBlueStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[masterKey],
     };
 
     draftMaster = {
@@ -335,22 +309,23 @@ export function processBlueStar(
     };
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+        },
     };
 }
 
 export function processYellowStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[masterKey],
     };
 
     // Normal Star
@@ -411,22 +386,23 @@ export function processYellowStar(
     }
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+        },
     };
 }
 
 export function processVioletStar(
-    { master, nonMaster },
+    prev,
+    masterKey,
+    nonMasterKey,
     normalStars,
     augmentedStars,
 ) {
     let draftMaster = {
-        ...master,
-    };
-
-    let draftNonMaster = {
-        ...nonMaster,
+        ...prev.entities[masterKey],
     };
 
     // Convert Gray Star into White Star
@@ -447,8 +423,11 @@ export function processVioletStar(
     };
 
     return {
-        draftMaster,
-        draftNonMaster,
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [masterKey]: draftMaster,
+        },
     };
 }
 

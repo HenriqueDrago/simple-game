@@ -576,6 +576,9 @@ export function assignStarsAI(context) {
         remainingWhite -= greenAssign + violetAssign;
     }
 
+    // Blue Star
+    
+
     // === Engine ===
     if (remainingWhite > 0) {
         const maxConsume = Math.max(

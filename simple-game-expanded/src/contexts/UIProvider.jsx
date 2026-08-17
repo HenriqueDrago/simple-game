@@ -1,14 +1,35 @@
 import { useState } from "react";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { UIContext } from "./UIContext";
+import { turnStatus } from "../utils/enums";
 
-export default function UIProvider({children}) {
+function hasOngoingSavedGame() {
+    try {
+        const savedData = localStorage.getItem("gameCheckpoint");
+        if (!savedData) {
+            return false;
+        }
+
+        const parsed = JSON.parse(savedData);
+        const finishedStatuses = [
+            turnStatus.VICTORY,
+            turnStatus.DRAW,
+            turnStatus.DEFEAT,
+            turnStatus.SETUP,
+        ];
+        return !finishedStatuses.includes(parsed.status);
+    } catch {
+        return false;
+    }
+}
+
+export default function UIProvider({ children }) {
     // === States ===
     const [UIElements, setUIElements] = useState({
-        continueModal: false,
+        continueModal: hasOngoingSavedGame(),
         resetModal: false,
         hardResetModal: false,
-        
+
         glossary: false,
         history: false,
     });
@@ -71,7 +92,7 @@ export default function UIProvider({children}) {
 
             const entry = DESCRIPTIONS[itemKey];
             console.log(itemKey);
-            console.log(entry)
+            console.log(entry);
             if (itemKey && entry) {
                 handleSetTooltip({
                     keyword: entry.name,
@@ -103,5 +124,3 @@ export default function UIProvider({children}) {
         </UIContext.Provider>
     );
 }
-
-

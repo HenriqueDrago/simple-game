@@ -3,8 +3,6 @@ import {
     consumeResources,
     createBaseEntity,
     restoreResources,
-    dealDamage,
-    takeDamage,
     gainMana,
     loseMana,
     gainHp,
@@ -17,6 +15,7 @@ import {
     getEntityTotalMana,
     addRune,
     translateElementIntoCrystals,
+    newDealDmg,
 } from "./entities.js";
 import {
     actionKeys,
@@ -163,31 +162,25 @@ function simulateSacrifice({ prev, agent, agentKey }) {
     };
 }
 
-function simulateAttack({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
-        getEntityStr(agent) + agent.resources.radiance,
+function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
+    const post = newDealDmg(
+        prev,
+        getEntityStr(agent) + agent.resources[effectKeys.RADIANCE],
+        nonAgentKey,
         dmgTypes.PHYSICAL,
+        agentKey,
     );
 
-    const draftAttacker = {
-        ...attacker,
-        resources: {
-            ...attacker.resources,
-            radiance: 0,
-        },
-    };
-
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [agentKey]: {
-                ...draftAttacker,
-            },
-            [nonAgentKey]: {
-                ...defender,
+                ...post.entities[agentKey],
+                resources: {
+                    ...post.entities[agentKey].resources,
+                    [effectKeys.RADIANCE]: 0,
+                },
             },
         },
     };
@@ -202,40 +195,42 @@ function simulateSpecialAttack({
 }) {
     const manaDiff = getEntityTotalMana(agent) - getEntityTotalMana(nonAgent);
 
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
+    const post = newDealDmg(
+        prev,
         getEntityStr(agent) + manaDiff,
+        nonAgentKey,
         dmgTypes.PIERCING,
+        agentKey,
     );
 
-    let draftDefender = {
-        ...defender,
+    let draftAgent = {
+        ...post.entities[agentKey],
     };
-    let draftAttacker = {
-        ...attacker,
+
+    let draftNonAgent = {
+        ...post.entities[nonAgentKey],
     };
 
     if (manaDiff > 0) {
-        draftDefender = gainMana(defender, manaDiff);
+        draftNonAgent = gainMana(draftNonAgent, manaDiff);
     } else if (manaDiff < 0) {
-        draftAttacker = gainMana(attacker, -manaDiff);
+        draftAgent = gainMana(draftAgent, -manaDiff);
     }
 
-    draftAttacker = loseMana(
-        draftAttacker,
+    draftAgent = loseMana(
+        draftAgent,
         constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
     );
 
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [agentKey]: {
-                ...draftAttacker,
+                ...draftAgent,
             },
             [nonAgentKey]: {
-                ...draftDefender,
+                ...draftNonAgent,
             },
         },
     };
@@ -539,73 +534,86 @@ function simulateDeploy({ prev, agent, agentKey }) {
     };
 }
 
-function simulateLaser({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
+function simulateLaser({ prev, agent, agentKey, nonAgentKey }) {
+    const post = newDealDmg(
+        prev,
         agent[effectKeys.ENERGY_LEVEL],
+        nonAgentKey,
         dmgTypes.PIERCING,
+        agentKey,
     );
+
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
 
     const newOverheat =
-        attacker[effectKeys.OVERHEAT] + 10 * (1 + attacker.lasersUsedThisTurn);
+        draftAgent[effectKeys.OVERHEAT] +
+        10 * (1 + draftAgent.lasersUsedThisTurn);
     const newDynamo = Math.min(
         constants.MAX_DYNAMO,
-        attacker[effectKeys.DYNAMO] + 10,
+        draftAgent[effectKeys.DYNAMO] + 10,
     );
-    const newlasersUsedThisTurn = attacker.lasersUsedThisTurn + 1;
+    const newlasersUsedThisTurn = draftAgent.lasersUsedThisTurn + 1;
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.OVERHEAT]: newOverheat,
+        [effectKeys.DYNAMO]: newDynamo,
+        lasersUsedThisTurn: newlasersUsedThisTurn,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.THERMAL_OVERLOAD]:
+                newOverheat >= constants.MAX_OVERHEAT,
+            [effectKeys.WEAPONS_DEPLOYED]: newOverheat < constants.MAX_OVERHEAT,
+        },
+    };
 
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [agentKey]: {
-                ...attacker,
-                [effectKeys.OVERHEAT]: newOverheat,
-                [effectKeys.DYNAMO]: newDynamo,
-                lasersUsedThisTurn: newlasersUsedThisTurn,
-                states: {
-                    ...attacker.states,
-                    [effectKeys.THERMAL_OVERLOAD]:
-                        newOverheat >= constants.MAX_OVERHEAT,
-                    [effectKeys.WEAPONS_DEPLOYED]:
-                        newOverheat < constants.MAX_OVERHEAT,
-                },
-            },
-            [nonAgentKey]: {
-                ...defender,
+                ...draftAgent,
             },
         },
     };
 }
 
-function simulateMeltdown({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateMeltdown({ prev, agent, agentKey, nonAgentKey }) {
     const baseDmg = Math.floor(
         (agent[effectKeys.ENERGY_LEVEL] +
             Math.floor(agent[effectKeys.DYNAMO] / 10)) *
             (agent[effectKeys.OVERHEAT] / 100),
     );
 
-    const draftAgent = takeDamage(agent, baseDmg, dmgTypes.PHYSICAL);
+    const post = newDealDmg(
+        prev,
+        baseDmg,
+        [agentKey, nonAgentKey],
+        dmgTypes.PHYSICAL,
+        null,
+    );
 
-    const draftNonAgent = takeDamage(nonAgent, baseDmg, dmgTypes.PHYSICAL);
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.DYNAMO]: 0,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.THERMAL_OVERLOAD]: false,
+            [effectKeys.VENTING]: true,
+        },
+    };
 
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-                [effectKeys.DYNAMO]: 0,
-                states: {
-                    ...draftAgent.states,
-                    [effectKeys.THERMAL_OVERLOAD]: false,
-                    [effectKeys.VENTING]: true,
-                },
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-            },
+            ...post.entities,
+            [agentKey]: draftAgent,
         },
     };
 }
@@ -681,29 +689,20 @@ function simulateShatter({ prev, agent, agentKey }) {
     };
 }
 
-function simulateChalk({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateChalk({ prev, agent, agentKey, nonAgentKey }) {
     const extraDmg = Math.floor(
         agent[effectKeys.LUNACY] / constants.CHALK_EXTRA_DMG,
     );
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
+
+    const post = newDealDmg(
+        prev,
         agent[effectKeys.MOONLIGHT] + extraDmg,
+        nonAgentKey,
         dmgTypes.LUNIC,
+        agentKey,
     );
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...attacker,
-            },
-            [nonAgentKey]: {
-                ...defender,
-            },
-        },
-    };
+    return post;
 }
 
 function simulateLunarTide({ prev, agent, agentKey }) {
@@ -745,38 +744,32 @@ function simulateLunarGrowth({ prev, agent, agentKey }) {
     };
 }
 
-function simulateLunarStrike({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
+function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
+    const post = newDealDmg(
+        prev,
         Math.floor(getEntityStr(agent) / 2) +
             agent.resources[effectKeys.MOONSHINE],
+        nonAgentKey,
         dmgTypes.PIERCING,
+        agentKey,
     );
 
-    const draftAgent = {
-        ...attacker,
-        resources: {
-            ...attacker.resources,
-            [effectKeys.MOONSHINE]: 0,
-        },
-    };
-
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...defender,
+                ...post.entities[agentKey],
+                resources: {
+                    ...post.entities[agentKey].resources,
+                    [effectKeys.MOONSHINE]: 0,
+                },
             },
         },
     };
 }
 
-function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
+function simulateLunarSmite({ prev, agent, agentKey, nonAgentKey }) {
     const extraDmg =
         agent[effectKeys.MAX_HEALTH] -
         agent[effectKeys.HEALTH] +
@@ -787,24 +780,16 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
             (1 + (extraDmg * constants.SMITE_MULT) / 100),
     );
 
-    const { attacker, defender } = dealDamage(
-        agent,
-        nonAgent,
+    const post = newDealDmg(
+        prev,
         baseDmg,
+        nonAgentKey,
         dmgTypes.PIERCING,
+        agentKey,
     );
 
     return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...attacker,
-            },
-            [nonAgentKey]: {
-                ...defender,
-            },
-        },
+        ...post,
     };
 }
 
@@ -833,15 +818,13 @@ function simulateLunarShroud({ prev, agent, agentKey }) {
 }
 
 function simulateLunarShed({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
-    };
+    const ml = agent[effectKeys.MOONLIGHT];
 
-    draftAgent = takeDamage(
-        draftAgent,
-        draftAgent[effectKeys.MOONLIGHT],
-        dmgTypes.TRUE,
-    );
+    const post = newDealDmg(prev, ml, agentKey, dmgTypes.TRUE, null);
+
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
 
     draftAgent = {
         ...draftAgent,
@@ -849,14 +832,14 @@ function simulateLunarShed({ prev, agent, agentKey }) {
             draftAgent[effectKeys.MOONLIT_TEARS] + constants.GIBBOUS_TEARS_GAIN,
         resources: {
             ...draftAgent.resources,
-            [effectKeys.MYCELIUM]: draftAgent[effectKeys.MOONLIGHT],
+            [effectKeys.MYCELIUM]: ml,
         },
     };
 
     return {
-        ...prev,
+        ...post,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [agentKey]: {
                 ...draftAgent,
             },
@@ -889,42 +872,28 @@ function simulateCarve({ prev, agent, agentKey }) {
 }
 
 function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
-    let newGameState = {
+    let post = {
         ...prev,
     };
 
     const arrayLength = agent?.[effectKeys.RUNIC_ARRAY]?.length || 0;
 
     for (let i = 0; i < arrayLength; i++) {
-        const currRune =
-            newGameState.entities[agentKey][effectKeys.RUNIC_ARRAY][0];
+        const currRune = post.entities[agentKey][effectKeys.RUNIC_ARRAY][0];
 
         if (currRune === runeKeys.EMPTY) {
-            newGameState = {
-                ...newGameState,
-                entities: {
-                    ...newGameState.entities,
-                    [agentKey]: {
-                        ...takeDamage(
-                            newGameState.entities[agentKey],
-                            constants.CURSE_EMPTY_RUNE_DMG *
-                                getEntityMaxHealth(
-                                    newGameState.entities[agentKey],
-                                ),
-                            dmgTypes.TRUE,
-                        ),
-                    },
-                },
-            };
+            post = newDealDmg(
+                post,
+                constants.CURSE_EMPTY_RUNE_DMG *
+                    getEntityMaxHealth(post.entities[agentKey]),
+                agentKey,
+                dmgTypes.TRUE,
+                null,
+            );
         }
 
-        newGameState = addRune(
-            newGameState,
-            agentKey,
-            nonAgentKey,
-            runeKeys.EMPTY,
-        );
+        post = addRune(post, agentKey, nonAgentKey, runeKeys.EMPTY);
     }
 
-    return newGameState;
+    return post;
 }

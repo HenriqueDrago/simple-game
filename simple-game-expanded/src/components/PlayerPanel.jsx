@@ -393,7 +393,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
                     <HpBar entity={entity} simEntity={simEntity} />
                     <ManaBar entity={entity} simEntity={simEntity} />
 
-                    <ModifiersTracker entity={entity} simEntity={simEntity} />
+                    <ModifiersTracker entityKey={entityKey} />
 
                     <CyborgTracker entityKey={entityKey} />
                     <ConstellationTracker entityKey={entityKey} />

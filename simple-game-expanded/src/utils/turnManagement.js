@@ -8,10 +8,10 @@ import {
     getEntityTotalMana,
     isElementActive,
     loseMana,
+    newDealDmg,
     processActionTypeUsed,
     processDeathCheck,
     restoreResources,
-    takeDamage,
 } from "./entities.js";
 import {
     turnStatus,
@@ -30,12 +30,16 @@ import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
 
 export function processUpkeep(prev, targetKey, nonTargetKey) {
+    let post = {
+        ...prev,
+    };
+
     let draftTarget = {
-        ...prev.entities[targetKey],
+        ...post.entities[targetKey],
     };
 
     let draftNonTarget = {
-        ...prev.entities[nonTargetKey],
+        ...post.entities[nonTargetKey],
     };
 
     // Irradiation
@@ -66,11 +70,25 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
 
         if (excessIrrad >= constants.IRRAD_DMG_EXCESS) {
-            draftTarget = takeDamage(
-                draftTarget,
+            post = {
+                ...post,
+                entities: {
+                    ...post.entities,
+                    [targetKey]: draftTarget,
+                    [nonTargetKey]: draftNonTarget,
+                },
+            };
+
+            post = newDealDmg(
+                post,
                 Math.floor(excessIrrad / constants.IRRAD_DMG_EXCESS),
+                targetKey,
                 dmgTypes.TRUE,
+                null,
             );
+
+            draftTarget = { ...post.entities[targetKey] };
+            draftNonTarget = { ...post.entities[nonTargetKey] };
         }
     }
 
@@ -242,11 +260,25 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     // Shattered
     if (isElementActive(draftTarget, elementalKeys.SHATTERED)) {
-        draftTarget = takeDamage(
-            draftTarget,
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [targetKey]: draftTarget,
+                [nonTargetKey]: draftNonTarget,
+            },
+        };
+
+        post = newDealDmg(
+            post,
             draftTarget[effectKeys.MOONLIGHT],
+            targetKey,
             dmgTypes.LUNIC,
+            null,
         );
+
+        draftTarget = { ...post.entities[targetKey] };
+        draftNonTarget = { ...post.entities[nonTargetKey] };
     }
 
     // Mana Bleed
@@ -350,13 +382,13 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         },
     };
 
-    const newQueue = prev.playerQueue.slice(1);
+    const newQueue = post.playerQueue.slice(1);
 
     return processDeathCheck({
-        ...prev,
+        ...post,
         playerQueue: newQueue,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [targetKey]: {
                 ...draftTarget,
             },
@@ -368,11 +400,15 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 }
 
 export function commitTurn(prev, currActorKey, nextActorKey) {
+    let post = {
+        ...prev,
+    };
+
     let draftCurrActor = {
-        ...prev.entities[currActorKey],
+        ...post.entities[currActorKey],
     };
     let draftNextActor = {
-        ...prev.entities[nextActorKey],
+        ...post.entities[nextActorKey],
     };
 
     // Venting
@@ -424,11 +460,7 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         draftCurrActor.resources[effectKeys.MANA_OVERFLOW] > 0 &&
         !draftCurrActor.states.dimmingDarkness
     ) {
-        draftCurrActor = takeDamage(
-            draftCurrActor,
-            draftCurrActor.resources.manaOverflow,
-            dmgTypes.TRUE,
-        );
+        const overflow = draftCurrActor.resources.manaOverflow;
 
         draftCurrActor = {
             ...draftCurrActor,
@@ -437,15 +469,25 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 manaOverflow: 0,
             },
         };
+
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [currActorKey]: draftCurrActor,
+                [nextActorKey]: draftNextActor,
+            },
+        };
+
+        post = newDealDmg(post, overflow, currActorKey, dmgTypes.TRUE, null);
+
+        draftCurrActor = { ...post.entities[currActorKey] };
+        draftNextActor = { ...post.entities[nextActorKey] };
     }
 
     // Dissonance
     if (draftCurrActor.resources[effectKeys.DISSONANCE] > 0) {
-        draftCurrActor = takeDamage(
-            draftCurrActor,
-            draftCurrActor.resources[effectKeys.DISSONANCE],
-            dmgTypes.TRUE,
-        );
+        const dissonance = draftCurrActor.resources[effectKeys.DISSONANCE];
 
         draftCurrActor = {
             ...draftCurrActor,
@@ -454,15 +496,25 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 [effectKeys.DISSONANCE]: 0,
             },
         };
+
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [currActorKey]: draftCurrActor,
+                [nextActorKey]: draftNextActor,
+            },
+        };
+
+        post = newDealDmg(post, dissonance, currActorKey, dmgTypes.TRUE, null);
+
+        draftCurrActor = { ...post.entities[currActorKey] };
+        draftNextActor = { ...post.entities[nextActorKey] };
     }
 
     // Radiance
     if (draftCurrActor.resources[effectKeys.RADIANCE] > 0) {
-        draftCurrActor = takeDamage(
-            draftCurrActor,
-            draftCurrActor.resources[effectKeys.RADIANCE],
-            dmgTypes.TRUE,
-        );
+        const radiance = draftCurrActor.resources[effectKeys.RADIANCE];
 
         draftCurrActor = {
             ...draftCurrActor,
@@ -471,15 +523,25 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 [effectKeys.RADIANCE]: 0,
             },
         };
+
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [currActorKey]: draftCurrActor,
+                [nextActorKey]: draftNextActor,
+            },
+        };
+
+        post = newDealDmg(post, radiance, currActorKey, dmgTypes.TRUE, null);
+
+        draftCurrActor = { ...post.entities[currActorKey] };
+        draftNextActor = { ...post.entities[nextActorKey] };
     }
 
     // Moonshine
     if (draftCurrActor.resources[effectKeys.MOONSHINE] > 0) {
-        draftCurrActor = takeDamage(
-            draftCurrActor,
-            draftCurrActor.resources[effectKeys.MOONSHINE],
-            dmgTypes.TRUE,
-        );
+        const moonshine = draftCurrActor.resources[effectKeys.MOONSHINE];
 
         draftCurrActor = {
             ...draftCurrActor,
@@ -488,6 +550,20 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                 [effectKeys.MOONSHINE]: 0,
             },
         };
+
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [currActorKey]: draftCurrActor,
+                [nextActorKey]: draftNextActor,
+            },
+        };
+
+        post = newDealDmg(post, moonshine, currActorKey, dmgTypes.TRUE, null);
+
+        draftCurrActor = { ...post.entities[currActorKey] };
+        draftNextActor = { ...post.entities[nextActorKey] };
     }
 
     // Gravitation
@@ -536,14 +612,14 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         lasersUsedThisTurn: 0,
     };
 
-    const newQueue = prev.playerQueue.slice(1);
+    const newQueue = post.playerQueue.slice(1);
 
     return processDeathCheck({
-        ...prev,
+        ...post,
         playerQueue: newQueue,
-        status: turnStatus.ROUND_TRANSITION, // advances to the next round phase
+        status: turnStatus.ROUND_TRANSITION,
         entities: {
-            ...prev.entities,
+            ...post.entities,
             [currActorKey]: {
                 ...draftCurrActor,
             },
@@ -798,7 +874,9 @@ export function processMoonPhase(prev) {
 
         // Moonlight gain
         if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.CORONAL) {
-            newMoonlight += constants.BLOOD_CORONA_ML_GAIN + draftEntity[effectKeys.MOONLIT_TEARS];
+            newMoonlight +=
+                constants.BLOOD_CORONA_ML_GAIN +
+                draftEntity[effectKeys.MOONLIT_TEARS];
         }
         if (moon === moonKeys.HIDDEN) {
             newMoonlight += constants.HIDDEN_MOON_ML_GAIN;
@@ -854,33 +932,35 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
         });
     }
 
+    let processedGame = buildHistory(prev, eventKeys.USE_ACTION, {
+        player: agentKey,
+        action: action,
+    });
+
     // Run the action
-    const agent = prev.entities[agentKey];
-    const nonAgent = prev.entities[nonAgentKey];
+    const agent = processedGame.entities[agentKey];
+    const nonAgent = processedGame.entities[nonAgentKey];
 
     const context = {
         agent,
         agentKey,
         nonAgent,
         nonAgentKey,
-        prev,
+        prev: processedGame,
     };
 
     const sim = simulators?.[action];
-    const simulationResult = sim ? sim(context) : prev;
+    const simulationResult = sim ? sim(context) : processedGame;
 
     // Process effects on Action Type
-    let newGameState = processActionTypeUsed(
+    processedGame = processActionTypeUsed(
         simulationResult,
         agentKey,
         nonAgentKey,
         action,
     );
 
-    return buildHistory(newGameState, eventKeys.USE_ACTION, {
-        player: agentKey,
-        action: action,
-    });
+    return processedGame;
 }
 
 export function processSingularity(prev, agentKey, action) {
@@ -941,6 +1021,13 @@ export function buildHistory(prev, event, info = {}) {
             : "Player Two"
         : "";
 
+    const dmgMap = {
+        [dmgTypes.PHYSICAL]: "Physical Damage",
+        [dmgTypes.PIERCING]: "Piercing Damage",
+        [dmgTypes.TRUE]: "True Damage",
+        [dmgTypes.LUNIC]: "Lunic Damage",
+    };
+
     let string;
     switch (event) {
         case eventKeys.BATTLE_START:
@@ -971,6 +1058,11 @@ export function buildHistory(prev, event, info = {}) {
             const elementName =
                 elementsMap[getEntityElement(prev.entities[player])];
             string = `${playerName} set element to ${elementName}`;
+            break;
+        }
+
+        case eventKeys.TOOK_DMG: {
+            string = `${playerName} took ${info?.damage ?? "Unknown"} ${dmgMap?.[info?.dmgType] ?? "Unknown"}!`;
             break;
         }
 

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import Header from "./components/Header.jsx";
 import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
@@ -6,39 +5,19 @@ import TooltipDisplay from "./components/TooltipDisplay.jsx";
 import Glossary from "./components/Glossary.jsx";
 import Modal from "./components/Modal.jsx";
 import ContinueModal from "./components/ContinueModal.jsx";
-import Timeline from "./components/Timeline.jsx";
 import History from "./components/History.jsx";
 
 import "./App.css";
 
-import { turnStatus } from "./utils/enums.js";
 import { useGame } from "./contexts/GameContext.js";
 import { useUI } from "./contexts/UIContext.js";
 import { INITIAL_GAME_STATE } from "./utils/constants.js";
 
 // App Component
 function App() {
-    const { game, setGame, handleHardResetGame } = useGame();
+    const { setGame, handleHardResetGame } = useGame();
     const { UIElements, setUIElements, tooltipStack, handleClearTooltip } =
         useUI();
-
-    // Continue Modal
-    useEffect(() => {
-        if (game.status !== turnStatus.SETUP) {
-            setUIElements((prev) => {
-                return {
-                    ...prev,
-                    continueModal: true,
-                };
-            });
-            setGame((prev) => {
-                return {
-                    ...prev,
-                    paused: true,
-                };
-            });
-        }
-    }, []);
 
     // Early Return
     if (UIElements.continueModal) {

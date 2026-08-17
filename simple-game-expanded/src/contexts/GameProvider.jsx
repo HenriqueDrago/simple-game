@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useState, useMemo } from "react";
 import {
     createBaseEntity,
     distributePoints,
@@ -17,7 +18,6 @@ import {
     entityKeys,
     eventKeys,
     playerTurnPhases,
-    progKeys,
     roundPhases,
     sdmKeys,
     starfallPhases,
@@ -92,9 +92,14 @@ export default function GameProvider({ children }) {
                 // Reset game if it's finished
                 if (toBeResetStatus.includes(savedGame.status)) {
                     savedGame = resetGameState(savedGame);
+                } else {
+                    savedGame = {
+                        ...savedGame,
+                        paused: true,
+                    };
                 }
-                // Enables modal if the saved game was ongoing
-                else return savedGame;
+
+                return savedGame;
             }
         } catch (error) {
             console.error("Failed to load saved game data:", error);
@@ -916,48 +921,6 @@ export default function GameProvider({ children }) {
         }
     }, [game.status, game.paused]);
 
-    // Progression Tracker
-    useEffect(() => {
-        if (
-            game.paused ||
-            game.status !== turnStatus.VICTORY ||
-            !game.progressMode
-        )
-            return;
-
-        setGame((prev) => {
-            const currController =
-                prev.entities[entityKeys.PLAYER_TWO].controller;
-
-            const keys = Object.keys(presetAi);
-            const currIndex = keys.indexOf(currController);
-
-            // If index is not found or human
-            if (currIndex === -1 || currIndex === 0) {
-                return prev;
-            }
-
-            const nextKey = keys[currIndex + 1];
-
-            // If next enemy is already defeated or is always open
-            if (
-                prev.progressStatus[nextKey] === progKeys.DEFEATED ||
-                prev.progressStatus[nextKey] === progKeys.ALWAYS_OPEN
-            ) {
-                return prev;
-            }
-
-            return {
-                ...prev,
-                progressStatus: {
-                    ...prev.progressStatus,
-                    [currController]: progKeys.DEFEATED,
-                    [nextKey]: progKeys.OPEN_UNDEFEATED,
-                },
-            };
-        });
-    }, [game.status, game.progressMode, game.paused]);
-
     // Save game
     useEffect(() => {
         if (game.paused) {
@@ -1051,86 +1014,84 @@ export default function GameProvider({ children }) {
     }, [game.status]);
 
     // Update simulation
-    useEffect(() => {
-        setGame((prev) => {
-            let sim = null;
+    const simGame = useMemo(() => {
+        let sim = null;
 
-            const agentKey = getCurrActivePlayer(prev);
-            const nonAgentKey = !agentKey
-                ? null
-                : agentKey === entityKeys.PLAYER_ONE
-                  ? entityKeys.PLAYER_TWO
-                  : entityKeys.PLAYER_ONE;
+        const agentKey = getCurrActivePlayer(game);
+        const nonAgentKey = !agentKey
+            ? null
+            : agentKey === entityKeys.PLAYER_ONE
+              ? entityKeys.PLAYER_TWO
+              : entityKeys.PLAYER_ONE;
 
-            if (
-                !agentKey ||
-                !nonAgentKey ||
-                !(
-                    prev?.entities?.[agentKey]?.[effectKeys.CONTROLLER] ===
-                    aiKeys.HUMAN
-                ) ||
-                !(prev?.playerQueue?.[0] === playerTurnPhases.PLAN)
-            ) {
-                return prev;
-            }
+        if (
+            !agentKey ||
+            !nonAgentKey ||
+            !(
+                game?.entities?.[agentKey]?.[effectKeys.CONTROLLER] ===
+                aiKeys.HUMAN
+            ) ||
+            !(game?.playerQueue?.[0] === playerTurnPhases.PLAN)
+        ) {
+            return game;
+        }
 
-            if (game?.simSpecs?.action) {
-                sim = processDeathCheck(
-                    buildRoundQueue(
-                        processActionUse(
-                            sim ? sim : prev,
-                            agentKey,
-                            nonAgentKey,
-                            game.simSpecs.action,
-                        ),
-                    ),
-                );
-            }
-
-            if (game?.simSpecs?.commit) {
-                sim = buildRoundQueue(
-                    commitTurn(sim ? sim : prev, agentKey, nonAgentKey),
-                );
-            }
-
-            if (game?.simSpecs?.starfall) {
-                sim = buildRoundQueue(
-                    simulateFullStarfall(
-                        sim ? sim : prev,
+        if (game?.simSpecs?.action) {
+            sim = processDeathCheck(
+                buildRoundQueue(
+                    processActionUse(
+                        sim ? sim : game,
                         agentKey,
                         nonAgentKey,
+                        game.simSpecs.action,
                     ),
-                );
-            }
+                ),
+            );
+        }
 
-            return {
-                ...prev,
-                simGame: sim,
-            };
-        });
-    }, [game.entities, game.simSpecs]);
+        if (game?.simSpecs?.commit) {
+            sim = buildRoundQueue(
+                commitTurn(sim ? sim : game, agentKey, nonAgentKey),
+            );
+        }
+
+        if (game?.simSpecs?.starfall) {
+            sim = buildRoundQueue(
+                simulateFullStarfall(sim ? sim : game, agentKey, nonAgentKey),
+            );
+        }
+
+        return sim;
+    }, [game]);
+
+    // Create Context
+    const contextValue = useMemo(
+        () => ({
+            game: {
+                ...game,
+                simGame,
+            },
+            setGame,
+            handleAction,
+            handleAiChange,
+            handleConstellation,
+            handleDistributionModeChange,
+            handleElementChange,
+            handleHardResetGame,
+            handleProgressToggle,
+            handleRandomizeStats,
+            handleResetGame,
+            handleStarChange,
+            handleStart,
+            handleUpdateStatsPoints,
+            handleWhoStartsChange,
+            handlePause,
+        }),
+        [game, simGame],
+    );
 
     return (
-        <GameContext.Provider
-            value={{
-                game,
-                setGame,
-                handleAction,
-                handleAiChange,
-                handleConstellation,
-                handleDistributionModeChange,
-                handleElementChange,
-                handleHardResetGame,
-                handleProgressToggle,
-                handleRandomizeStats,
-                handleResetGame,
-                handleStarChange,
-                handleStart,
-                handleUpdateStatsPoints,
-                handleWhoStartsChange,
-                handlePause,
-            }}
-        >
+        <GameContext.Provider value={contextValue}>
             {children}
         </GameContext.Provider>
     );
