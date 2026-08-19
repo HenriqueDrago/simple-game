@@ -71,9 +71,26 @@ function resetGameState(prev) {
     };
 }
 
+function loadProgress() {
+    try {
+        const savedProgress = localStorage.getItem("gameProgression");
+        if (savedProgress) {
+            return {
+                ...INITIAL_GAME_STATE.progressStatus,
+                ...JSON.parse(savedProgress),
+            };
+        }
+    } catch (error) {
+        console.error("Failed to load progression:", error);
+    }
+    return INITIAL_GAME_STATE.progressStatus;
+}
+
 export default function GameProvider({ children }) {
     // Declare Game State
     const [game, setGame] = useState(() => {
+        const playerProgress = loadProgress();
+
         // try getting saved data
         try {
             const savedData = localStorage.getItem("gameCheckpoint");
@@ -81,6 +98,7 @@ export default function GameProvider({ children }) {
                 let savedGame = {
                     ...INITIAL_GAME_STATE,
                     ...JSON.parse(savedData),
+                    progressStatus: playerProgress,
                 };
 
                 const toBeResetStatus = [
@@ -99,6 +117,8 @@ export default function GameProvider({ children }) {
                     };
                 }
 
+                console.log("Saved Data Found!");
+                console.log(savedData);
                 return savedGame;
             }
         } catch (error) {
@@ -106,7 +126,10 @@ export default function GameProvider({ children }) {
         }
 
         // Fallback if load fails
-        return INITIAL_GAME_STATE;
+        return {
+            ...INITIAL_GAME_STATE,
+            progressStatus: playerProgress,
+        };
     });
 
     // === Handles ===
@@ -202,6 +225,8 @@ export default function GameProvider({ children }) {
     }
 
     function handleHardResetGame() {
+        localStorage.removeItem("gameProgression");
+        localStorage.removeItem("gameCheckpoint");
         setGame({ ...INITIAL_GAME_STATE });
     }
 
@@ -216,6 +241,7 @@ export default function GameProvider({ children }) {
             return buildHistory(
                 {
                     ...prev,
+                    paused: false,
                     status: turnStatus.ONGOING,
                     startingPlayer: startingPlayer,
                 },
@@ -267,7 +293,7 @@ export default function GameProvider({ children }) {
                 return prev;
             }
 
-            if (prev[effectKeys.PROGRESSION_MODE]) {
+            if (prev.progressMode) {
                 return {
                     ...prev,
                     progressMode: false,
@@ -573,6 +599,20 @@ export default function GameProvider({ children }) {
                     targetKey = entityKeys.PLAYER_TWO;
                     nonTargetKey = entityKeys.PLAYER_ONE;
                     historyKey = null;
+                    break;
+                }
+
+                case roundPhases.P1_SINGULARITY: {
+                    targetKey = entityKeys.PLAYER_ONE;
+                    nonTargetKey = entityKeys.PLAYER_TWO;
+                    historyKey = eventKeys.SINGULARITY;
+                    break;
+                }
+
+                case roundPhases.P2_SINGULARITY: {
+                    targetKey = entityKeys.PLAYER_TWO;
+                    nonTargetKey = entityKeys.PLAYER_ONE;
+                    historyKey = eventKeys.SINGULARITY;
                     break;
                 }
 
@@ -921,13 +961,25 @@ export default function GameProvider({ children }) {
         }
     }, [game.status, game.paused]);
 
-    // Save game
+    // Save Game
     useEffect(() => {
         if (game.paused) {
             return;
         }
 
-        // Saves only if it's a "checkpoint" state
+        // Progression Data
+        if (game.progressStatus) {
+            try {
+                localStorage.setItem(
+                    "gameProgression",
+                    JSON.stringify(game.progressStatus),
+                );
+            } catch (error) {
+                console.error("Failed to save progression:", error);
+            }
+        }
+
+        // Match Data
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
                 localStorage.setItem("gameCheckpoint", JSON.stringify(game));
@@ -1033,7 +1085,7 @@ export default function GameProvider({ children }) {
             ) ||
             !(game?.playerQueue?.[0] === playerTurnPhases.PLAN)
         ) {
-            return game;
+            return null;
         }
 
         if (game?.simSpecs?.action) {

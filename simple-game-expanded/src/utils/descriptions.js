@@ -312,7 +312,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes STARLIT DOME, DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes FAULTY FIRMAMENT, FRACTURED DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
@@ -1017,14 +1017,21 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "BLUE STAR",
         type: entryTypes.STAR,
         description:
-            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Converts WHITE STAR into GRAY STAR and gains DOME equal to normal BLUE STAR converted. Gains STARLIT DOME equal to augmented BLUE STAR converted.",
+            "At BLUE STARFALL, converts all BLUE STAR into WHITE STAR. Gains FRACTURED DOME equal to normal BLUE STAR converted. Gains FAULTY FIRMAMENT equal to augmented BLUE STAR converted.",
     },
 
-    [effectKeys.DOME]: {
-        name: "DOME",
+    [effectKeys.FRACTURED_DOME]: {
+        name: "FRACTURED DOME",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes DOME to reduce the damage taken. At turn start, loses all DOME, then raises IRRADIATION by 5% for every DOME lost this way.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FRACTURED DOME to reduce the damage taken. At turn start, loses all FRACTURED DOME and takes TRUE DAMAGE equal to the amount lost.",
+    },
+
+    [effectKeys.FAULTY_FIRMAMENT]: {
+        name: "FAULTY FIRMAMENT",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FAULTY FIRMAMENT to reduce the damage taken. At turn start, loses all FAULTY FIRMAMENT and raises IRRADIATION by 5% per FAULTY FIRMAMENT lost.",
     },
 
     [effectKeys.IRRADIATION]: {
@@ -1032,13 +1039,6 @@ export const VOYAGER_DESCRIPTIONS = {
         type: entryTypes.FIXED_RESOURCE,
         description:
             "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 5% excess. At turn start, loses all IRRADIATION.",
-    },
-
-    [effectKeys.STARLIT_DOME]: {
-        name: "STARLIT DOME",
-        type: entryTypes.MITIGATION_RESOURCE,
-        description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes STARLIT DOME to reduce the damage taken. At turn start, converts all STARLIT DOME into STARDUST.",
     },
 
     [effectKeys.STARDUST]: {

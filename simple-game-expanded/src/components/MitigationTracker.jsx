@@ -30,7 +30,7 @@ const mitigators = {
         color: "#f50057",
         borderColor: "rgba(245, 0, 87, 0.25)",
     },
-    [effectKeys.DOME]: {
+    [effectKeys.FRACTURED_DOME]: {
         icon: <Hexagon className="svg-icon" strokeWidth={2.5} />,
         color: "#3d5afe",
         borderColor: "rgba(61, 90, 254, 0.25)",
@@ -50,7 +50,7 @@ const mitigators = {
         color: "#b0bec5",
         borderColor: "rgba(176, 190, 197, 0.25)",
     },
-    [effectKeys.STARLIT_DOME]: {
+    [effectKeys.FAULTY_FIRMAMENT]: {
         icon: <Sparkles className="svg-icon" strokeWidth={2.5} />,
         color: "#536dfe",
         borderColor: "rgba(83, 109, 254, 0.25)",
@@ -62,10 +62,7 @@ const mitigators = {
     },
 };
 
-export default function MitigationTracker({
-    entity,
-    simEntity,
-}) {
+export default function MitigationTracker({ entity, simEntity }) {
     const { handleSpawnTooltip } = useUI();
     const activeResources = [...MITIGATION_RESOURCES].filter((key) => {
         if (!mitigators[key]) {
@@ -114,9 +111,7 @@ export default function MitigationTracker({
                             color: mitigator.color,
                             borderColor: mitigator.borderColor,
                         }}
-                        onMouseDown={(e) =>
-                            handleSpawnTooltip(e, key)
-                        }
+                        onMouseDown={(e) => handleSpawnTooltip(e, key)}
                     >
                         {mitigator.icon}
                         <span

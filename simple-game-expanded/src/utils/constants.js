@@ -117,8 +117,8 @@ export const constants = Object.freeze({
 });
 
 export const MITIGATION_RESOURCES = [
-    effectKeys.STARLIT_DOME,
-    effectKeys.DOME,
+    effectKeys.FAULTY_FIRMAMENT,
+    effectKeys.FRACTURED_DOME,
     effectKeys.HALO,
     effectKeys.REFRACTED_DIVINITY,
     effectKeys.CONJECTURE,

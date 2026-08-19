@@ -4,8 +4,10 @@ import {
     processDeathCheck,
     restoreResources,
     newDealDmg,
+    isEntityDead,
 } from "./entities";
-import { dmgTypes, effectKeys } from "./enums";
+import { dmgTypes, effectKeys, eventKeys } from "./enums";
+import { buildHistory } from "./turnManagement";
 
 export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
     let draftMaster = {
@@ -53,13 +55,17 @@ export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
         };
     }
 
-    const currentGameState = {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [masterKey]: draftMaster,
+    const currentGameState = buildHistory(
+        {
+            ...prev,
+            entities: {
+                ...prev.entities,
+                [masterKey]: draftMaster,
+            },
         },
-    };
+        eventKeys.STARFALL_SUBPHASE,
+        { player: masterKey, normalStars, augmentedStars, starKey },
+    );
 
     switch (starKey) {
         case effectKeys.RED_STAR:
@@ -294,17 +300,11 @@ export function processBlueStar(
         ...draftMaster,
         resources: {
             ...draftMaster.resources,
-            [effectKeys.DOME]:
-                draftMaster.resources[effectKeys.DOME] + normalStars,
-            [effectKeys.STARLIT_DOME]:
-                draftMaster.resources[effectKeys.STARLIT_DOME] + augmentedStars,
-        },
-        stars: {
-            ...draftMaster.stars,
-            [effectKeys.WHITE_STAR]:
-                draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
-            [effectKeys.GRAY_STAR]:
-                draftMaster.stars[effectKeys.GRAY_STAR] + normalStars,
+            [effectKeys.FRACTURED_DOME]:
+                draftMaster.resources[effectKeys.FRACTURED_DOME] + normalStars,
+            [effectKeys.FAULTY_FIRMAMENT]:
+                draftMaster.resources[effectKeys.FAULTY_FIRMAMENT] +
+                augmentedStars,
         },
     };
 
@@ -444,6 +444,13 @@ export function simulateFullStarfall(prev, ownerKey, nonOwnerKey) {
         gameState = processDeathCheck(
             processROYGBIVStar(gameState, ownerKey, nonOwnerKey, star.star),
         );
+
+        if (
+            isEntityDead(gameState.entities[ownerKey]) ||
+            isEntityDead(gameState.entities[nonOwnerKey])
+        ) {
+            return gameState;
+        }
     }
 
     return gameState;

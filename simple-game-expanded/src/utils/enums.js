@@ -165,7 +165,7 @@ export const effectKeys = Object.freeze({
     STARDUST: "stardust",
     STARGAZER: "stargazer",
     STARFALL: "starfall",
-    DOME: "dome",
+    FRACTURED_DOME: "fracturedDome",
     RED_STARFALL: "redStarfall",
     ORANGE_STARFALL: "orangeStarfall",
     YELLOW_STARFALL: "yellowStarfall",
@@ -218,7 +218,7 @@ export const effectKeys = Object.freeze({
     CRIMSON_CONSTELLATION: "crimsonConstellation",
     AZURE_CONSTELLATION: "azureConstellation",
 
-    STARLIT_DOME: "starlitDome",
+    FAULTY_FIRMAMENT: "faultyFirmament",
 
     GRAVITATION: "gravitation",
     SINGULARITY: "singularity",
@@ -322,11 +322,6 @@ export const eventKeys = Object.freeze({
     PLAYER_TURN_START: "playerTurnStart",
     USE_ACTION: "useAction",
     SET_ELEMENT: "setElement",
-    SET_STAR: "setStar",
-    SET_MASS_STARS: "setMassStars",
-    TURN_UPKEEP: "turnUpkeep",
-    TURN_COMMIT: "turnCommit",
-    STAR_ACTIVATION: "starActivation",
     MOON_PHASE: "moonPhase",
     VICTORY: "victory",
     DEFEAT: "defeat",
@@ -334,4 +329,6 @@ export const eventKeys = Object.freeze({
     STARFALL_START: "starfallStart",
     FAILED_ACTION: "failedAction",
     TOOK_DMG: "tookDmg",
+    STARFALL_SUBPHASE: "starfallSub",
+    SINGULARITY: "singularity"
 });

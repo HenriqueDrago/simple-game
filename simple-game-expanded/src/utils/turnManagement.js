@@ -1,4 +1,9 @@
-import { actionMap, constants, elementsMap } from "./constants.js";
+import {
+    actionMap,
+    constants,
+    elementsMap,
+    FREE_ACTIONS,
+} from "./constants.js";
 import {
     canUseAction,
     consumeResources,
@@ -16,7 +21,6 @@ import {
 import {
     turnStatus,
     entityKeys,
-    actionKeys,
     effectKeys,
     dmgTypes,
     starfallPhases,
@@ -50,12 +54,12 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Dome
-    if (draftTarget.resources[effectKeys.DOME] > 0) {
+    // Faulty Firmament
+    if (draftTarget.resources[effectKeys.FAULTY_FIRMAMENT] > 0) {
         const totalIrrad =
             draftTarget[effectKeys.IRRADIATION] +
             Math.floor(
-                draftTarget.resources[effectKeys.DOME] *
+                draftTarget.resources[effectKeys.FAULTY_FIRMAMENT] *
                     constants.IRRADIATION_GAIN_RATE,
             );
         const excessIrrad = Math.max(0, totalIrrad - constants.MAX_IRRADIATION);
@@ -65,7 +69,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.IRRADIATION]: totalIrrad - excessIrrad,
             resources: {
                 ...draftTarget.resources,
-                [effectKeys.DOME]: 0,
+                [effectKeys.FAULTY_FIRMAMENT]: 0,
             },
         };
 
@@ -92,20 +96,31 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         }
     }
 
-    // Starlit Dome
-    if (draftTarget.resources[effectKeys.STARLIT_DOME] > 0) {
-        const newStardust =
-            draftTarget.resources[effectKeys.STARDUST] +
-            draftTarget.resources[effectKeys.STARLIT_DOME];
+    // Faulty Firmament
+    if (draftTarget.resources[effectKeys.FRACTURED_DOME] > 0) {
+        const dmgTaken = draftTarget.resources[effectKeys.FRACTURED_DOME];
 
         draftTarget = {
             ...draftTarget,
             resources: {
                 ...draftTarget.resources,
-                [effectKeys.STARLIT_DOME]: 0,
-                [effectKeys.STARDUST]: newStardust,
+                [effectKeys.FRACTURED_DOME]: 0,
             },
         };
+
+        post = {
+            ...post,
+            entities: {
+                ...post.entities,
+                [targetKey]: draftTarget,
+                [nonTargetKey]: draftNonTarget,
+            },
+        };
+
+        post = newDealDmg(post, dmgTaken, targetKey, dmgTypes.TRUE, null);
+
+        draftTarget = { ...post.entities[targetKey] };
+        draftNonTarget = { ...post.entities[nonTargetKey] };
     }
 
     // Stardust
@@ -964,19 +979,16 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
 }
 
 export function processSingularity(prev, agentKey, action) {
-    let newGameState = {
-        ...prev,
-    };
+    let newGameState = processDeathCheck(prev);
 
-    // Death check
-    newGameState = processDeathCheck(newGameState);
+    if (newGameState.status !== turnStatus.ONGOING) {
+        return buildHistory(buildRoundQueue(newGameState), null);
+    }
 
-    // Determine if PLAN subphase ends or not
-    const newStatus =
-        (action === actionKeys.LASER || action === actionKeys.CURSE) && // free actions
-        newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
-            ? prev.status
-            : turnStatus.ROUND_TRANSITION;
+    // Free actions do not end singularity
+    const newStatus = FREE_ACTIONS.includes(action)
+        ? turnStatus.ONGOING
+        : turnStatus.ROUND_TRANSITION;
 
     return buildRoundQueue({
         ...newGameState,
@@ -985,22 +997,20 @@ export function processSingularity(prev, agentKey, action) {
 }
 
 export function processPlan(prev, action) {
-    let newGameState = {
-        ...prev,
-    };
+    let newGameState = processDeathCheck(prev);
 
-    // Death check
-    newGameState = processDeathCheck(newGameState);
+    if (newGameState.status !== turnStatus.ONGOING) {
+        return buildHistory(buildRoundQueue(newGameState), null);
+    }
 
-    // Determine if PLAN subphase ends or not
-    const newQueue =
-        (action === actionKeys.LASER || action === actionKeys.CURSE) && // free actions
-        newGameState.status === turnStatus.ONGOING // plan subphase ends if something changes status (ex, a player died)
-            ? prev.playerQueue
-            : prev.playerQueue.slice(1);
+    // Free actions do not advance turn subphase
+    const newQueue = FREE_ACTIONS.includes(action)
+        ? prev.playerQueue
+        : prev.playerQueue.slice(1);
 
+    // Guarantes Commit executes without a round transition
     const newStatus =
-        newQueue[0] === playerTurnPhases.COMMIT // guarantee commit always runs after plan subphase ends
+        newQueue[0] === playerTurnPhases.COMMIT
             ? turnStatus.ONGOING
             : newGameState.status;
 
@@ -1026,6 +1036,16 @@ export function buildHistory(prev, event, info = {}) {
         [dmgTypes.PIERCING]: "Piercing Damage",
         [dmgTypes.TRUE]: "True Damage",
         [dmgTypes.LUNIC]: "Lunic Damage",
+    };
+
+    const starMap = {
+        [effectKeys.RED_STAR]: "Red Star",
+        [effectKeys.ORANGE_STAR]: "Orange Star",
+        [effectKeys.YELLOW_STAR]: "Yellow Star",
+        [effectKeys.GREEN_STAR]: "Green Star",
+        [effectKeys.BLUE_STAR]: "Blue Star",
+        [effectKeys.INDIGO_STAR]: "Indigo Star",
+        [effectKeys.VIOLET_STAR]: "Violet Star",
     };
 
     let string;
@@ -1066,8 +1086,18 @@ export function buildHistory(prev, event, info = {}) {
             break;
         }
 
+        case eventKeys.STARFALL_SUBPHASE: {
+            string = `${playerName}'s ${info?.normalStars ?? "Unknown"} Normal and ${info?.augmentedStars ?? "Unknown"} Augmented ${starMap?.[info?.starKey] ?? "Unknown"} have fallen!`;
+            break;
+        }
+
         case eventKeys.STARFALL_START: {
             string = `${playerName}'s Starfall Start`;
+            break;
+        }
+
+        case eventKeys.SINGULARITY: {
+            string = `${playerName}'s Singularity Start`;
             break;
         }
 
@@ -1076,7 +1106,7 @@ export function buildHistory(prev, event, info = {}) {
             break;
 
         default:
-            string = "";
+            string = null;
             break;
     }
 

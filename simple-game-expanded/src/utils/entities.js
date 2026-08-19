@@ -234,8 +234,8 @@ export function createBaseEntity() {
             [effectKeys.HALO]: 0,
             [effectKeys.LINGERING_EMBER]: 0,
             [effectKeys.FUNERARY_URN]: 0,
-            [effectKeys.DOME]: 0,
-            [effectKeys.STARLIT_DOME]: 0,
+            [effectKeys.FRACTURED_DOME]: 0,
+            [effectKeys.FAULTY_FIRMAMENT]: 0,
             [effectKeys.MYCELIUM]: 0,
             [effectKeys.REFRACTED_DIVINITY]: 0,
             [effectKeys.HARMONY]: 0,
@@ -1483,7 +1483,7 @@ export function canUseAction(prev, entityKey, action) {
     // Helper to evaluate progression lock status for base actions only
     const isProgLocked = (bossKey) => {
         if (
-            !prev[effectKeys.PROGRESSION_MODE] ||
+            !prev.progressMode ||
             entity.controller !== aiKeys.HUMAN
         ) {
             return false;
