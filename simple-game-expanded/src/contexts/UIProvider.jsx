@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { UIContext } from "./UIContext";
 import { turnStatus } from "../utils/enums";
+import { INITIAL_GLOSSARY_SPECS } from "../utils/constants";
 
 function hasOngoingSavedGame() {
     try {
@@ -34,6 +35,7 @@ export default function UIProvider({ children }) {
         history: false,
     });
     const [tooltipStack, setTooltipStack] = useState([]);
+    const [glossarySpecs, setGlossarySpecs] = useState(INITIAL_GLOSSARY_SPECS);
 
     // === Handles ===
     function handleSetTooltip(tooltipData, depth = 0) {
@@ -118,6 +120,9 @@ export default function UIProvider({ children }) {
                 handleClearTooltip,
                 handleSetTooltip,
                 handleSpawnTooltip,
+
+                glossarySpecs,
+                setGlossarySpecs,
             }}
         >
             {children}

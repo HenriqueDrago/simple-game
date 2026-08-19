@@ -40,6 +40,7 @@ import {
     roundPhases,
     elementalKeys,
     moonKeys,
+    speedKeys,
 } from "./enums.js";
 
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
@@ -346,6 +347,21 @@ export const coloredStars = [
     },
 ];
 
+export const gameSpeeds = Object.freeze({
+    [speedKeys.ONE]: {
+        label: "1x",
+        mod: 1,
+    },
+    [speedKeys.TWO]: {
+        label: "2x",
+        mod: 0.5,
+    },
+    [speedKeys.INF]: {
+        label: "Inf",
+        mod: 0,
+    },
+});
+
 export const INITIAL_GAME_STATE = {
     // turn logic
     status: turnStatus.SETUP,
@@ -364,6 +380,8 @@ export const INITIAL_GAME_STATE = {
     progressMode: false,
     simGame: null,
     paused: false,
+
+    speed: speedKeys.ONE,
 
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
@@ -597,3 +615,12 @@ export const RANKED_RESOURCES = [
 ];
 
 export const FREE_ACTIONS = [actionKeys.LASER, actionKeys.CURSE];
+
+export const ALL_CATEGORY_KEY = "ALL";
+
+export const INITIAL_GLOSSARY_SPECS = {
+    selectedCategory: ALL_CATEGORY_KEY,
+    searchQuery: "",
+    matchCase: false,
+    matchWholeWord: false,
+};

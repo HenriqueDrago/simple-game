@@ -23,7 +23,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to 'CHALLENGE'. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI, it's GLOSSARY entry and related tooltips can only be unlocked upon defeating the preceding enemy.",
+            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to CHALLENGE. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI, it's GLOSSARY entry and related tooltips can only be unlocked upon defeating the preceding enemy.",
     },
 
     [effectKeys.SHORTCUTS]: {
@@ -174,14 +174,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "DEF",
         type: entryTypes.BASE_ATTRIBUTES,
         description:
-            "The main defensive BASE ATTRIBUTES. Decreases the PHYSICAL DAMAGE and PIERCING DAMAGE taken.",
+            "The main defensive BASE ATTRIBUTES. Decreases the PHYSICAL DAMAGE taken.",
     },
 
     [entryTypes.DAMAGE_TYPE]: {
         name: "DAMAGE TYPE",
         type: entryTypes.CATEGORY,
         description:
-            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE.",
+            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE. All damage taken has a minimum of 1, regardless of DAMAGE TYPE, EFFECTIVE DEFENSE or DAMAGE MODIFIERS.",
     },
 
     [dmgTypes.PHYSICAL]: {
@@ -208,7 +208,8 @@ export const GENERAL_DESCRIPTIONS = {
     [effectKeys.EFFECTIVE_DEF]: {
         name: "EFFECTIVE DEFENSE",
         type: entryTypes.MECHANIC,
-        description: "Decreases PHYSICAL DAMAGE taken.",
+        description:
+            "Decreases PHYSICAL DAMAGE taken based on DEF and DEF EFFECTIVENESS.",
     },
 
     [effectKeys.DEF_EFFECTIVENESS]: {
@@ -446,7 +447,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "Increases PHYSICAL DAMAGE dealt equal to BLOOD SACRIFICE on self.",
+            "When using ATTACK, increases the damage dealt by BLOOD SACRIFICE on self.",
     },
 
     [effectKeys.MANA_BLEED]: {
@@ -856,7 +857,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "STARGAZER",
         type: entryTypes.STATE,
         description:
-            "While active, enables STARFALL after the corresponding player's TURN. Enables a side-menu for assigning STARS. Upon exiting this state, loses all STARS and sets CONSTELLATION, AZURE CONSTELLATION and CRIMSON CONSTELLATION to zero.",
+            "While active, enables STARFALL after the corresponding player's TURN. Enables a side-menu for assigning STARS. Upon exiting this state, loses all STARS and sets STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION and CRIMSON CONSTELLATION to zero.",
     },
 
     [entryTypes.STAR]: {
@@ -975,14 +976,20 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "ACCRETION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to ACCRETION on self. When raising ACCRETION above 100%, raises STARBLIGHT rank for every 5% excess instead. At turn end, lose all ACCRETION.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to ACCRETION on self. When raising ACCRETION above 100%, raises STARBLIGHT rank for every 5% excess. At turn end, lose all ACCRETION.",
     },
 
     [effectKeys.STARBLIGHT]: {
         name: "STARBLIGHT",
         type: entryTypes.RANKED_RESOURCE,
+        description: "Increases DEFENSE PENETRATION by its rank. At turn end, sets STARBLIGHT to 0.",
+    },
+
+    [effectKeys.DEF_PEN]: {
+        name: "DEFENSE PENETRATION",
+        type: entryTypes.MECHANIC,
         description:
-            "Increases PHYSICAL DAMAGE and PIERCING DAMAGE dealt equal to STARBLIGHT rank. When using an OFFENSIVE ACTION, takes TRUE DAMAGE equal to STARBLIGHT rank. At turn end, lowers MAX HEALTH equal to STARBLIGHT on self, then lowers STARBLIGHT rank to 0.",
+            "When dealing PHYSICAL DAMAGE, ignores EFFECTIVE DEFENSE equal to the user's DEFENSE PENETRATION.",
     },
 
     [effectKeys.CONSTELLATION]: {

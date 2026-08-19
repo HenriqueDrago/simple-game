@@ -1,10 +1,11 @@
 import "./Header.css";
 import Switch from "./Switch";
-import { RotateCcw } from "lucide-react";
+import { Pause, Play, RotateCcw } from "lucide-react";
 import { effectKeys, turnStatus, whoStartsKeys } from "../utils/enums";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import { DESCRIPTIONS } from "../utils/descriptions";
+import { gameSpeeds, INITIAL_GLOSSARY_SPECS } from "../utils/constants";
 
 function Header() {
     const {
@@ -14,8 +15,9 @@ function Header() {
         handlePause,
         handleWhoStartsChange,
         handleProgressToggle,
+        handleSpeed,
     } = useGame();
-    const { setUIElements, handleSpawnTooltip } = useUI();
+    const { setUIElements, handleSpawnTooltip, setGlossarySpecs } = useUI();
 
     const battleState = game.status;
     const isSetup = battleState === turnStatus.SETUP;
@@ -124,6 +126,30 @@ function Header() {
 
             {/* Right Section: Utility Controls */}
             <div className="header-right">
+                {!isSetup && (
+                    <button
+                        className="sharp-btn-header icon-btn"
+                        onClick={handlePause}
+                    >
+                        {game?.paused ? (
+                            <Play size={18} />
+                        ) : (
+                            <Pause size={18} />
+                        )}
+                    </button>
+                )}
+
+                {!isSetup && (
+                    <button
+                        className="sharp-btn-header icon-btn"
+                        onClick={() => {
+                            handleSpeed(1);
+                        }}
+                    >
+                        {gameSpeeds?.[game?.speed]?.label ?? "Spd"}
+                    </button>
+                )}
+
                 {isSetup ? (
                     <button className="sharp-btn-header" onClick={handleStart}>
                         Start
@@ -144,15 +170,10 @@ function Header() {
                     </button>
                 )}
 
-                {!isSetup && (
-                    <button className="sharp-btn-header" onClick={handlePause}>
-                        {game?.paused ? "Unpause" : "Pause"}
-                    </button>
-                )}
-
                 <button
                     className="sharp-btn-header"
                     onClick={() => {
+                        setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
                         setUIElements((prev) => ({
                             ...prev,
                             glossary: true,
@@ -161,6 +182,20 @@ function Header() {
                 >
                     Glossary
                 </button>
+
+                {!isSetup && (
+                    <button
+                        className="sharp-btn-header"
+                        onClick={() => {
+                            setUIElements((prev) => ({
+                                ...prev,
+                                history: !prev.history,
+                            }));
+                        }}
+                    >
+                        History
+                    </button>
+                )}
 
                 <button
                     className="sharp-btn-header"

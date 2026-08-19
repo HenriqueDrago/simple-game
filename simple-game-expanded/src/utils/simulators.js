@@ -163,27 +163,31 @@ function simulateSacrifice({ prev, agent, agentKey }) {
 }
 
 function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
-    const post = newDealDmg(
-        prev,
-        getEntityStr(agent) + agent.resources[effectKeys.RADIANCE],
-        nonAgentKey,
-        dmgTypes.PHYSICAL,
-        agentKey,
-    );
+    const radiance = agent.resources[effectKeys.RADIANCE];
 
-    return {
-        ...post,
+    let post = {
+        ...prev,
         entities: {
-            ...post.entities,
+            ...prev.entities,
             [agentKey]: {
-                ...post.entities[agentKey],
+                ...prev.entities[agentKey],
                 resources: {
-                    ...post.entities[agentKey].resources,
+                    ...prev.entities[agentKey].resources,
                     [effectKeys.RADIANCE]: 0,
                 },
             },
         },
     };
+
+    post = newDealDmg(
+        post,
+        getEntityStr(agent) + radiance + agent.resources[effectKeys.BLOOD_SACRIFICE],
+        nonAgentKey,
+        dmgTypes.PHYSICAL,
+        agentKey,
+    );
+
+    return post;
 }
 
 function simulateSpecialAttack({

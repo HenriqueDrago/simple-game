@@ -178,8 +178,6 @@
     opacity: 1;
 }
 
-/* Coronal Phase: Retains full multi-colored element body gradient alongside a smoothly cycling outer aura */
-/* Updated Coronal Moon Phase Rule with synchronized, accelerated animations */
 .moon-sphere.moon-coronal {
     background: linear-gradient(
         90deg, 
@@ -189,7 +187,6 @@
         var(--frost-color)
     );
     background-size: 300% 100%;
-    /* Crucial: Both animations now use ease-in-out to prevent desyncing */
     animation: 
         coronal-glow-cycle 5s infinite ease-in-out,
         coronal-body-wave 5s infinite ease-in-out;

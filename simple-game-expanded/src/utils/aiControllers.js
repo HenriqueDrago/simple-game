@@ -4,6 +4,8 @@ import {
     consumeMitigationResources,
     consumeResources,
     getEntityDef,
+    getEntityDefEffect,
+    getEntityDefPen,
     getEntityMaxHealth,
     getEntityStr,
     getEntityTotalHealth,
@@ -259,23 +261,39 @@ export function assignStarsAI(context) {
         },
     ];
 
+    // Helper for calculating max starblight
+    const calcMaxStarblight = (sim) => {
+        return Math.ceil(
+            (Math.max(
+                0,
+                Math.floor(
+                    getEntityDef(sim.entities[nonAgentKey]) *
+                        getEntityDefEffect(sim, nonAgentKey),
+                ) - getEntityDefPen(sim, agentKey),
+            ) *
+                constants.ACC_STARBLIGHT_CONVERSION) /
+            constants.GRAVITATION_GAIN
+        );
+    };
+
     // Yellow Star Variants
     if (remainingWhite >= starsForMaxGrav) {
         scenarioGenerators.push(
             // Variant A: Max Starblight then Constellation
             (actionSim) => {
                 const normalYellow = Math.min(
-                    starsForMaxAcc +
-                        getEntityTotalHealth(actionSim.entities[agentKey]) -
-                        1,
+                    starsForMaxAcc + calcMaxStarblight(actionSim),
                     remainingWhite,
                 );
-                const augmentedYellow = Math.floor(
+                const augmentedYellow = Math.ceil(
+                    (remainingWhite - normalYellow) / 2,
+                );
+                const violet = Math.floor(
                     (remainingWhite - normalYellow) / 2,
                 );
                 return {
                     [effectKeys.YELLOW_STAR]: normalYellow + augmentedYellow,
-                    [effectKeys.VIOLET_STAR]: augmentedYellow,
+                    [effectKeys.VIOLET_STAR]: violet,
                 };
             },
 
@@ -299,13 +317,10 @@ export function assignStarsAI(context) {
                 const normalYellow = Math.min(
                     starsForMaxGrav +
                         Math.min(
-                            (remainingWhite - starsForMaxGrav) / 2,
+                            Math.floor((remainingWhite - starsForMaxGrav) / 2),
                             starsForMaxAcc -
                                 starsForMaxGrav +
-                                getEntityTotalHealth(
-                                    actionSim.entities[agentKey],
-                                ) -
-                                1,
+                                calcMaxStarblight(actionSim),
                         ),
                     remainingWhite,
                 );
@@ -321,7 +336,7 @@ export function assignStarsAI(context) {
                 };
             },
 
-            // Variant A + Mana: Raw Green for SP ATK + Max Starblight then Constellation
+            // Variant A + Mana: Raw Green for SP ATK + Max Accretion then Constellation
             (actionSim) => {
                 const agentEnt = actionSim.entities[agentKey];
                 const missingHp = Math.max(
@@ -341,16 +356,14 @@ export function assignStarsAI(context) {
                     return null;
                 }
 
-                const normalYellow = Math.min(
-                    starsForMaxAcc + getEntityTotalHealth(agentEnt) - 1,
-                    budget,
-                );
-                const augmentedYellow = Math.floor((budget - normalYellow) / 2);
+                const normalYellow = Math.min(starsForMaxAcc, budget);
+                const augmentedYellow = Math.ceil((budget - normalYellow) / 2);
+                const violet = Math.floor((budget - normalYellow) / 2);
 
                 return {
                     [effectKeys.GREEN_STAR]: rawGreenNeeded,
                     [effectKeys.YELLOW_STAR]: normalYellow + augmentedYellow,
-                    [effectKeys.VIOLET_STAR]: augmentedYellow,
+                    [effectKeys.VIOLET_STAR]: violet,
                 };
             },
 
@@ -408,11 +421,8 @@ export function assignStarsAI(context) {
                 const normalYellow = Math.min(
                     starsForMaxGrav +
                         Math.min(
-                            (budget - starsForMaxGrav) / 2,
-                            starsForMaxAcc -
-                                starsForMaxGrav +
-                                getEntityTotalHealth(agentEnt) -
-                                1,
+                            Math.floor((budget - starsForMaxGrav) / 2),
+                            starsForMaxAcc - starsForMaxGrav,
                         ),
                     budget,
                 );
@@ -613,9 +623,7 @@ export function assignStarsAI(context) {
                         [nonAgentKey]: {
                             ...simUsed.entities[nonAgentKey],
                             [effectKeys.ELEMENTAL_CRYSTALS]:
-                                translateElementIntoCrystals(
-                                    element,
-                                ),
+                                translateElementIntoCrystals(element),
                         },
                     },
                 };

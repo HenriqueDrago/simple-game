@@ -12,7 +12,6 @@ function KeywordTooltip({ keyword, type, depth, originalKey }) {
     const isLocked = () => {
         if (game.progressMode) {
             for (let ai of Object.entries(presetAi)) {
-                console.log(ai[1].desc.includes(originalKey))
                 if (
                     ai[1].desc.includes(originalKey) &&
                     game.progressStatus[ai[0]] !== progKeys.ALWAYS_OPEN &&
@@ -31,8 +30,6 @@ function KeywordTooltip({ keyword, type, depth, originalKey }) {
             e.preventDefault();
             e.stopPropagation();
             const entry = keywordDictionary[keyword];
-
-            console.log(isLocked())
 
             if (isLocked()) {
                 return;

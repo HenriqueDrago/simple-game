@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import "./History.css";
@@ -7,27 +8,25 @@ export default function History() {
     const { UIElements, setUIElements } = useUI();
 
     const history = game.history;
+    const listRef = useRef(null);
+    const wasAtBottomRef = useRef(true);
+
+    const handleScroll = () => {
+        if (!listRef.current) {
+            return;
+        }
+        const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+        wasAtBottomRef.current = scrollHeight - scrollTop - clientHeight <= 30;
+    };
+
+    useEffect(() => {
+        if (listRef.current && wasAtBottomRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+    }, [history]);
 
     if (!history || history.length <= 0 || !UIElements.history) {
-        return (
-            <div
-                className="history-button-container"
-                disabled={!history || history.length <= 0}
-            >
-                <button
-                    onClick={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                history: true,
-                            };
-                        });
-                    }}
-                >
-                    History
-                </button>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -36,21 +35,23 @@ export default function History() {
                 <span>History</span>
                 <button
                     onClick={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                history: false,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            history: false,
+                        }));
                     }}
                 >
                     &times;
                 </button>
             </div>
-            <div className="history-list-items">
-                {history.map((entry) => {
-                    return <span>{entry}</span>;
-                })}
+            <div
+                ref={listRef}
+                onScroll={handleScroll}
+                className="history-list-items"
+            >
+                {history.map((entry, index) => (
+                    <span key={index}>{entry}</span>
+                ))}
             </div>
         </div>
     );

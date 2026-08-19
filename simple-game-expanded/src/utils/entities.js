@@ -435,6 +435,7 @@ export function processExitStargazer(prev, targetKey) {
                 [effectKeys.CONSTELLATION]: 0,
                 [effectKeys.AZURE_CONSTELLATION]: 0,
                 [effectKeys.CRIMSON_CONSTELLATION]: 0,
+                [effectKeys.STARBLIGHT]: 0,
                 states: {
                     ...currentEntity.states,
                     [effectKeys.STARGAZER]: false,
@@ -1482,10 +1483,7 @@ export function canUseAction(prev, entityKey, action) {
 
     // Helper to evaluate progression lock status for base actions only
     const isProgLocked = (bossKey) => {
-        if (
-            !prev.progressMode ||
-            entity.controller !== aiKeys.HUMAN
-        ) {
+        if (!prev.progressMode || entity.controller !== aiKeys.HUMAN) {
             return false;
         }
         const status = prev.progressStatus[bossKey];
@@ -2162,16 +2160,37 @@ export function newDealDmg(
     dmgType,
     dealerKey = null,
 ) {
-    const dmgDealt = dealerKey
-        ? calcDmgDealt(prev, baseDmg, dealerKey, dmgType)
-        : baseDmg;
+    let dmgDealt = baseDmg;
 
-    const processedGame = newTakeDmg(prev, dmgDealt, takerKeys, dmgType);
+    // Calculates Final Damage Dealt
+    let defPen = 0;
+    if (dealerKey && prev?.entities?.[dealerKey]) {
+        defPen = getEntityDefPen(prev, dealerKey);
+        switch (dmgType) {
+            case dmgTypes.PHYSICAL:
+            case dmgTypes.PIERCING: {
+                // Weakness
+                const weakMult = getEntityWeakness(prev, dealerKey);
 
-    return processedGame;
+                // Dmg Bonus
+                const dmgBonusMult = getEntityDamageBonus(prev, dealerKey);
+
+                dmgDealt = Math.floor(dmgDealt * weakMult * dmgBonusMult);
+
+                break;
+            }
+            case dmgTypes.TRUE:
+            case dmgTypes.LUNIC:
+            default: {
+                break;
+            }
+        }
+    }
+
+    return newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen);
 }
 
-export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType) {
+export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen = 0) {
     let processedGame = {
         ...prev,
     };
@@ -2192,7 +2211,43 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType) {
             dmgTypeTaken = dmgTypes.PIERCING;
         }
 
-        const dmgTaken = calcDmgTaken(prev, dmgDealt, entityKey, dmgTypeTaken);
+        let dmgTaken = dmgDealt;
+
+        // Damage Reduction
+        const drMult = getEntityDR(prev, entityKey);
+
+        // Fragility
+        const frailMult = getEntityFragility(prev, entityKey);
+
+        // Flat Reduction
+        const flatDR = Math.max(
+            0,
+            Math.floor(
+                getEntityDef(draftTaker) * getEntityDefEffect(prev, entityKey),
+            ) - defPen,
+        );
+
+        switch (dmgTypeTaken) {
+            case dmgTypes.PHYSICAL: {
+                dmgTaken -= flatDR;
+
+                dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
+
+                break;
+            }
+            case dmgTypes.PIERCING: {
+                dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
+
+                break;
+            }
+            case dmgTypes.TRUE:
+            case dmgTypes.LUNIC:
+            default: {
+                break;
+            }
+        }
+
+        dmgTaken = Math.max(1, dmgTaken); // All damage has a minimum of 1
 
         switch (dmgTypeTaken) {
             case dmgTypes.PHYSICAL:
@@ -2257,90 +2312,6 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType) {
     }
 
     return processedGame;
-}
-
-export function calcDmgDealt(prev, baseDmg, dealerKey, dmgType) {
-    const dealer = {
-        ...prev.entities[dealerKey],
-    };
-
-    let dmgDealt = baseDmg;
-
-    // Weakness
-    const weakMult = getEntityWeakness(prev, dealerKey);
-
-    // Dmg Bonus
-    const dmgBonusMult = getEntityDamageBonus(prev, dealerKey);
-
-    switch (dmgType) {
-        case dmgTypes.PHYSICAL: {
-            dmgDealt +=
-                dealer.resources[effectKeys.BLOOD_SACRIFICE] +
-                dealer[effectKeys.STARBLIGHT];
-
-            dmgDealt = Math.floor(dmgDealt * weakMult * dmgBonusMult);
-
-            break;
-        }
-        case dmgTypes.PIERCING: {
-            dmgDealt += dealer[effectKeys.STARBLIGHT];
-
-            dmgDealt = Math.floor(dmgDealt * weakMult * dmgBonusMult);
-
-            break;
-        }
-        case dmgTypes.TRUE:
-        case dmgTypes.LUNIC:
-        default: {
-            break;
-        }
-    }
-
-    return dmgDealt;
-}
-
-export function calcDmgTaken(prev, dmgDealt, takerKey, dmgType) {
-    const taker = {
-        ...prev.entities[takerKey],
-    };
-
-    let dmgTaken = dmgDealt;
-
-    // Prismatic Override
-    if (dmgType === dmgTypes.PHYSICAL && taker.states[effectKeys.PRISMATIC]) {
-        dmgType = dmgTypes.PIERCING;
-    }
-
-    // Damage Reduction
-    const drMult = getEntityDR(prev, takerKey);
-
-    // Fragility
-    const frailMult = getEntityFragility(prev, takerKey);
-
-    // Flat Reduction
-    const flatDR = getEntityDef(taker) * getEntityDefEffect(prev, takerKey);
-
-    switch (dmgType) {
-        case dmgTypes.PHYSICAL: {
-            dmgTaken -= flatDR;
-
-            dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
-
-            break;
-        }
-        case dmgTypes.PIERCING: {
-            dmgTaken = Math.floor(dmgTaken * drMult * frailMult);
-
-            break;
-        }
-        case dmgTypes.TRUE:
-        case dmgTypes.LUNIC:
-        default: {
-            break;
-        }
-    }
-
-    return Math.max(1, dmgTaken);
 }
 
 export function getEntityDR(prev, entityKey) {
@@ -2418,6 +2389,19 @@ export function getEntityDefEffect(prev, entityKey) {
     }
 
     return defEffect;
+}
+
+export function getEntityDefPen(prev, entityKey) {
+    const entity = {
+        ...prev.entities[entityKey],
+    };
+
+    let defPen = 0;
+    if (entity[effectKeys.STARBLIGHT] > 0) {
+        defPen += entity[effectKeys.STARBLIGHT];
+    }
+
+    return defPen;
 }
 
 export function getEntityDamageBonus(prev, entityKey) {

@@ -215,8 +215,6 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
     const showWarning =
         canUseCombatInteractions(game, entityKey) && isEntityDead(entity);
 
-    const showLeftPanel = game.status !== turnStatus.SETUP;
-
     const activeBars = FIXED_RESOURCES.filter((key) => {
         if (!FIXED_BARS_CONFIG[key]) return false;
         const curr = entity?.[key] ?? 0;
@@ -237,6 +235,10 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
         const sim = simEntity ? (simEntity?.resources?.[key] ?? 0) : curr;
         return curr > 0 || sim > 0;
     });
+
+    const showLeftPanel =
+        game.status !== turnStatus.SETUP &&
+        activeBars.length + activeCounters.length + activeStacks.length > 0;
 
     const stateClassMap = {
         [effectKeys.UMBRAL_CORE]: "state-umbral",

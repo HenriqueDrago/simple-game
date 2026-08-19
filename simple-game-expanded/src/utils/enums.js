@@ -246,6 +246,8 @@ export const effectKeys = Object.freeze({
     MISSING_HEALTH: "missingHealth",
     MISSING_MANA: "missingMana",
     IRRADIATION: "irradiation",
+
+    DEF_PEN: "defPen"
 });
 
 export const runeKeys = Object.freeze({
@@ -332,3 +334,9 @@ export const eventKeys = Object.freeze({
     STARFALL_SUBPHASE: "starfallSub",
     SINGULARITY: "singularity"
 });
+
+export const speedKeys = Object.freeze({
+    ONE: "one",
+    TWO: "two",
+    INF: "inf",
+})

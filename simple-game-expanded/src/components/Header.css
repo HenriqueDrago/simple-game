@@ -151,6 +151,9 @@
 }
 
 .sharp-btn-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: #000000;
     color: #ffffff;
     border: 2px solid #ffffff;
@@ -160,10 +163,41 @@
     font-weight: bold;
     text-transform: uppercase;
     cursor: pointer;
+    line-height: 1;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sharp-btn-header:hover {
     background-color: #ffffff;
     color: #000000;
+}
+
+.sharp-btn-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    padding: 8px 20px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    line-height: 1;
+    box-sizing: border-box;
+    height: 38px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sharp-btn-header:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.sharp-btn-header.icon-btn {
+    width: 38px;
+    padding: 0;
+    aspect-ratio: 1 / 1;
 }

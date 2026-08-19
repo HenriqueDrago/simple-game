@@ -4,12 +4,13 @@ import {
     HeartCrack,
     ShieldCogCorner,
     ChevronsDown,
+    Crosshair,
 } from "lucide-react";
 import "./ModifiersTracker.css";
 import { effectKeys } from "../utils/enums";
 import { useUI } from "../contexts/UIContext";
 import { useGame } from "../contexts/GameContext";
-import { getEntityDamageBonus, getEntityDefEffect, getEntityDR, getEntityFragility, getEntityWeakness } from "../utils/entities";
+import { getEntityDamageBonus, getEntityDefEffect, getEntityDefPen, getEntityDR, getEntityFragility, getEntityWeakness } from "../utils/entities";
 
 export default function ModifiersTracker({ entityKey }) {
     const { game } = useGame();
@@ -51,6 +52,11 @@ export default function ModifiersTracker({ entityKey }) {
         : realDef;
     const isDefChanged = simGame && simDef !== realDef;
     const displayDef = simGame ? simDef : realDef;
+
+    const realDefPen = getEntityDefPen(game, entityKey);
+    const simDefPen = simGame ? getEntityDefPen(simGame, entityKey) : realDefPen;
+    const isDefPenChanged = simGame && simDefPen !== realDefPen;
+    const displayDefPen = simGame ? simDefPen : realDefPen;
 
     return (
         <div className="modifiers-tracker-container">
@@ -94,6 +100,15 @@ export default function ModifiersTracker({ entityKey }) {
             >
                 <ShieldCogCorner size={18} />
                 {displayDef}%
+            </span>
+            <span
+                className={isDefPenChanged ? "is-preview" : ""}
+                onMouseDown={(e) =>
+                    handleSpawnTooltip(e, effectKeys.DEF_PEN)
+                }
+            >
+                <Crosshair size={18} />
+                {displayDefPen}
             </span>
         </div>
     );

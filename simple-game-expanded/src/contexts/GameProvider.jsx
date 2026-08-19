@@ -27,6 +27,7 @@ import {
 import {
     CHECKPOINT_STATES,
     coloredStars,
+    gameSpeeds,
     INITIAL_GAME_STATE,
     presetAi,
 } from "../utils/constants";
@@ -118,7 +119,6 @@ export default function GameProvider({ children }) {
                 }
 
                 console.log("Saved Data Found!");
-                console.log(savedData);
                 return savedGame;
             }
         } catch (error) {
@@ -532,6 +532,33 @@ export default function GameProvider({ children }) {
         });
     }
 
+    function handleSpeed(value) {
+        setGame((prev) => {
+            const currSpeed = prev.speed;
+            const keys = Object.keys(gameSpeeds);
+            const index = keys.indexOf(currSpeed);
+
+            // Fallback
+            if (index === -1) {
+                return {
+                    ...prev,
+                    speed: keys[0],
+                };
+            }
+
+            let nextIndex = (index + value) % keys.length;
+
+            if (nextIndex < 0) {
+                nextIndex += keys.length;
+            }
+
+            return {
+                ...prev,
+                speed: keys[nextIndex],
+            };
+        });
+    }
+
     // === Efeitos ===
     // Turn Management
     useEffect(() => {
@@ -562,14 +589,17 @@ export default function GameProvider({ children }) {
                         roundCount: gameState.roundCount + 1,
                         roundIndex: gameState.roundIndex + 1,
                     };
-                    delayAmount = gameState.roundCount > 0 ? 600 : 0;
+                    delayAmount =
+                        gameState.roundCount > 0
+                            ? 600 * gameSpeeds[game.speed].mod
+                            : 0;
                     historyKey = eventKeys.ROUND_START;
                     break;
                 }
 
                 case roundPhases.MOON_TURN: {
                     nextState = processMoonPhase(gameState);
-                    delayAmount = 1200;
+                    delayAmount = 1200 * gameSpeeds[game.speed].mod;
                     historyKey = eventKeys.MOON_PHASE;
                     break;
                 }
@@ -621,7 +651,7 @@ export default function GameProvider({ children }) {
                         ...gameState,
                         roundIndex: 0,
                     };
-                    delayAmount = 600;
+                    delayAmount = 600 * gameSpeeds[game.speed].mod;
                     historyKey = null;
                     break;
                 }
@@ -692,7 +722,7 @@ export default function GameProvider({ children }) {
                             nonTargetKey,
                         );
                         delayAmount = willTriggerRevelevantTurnEndEffects
-                            ? 800
+                            ? 800 * gameSpeeds[game.speed].mod
                             : 0;
                     }
                 }
@@ -911,7 +941,7 @@ export default function GameProvider({ children }) {
 
                     return newGame;
                 });
-            }, 1200);
+            }, 1200 * gameSpeeds[game.speed].mod);
 
             return () => clearTimeout(aiTimer);
         }
@@ -937,7 +967,7 @@ export default function GameProvider({ children }) {
                     status: turnStatus.ONGOING,
                     roundIndex: prev.roundIndex + 1,
                 }));
-            }, 900);
+            }, 900 * gameSpeeds[game.speed].mod);
 
             return () => clearTimeout(timer);
         }
@@ -955,7 +985,7 @@ export default function GameProvider({ children }) {
                     ...prev,
                     status: turnStatus.ONGOING,
                 }));
-            }, 700);
+            }, 700 * gameSpeeds[game.speed].mod);
 
             return () => clearTimeout(timer);
         }
@@ -990,81 +1020,6 @@ export default function GameProvider({ children }) {
         }
     }, [game]);
 
-    // Event Listeners
-    useEffect(() => {
-        function handleKeyDown(e) {
-            if (
-                (e.code === "Space" || e.key === " ") &&
-                game.status !== turnStatus.SETUP
-            ) {
-                e.preventDefault();
-                setGame((prev) => {
-                    return {
-                        ...prev,
-                        paused: !prev?.paused,
-                    };
-                });
-            }
-
-            if (e.key === "Shift") {
-                if (e.repeat) {
-                    return;
-                }
-
-                e.preventDefault();
-                setGame((prev) => {
-                    return {
-                        ...prev,
-                        simSpecs: {
-                            ...prev.simSpecs,
-                            commit: true,
-                            starfall: true,
-                        },
-                    };
-                });
-            }
-        }
-
-        function handleKeyUp(e) {
-            if (e.key === "Shift") {
-                e.preventDefault();
-                setGame((prev) => {
-                    return {
-                        ...prev,
-                        simSpecs: {
-                            ...prev.simSpecs,
-                            commit: false,
-                            starfall: false,
-                        },
-                    };
-                });
-            }
-        }
-
-        function handleBlur() {
-            setGame((prev) => ({
-                ...prev,
-                paused: game.status !== turnStatus.SETUP ? true : prev.paused,
-                simSpecs: {
-                    ...prev.simSpecs,
-                    commit: false,
-                    starfall: false,
-                },
-            }));
-        }
-
-        // Add listeners
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
-        window.addEventListener("blur", handleBlur);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("keyup", handleKeyUp);
-            window.removeEventListener("blur", handleBlur);
-        };
-    }, [game.status]);
-
     // Update simulation
     const simGame = useMemo(() => {
         let sim = null;
@@ -1076,6 +1031,13 @@ export default function GameProvider({ children }) {
               ? entityKeys.PLAYER_TWO
               : entityKeys.PLAYER_ONE;
 
+        const isSingularity =
+            game?.roundQueue?.[game?.roundIndex] ===
+                roundPhases.P1_SINGULARITY ||
+            game?.roundQueue?.[game?.roundIndex] === roundPhases.P2_SINGULARITY;
+
+        console.log(isSingularity)
+
         if (
             !agentKey ||
             !nonAgentKey ||
@@ -1083,7 +1045,10 @@ export default function GameProvider({ children }) {
                 game?.entities?.[agentKey]?.[effectKeys.CONTROLLER] ===
                 aiKeys.HUMAN
             ) ||
-            !(game?.playerQueue?.[0] === playerTurnPhases.PLAN)
+            (
+                !game?.playerQueue?.[0] === playerTurnPhases.PLAN &&
+                !isSingularity
+            )
         ) {
             return null;
         }
@@ -1138,6 +1103,7 @@ export default function GameProvider({ children }) {
             handleUpdateStatsPoints,
             handleWhoStartsChange,
             handlePause,
+            handleSpeed,
         }),
         [game, simGame],
     );

@@ -6,8 +6,6 @@ A turn-based combat and resource-management game built with React and Vite. Both
 
 Simple Game Expanded can be played at: https://simple-game-hd.vercel.app/
 
----
-
 ## Pre-Battle Setup & Attribute Allocation
 
 Before starting a match, players configure battle settings during the setup phase:
@@ -22,8 +20,6 @@ Before starting a match, players configure battle settings during the setup phas
   * **Full Str / Full Def:** Assigns all 10 available points into a single attribute.
 * **Match Configuration:** Players choose who takes the first turn (Player One, Player Two, or Random) and set the controller for each entity (Human manual control or autonomous AI archetypes).
 
----
-
 ## Battle Structure
 
 A basic round consists of the following phases, though rounds can be extended with additional transitional phases:
@@ -35,8 +31,6 @@ A basic round consists of the following phases, though rounds can be extended wi
   * **Commit:** Applies turn-end effects, resource decays, and damage over time.
 * **Round End:** A transitional phase concluding the active round.
 
----
-
 ## Resources
 
 Abilities that consume resources draw from **Mitigation Resources**, **Free Resources**, and **Limited Resources** in that order, while resource restoration occurs in reverse:
@@ -46,8 +40,6 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 * **Limited Resources:** Primary capacity pools (health and mana) with non-fixed caps that route overflow recovery into secondary pools.
 * **Fixed Resources:** Percentage-based meters with strict limits that track mechanic progress, trigger state transformations, or modify damage parameters.
 * **Ranked Resources:** Tier-based counters that scale the strength of specific effects.
-
----
 
 ## Progression Mode
 
@@ -62,16 +54,12 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 - **Voyager:** Assigns colored stars to resolve Starfall effects.
 - **Lunatic:** Configures elemental crystal combinations and adapts actions according to the mirrored moon phase.
 
----
-
 ## Controls & Shortcuts
 
 * **Middle Mouse Click (Wheel):** Click on any term or UI element to open a tooltip; clicking highlighted terms inside opens nested tooltips.
 * **Hover Over Actions:** Simulates the immediate outcome of an action.
 * **Shift (Hold):** Simulates end-of-turn commit effects and upcoming starfall resolutions.
 * **Spacebar:** Pauses or resumes automatic turn progression timers.
-
----
 
 ## Getting Started
 

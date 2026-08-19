@@ -597,6 +597,14 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
+    // Starblight
+    if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.STARBLIGHT]: 0,
+        };
+    }
+
     // Constellation
     if (draftCurrActor[effectKeys.CONSTELLATION] > 0) {
         draftCurrActor = {

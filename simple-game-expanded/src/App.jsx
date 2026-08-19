@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Header from "./components/Header.jsx";
 import GamePanel from "./components/GamePanel.jsx";
 import ActionPanel from "./components/ActionPanel.jsx";
@@ -11,13 +12,123 @@ import "./App.css";
 
 import { useGame } from "./contexts/GameContext.js";
 import { useUI } from "./contexts/UIContext.js";
-import { INITIAL_GAME_STATE } from "./utils/constants.js";
+import { INITIAL_GAME_STATE, INITIAL_GLOSSARY_SPECS } from "./utils/constants.js";
+import { turnStatus } from "./utils/enums.js";
+import { useEffect } from "react";
 
 // App Component
 function App() {
-    const { setGame, handleHardResetGame } = useGame();
-    const { UIElements, setUIElements, tooltipStack, handleClearTooltip } =
+    const { game, setGame, handleHardResetGame, handleSpeed } = useGame();
+    const { UIElements, setUIElements, tooltipStack, handleClearTooltip, setGlossarySpecs } =
         useUI();
+
+    // Event Listeners
+    useEffect(() => {
+        function handleKeyDown(e) {
+            // Pause/Unpause
+            if (
+                (e.code === "Space" || e.key === " ") &&
+                game.status !== turnStatus.SETUP
+            ) {
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        paused: !prev?.paused,
+                    };
+                });
+            }
+
+            // Speed Controls
+            if (game.status !== turnStatus.SETUP) {
+                if (e.code === "KeyF" || e.key === "f" || e.key === "F") {
+                    handleSpeed(1);
+                } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    handleSpeed(1);
+                } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                    handleSpeed(-1);
+                }
+            }
+
+            // History
+            if (game.status !== turnStatus.SETUP) {
+                if (e.code === "KeyH" || e.key === "h" || e.key === "H") {
+                    setUIElements((prev) => ({
+                        ...prev,
+                        history: !prev.history,
+                    }));
+                }
+            }
+
+            // Glossary
+            if (e.code === "KeyG" || e.key === "g" || e.key === "G") {
+                setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
+                setUIElements((prev) => ({
+                    ...prev,
+                    glossary: !prev.glossary,
+                }));
+            }
+
+            if (e.key === "Shift") {
+                if (e.repeat) {
+                    return;
+                }
+
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        simSpecs: {
+                            ...prev.simSpecs,
+                            commit: true,
+                            starfall: true,
+                        },
+                    };
+                });
+            }
+        }
+
+        function handleKeyUp(e) {
+            if (e.key === "Shift") {
+                e.preventDefault();
+                setGame((prev) => {
+                    return {
+                        ...prev,
+                        simSpecs: {
+                            ...prev.simSpecs,
+                            commit: false,
+                            starfall: false,
+                        },
+                    };
+                });
+            }
+        }
+
+        function handleBlur() {
+            setGame((prev) => ({
+                ...prev,
+                paused: game.status !== turnStatus.SETUP ? true : prev.paused,
+                simSpecs: {
+                    ...prev.simSpecs,
+                    commit: false,
+                    starfall: false,
+                },
+            }));
+        }
+
+        // Add listeners
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
+        };
+    }, [game.status, game.speed, setGame, setUIElements]);
 
     // Early Return
     if (UIElements.continueModal) {
@@ -26,8 +137,6 @@ function App() {
 
     return (
         <div className="app-container">
-            <History />
-
             {tooltipStack.length > 0 && (
                 <div
                     className="backdrop"
@@ -98,7 +207,9 @@ function App() {
             {UIElements.hardResetModal && (
                 <Modal
                     mainText={"Are you sure you wish to proceed?"}
-                    subText={"*This action will delete all game data. This action is irreversible."}
+                    subText={
+                        "*This action will delete all game data. This action is irreversible."
+                    }
                     isConfirmOnly={false}
                     rejectAction={() => {
                         setUIElements((prev) => {
@@ -126,9 +237,14 @@ function App() {
             <Glossary />
             <TooltipDisplay />
 
-            <Header/>
-            <GamePanel/>
-            <ActionPanel/>
+            <Header />
+            <div className="app-main-layout">
+                <div className="game-panels-container">
+                    <GamePanel />
+                    <ActionPanel />
+                </div>
+                <History />
+            </div>
         </div>
     );
 }
