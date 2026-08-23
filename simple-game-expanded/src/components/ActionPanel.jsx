@@ -1,17 +1,14 @@
 import "./ActionPanel.css";
 
-import {
-    entityKeys,
-    turnStatus,
-    aiKeys,
-    effectKeys,
-    roundPhases,
-} from "../utils/enums";
-import { presetAi, actionMap, FREE_ACTIONS } from "../utils/constants";
+import { turnStatus, aiKeys, effectKeys, roundPhases } from "../utils/enums";
+import { actionMap, FREE_ACTIONS } from "../utils/constants";
 import {
     getActions,
     canUseAction,
     canUseCombatInteractions,
+    getEntityLabel,
+    getCurrActivePlayer,
+    getOtherEntity,
 } from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { useGame } from "../contexts/GameContext";
@@ -21,9 +18,6 @@ function ActionPanel() {
     const { game, handleAction, setGame } = useGame();
     const { handleClearTooltip, handleSetTooltip } = useUI();
 
-    const p1Controller = game.entities[entityKeys.PLAYER_ONE].controller;
-    const p2Controller = game.entities[entityKeys.PLAYER_TWO].controller;
-
     const battleState = game.status;
 
     const currPhase =
@@ -31,54 +25,25 @@ function ActionPanel() {
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const isPlayerOneTurn =
-        currPhase === roundPhases.PLAYER_ONE_TURN ||
-        currPhase === roundPhases.P1_SINGULARITY;
-    const isPlayerTwoTurn =
-        currPhase === roundPhases.PLAYER_TWO_TURN ||
-        currPhase === roundPhases.P2_SINGULARITY;
-
-    const currEntityKey = isPlayerOneTurn
-        ? entityKeys.PLAYER_ONE
-        : entityKeys.PLAYER_TWO;
-    const targetEntityKey = isPlayerOneTurn
-        ? entityKeys.PLAYER_TWO
-        : entityKeys.PLAYER_ONE;
-    const currEntity = game.entities[currEntityKey];
+    const currPlayerKey = getCurrActivePlayer(game);
+    const currEntity = game?.entities?.[currPlayerKey];
 
     // Visibility Constraints
-    const showButtons = canUseCombatInteractions(game);
-
-    // Label Generation Helpers
-    const getActorLabel = (controller, isPlayerOne) => {
-        if (controller === aiKeys.HUMAN) {
-            if (
-                p1Controller === aiKeys.HUMAN &&
-                p2Controller === aiKeys.HUMAN
-            ) {
-                return `${isPlayerOne ? "Player One Turn" : "Player Two Turn"}`;
-            }
-            return `Player Turn`;
-        }
-        if (p1Controller === p2Controller) {
-            return `${presetAi[controller].name} ${isPlayerOne ? "One" : "Two"}`;
-        }
-        return `${presetAi[controller].name}`;
-    };
-
-    const playerLabel = getActorLabel(p1Controller, true);
-    const enemyLabel = getActorLabel(p2Controller, false);
-    const currActorLabel = isPlayerOneTurn ? playerLabel : enemyLabel;
+    const showButtons =
+        currPlayerKey && canUseCombatInteractions(game, currPlayerKey, true, true);
+    const currActorLabel = getEntityLabel(game, currPlayerKey);
 
     let waitLabel = null;
     if (battleState === turnStatus.STARFALL_TRANSITION) {
         waitLabel = "Starfall";
     } else if (battleState !== turnStatus.ONGOING) {
         waitLabel = null;
-    } else if (isPlayerTwoTurn && p2Controller !== aiKeys.HUMAN) {
-        waitLabel = enemyLabel;
-    } else if (isPlayerOneTurn && p1Controller !== aiKeys.HUMAN) {
-        waitLabel = playerLabel;
+    } else if (
+        currEntity &&
+        canUseCombatInteractions(game, currPlayerKey, true, false) &&
+        currEntity.controller !== aiKeys.HUMAN
+    ) {
+        waitLabel = `${currActorLabel}`;
     } else if (
         currPhase === roundPhases.P1_STARS_TURN ||
         currPhase === roundPhases.P2_STARS_TURN
@@ -94,13 +59,13 @@ function ActionPanel() {
     let containerClass = "button-grid";
 
     if (showButtons) {
-        currentActions = getActions(game, currEntityKey).map((key) => {
+        currentActions = getActions(game, currPlayerKey).map((key) => {
             const mapInfo = actionMap[key] || { name: key, specialClass: "" };
             return {
                 key: key,
                 label: mapInfo.name,
                 specialClass: mapInfo.specialClass,
-                disabled: !canUseAction(game, currEntityKey, key),
+                disabled: !canUseAction(game, currPlayerKey, key),
             };
         });
 
@@ -139,8 +104,8 @@ function ActionPanel() {
                                     handleClearTooltip();
                                     handleAction(
                                         action.key,
-                                        currEntityKey,
-                                        targetEntityKey,
+                                        currPlayerKey,
+                                        getOtherEntity(currPlayerKey),
                                     );
                                     if (FREE_ACTIONS.includes(action.key)) {
                                         setGame((prev) => {

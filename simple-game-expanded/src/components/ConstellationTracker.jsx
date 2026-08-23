@@ -26,7 +26,7 @@ export default function ConstellationTracker({ entityKey }) {
         activeClass = "crimson-constellation";
     }
 
-    const buttonActive = canUseCombatInteractions(game);
+    const buttonActive = canUseCombatInteractions(game, entityKey);
 
     return (
         <div className={`constellation-tracker-container ${activeClass}`}>

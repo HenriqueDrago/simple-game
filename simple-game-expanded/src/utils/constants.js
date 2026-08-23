@@ -380,6 +380,8 @@ export const INITIAL_GAME_STATE = {
     progressMode: false,
     simGame: null,
     paused: false,
+    undoPile: [],
+    redoPile: [],
 
     speed: speedKeys.ONE,
 
@@ -624,3 +626,14 @@ export const INITIAL_GLOSSARY_SPECS = {
     matchCase: false,
     matchWholeWord: false,
 };
+
+export const playerMap = Object.freeze({
+    [entityKeys.PLAYER_ONE]: {
+        turn: [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_SINGULARITY],
+        extra: [roundPhases.P1_SINGULARITY],
+    },
+    [entityKeys.PLAYER_TWO]: {
+        turn: [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_SINGULARITY],
+        extra: [roundPhases.P2_SINGULARITY],
+    },
+})

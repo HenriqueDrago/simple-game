@@ -30,7 +30,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf.",
+            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf. Press Z/X to undo/redo your previous action on the current turn.",
     },
 
     [turnStatus.SETUP]: {

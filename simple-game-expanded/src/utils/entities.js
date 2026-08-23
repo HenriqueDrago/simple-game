@@ -5,6 +5,7 @@ import {
     constants,
     FREE_RESOURCES,
     MITIGATION_RESOURCES,
+    playerMap,
     presetAi,
 } from "./constants.js";
 import {
@@ -18,7 +19,6 @@ import {
     turnStatus,
     progKeys,
     aiKeys,
-    roundPhases,
     playerTurnPhases,
     runeKeys,
     eventKeys,
@@ -583,11 +583,7 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
         );
     }
     if (originalStates[effectKeys.UMBRAL_CORE]) {
-        newGameState = processExitUmbral(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        newGameState = processExitUmbral(newGameState, targetKey, nonTargetKey);
     }
 
     return newGameState;
@@ -1778,7 +1774,12 @@ export function getActions(prev, entityKey) {
     return actions;
 }
 
-export function canUseCombatInteractions(prev, realEntityKey = null) {
+export function canUseCombatInteractions(
+    prev,
+    entityKey,
+    allowExtraTurn = true,
+    onlyHuman = true,
+) {
     const currRoundPhase =
         prev.roundQueue && prev.roundQueue.length > 0
             ? prev.roundQueue[prev.roundIndex]
@@ -1789,14 +1790,10 @@ export function canUseCombatInteractions(prev, realEntityKey = null) {
             ? prev.playerQueue[0]
             : null;
 
-    const entityKey =
-        currRoundPhase === roundPhases.P1_SINGULARITY ||
-        currRoundPhase === roundPhases.PLAYER_ONE_TURN
-            ? entityKeys.PLAYER_ONE
-            : entityKeys.PLAYER_TWO;
+    const currPlayer = getCurrActivePlayer(prev);
 
     // Incorrect Player
-    if (realEntityKey && realEntityKey !== entityKey) {
+    if (currPlayer !== entityKey) {
         return false;
     }
 
@@ -1806,25 +1803,27 @@ export function canUseCombatInteractions(prev, realEntityKey = null) {
     }
 
     // Player not human
-    if (prev.entities[entityKey].controller !== aiKeys.HUMAN) {
+    if (onlyHuman && prev.entities[entityKey].controller !== aiKeys.HUMAN) {
         return false;
     }
 
     // Incorrect Round Phase
-
-    const correctPhases =
-        entityKey === entityKeys.PLAYER_ONE
-            ? [roundPhases.P1_SINGULARITY, roundPhases.PLAYER_ONE_TURN]
-            : [roundPhases.P2_SINGULARITY, roundPhases.PLAYER_TWO_TURN];
-
-    if (!correctPhases.includes(currRoundPhase)) {
+    if (!playerMap[entityKey].turn.includes(currRoundPhase)) {
         return false;
     }
 
-    // Not Plan Phase
+    // Extra Turn
+    if (
+        !allowExtraTurn &&
+        !playerMap[entityKey].extra.includes(currRoundPhase)
+    ) {
+        return false;
+    }
+
+    // Normal Turn and not Plan
     if (
         currPlayerPhase !== playerTurnPhases.PLAN &&
-        currRoundPhase === correctPhases[1]
+        !playerMap[entityKey].extra.includes(currRoundPhase)
     ) {
         return false;
     }
@@ -2138,26 +2137,6 @@ export function processLunacy(entity) {
     }
 
     return draftEntity;
-}
-
-export function getCurrActivePlayer(prev) {
-    const currPhase = prev?.roundQueue?.[prev?.roundIndex];
-
-    const isPlayerOneTurn =
-        currPhase === roundPhases.PLAYER_ONE_TURN ||
-        currPhase === roundPhases.P1_SINGULARITY;
-    const isPlayerTwoTurn =
-        currPhase === roundPhases.PLAYER_TWO_TURN ||
-        currPhase === roundPhases.P2_SINGULARITY;
-
-    if (isPlayerOneTurn) {
-        return entityKeys.PLAYER_ONE;
-    }
-    if (isPlayerTwoTurn) {
-        return entityKeys.PLAYER_TWO;
-    }
-
-    return null;
 }
 
 export function newDealDmg(
@@ -2577,4 +2556,60 @@ export function processExitUmbral(prev, targetKey) {
             },
         },
     };
+}
+
+export function getCurrActivePlayer(prev) {
+    const currPhase = prev?.roundQueue?.[prev?.roundIndex];
+
+    const isPlayerOneTurn =
+        playerMap[entityKeys.PLAYER_ONE].turn.includes(currPhase);
+    const isPlayerTwoTurn =
+        playerMap[entityKeys.PLAYER_TWO].turn.includes(currPhase);
+
+    if (isPlayerOneTurn) {
+        return entityKeys.PLAYER_ONE;
+    }
+    if (isPlayerTwoTurn) {
+        return entityKeys.PLAYER_TWO;
+    }
+
+    return null;
+}
+
+export function getEntityLabel(prev, entityKey) {
+    let label = "";
+    if (!prev?.entities?.[entityKey]) {
+        return label;
+    }
+
+    const controller = prev.entities[entityKey].controller;
+    if (controller === aiKeys.HUMAN) {
+        label =
+            entityKey === entityKeys.PLAYER_ONE ? "Player One" : "Player Two";
+    } else {
+        const otherEntityKey =
+            entityKey === entityKeys.PLAYER_ONE
+                ? entityKeys.PLAYER_TWO
+                : entityKeys.PLAYER_ONE;
+
+        const otherController = prev.entities[otherEntityKey].controller;
+
+        if (controller === otherController) {
+            label = `${presetAi[controller].name} ${entityKey === entityKeys.PLAYER_ONE ? "(Player One)" : "(Player Two)"}`;
+        } else {
+            label = `${presetAi[controller].name}`;
+        }
+    }
+
+    return label;
+}
+
+export function getOtherEntity(entityKey) {
+    if (!Object.values(entityKeys).includes(entityKey)) {
+        return null;
+    }
+
+    return entityKey === entityKeys.PLAYER_ONE
+        ? entityKeys.PLAYER_TWO
+        : entityKeys.PLAYER_ONE;
 }

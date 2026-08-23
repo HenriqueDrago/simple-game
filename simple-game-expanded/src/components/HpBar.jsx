@@ -34,8 +34,7 @@ function HpBar({ entity, simEntity }) {
 
     const hpPercentage =
         maxHealth > 0 ? Math.min(100, (baseHp / maxHealth) * 100) : 0;
-    const hpLossRatio =
-        baseHp > 0 ? Math.max(0, (baseHp - simHp) / baseHp) : 0;
+    const hpLossRatio = baseHp > 0 ? Math.max(0, (baseHp - simHp) / baseHp) : 0;
     const hpGainLeft = hpPercentage;
     const hpGainWidth =
         maxHealth > 0
@@ -121,23 +120,21 @@ function HpBar({ entity, simEntity }) {
                     />
                 )}
 
-                {silverPercentage > 0 && (
-                    <div
-                        className="overgrowth-hp-fill"
-                        style={{
-                            width: `${silverPercentage}%`,
-                        }}
-                    >
-                        {silverLossRatio > 0 && (
-                            <div
-                                className="preview-chunk silver-loss"
-                                style={{
-                                    width: `${silverLossRatio * 100}%`,
-                                }}
-                            />
-                        )}
-                    </div>
-                )}
+                <div
+                    className="overgrowth-hp-fill"
+                    style={{
+                        width: `${silverPercentage}%`,
+                    }}
+                >
+                    {silverLossRatio > 0 && (
+                        <div
+                            className="preview-chunk silver-loss"
+                            style={{
+                                width: `${silverLossRatio * 100}%`,
+                            }}
+                        />
+                    )}
+                </div>
 
                 {silverGainWidth > 0 && (
                     <div

@@ -35,12 +35,8 @@ function StarsPanel({ entityKey, reversed }) {
             ? game.roundQueue[game.roundIndex]
             : null;
 
-    const isSingularity =
-        currRoundPhase === roundPhases.P1_SINGULARITY ||
-        currRoundPhase === roundPhases.P2_SINGULARITY;
-
     const showButton =
-        canUseCombatInteractions(game, entityKey) && !isSingularity;
+        canUseCombatInteractions(game, entityKey, false);
 
     const isPlayerStarfall =
         entityKey === entityKeys.PLAYER_ONE

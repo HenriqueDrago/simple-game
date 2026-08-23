@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useMemo } from "react";
 import {
+    canUseCombatInteractions,
     createBaseEntity,
     distributePoints,
     getCurrActivePlayer,
     getEntityElement,
+    getOtherEntity,
     isElementActive,
     processDeathCheck,
     processHealth,
@@ -65,6 +67,8 @@ function resetGameState(prev) {
         history: [],
         simGame: null,
         paused: false,
+        undoPile: [],
+        redoPile: [],
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -143,18 +147,89 @@ export default function GameProvider({ children }) {
                 currPhase === roundPhases.P1_SINGULARITY ||
                 currPhase === roundPhases.P2_SINGULARITY;
 
-            const processedAction = {
+            let post = {
                 ...processActionUse(prev, agentKey, nonAgentKey, action),
                 simGame: null,
             };
 
-            const newGameState = isSingularity
-                ? processSingularity(processedAction, agentKey, action)
-                : processPlan(processedAction, action);
+            post = isSingularity
+                ? processSingularity(post, agentKey, action)
+                : processPlan(post, action);
+
+            if (canUseCombatInteractions(post, agentKey)) {
+                post = {
+                    ...post,
+                    undoPile: [
+                        ...post.undoPile,
+                        { ...prev, undoPile: [], redoPile: [], simGame: null },
+                    ].slice(-10), // Max of 10 actions saved
+                    redoPile: [],
+                };
+            } else {
+                post = {
+                    ...post,
+                    undoPile: [],
+                    redoPile: [],
+                };
+            }
 
             return {
-                ...newGameState,
+                ...post,
                 paused: false,
+            };
+        });
+    }
+
+    function handleUndo() {
+        setGame((prev) => {
+            if (!prev?.undoPile || prev.undoPile.length <= 0) {
+                return prev;
+            }
+
+            const newGame = prev.undoPile[prev.undoPile.length - 1];
+
+            return {
+                ...newGame,
+                undoPile: prev.undoPile.slice(0, -1),
+                redoPile: [
+                    ...prev.redoPile,
+                    { ...prev, undoPile: [], redoPile: [], simGame: null },
+                ],
+                simSpecs: prev.simSpecs
+                    ? {
+                          ...prev.simSpecs,
+                          action: null,
+                      }
+                    : null,
+                speed: prev.speed,
+                paused: prev.paused,
+            };
+        });
+    }
+
+    function handleRedo() {
+        setGame((prev) => {
+            if (!prev?.redoPile || prev.redoPile.length <= 0) {
+                return prev;
+            }
+
+            const newGame = prev.redoPile[prev.redoPile.length - 1];
+
+            return {
+                ...newGame,
+                redoPile: prev.redoPile.slice(0, -1),
+                undoPile: [
+                    ...prev.undoPile,
+                    { ...prev, undoPile: [], redoPile: [], simGame: null },
+                ],
+                simSpecs: prev.simSpecs
+                    ? {
+                          ...prev.simSpecs,
+                          action: null,
+                      }
+                    : null,
+                speed: prev.speed,
+                paused: prev.paused,
             };
         });
     }
@@ -245,6 +320,8 @@ export default function GameProvider({ children }) {
                     paused: false,
                     status: turnStatus.ONGOING,
                     startingPlayer: startingPlayer,
+                    undoPile: [],
+                    redoPile: [],
                 },
                 eventKeys.BATTLE_START,
             );
@@ -613,7 +690,7 @@ export default function GameProvider({ children }) {
 
                 case roundPhases.MOON_TURN: {
                     nextState = processMoonPhase(gameState);
-                    delayAmount = 1200 * gameSpeeds[game.speed].mod;
+                    delayAmount = 800 * gameSpeeds[game.speed].mod;
                     historyKey = eventKeys.MOON_PHASE;
                     break;
                 }
@@ -728,6 +805,8 @@ export default function GameProvider({ children }) {
                                 currEntity.resources[effectKeys.MOONSHINE] >
                                     0 ||
                                 currEntity.resources[effectKeys.MANA_OVERFLOW] >
+                                    0 || 
+                                currEntity[effectKeys.BAD_OMEN] >
                                     0);
 
                         nextState = commitTurn(
@@ -778,40 +857,17 @@ export default function GameProvider({ children }) {
 
     // AI turn
     useEffect(() => {
-        if (game.paused || game.status !== turnStatus.ONGOING) {
-            return;
-        }
-
-        const currPhase =
-            game.roundQueue && game.roundQueue.length > 0
-                ? game.roundQueue[game.roundIndex]
-                : null;
-
-        const isSingularity =
-            currPhase === roundPhases.P1_SINGULARITY ||
-            currPhase === roundPhases.P2_SINGULARITY;
-        if (
-            currPhase !== roundPhases.PLAYER_ONE_TURN &&
-            currPhase !== roundPhases.PLAYER_TWO_TURN &&
-            !isSingularity
-        ) {
+        if (game.paused || !getCurrActivePlayer(game)) {
             return;
         }
 
         const targetKey = getCurrActivePlayer(game);
-        const nonTargetKey =
-            targetKey === entityKeys.PLAYER_ONE
-                ? entityKeys.PLAYER_TWO
-                : entityKeys.PLAYER_ONE;
+        const nonTargetKey = getOtherEntity(targetKey);
 
         const activePlayer = game.entities[targetKey];
-        const currentSubPhase =
-            game.playerQueue && game.playerQueue.length > 0
-                ? game.playerQueue[0]
-                : null;
 
         if (
-            (currentSubPhase === playerTurnPhases.PLAN || isSingularity) &&
+            canUseCombatInteractions(game, targetKey, true, false) &&
             activePlayer.controller !== aiKeys.HUMAN
         ) {
             const aiTimer = setTimeout(() => {
@@ -1026,7 +1082,10 @@ export default function GameProvider({ children }) {
         // Match Data
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
-                localStorage.setItem("gameCheckpoint", JSON.stringify(game));
+                localStorage.setItem(
+                    "gameCheckpoint",
+                    JSON.stringify({ ...game, simGame: null }),
+                );
                 console.log("Game Saved!");
             } catch (error) {
                 console.error("Failed to save game checkpoint:", error);
@@ -1117,6 +1176,8 @@ export default function GameProvider({ children }) {
             handlePause,
             handleSpeed,
             handleSpeedAbs,
+            handleUndo,
+            handleRedo,
         }),
         [game, simGame],
     );

@@ -55,7 +55,8 @@ function ManaBar({ entity, simEntity }) {
               )
             : 0;
 
-    const activeEntity = isManaSimulating || isMaxManaSimulating ? simEntity : entity;
+    const activeEntity =
+        isManaSimulating || isMaxManaSimulating ? simEntity : entity;
     const backgroundColor =
         activeEntity[effectKeys.MANA_BLEED] > 0 ? "purple" : "blue";
     const textColor = displayHasOverflow ? "cyan" : "inherit";
@@ -109,21 +110,19 @@ function ManaBar({ entity, simEntity }) {
                     />
                 )}
 
-                {overflowPercentage > 0 && (
-                    <div
-                        className="mana-overflow-fill"
-                        style={{ width: `${overflowPercentage}%` }}
-                    >
-                        {overflowLossRatio > 0 && (
-                            <div
-                                className="preview-chunk overflow-loss"
-                                style={{
-                                    width: `${overflowLossRatio * 100}%`,
-                                }}
-                            />
-                        )}
-                    </div>
-                )}
+                <div
+                    className="mana-overflow-fill"
+                    style={{ width: `${overflowPercentage}%` }}
+                >
+                    {overflowLossRatio > 0 && (
+                        <div
+                            className="preview-chunk overflow-loss"
+                            style={{
+                                width: `${overflowLossRatio * 100}%`,
+                            }}
+                        />
+                    )}
+                </div>
 
                 {overflowGainWidth > 0 && (
                     <div

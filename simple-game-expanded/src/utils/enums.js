@@ -34,7 +34,7 @@ export const aiKeys = Object.freeze({
     BLOODKNIGHT: "bloodknight",
     WARLOCK: "warlock",
     PALADIN: "paladin",
-    AUGUR: "AUGUR",
+    AUGUR: "augur",
     SHADOW_SORCERER: "shadowSorcerer",
     CYBORG: "cyborg",
     MAESTRO: "maestro",
@@ -339,4 +339,11 @@ export const speedKeys = Object.freeze({
     ONE: "one",
     TWO: "two",
     INF: "inf",
+})
+
+export const aiCommands = Object.freeze({
+    USE_ACTION: "useAct",
+    ASSIGN_STARS: "assignStars",
+    SELECT_ELEMENT: "selectElement",
+    SET_CONSTELLATION: "setConstel"
 })

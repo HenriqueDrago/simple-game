@@ -1,6 +1,6 @@
 import "./Header.css";
 import Switch from "./Switch";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play, Redo2, RotateCcw, Undo2 } from "lucide-react";
 import { effectKeys, turnStatus, whoStartsKeys } from "../utils/enums";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
@@ -16,6 +16,8 @@ function Header() {
         handleWhoStartsChange,
         handleProgressToggle,
         handleSpeed,
+        handleUndo,
+        handleRedo,
     } = useGame();
     const { setUIElements, handleSpawnTooltip, setGlossarySpecs } = useUI();
 
@@ -147,6 +149,30 @@ function Header() {
                         }}
                     >
                         {gameSpeeds?.[game?.speed]?.label ?? "Spd"}
+                    </button>
+                )}
+
+                {!isSetup && (
+                    <button
+                        className="sharp-btn-header icon-btn"
+                        onClick={() => {
+                            handleUndo();
+                        }}
+                        disabled={!game?.undoPile || game.undoPile.length <= 0}
+                    >
+                        <Undo2 size={18} />
+                    </button>
+                )}
+
+                {!isSetup && (
+                    <button
+                        className="sharp-btn-header icon-btn"
+                        onClick={() => {
+                            handleRedo();
+                        }}
+                        disabled={!game?.redoPile || game.redoPile.length <= 0}
+                    >
+                        <Redo2 size={18} />
                     </button>
                 )}
 

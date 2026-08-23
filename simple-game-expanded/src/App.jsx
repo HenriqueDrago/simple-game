@@ -21,8 +21,15 @@ import { useEffect } from "react";
 
 // App Component
 function App() {
-    const { game, setGame, handleHardResetGame, handleSpeed, handleSpeedAbs } =
-        useGame();
+    const {
+        game,
+        setGame,
+        handleHardResetGame,
+        handleSpeed,
+        handleSpeedAbs,
+        handleUndo,
+        handleRedo,
+    } = useGame();
     const {
         UIElements,
         setUIElements,
@@ -76,6 +83,19 @@ function App() {
                 }
             }
 
+            // Undo / Redo
+            if (game.status !== turnStatus.SETUP) {
+                if (e.code === "KeyZ" || e.key === "z" || e.key === "Z") {
+                    handleUndo();
+                } else if (
+                    e.code === "KeyX" ||
+                    e.key === "x" ||
+                    e.key === "X"
+                ) {
+                    handleRedo();
+                }
+            }
+
             // History
             if (game.status !== turnStatus.SETUP) {
                 if (e.code === "KeyH" || e.key === "h" || e.key === "H") {
@@ -95,6 +115,7 @@ function App() {
                 }));
             }
 
+            // Simulate Turn End/Starfall
             if (e.key === "Shift") {
                 if (e.repeat) {
                     return;

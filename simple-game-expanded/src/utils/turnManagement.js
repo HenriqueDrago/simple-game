@@ -382,6 +382,12 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
+    // Laser used
+    draftTarget = {
+        ...draftTarget,
+        lasersUsedThisTurn: 0,
+    };
+
     // States cleared at turn start
     draftTarget = {
         ...draftTarget,
