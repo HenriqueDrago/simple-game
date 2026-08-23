@@ -30,7 +30,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations.",
+            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf.",
     },
 
     [turnStatus.SETUP]: {
@@ -433,14 +433,14 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "SACRIFICE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Halves current HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the total HEALTH lost this way, raises MANA BLEED rank by half the HEALTH lost this way. Enters SACRIFICIAL state.",
+            "Halves current total HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the total HEALTH lost this way, raises MANA BLEED rank by half the HEALTH lost this way. Enters SACRIFICIAL state.",
     },
 
     [effectKeys.SACRIFICIAL_STATE]: {
         name: "SACRIFICIAL",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION based on the ratio of missing HEALTH to MAX HEALTH. At turn start, exits this state.",
+            "Raises DAMAGE REDUCTION by the user's missing HEALTH percentage. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
@@ -513,7 +513,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW PACT",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all STATES and enters UMBRAL CORE. Then, burns 5 RESOURCES on self and gains SHADOWFLAME equal to the amount burned. Cannot burn SHADOWFLAME, LINGERING EMBER or UNRELENTING SHADOWS this way.",
+            "Exits all STATES and enters UMBRAL CORE. Then, burns 5 RESOURCES on self and gains SHADOWFLAME equal to the amount burned. Cannot burn SHADOWFLAME, LINGERING EMBER or UNRELENTING SHADOWS this way. When exiting this state, loses all SHADOWFLAME, LINGERING EMBER and CINDERS on self, then gains UNRELENTING SHADOWS equal to SHADOWFLAME consumed plus half the LINGERING EMBER consumed.",
     },
 
     [effectKeys.SHADOWFLAME]: {
@@ -864,7 +864,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "STARS",
         type: entryTypes.CATEGORY,
         description:
-            "Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have two forms: normal and augmented.",
+            "Includes WHITE STAR, GRAY STAR, RED STAR, ORANGE STAR, YELLOW STAR, GREEN STAR, BLUE STAR, INDIGO STAR, and VIOLET STAR. The latter seven are labeled colored STARS and have two forms: normal and augmented. Click on the starpanel to add or subtract STARS, converting WHITE STARS into colored STARS and back. Left click to add or subtract in batches of 10.",
     },
 
     [effectKeys.STARFALL]: {
@@ -1088,7 +1088,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "SELENIAN",
         type: entryTypes.STATE,
         description:
-            "Enables ELEMENTAL CRYSTALS, MIRRORED MOON and MOON PHASE. Replaces REFRACT with MIRROR. Upon exiting this state, takes LUNIC DAMAGE equal to MOONLIGHT on self, then loses all MOONLIGHT, LUNACY and MOONLIT TEARS, also sets MIRRORED MOON to HIDDEN, ELEMENTAL CRYSTALS to DULLED and disables them. When MAX HEALTH falls below current HEALTH, converts excess HEALTH into SILVER BLOOD. When MAX HEALTH rises past current HEALTH, consumes SILVER BLOOD to replenish missing HEALTH.",
+            "Enables ELEMENTAL CRYSTALS, MIRRORED MOON and MOON PHASE. Replaces REFRACT with MIRROR. Upon exiting this state, takes LUNIC DAMAGE equal to MOONLIGHT on self, then loses all MOONLIGHT, LUNACY and MOONLIT TEARS, also sets MIRRORED MOON to HIDDEN, ELEMENTAL CRYSTALS to DULLED and disables them. When MAX HEALTH falls below current HEALTH, converts excess HEALTH into SILVER BLOOD. When MAX HEALTH rises past current HEALTH, consumes SILVER BLOOD to replenish missing HEALTH. When MAX HEALTH is decreased below 0, lose MOONLIGHT instead.",
     },
 
     [actionKeys.MIRROR]: {
@@ -1259,7 +1259,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "WITHER",
         type: entryTypes.MECHANIC,
         description:
-            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 1% for every HEALTH or SILVER BLOOD lost. Additionally, raises DAMAGE REDUCTION based on the ratio of missing HEALTH to MAX HEALTH. Replaces SACRIFICE with LUNAR SHED.",
+            "Combination of FROST and NATURE. While active, when losing HEALTH or SILVER BLOOD, raises LUNACY by 1% for every HEALTH or SILVER BLOOD lost. Additionally, raises DAMAGE REDUCTION by the user's missing HEALTH percentage. Replaces SACRIFICE with LUNAR SHED.",
     },
 
     [effectKeys.MOONLIT_TEARS]: {
@@ -1335,7 +1335,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNIC DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES. When decreasing MAX HEALTH below 0, decreases MOONLIGHT instead.",
+            "Reduces the target's MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES.",
     },
 };
 

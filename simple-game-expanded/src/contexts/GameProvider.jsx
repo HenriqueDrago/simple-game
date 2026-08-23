@@ -20,6 +20,7 @@ import {
     playerTurnPhases,
     roundPhases,
     sdmKeys,
+    speedKeys,
     starfallPhases,
     turnStatus,
     whoStartsKeys,
@@ -559,6 +560,19 @@ export default function GameProvider({ children }) {
         });
     }
 
+    function handleSpeedAbs(key) {
+        setGame((prev) => {
+            if (!Object.values(speedKeys).includes(key)) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                speed: key,
+            };
+        });
+    }
+
     // === Efeitos ===
     // Turn Management
     useEffect(() => {
@@ -1036,7 +1050,7 @@ export default function GameProvider({ children }) {
                 roundPhases.P1_SINGULARITY ||
             game?.roundQueue?.[game?.roundIndex] === roundPhases.P2_SINGULARITY;
 
-        console.log(isSingularity)
+        console.log(isSingularity);
 
         if (
             !agentKey ||
@@ -1045,10 +1059,8 @@ export default function GameProvider({ children }) {
                 game?.entities?.[agentKey]?.[effectKeys.CONTROLLER] ===
                 aiKeys.HUMAN
             ) ||
-            (
-                !game?.playerQueue?.[0] === playerTurnPhases.PLAN &&
-                !isSingularity
-            )
+            (!game?.playerQueue?.[0] === playerTurnPhases.PLAN &&
+                !isSingularity)
         ) {
             return null;
         }
@@ -1104,6 +1116,7 @@ export default function GameProvider({ children }) {
             handleWhoStartsChange,
             handlePause,
             handleSpeed,
+            handleSpeedAbs,
         }),
         [game, simGame],
     );

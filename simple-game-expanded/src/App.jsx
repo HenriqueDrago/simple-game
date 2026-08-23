@@ -12,15 +12,24 @@ import "./App.css";
 
 import { useGame } from "./contexts/GameContext.js";
 import { useUI } from "./contexts/UIContext.js";
-import { INITIAL_GAME_STATE, INITIAL_GLOSSARY_SPECS } from "./utils/constants.js";
-import { turnStatus } from "./utils/enums.js";
+import {
+    INITIAL_GAME_STATE,
+    INITIAL_GLOSSARY_SPECS,
+} from "./utils/constants.js";
+import { speedKeys, turnStatus } from "./utils/enums.js";
 import { useEffect } from "react";
 
 // App Component
 function App() {
-    const { game, setGame, handleHardResetGame, handleSpeed } = useGame();
-    const { UIElements, setUIElements, tooltipStack, handleClearTooltip, setGlossarySpecs } =
-        useUI();
+    const { game, setGame, handleHardResetGame, handleSpeed, handleSpeedAbs } =
+        useGame();
+    const {
+        UIElements,
+        setUIElements,
+        tooltipStack,
+        handleClearTooltip,
+        setGlossarySpecs,
+    } = useUI();
 
     // Event Listeners
     useEffect(() => {
@@ -43,12 +52,27 @@ function App() {
             if (game.status !== turnStatus.SETUP) {
                 if (e.code === "KeyF" || e.key === "f" || e.key === "F") {
                     handleSpeed(1);
-                } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                } else if (
+                    e.key === "1" ||
+                    e.code === "Digit1" ||
+                    e.code === "Numpad1"
+                ) {
                     e.preventDefault();
-                    handleSpeed(1);
-                } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                    handleSpeedAbs(speedKeys.ONE);
+                } else if (
+                    e.key === "2" ||
+                    e.code === "Digit2" ||
+                    e.code === "Numpad2"
+                ) {
                     e.preventDefault();
-                    handleSpeed(-1);
+                    handleSpeedAbs(speedKeys.TWO);
+                } else if (
+                    e.key === "3" ||
+                    e.code === "Digit3" ||
+                    e.code === "Numpad3"
+                ) {
+                    e.preventDefault();
+                    handleSpeedAbs(speedKeys.INF);
                 }
             }
 

@@ -582,6 +582,13 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
             nonTargetKey,
         );
     }
+    if (originalStates[effectKeys.UMBRAL_CORE]) {
+        newGameState = processExitUmbral(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
+    }
 
     return newGameState;
 }
@@ -2273,22 +2280,7 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen = 0) {
                 break;
             }
             case dmgTypes.LUNIC: {
-                const maxHpConsumed = Math.min(
-                    dmgTaken,
-                    draftTaker[effectKeys.MAX_HEALTH],
-                );
-                const moonlightConsumed = Math.min(
-                    dmgTaken - maxHpConsumed,
-                    draftTaker[effectKeys.MOONLIGHT],
-                );
-
-                draftTaker = {
-                    ...draftTaker,
-                    [effectKeys.MAX_HEALTH]:
-                        draftTaker[effectKeys.MAX_HEALTH] - maxHpConsumed,
-                    [effectKeys.MOONLIGHT]:
-                        draftTaker[effectKeys.MOONLIGHT] - moonlightConsumed,
-                };
+                draftTaker = loseMaxHealth(draftTaker, dmgTaken);
 
                 break;
             }
@@ -2526,4 +2518,63 @@ function processProgUnlock(prev) {
     }
 
     return prev;
+}
+
+export function loseMaxHealth(entity, amount) {
+    let draftEntity = {
+        ...entity,
+    };
+    const maxHpConsumed = Math.min(amount, draftEntity[effectKeys.MAX_HEALTH]);
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.MAX_HEALTH]:
+            draftEntity[effectKeys.MAX_HEALTH] - maxHpConsumed,
+    };
+
+    if (draftEntity.states[effectKeys.SELENIAN]) {
+        const moonlightConsumed = Math.min(
+            amount - maxHpConsumed,
+            draftEntity[effectKeys.MOONLIGHT],
+        );
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.MOONLIGHT]:
+                draftEntity[effectKeys.MOONLIGHT] - moonlightConsumed,
+        };
+    }
+
+    return draftEntity;
+}
+
+export function processExitUmbral(prev, targetKey) {
+    const entity = {
+        ...prev.entities[targetKey],
+    };
+
+    const newShadows = Math.floor(
+        entity.resources[effectKeys.SHADOWFLAME] +
+            entity.resources[effectKeys.LINGERING_EMBER] / 2,
+    );
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [targetKey]: {
+                ...entity,
+                states: {
+                    ...entity.states,
+                    [effectKeys.UMBRAL_CORE]: false,
+                },
+                resources: {
+                    ...entity.resources,
+                    [effectKeys.SHADOWFLAME]: 0,
+                    [effectKeys.CINDERS]: 0,
+                    [effectKeys.LINGERING_EMBER]: 0,
+                    [effectKeys.UNRELENTING_SHADOWS]: newShadows,
+                },
+            },
+        },
+    };
 }

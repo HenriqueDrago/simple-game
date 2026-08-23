@@ -38,6 +38,12 @@ function StarRow({
                     onClick={() => {
                         handleStarChange(entityKey, starKey, -1);
                     }}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        handleStarChange(entityKey, starKey, -10);
+                    }}
                     disabled={isMinusDisabled}
                 >
                     -
@@ -48,6 +54,12 @@ function StarRow({
                 <button
                     onClick={() => {
                         handleStarChange(entityKey, starKey, 1);
+                    }}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        handleStarChange(entityKey, starKey, 10);
                     }}
                     disabled={isPlusDisabled}
                 >
