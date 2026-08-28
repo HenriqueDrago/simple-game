@@ -113,10 +113,17 @@ export const actionKeys = Object.freeze({
     SHATTER: "shatter",
     CHALK: "chalk",
 
-    ASCEND: "ascend",
-
     CARVE: "carve",
     CURSE: "curse",
+
+    // Seraph
+    ASCEND: "ascend",
+    RISE: "rise",
+    CONDEMN: "condemn",
+    SUPPLICATE: "supplicate",
+    DISCERN: "discern",
+    ATONE: "atone",
+    JUDGEMENT: "judgement",
 });
 
 export const effectKeys = Object.freeze({
@@ -247,7 +254,44 @@ export const effectKeys = Object.freeze({
     MISSING_MANA: "missingMana",
     IRRADIATION: "irradiation",
 
-    DEF_PEN: "defPen"
+    DEF_PEN: "defPen",
+
+    // Seraph
+    ZENITH_OF_MORTALITY: "zenithOfMortality",
+    ENLIGHTENMENT: "currEnlightenment",
+    MAX_ENLIGHTENMENT: "maxEnlightenment",
+    REVELATION: "revelation",
+    PROVIDENCE: "providence",
+    FORTITUDE: "fortitude",
+    ASCENDENCE_OF_SPIRIT: "ascendenceOfSpirit",
+
+    INSIGHT: "insight",
+    TARNISHED_SIN: "tarnishedSin",
+    ABANDONED_BY_GRACE: "abandonedByGrace",
+    EYE_OF_HEAVENS: "eyeOfHeavens",
+    ANOINTED_PROXY: "anointedProxy",
+    CUTOFF_WINGS: "cutoffWings",
+    INTEGRITY: "integrity",
+    DEFILEMENT: "defilement",
+    MALEDICTION: "malediction",
+    BENEDICTION: "benediction",
+    GRACE: "grace",
+    DISGRACE: "disgrace",
+    SANCTUARY: "sanctuary",
+    SACRILEGE: "sacrilege",
+    IMMACULATE: "immaculate",
+    SACRED_FLAMES: "sacredFlames",
+    HALLOWED_ECHOES: "hallowedEchoes",
+    CODEX_OF_BLASPHEMY: "codexOfBlasphemy",
+
+    COVENANT: "covenant",
+    STARS_OF_APOCALYPSE: "starsOfApocalypse",
+    STARS_OF_GENESIS: "starsOfGenesis",
+    BURDEN_OF_STIGMA: "burdenOfStigma",
+    MARTHYR: "marthyr",
+    ANOINTMENT: "anointment",
+    TRIAL: "trial",
+    RECKONING: "reckoning",
 });
 
 export const runeKeys = Object.freeze({
@@ -289,6 +333,13 @@ export const entryTypes = Object.freeze({
     SPECIAL_ATTRIBUTES: "alternateStats",
     RUNES: "runes",
     CONTROLLER: "controller",
+    TARNISHMENT_TYPE: "tarnishmentType",
+    SPIRITUAL_ORDINANCE: "spiritualOrdinance",
+    BLASPHEMY: "blasphemy",
+    CELESTIAL_STAR: "celestialStar",
+    GLOBAL_RESOURCE: "globalResource",
+    EDICT: "edict",
+    HEAVENLY_CHOIR: "heavenlyChoir",
 });
 
 export const starfallPhases = Object.freeze({
@@ -332,18 +383,56 @@ export const eventKeys = Object.freeze({
     FAILED_ACTION: "failedAction",
     TOOK_DMG: "tookDmg",
     STARFALL_SUBPHASE: "starfallSub",
-    SINGULARITY: "singularity"
+    SINGULARITY: "singularity",
 });
 
 export const speedKeys = Object.freeze({
     ONE: "one",
     TWO: "two",
     INF: "inf",
-})
+});
 
-export const aiCommands = Object.freeze({
-    USE_ACTION: "useAct",
-    ASSIGN_STARS: "assignStars",
-    SELECT_ELEMENT: "selectElement",
-    SET_CONSTELLATION: "setConstel"
-})
+export const edictKeys = Object.freeze({
+    ANGELS: "angels",
+    ARCHANGELS: "archangels",
+    PRINCIPALITIES: "principalities",
+    POWERS: "powers",
+    VIRTUES: "virtues",
+    DOMINIONS: "dominions",
+    THRONES: "thrones",
+    CHERUBIM: "cherubim",
+    SERAPHIM: "seraphim",
+});
+
+export const eyeKeys = Object.freeze({
+    DORMANT: "dormant",
+    CLOSED: "closed",
+    OPEN: "open",
+});
+
+export const tarnishTypes = Object.freeze({
+    PHYSICAL: "physicalTarnishment",
+    PIERCING: "piercingTarnishment",
+    TRUE: "trueTarnishment",
+    LUNIC: "lunicTarnishment",
+});
+
+export const choirKeys = Object.freeze({
+    NONE: "none",
+    FIRST: "first",
+    SECOND: "second",
+    THIRD: "third",
+    FOURTH: "fourth",
+    FIFTH: "fifth",
+    SIXTH: "sixth",
+    SEVENTH: "seventh",
+    EIGHTH: "eighth",
+    NINTH: "ninth",
+});
+
+export const blasphemyKeys = Object.freeze({
+    NONE: "none",
+    YESTERDAY: "yesterday",
+    TODAY: "today",
+    TOMORROW: "tomorrow",
+});

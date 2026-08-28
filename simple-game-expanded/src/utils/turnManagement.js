@@ -7,15 +7,20 @@ import {
 import {
     canUseAction,
     consumeResources,
+    extractEntity,
     gainHp,
+    gainSin,
     getEntityColoredStars,
     getEntityElement,
     getEntityTotalMana,
     isElementActive,
     loseMana,
+    loseProvidence,
     newDealDmg,
     processActionTypeUsed,
     processDeathCheck,
+    raiseProvidence,
+    replaceEntity,
     restoreResources,
 } from "./entities.js";
 import {
@@ -29,6 +34,7 @@ import {
     roundPhases,
     playerTurnPhases,
     eventKeys,
+    edictKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
@@ -96,7 +102,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         }
     }
 
-    // Faulty Firmament
+    // Fractured Dome
     if (draftTarget.resources[effectKeys.FRACTURED_DOME] > 0) {
         const dmgTaken = draftTarget.resources[effectKeys.FRACTURED_DOME];
 
@@ -382,10 +388,62 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = restoreResources(draftTarget, toBeRestored);
     }
 
+    // Insight
+    if (draftTarget.resources[effectKeys.INSIGHT] > 0) {
+        const sinGained =
+            draftTarget.resources[effectKeys.INSIGHT] * constants.BASE_SIN_GAIN;
+        const provGained =
+            draftTarget.resources[effectKeys.INSIGHT] *
+            constants.BASE_PROV_GAIN;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.INSIGHT]: 0,
+            },
+        };
+
+        draftTarget = gainSin(draftTarget, sinGained);
+        post = replaceEntity(post, draftTarget, targetKey);
+
+        post = raiseProvidence(post, provGained);
+        draftTarget = extractEntity(post, targetKey);
+    }
+
+    // Sanctuary
+    if (draftTarget.resources[effectKeys.SANCTUARY] > 0) {
+        const provGain =
+            draftTarget.resources[effectKeys.SANCTUARY] *
+            constants.BASE_PROV_GAIN;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.SANCTUARY]: 0,
+            },
+        };
+
+        post = replaceEntity(post, draftTarget, targetKey);
+        post = raiseProvidence(post, provGain);
+        draftTarget = extractEntity(post, targetKey);
+    }
+
+    // Burden of Stigma
+    if (draftTarget[effectKeys.BURDEN_OF_STIGMA] > 0) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.BURDEN_OF_STIGMA]:
+                draftTarget[effectKeys.BURDEN_OF_STIGMA] - 1,
+        };
+    }
+
     // Laser used
     draftTarget = {
         ...draftTarget,
         lasersUsedThisTurn: 0,
+        virtuesUsedThisTurn: 0,
     };
 
     // States cleared at turn start
@@ -431,6 +489,56 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
     let draftNextActor = {
         ...post.entities[nextActorKey],
     };
+
+    // Sacred Flames
+    if (draftCurrActor.resources[effectKeys.SACRED_FLAMES] > 0) {
+        draftCurrActor = restoreResources(
+            draftCurrActor,
+            draftCurrActor.resources[effectKeys.SACRED_FLAMES],
+        );
+    }
+
+    // Marthyr
+    if (draftCurrActor.resources[effectKeys.MARTHYR] > 0) {
+        const sinGained =
+            draftCurrActor.resources[effectKeys.MARTHYR] *
+            constants.BASE_SIN_GAIN;
+        const provGained =
+            draftCurrActor.resources[effectKeys.MARTHYR] *
+            constants.BASE_PROV_GAIN;
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.MARTHYR]: 0,
+            },
+        };
+
+        draftCurrActor = gainSin(draftCurrActor, sinGained);
+        post = replaceEntity(post, draftCurrActor, currActorKey);
+
+        post = raiseProvidence(post, provGained);
+        draftCurrActor = extractEntity(post, currActorKey);
+    }
+
+    // Sacrilege
+    if (draftCurrActor.resources[effectKeys.SACRILEGE] > 0) {
+        const sinGained =
+            draftCurrActor.resources[effectKeys.SACRILEGE] *
+            constants.BASE_SIN_GAIN;
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.SACRILEGE]: 0,
+            },
+        };
+
+        draftCurrActor = gainSin(draftCurrActor, sinGained);
+        post = replaceEntity(post, draftCurrActor, currActorKey);
+    }
 
     // Venting
     if (draftCurrActor.states[effectKeys.VENTING]) {
@@ -639,6 +747,7 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
     draftCurrActor = {
         ...draftCurrActor,
         lasersUsedThisTurn: 0,
+        virtuesUsedThisTurn: 0,
     };
 
     const newQueue = post.playerQueue.slice(1);
@@ -992,44 +1101,80 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
     return processedGame;
 }
 
-export function processSingularity(prev, agentKey, action) {
-    let newGameState = processDeathCheck(prev);
+export function processExtraTurn(prev, agentKey, action) {
+    let post = processDeathCheck(prev);
 
-    if (newGameState.status !== turnStatus.ONGOING) {
-        return buildHistory(buildRoundQueue(newGameState), null);
+    if (post.status !== turnStatus.ONGOING) {
+        return buildHistory(buildRoundQueue(post), null);
+    }
+
+    let isFreeAction = FREE_ACTIONS.includes(action);
+
+    const entity = extractEntity(post, agentKey);
+    if (
+        !isFreeAction &&
+        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        entity.edicts[edictKeys.VIRTUES]
+    ) {
+        const provNecessary =
+            constants.BASE_VIRTUES_COST +
+            constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
+
+        if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
+            post = loseProvidence(post, provNecessary);
+            isFreeAction = true;
+        }
     }
 
     // Free actions do not end singularity
-    const newStatus = FREE_ACTIONS.includes(action)
+    const newStatus = isFreeAction
         ? turnStatus.ONGOING
         : turnStatus.ROUND_TRANSITION;
 
     return buildRoundQueue({
-        ...newGameState,
+        ...post,
         status: newStatus,
     });
 }
 
-export function processPlan(prev, action) {
-    let newGameState = processDeathCheck(prev);
+export function processPlan(prev, agentKey, action) {
+    let post = processDeathCheck(prev);
 
-    if (newGameState.status !== turnStatus.ONGOING) {
-        return buildHistory(buildRoundQueue(newGameState), null);
+    if (post.status !== turnStatus.ONGOING) {
+        return buildHistory(buildRoundQueue(post), null);
+    }
+
+    let isFreeAction = FREE_ACTIONS.includes(action);
+
+    const entity = extractEntity(post, agentKey);
+    if (
+        !isFreeAction &&
+        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
+        entity.edicts[edictKeys.VIRTUES]
+    ) {
+        const provNecessary =
+            constants.BASE_VIRTUES_COST +
+            constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
+
+        if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
+            post = loseProvidence(post, provNecessary);
+            isFreeAction = true;
+        }
     }
 
     // Free actions do not advance turn subphase
-    const newQueue = FREE_ACTIONS.includes(action)
-        ? prev.playerQueue
-        : prev.playerQueue.slice(1);
+    const newQueue = isFreeAction
+        ? post.playerQueue
+        : post.playerQueue.slice(1);
 
     // Guarantes Commit executes without a round transition
     const newStatus =
         newQueue[0] === playerTurnPhases.COMMIT
             ? turnStatus.ONGOING
-            : newGameState.status;
+            : post.status;
 
     return buildRoundQueue({
-        ...newGameState,
+        ...post,
         status: newStatus,
         playerQueue: newQueue,
     });

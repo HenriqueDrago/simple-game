@@ -16,13 +16,29 @@ import {
     addRune,
     translateElementIntoCrystals,
     newDealDmg,
+    consumeLimitedResources,
+    gainEnlit,
+    resetAttr,
+    raiseProvidence,
+    raiseStats,
+    deleteCondition,
+    getTotalEnlit,
+    loseEnlit,
+    replaceEntity,
+    extractEntity,
+    getFortitude,
+    advanceChoir,
 } from "./entities.js";
 import {
     actionKeys,
+    choirKeys,
     dmgTypes,
+    edictKeys,
     effectKeys,
     elementalKeys,
+    entryTypes,
     runeKeys,
+    tarnishTypes,
 } from "./enums.js";
 
 export const simulators = {
@@ -69,6 +85,15 @@ export const simulators = {
     // Array
     [actionKeys.CARVE]: simulateCarve,
     [actionKeys.CURSE]: simulateCurse,
+
+    // Seraph
+    [actionKeys.ASCEND]: simulateAscend,
+    [actionKeys.RISE]: simulateRise,
+    [actionKeys.CONDEMN]: simulateCondemn,
+    [actionKeys.SUPPLICATE]: simulateSupplicate,
+    [actionKeys.DISCERN]: simulateDiscern,
+    [actionKeys.ATONE]: simulateAtone,
+    [actionKeys.JUDGEMENT]: simulateJudgment,
 };
 
 function simulateGuard({ prev, agent, agentKey }) {
@@ -181,7 +206,9 @@ function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
 
     post = newDealDmg(
         post,
-        getEntityStr(agent) + radiance + agent.resources[effectKeys.BLOOD_SACRIFICE],
+        getEntityStr(agent) +
+            radiance +
+            agent.resources[effectKeys.BLOOD_SACRIFICE],
         nonAgentKey,
         dmgTypes.PHYSICAL,
         agentKey,
@@ -190,54 +217,47 @@ function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
     return post;
 }
 
-function simulateSpecialAttack({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    const manaDiff = getEntityTotalMana(agent) - getEntityTotalMana(nonAgent);
-
-    const post = newDealDmg(
-        prev,
-        getEntityStr(agent) + manaDiff,
-        nonAgentKey,
-        dmgTypes.PIERCING,
-        agentKey,
-    );
-
-    let draftAgent = {
-        ...post.entities[agentKey],
+function simulateSpecialAttack({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
     };
 
-    let draftNonAgent = {
-        ...post.entities[nonAgentKey],
-    };
-
-    if (manaDiff > 0) {
-        draftNonAgent = gainMana(draftNonAgent, manaDiff);
-    } else if (manaDiff < 0) {
-        draftAgent = gainMana(draftAgent, -manaDiff);
-    }
-
+    let draftAgent = extractEntity(post, agentKey);
     draftAgent = loseMana(
         draftAgent,
-        constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+        draftAgent[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST,
     );
 
-    return {
-        ...post,
-        entities: {
-            ...post.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-            },
-        },
-    };
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    const manaDiff =
+        getEntityTotalMana(extractEntity(post, agentKey)) -
+        getEntityTotalMana(extractEntity(post, nonAgentKey));
+
+    post = newDealDmg(
+        post,
+        getEntityStr(extractEntity(post, agentKey)),
+        [nonAgentKey],
+        dmgTypes.PIERCING,
+        agentKey,
+        manaDiff,
+    );
+
+    if (manaDiff > 0) {
+        post = replaceEntity(
+            post,
+            gainMana(extractEntity(post, nonAgentKey), manaDiff),
+            nonAgentKey,
+        );
+    } else if (manaDiff < 0) {
+        post = replaceEntity(
+            post,
+            gainMana(extractEntity(post, agentKey), -manaDiff),
+            agentKey,
+        );
+    }
+
+    return post;
 }
 
 function simulateHeal({ prev, agent, agentKey }) {
@@ -472,7 +492,9 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
         [effectKeys.SONORITY]: newSonority,
         resources: {
             ...agent.resources,
-            [effectKeys.HARMONY]: Math.floor(musicalShift / 5),
+            [effectKeys.HARMONY]: Math.floor(
+                musicalShift * constants.SILENCE_RATE,
+            ),
         },
     };
 
@@ -500,7 +522,9 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
         ...nonAgent,
         resources: {
             ...nonAgent.resources,
-            [effectKeys.DISSONANCE]: Math.floor(musicalShift / 5),
+            [effectKeys.DISSONANCE]: Math.floor(
+                musicalShift * constants.BABEL_RATE,
+            ),
         },
     };
 
@@ -898,6 +922,274 @@ function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
 
         post = addRune(post, agentKey, nonAgentKey, runeKeys.EMPTY);
     }
+
+    return post;
+}
+
+function simulateRise({ prev, agentKey }) {
+    let draftAgent = extractEntity(prev, agentKey);
+
+    draftAgent = {
+        ...draftAgent,
+        attributes: {
+            ...draftAgent.attributes,
+            str: {
+                ...draftAgent.attributes.str,
+                value:
+                    draftAgent.attributes.str.value + constants.RISE_STR_GAIN,
+            },
+        },
+        states: {
+            ...draftAgent.states,
+            [effectKeys.ZENITH_OF_MORTALITY]: true,
+        },
+    };
+
+    return replaceEntity(prev, draftAgent, agentKey);
+}
+
+function simulateAscend({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    post = exitAllStates(post, agentKey, nonAgentKey);
+
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
+
+    const result = consumeLimitedResources(draftAgent, Infinity);
+
+    draftAgent = result.draftEntity;
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.MAX_ENLIGHTENMENT]:
+            draftAgent[effectKeys.MAX_HEALTH] + draftAgent[effectKeys.MAX_MANA],
+        [effectKeys.MAX_HEALTH]: 0,
+        [effectKeys.MAX_MANA]: 0,
+    };
+
+    draftAgent = gainEnlit(
+        draftAgent,
+        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+    );
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.REVELATION]: getEntityStr(draftAgent),
+        [effectKeys.FORTITUDE]: getEntityDef(draftAgent),
+    };
+
+    draftAgent = resetAttr(draftAgent);
+
+    const newProv = draftAgent[effectKeys.DIVINE_SPARK];
+    post = {
+        ...post,
+        entities: {
+            ...post.entities,
+            [agentKey]: {
+                ...draftAgent,
+                [effectKeys.DIVINE_SPARK]: 0,
+            },
+        },
+    };
+
+    post = raiseProvidence(post, newProv);
+
+    post = {
+        ...post,
+        entities: {
+            ...post.entities,
+            [agentKey]: {
+                ...post.entities[agentKey],
+                states: {
+                    ...post.entities[agentKey].states,
+                    [effectKeys.ASCENDENCE_OF_SPIRIT]: true,
+                },
+                [entryTypes.HEAVENLY_CHOIR]: choirKeys.FIRST,
+            },
+        },
+    };
+
+    draftAgent = extractEntity(post, agentKey);
+    for (
+        let count = newProv;
+        newProv >= constants.ASCEND_SKIP_RATE;
+        count -= constants.ASCEND_SKIP_RATE
+    ) {
+        draftAgent = advanceChoir(draftAgent);
+    }
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
+}
+
+function simulateCondemn({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+    let extraDmg = 0;
+
+    // Edict of Angels
+    if (draftAgent.edicts[edictKeys.ANGELS]) {
+        const enlitConsumed = getTotalEnlit(draftAgent);
+        draftAgent = loseEnlit(draftAgent, enlitConsumed);
+
+        extraDmg += enlitConsumed;
+    }
+
+    extraDmg += draftAgent.resources[effectKeys.SACRILEGE];
+
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.SACRILEGE]: 0,
+        },
+    };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    post = newDealDmg(
+        post,
+        post.entities[agentKey][effectKeys.REVELATION] + extraDmg,
+        [nonAgentKey],
+        tarnishTypes.PHYSICAL,
+        [agentKey],
+    );
+
+    return post;
+}
+
+function simulateSupplicate({ prev, agentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    // Edict of Principalities
+    if (draftAgent.edicts[edictKeys.PRINCIPALITIES]) {
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.SANCTUARY]:
+                    draftAgent.resources[effectKeys.SANCTUARY] +
+                    getFortitude(post, agentKey),
+            },
+            states: {
+                ...draftAgent.states,
+                [effectKeys.IMMACULATE]: true,
+            },
+        };
+
+        post = replaceEntity(post, draftAgent, agentKey);
+    } else {
+        draftAgent = restoreResources(
+            draftAgent,
+            draftAgent[effectKeys.REVELATION],
+        );
+
+        post = replaceEntity(post, draftAgent, agentKey);
+    }
+
+    return post;
+}
+
+function simulateDiscern({ prev, agentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.REVELATION]:
+            draftAgent[effectKeys.REVELATION] +
+            Math.floor(
+                post.btt[effectKeys.PROVIDENCE] * constants.DISCERN_RATE,
+            ),
+    };
+
+    // Powers
+    if (draftAgent.edicts[edictKeys.POWERS]) {
+        const result = consumeResources(
+            draftAgent,
+            Math.floor(
+                post.btt[effectKeys.PROVIDENCE] * constants.POWERS_RATE,
+                edictKeys.POWERS,
+            ),
+        );
+        draftAgent = result.draftEntity;
+
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.SACRED_FLAMES]:
+                    draftAgent[effectKeys.SACRED_FLAMES] +
+                    result.resourcesConsumed.totalConsumption,
+            },
+        };
+    }
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
+}
+
+function simulateAtone({ prev, agentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = {
+        ...post.entities[agentKey],
+    };
+
+    draftAgent = raiseStats(draftAgent, draftAgent[effectKeys.REVELATION]);
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.REVELATION]: 0,
+        [effectKeys.FORTITUDE]: 0,
+    };
+
+    post = {
+        ...post,
+        entities: {
+            ...post.entities,
+            [agentKey]: draftAgent,
+        },
+        btt: {
+            ...post.btt,
+            [effectKeys.PROVIDENCE]: 0,
+        },
+    };
+
+    return post;
+}
+
+function simulateJudgment({ prev, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    post = {
+        ...post,
+        entities: {
+            ...post.entities,
+            [nonAgentKey]: deleteCondition(post.entities[nonAgentKey]),
+        },
+    };
 
     return post;
 }

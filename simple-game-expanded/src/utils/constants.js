@@ -41,11 +41,38 @@ import {
     elementalKeys,
     moonKeys,
     speedKeys,
+    eyeKeys,
+    edictKeys,
+    choirKeys,
 } from "./enums.js";
 
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
 export const constants = Object.freeze({
+    // Seraph
+    TARNISH_SIN_CONVERSION: 0.5,
+    MAX_SIN: 100,
+    MAX_PROVIDENCE: 100,
+    EXCESS_PROV_RESTORE_RATE: 1 / 2,
+    DISCERN_RATE: 1 / 5,
+    BASE_SIN_GAIN: 0.5,
+    BASE_PROV_GAIN: 2.5,
+    POWERS_RATE: 1 / 5,
+    BASE_VIRTUES_COST: 10,
+    VIRTUES_EXTRA_COST: 10,
+    STAR_GAIN_RATE: 1 / 2.5,
+    APOC_BASE_DMG: 1,
+    GENE_BASE_RESTORE: 1,
+    APOC_DISGRACE: 2.5,
+    GENE_BENE: 2.5,
+    SERAPHIM_MULT: 0.5,
+    RISE_STR_GAIN: 10,
+    ASCEND_SKIP_RATE: 20,
+    HALLOW_CONDEMN: -15,
+    HALLOW_SUPPLICATE: 15,
+    MIN_HALLOW: -75,
+    MAX_HALLOW: 75,
+
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
     IRRADIATION_GAIN_RATE: 5,
@@ -54,6 +81,15 @@ export const constants = Object.freeze({
     SPARK_RESTORE_RATE: 2,
     ACC_STARBLIGHT_CONVERSION: 5,
     CHALK_EXTRA_DMG: 10,
+
+    // Sonority
+    BABEL_RATE: 1 / 10,
+    SILENCE_RATE: 1 / 10,
+    SONORITY_ON_DEFENSE: 15,
+    SONORITY_ON_OFFENSE: -15,
+    STARTING_SONORITY: 0,
+    SONORITY_LOWER_LIMIT: -75,
+    SONORITY_HIGHER_LIMIT: 75,
 
     // Verdandi
     VERDANDI_MANA_RESTORE: 0.6,
@@ -77,8 +113,7 @@ export const constants = Object.freeze({
     GRAVITATION_GAIN: 5,
     MAX_GRAVITATION: 100,
     MAX_ACCRETION: 100,
-    SONORITY_ON_DEFENSE: 5,
-    SONORITY_ON_OFFENSE: -5,
+    
     WITHER_LUNACY_MULT: 1,
     LUNAR_TIDE_MULT: 2,
     MAX_LUNACY: 100,
@@ -98,9 +133,6 @@ export const constants = Object.freeze({
     SAC_HP_CONSUMPTION: 0.5,
     SHADOW_PACT_BURN: 5,
     RADIANT_DEF_EFFECT_MULTIPLIER: 0,
-    STARTING_SONORITY: 0,
-    SONORITY_LOWER_LIMIT: -50,
-    SONORITY_HIGHER_LIMIT: 50,
     VENTING_OVERHEAT_LOSS: 50,
     CHART_STAR_GAIN: 3,
     STARDUST_RATE_CONVERSION: 3,
@@ -421,6 +453,11 @@ export const INITIAL_GAME_STATE = {
             statDistributionMode: sdmKeys.CUSTOM,
         },
     },
+    btt: {
+        [effectKeys.EYE_OF_HEAVENS]: eyeKeys.DORMANT,
+        [effectKeys.PROVIDENCE]: 0,
+        [effectKeys.DEFILEMENT]: 0,
+    },
 };
 
 export const CHECKPOINT_STATES = [
@@ -616,7 +653,11 @@ export const RANKED_RESOURCES = [
     effectKeys.MOONLIT_TEARS,
 ];
 
-export const FREE_ACTIONS = [actionKeys.LASER, actionKeys.CURSE];
+export const FREE_ACTIONS = [
+    actionKeys.LASER,
+    actionKeys.CURSE,
+    actionKeys.ASCEND,
+];
 
 export const ALL_CATEGORY_KEY = "ALL";
 
@@ -636,4 +677,16 @@ export const playerMap = Object.freeze({
         turn: [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_SINGULARITY],
         extra: [roundPhases.P2_SINGULARITY],
     },
-})
+});
+
+export const edictChoirMap = Object.freeze({
+    [edictKeys.ANGELS]: choirKeys.FIRST,
+    [edictKeys.ARCHANGELS]: choirKeys.SECOND,
+    [edictKeys.PRINCIPALITIES]: choirKeys.THIRD,
+    [edictKeys.POWERS]: choirKeys.FOURTH,
+    [edictKeys.VIRTUES]: choirKeys.FIFTH,
+    [edictKeys.DOMINIONS]: choirKeys.SIXTH,
+    [edictKeys.THRONES]: choirKeys.SEVENTH,
+    [edictKeys.CHERUBIM]: choirKeys.EIGHTH,
+    [edictKeys.SERAPHIM]: choirKeys.NINTH,
+});

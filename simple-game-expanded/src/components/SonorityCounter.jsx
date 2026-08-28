@@ -25,13 +25,16 @@ function SonorityCounter({ entityKey }) {
 
     const disNonFill = Math.max(
         0,
-        (Math.min(displaySonority, 0) - constants.SONORITY_LOWER_LIMIT) * 2,
+        ((Math.min(displaySonority, 0) - constants.SONORITY_LOWER_LIMIT) *
+            100) /
+            -constants.SONORITY_LOWER_LIMIT,
     );
     const disFill = 100 - disNonFill;
 
     const harFill = Math.max(
         0,
-        Math.min(displaySonority, constants.SONORITY_HIGHER_LIMIT) * 2,
+        (Math.min(displaySonority, constants.SONORITY_HIGHER_LIMIT) * 100) /
+            constants.SONORITY_HIGHER_LIMIT,
     );
     const harNonFill = 100 - harFill;
 
@@ -41,11 +44,7 @@ function SonorityCounter({ entityKey }) {
             onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.SONORITY)}
         >
             <div className="sonority-counter-upper-labels">
-                <span
-                    className={`${
-                        isNumberChanged ? "is-preview" : ""
-                    }`}
-                >
+                <span className={`${isNumberChanged ? "is-preview" : ""}`}>
                     {`Sonority: ${displaySonority}%`}
                 </span>
             </div>

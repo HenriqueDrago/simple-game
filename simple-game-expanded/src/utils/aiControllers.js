@@ -1,4 +1,4 @@
-import { constants, FREE_ACTIONS, presetAi } from "./constants.js";
+import { constants, FREE_ACTIONS, playerMap, presetAi } from "./constants.js";
 import {
     canUseAction,
     consumeMitigationResources,
@@ -22,7 +22,6 @@ import {
     effectKeys,
     elementalKeys,
     moonKeys,
-    roundPhases,
 } from "./enums.js";
 import { simulateFullStarfall } from "./starfall.js";
 import {
@@ -175,7 +174,7 @@ export function selectConstellationAI() {
 
 // Star Assignment
 export function assignStarsAI(context) {
-    const { prev, agentKey, nonAgentKey, agent, isSingularity } = context;
+    const { prev, agentKey, nonAgentKey, agent, isExtraTurn } = context;
 
     // Initial allocations
     let allocations = {
@@ -191,7 +190,7 @@ export function assignStarsAI(context) {
     let remainingWhite = getEntityUsableStars(agent);
 
     // Early return if no stars or during singularity
-    if (remainingWhite <= 0 || isSingularity) {
+    if (remainingWhite <= 0 || isExtraTurn) {
         return allocations;
     }
 
@@ -272,7 +271,7 @@ export function assignStarsAI(context) {
                 ) - getEntityDefPen(sim, agentKey),
             ) *
                 constants.ACC_STARBLIGHT_CONVERSION) /
-            constants.GRAVITATION_GAIN
+                constants.GRAVITATION_GAIN,
         );
     };
 
@@ -288,9 +287,7 @@ export function assignStarsAI(context) {
                 const augmentedYellow = Math.ceil(
                     (remainingWhite - normalYellow) / 2,
                 );
-                const violet = Math.floor(
-                    (remainingWhite - normalYellow) / 2,
-                );
+                const violet = Math.floor((remainingWhite - normalYellow) / 2);
                 return {
                     [effectKeys.YELLOW_STAR]: normalYellow + augmentedYellow,
                     [effectKeys.VIOLET_STAR]: violet,
@@ -1062,9 +1059,7 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
             ? prev.roundQueue[prev.roundIndex]
             : null;
 
-    const isSingularity =
-        currPhase === roundPhases.P1_SINGULARITY ||
-        currPhase === roundPhases.P2_SINGULARITY;
+    const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
 
     let context = {
         prev,
@@ -1075,7 +1070,7 @@ export function centralAIManagement(prev, agentKey, nonAgentKey) {
         hasManaForSpecial:
             getEntityTotalMana(agent) >=
             constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
-        isSingularity,
+        isExtraTurn,
     };
 
     let caller = presetAi[agent.controller].caller || simpleAI;
@@ -1712,7 +1707,7 @@ export function maestroAI(context) {
 }
 
 export function starfarerAI(context) {
-    const { prev, nonAgentKey, agentKey, assignedStars, isSingularity } =
+    const { prev, nonAgentKey, agentKey, assignedStars, isExtraTurn } =
         context;
 
     function simulateActionStarfallHelper(action) {
@@ -1778,7 +1773,7 @@ export function starfarerAI(context) {
         // Singularity Check
         if (
             sim.entities[agentKey].states[effectKeys.EVENT_HORIZON] &&
-            !isSingularity
+            !isExtraTurn
         ) {
             const settedSim = setConstellation(
                 sim,

@@ -5,7 +5,6 @@
     flex-direction: column;
     gap: 5px;
     width: 100%;
-    cursor: pointer;
     transition: opacity 0.2s ease, filter 0.2s ease;
 }
 

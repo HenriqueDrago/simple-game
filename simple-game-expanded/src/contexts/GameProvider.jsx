@@ -4,13 +4,17 @@ import {
     canUseCombatInteractions,
     createBaseEntity,
     distributePoints,
+    extractEntity,
     getCurrActivePlayer,
     getEntityElement,
     getOtherEntity,
     isElementActive,
+    newDealDmg,
     processDeathCheck,
     processHealth,
+    replaceEntity,
     resetPlayerEntity,
+    restoreResources,
     translateElementIntoCrystals,
 } from "../utils/entities";
 import {
@@ -24,14 +28,17 @@ import {
     sdmKeys,
     speedKeys,
     starfallPhases,
+    tarnishTypes,
     turnStatus,
     whoStartsKeys,
 } from "../utils/enums";
 import {
     CHECKPOINT_STATES,
     coloredStars,
+    constants,
     gameSpeeds,
     INITIAL_GAME_STATE,
+    playerMap,
     presetAi,
 } from "../utils/constants";
 import {
@@ -41,7 +48,7 @@ import {
     processActionUse,
     processMoonPhase,
     processPlan,
-    processSingularity,
+    processExtraTurn,
     processStarfallTurn,
     processUpkeep,
 } from "../utils/turnManagement";
@@ -143,18 +150,16 @@ export default function GameProvider({ children }) {
         setGame((prev) => {
             const currPhase =
                 prev.roundQueue && prev.roundQueue[prev.roundIndex];
-            const isSingularity =
-                currPhase === roundPhases.P1_SINGULARITY ||
-                currPhase === roundPhases.P2_SINGULARITY;
+            const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
 
             let post = {
                 ...processActionUse(prev, agentKey, nonAgentKey, action),
                 simGame: null,
             };
 
-            post = isSingularity
-                ? processSingularity(post, agentKey, action)
-                : processPlan(post, action);
+            post = isExtraTurn
+                ? processExtraTurn(post, agentKey, action)
+                : processPlan(post, agentKey, action);
 
             if (canUseCombatInteractions(post, agentKey)) {
                 post = {
@@ -650,6 +655,50 @@ export default function GameProvider({ children }) {
         });
     }
 
+    function handleCelestialStars(entityKey, amount, starKey) {
+        setGame((prev) => {
+            let post = {
+                ...prev,
+            };
+
+            let draftEntity = extractEntity(post, entityKey);
+
+            const starsUsed = Math.min(amount, draftEntity?.[starKey] ?? 0);
+
+            draftEntity = {
+                ...draftEntity,
+                [starKey]: draftEntity[starKey] - starsUsed,
+            };
+
+            post = replaceEntity(post, draftEntity, entityKey);
+
+            if (starKey === effectKeys.STARS_OF_APOCALYPSE) {
+                post = newDealDmg(
+                    post,
+                    amount * constants.APOC_BASE_DMG,
+                    [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
+                    tarnishTypes.TRUE,
+                );
+            } else if (starKey === effectKeys.STARS_OF_GENESIS) {
+                let p1 = restoreResources(
+                    extractEntity(post, entityKeys.PLAYER_ONE),
+                    amount * constants.GENE_BASE_RESTORE,
+                );
+                post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
+
+                let p2 = restoreResources(
+                    extractEntity(post, entityKeys.PLAYER_TWO),
+                    amount * constants.GENE_BASE_RESTORE,
+                );
+                post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+            } else {
+                return post;
+            }
+
+            return post;
+        });
+    }
+
     // === Efeitos ===
     // Turn Management
     useEffect(() => {
@@ -805,9 +854,8 @@ export default function GameProvider({ children }) {
                                 currEntity.resources[effectKeys.MOONSHINE] >
                                     0 ||
                                 currEntity.resources[effectKeys.MANA_OVERFLOW] >
-                                    0 || 
-                                currEntity[effectKeys.BAD_OMEN] >
-                                    0);
+                                    0 ||
+                                currEntity[effectKeys.BAD_OMEN] > 0);
 
                         nextState = commitTurn(
                             gameState,
@@ -994,9 +1042,8 @@ export default function GameProvider({ children }) {
                     // Use Action
                     const currPhase =
                         prev.roundQueue && prev.roundQueue[prev.roundIndex];
-                    const isSingularity =
-                        currPhase === roundPhases.P1_SINGULARITY ||
-                        currPhase === roundPhases.P2_SINGULARITY;
+                    const isExtraTurn =
+                        playerMap[targetKey].extra.includes(currPhase);
 
                     newGame = processActionUse(
                         newGame,
@@ -1005,9 +1052,9 @@ export default function GameProvider({ children }) {
                         action,
                     );
 
-                    newGame = isSingularity
-                        ? processSingularity(newGame, targetKey, action)
-                        : processPlan(newGame, action);
+                    newGame = isExtraTurn
+                        ? processExtraTurn(newGame, targetKey, action)
+                        : processPlan(newGame, targetKey, action);
 
                     return newGame;
                 });
@@ -1104,12 +1151,7 @@ export default function GameProvider({ children }) {
               ? entityKeys.PLAYER_TWO
               : entityKeys.PLAYER_ONE;
 
-        const isSingularity =
-            game?.roundQueue?.[game?.roundIndex] ===
-                roundPhases.P1_SINGULARITY ||
-            game?.roundQueue?.[game?.roundIndex] === roundPhases.P2_SINGULARITY;
-
-        console.log(isSingularity);
+        const currPhase = game.roundQueue && game.roundQueue[game.roundIndex];
 
         if (
             !agentKey ||
@@ -1119,7 +1161,7 @@ export default function GameProvider({ children }) {
                 aiKeys.HUMAN
             ) ||
             (!game?.playerQueue?.[0] === playerTurnPhases.PLAN &&
-                !isSingularity)
+                !playerMap?.[agentKey]?.extra?.includes(currPhase))
         ) {
             return null;
         }
@@ -1178,6 +1220,7 @@ export default function GameProvider({ children }) {
             handleSpeedAbs,
             handleUndo,
             handleRedo,
+            handleCelestialStars,
         }),
         [game, simGame],
     );

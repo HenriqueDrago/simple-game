@@ -2,13 +2,18 @@ import {
     actionKeys,
     aiKeys,
     dmgTypes,
+    edictKeys,
     effectKeys,
     elementalKeys,
     entryTypes,
+    eyeKeys,
+    choirKeys,
     moonKeys,
     roundPhases,
     runeKeys,
+    tarnishTypes,
     turnStatus,
+    blasphemyKeys,
 } from "./enums";
 
 export const GENERAL_DESCRIPTIONS = {
@@ -216,7 +221,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "DEF EFFECTIVENESS",
         type: entryTypes.MECHANIC,
         description:
-            "Used to calculate EFFECTIVE DEFENSE. Defines how much PHYSICAL DAMAGE a point of DEF can block.",
+            "Defaults to 100%. Used to calculate EFFECTIVE DEFENSE. Defines how much PHYSICAL DAMAGE a point of DEF can block.",
     },
 
     [entryTypes.DAMAGE_MODIFIERS]: {
@@ -230,28 +235,28 @@ export const GENERAL_DESCRIPTIONS = {
         name: "WEAKNESS",
         type: entryTypes.DAMAGE_MODIFIERS,
         description:
-            "Decreases PHYSICAL DAMAGE and PIERCING DAMAGE dealt by the percentage.",
+            "Defaults to 0%. Decreases PHYSICAL DAMAGE and PIERCING DAMAGE dealt by the percentage.",
     },
 
     [effectKeys.DAMAGE_REDUCTION]: {
         name: "DAMAGE REDUCTION",
         type: entryTypes.DAMAGE_MODIFIERS,
         description:
-            "Decreases PHYSICAL DAMAGE and PIERCING DAMAGE taken by the percentage.",
+            "Defaults to 0%. Decreases PHYSICAL DAMAGE and PIERCING DAMAGE taken by the percentage.",
     },
 
     [effectKeys.FRAGILITY]: {
         name: "FRAGILITY",
         type: entryTypes.DAMAGE_MODIFIERS,
         description:
-            "Increases PHYSICAL DAMAGE and PIERCING DAMAGE taken by the percentage.",
+            "Defaults to 0%. Increases PHYSICAL DAMAGE and PIERCING DAMAGE taken by the percentage.",
     },
 
     [effectKeys.DAMAGE_BONUS]: {
         name: "DAMAGE BONUS",
         type: entryTypes.DAMAGE_MODIFIERS,
         description:
-            "Increases PHYSICAL DAMAGE and PIERCING DAMAGE dealt by the percentage.",
+            "Defaults to 0%. Increases PHYSICAL DAMAGE and PIERCING DAMAGE dealt by the percentage.",
     },
 
     [entryTypes.STATE]: {
@@ -265,7 +270,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "CONDITION",
         type: entryTypes.MECHANIC,
         description:
-            "A player's current condition in a MATCH. Includes STATES, ATTRIBUTES, RESOURCES and more.",
+            "A player's current status in a MATCH. Includes ATTRIBUTES, RESOURCES, STATES and other special mechanics. When a player's condition is deleted, it loses the MATCH.",
     },
 
     [entryTypes.BATTLE_PHASE]: {
@@ -292,7 +297,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that has a non-fixed upper cap. Includes MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the following RESOURCES on the list. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise continues to the following RESOURCES on the list.",
+            "A subset of RESOURCES that has a non-fixed upper cap. Includes ENLIGHTENMENT, MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the following RESOURCES on the list. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise continues to the following RESOURCES on the list.",
     },
 
     [entryTypes.OVERFLOWN_RESOURCE]: {
@@ -355,6 +360,13 @@ export const GENERAL_DESCRIPTIONS = {
         type: entryTypes.CATEGORY,
         description: "A classification grouping for game mechanics.",
     },
+
+    [effectKeys.EXTRA_TURN]: {
+        name: "EXTRA TURN",
+        type: entryTypes.MECHANIC,
+        description:
+            "Allows the player to utilize ACTIONS and other combat interactions. Does not trigger turn start and turn end effects. Ends when using any ACTIONS that aren't a FREE ACTION.",
+    },
 };
 
 export const BASIC_DESCRIPTIONS = {
@@ -403,14 +415,7 @@ export const WARLOCK_DESCRIPTIONS = {
         name: "SPECIAL ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Deals PIERCING DAMAGE equal to the user's STR. If MANA IMBALANCE is positive, replenishes the target's MANA and increases the damage dealt by its value. If MANA IMBALANCE is negative, replenishes MANA on self and decreases the damage dealt by its value. Then, consumes MANA equal to 60% of MAX MANA. Cannot be used at less than 60% MAX MANA.",
-    },
-
-    [effectKeys.MANA_IMBALANCE]: {
-        name: "MANA IMBALANCE",
-        type: entryTypes.MECHANIC,
-        description:
-            "The difference between the user's and target's current MANA.",
+            "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STR. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA equal to the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA equal to the difference. Cannot be when MANA is lower than 60% of MAX MANA.",
     },
 
     [effectKeys.MANA_OVERFLOW]: {
@@ -700,7 +705,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "SONORITY",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Ranges from -50% to +50%. When using a DEFENSIVE ACTION, raises SONORITY by 5%. When using an OFFENSIVE ACTION, lowers SONORITY by 5%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
+            "Ranges from -75% to +75%. When using a DEFENSIVE ACTION, raises SONORITY by 15%. When using an OFFENSIVE ACTION, lowers SONORITY by 15%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
     },
 
     [actionKeys.DA_CAPO]: {
@@ -714,7 +719,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Gains 1 HARMONY for every 5% shift on SONORITY.",
+            "Inverts current SONORITY. Gains HARMONY for every 10% shift on SONORITY.",
     },
 
     [effectKeys.HARMONY]: {
@@ -728,7 +733,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "BABEL",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Inflicts 1 DISSONANCE on the opponent for every 5% shift on SONORITY.",
+            "Inverts current SONORITY. Inflicts DISSONANCE on the opponent for every 10% shift on SONORITY.",
     },
 
     [effectKeys.DISSONANCE]: {
@@ -778,7 +783,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF URD",
         type: entryTypes.RUNES,
         description:
-            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 50%. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Restores HEALTH equal to 15% MAX HEALTH.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 50%. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Restores HEALTH equal to 15% of MAX HEALTH.",
     },
 
     [effectKeys.RECOLLECTION]: {
@@ -813,7 +818,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF SKULD",
         type: entryTypes.RUNES,
         description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Replenishes 30% MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS and DAMAGE REDUCTION by 30%. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Replenishes MANA equal to 30% of MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS and DAMAGE REDUCTION by 30%. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
     },
 
     [effectKeys.BAD_OMEN]: {
@@ -982,7 +987,8 @@ export const VOYAGER_DESCRIPTIONS = {
     [effectKeys.STARBLIGHT]: {
         name: "STARBLIGHT",
         type: entryTypes.RANKED_RESOURCE,
-        description: "Increases DEFENSE PENETRATION by its rank. At turn end, sets STARBLIGHT to 0.",
+        description:
+            "Increases DEFENSE PENETRATION by its rank. At turn end, sets STARBLIGHT to 0.",
     },
 
     [effectKeys.DEF_PEN]: {
@@ -1343,7 +1349,506 @@ export const SERAPH_DESCRIPTIONS = {
     [aiKeys.SERAPH]: {
         name: "SERAPH",
         type: entryTypes.CONTROLLER,
-        description: "The tenth and final challenge. Coming soon.",
+        description:
+            "The tenth and final challenge. In PROGRESSION MODE, defeat this enemy to unlock the RISE and ASCEND actions.",
+    },
+
+    [actionKeys.RISE]: {
+        name: "RISE",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description: "Raises STR by 10. Enters ZENITH OF MORTALITY.",
+    },
+
+    [effectKeys.ZENITH_OF_MORTALITY]: {
+        name: "ZENITH OF MORTALITY",
+        type: entryTypes.STATE,
+        description: "Replaces all ACTIONS with ASCEND.",
+    },
+
+    [actionKeys.ASCEND]: {
+        name: "ASCEND",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Exits all states. Consumes all LIMITED RESOURCES on self and sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0 and replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises REVELATION by the user's STR. Raises FORTITUDE by the user's DEF. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
+    },
+
+    [effectKeys.REVELATION]: {
+        name: "REVELATION",
+        type: entryTypes.SPECIAL_ATTRIBUTES,
+        description: "Scales certain actions and effects.",
+    },
+
+    [effectKeys.PROVIDENCE]: {
+        name: "PROVIDENCE",
+        type: entryTypes.GLOBAL_RESOURCE,
+        description:
+            "Capped at 100%. When restoring PROVIDENCE above 100%, restores RESOURCES to all entities for every 2.5% excess.",
+    },
+
+    [effectKeys.ENLIGHTENMENT]: {
+        name: "ENLIGHTENMENT",
+        type: entryTypes.LIMITED_RESOURCE,
+        description:
+            "Capped by MAX ENLIGHTENMENT. When restoring ENLIGHTENMENT above the limit, restores INSIGHT instead. While on ASCENDENCE OF SPIRIT, at 0 or less ENLIGHTENMENT, exits ASCENDENCE OF SPIRIT.",
+    },
+
+    [effectKeys.MAX_ENLIGHTENMENT]: {
+        name: "MAX ENLIGHTENMENT",
+        type: entryTypes.MECHANIC,
+        description:
+            "Starts at 0. While on ASCENDENCE OF SPIRIT, at 0 or less MAX ENLIGHTENMENT, exits ASCENDENCE OF SPIRIT.",
+    },
+
+    [effectKeys.INSIGHT]: {
+        name: "INSIGHT",
+        type: entryTypes.OVERFLOWN_RESOURCE,
+        description:
+            "When losing ENLIGHTENMENT, lose INSIGHT first. At turn start, loses all INSIGHT, then, raises TARNISHED SIN on self by 0.5% per INSIGHT lost and the battlefield's PROVIDENCE by 2.5% per INSIGHT lost.",
+    },
+
+    [effectKeys.TARNISHED_SIN]: {
+        name: "TARNISHED SIN",
+        type: entryTypes.FIXED_RESOURCE,
+        description: "At 100%, enters ABANDONED BY GRACE.",
+    },
+
+    [effectKeys.ABANDONED_BY_GRACE]: {
+        name: "ABANDONED BY GRACE",
+        type: entryTypes.STATE,
+        description:
+            "Cannot act. If there's no entity on ANOINTED PROXY on the battlefield, awakens the EYE OF HEAVENS and triggers ANOINTMENT.",
+    },
+
+    [effectKeys.ANOINTMENT]: {
+        name: "ANOINTMENT",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "If the EYE OF HEAVENS is CLOSED, sets it to OPEN. If both entities are on ABANDONED BY GRACE, delete both entities CONDITION and ends the MATCH in a draw. Otherwise, grants ANOINTED PROXY to the entity not on ABANDONED BY GRACE.",
+    },
+
+    [effectKeys.ANOINTED_PROXY]: {
+        name: "ANOINTED PROXY",
+        type: entryTypes.STATE,
+        description:
+            "Cannot die. Triggers the corresponding player's TRIAL. Replaces all actions with JUDGEMENT.",
+    },
+
+    [effectKeys.TRIAL]: {
+        name: "TRIAL",
+        type: entryTypes.BATTLE_PHASE,
+        description: "Counts as an EXTRA TURN.",
+    },
+
+    [actionKeys.JUDGEMENT]: {
+        name: "JUDGEMENT",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Deletes the opponent's CONDITION. Then, exits ANOINTED PROXY.",
+    },
+
+    [effectKeys.ASCENDENCE_OF_SPIRIT]: {
+        name: "ASCENDENCE OF SPIRIT",
+        type: entryTypes.STATE,
+        description:
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS, EFFECTIVE DEFENSE, DEFENSE EFFECTIVENESS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES, FORTITUDE, INTEGRITY and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 0.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
+    },
+
+    [effectKeys.CUTOFF_WINGS]: {
+        name: "CUTOFF WINGS",
+        type: entryTypes.STATE,
+        description: "Cannot use AEGIS, RISE or ASCEND.",
+    },
+
+    [entryTypes.TARNISHMENT_TYPE]: {
+        name: "TARNISHMENT TYPES",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes PHYSICAL TARNISHMENT, PIERCING TARNISHMENT, TRUE TARNISHMENT and LUNIC TARNISHMENT. All TARNISHMENT received has a minimum of 1. When reducing a target's ENLIGHTENMENT or MAX ENLIGHTENMENT below 0, raises their TARNISHED SIN by 0.5% per point of tarnishment received instead.",
+    },
+
+    [tarnishTypes.PHYSICAL]: {
+        name: "PHYSICAL TARNISHMENT",
+        type: entryTypes.TARNISHMENT_TYPE,
+        description:
+            "Reduces the target's ENLIGHTENMENT. Can be blocked by FORTITUDE, affected by SPIRITUAL ORDINANCES and mitigated by SANCTUARY.",
+    },
+
+    [tarnishTypes.PIERCING]: {
+        name: "PIERCING TARNISHMENT",
+        type: entryTypes.TARNISHMENT_TYPE,
+        description:
+            "Reduces the target's ENLIGHTENMENT. Ignores FORTITUDE, but can be affected by SPIRITUAL ORDINANCES and mitigated by SANCTUARY.",
+    },
+
+    [tarnishTypes.TRUE]: {
+        name: "TRUE TARNISHMENT",
+        type: entryTypes.TARNISHMENT_TYPE,
+        description:
+            "Reduces the target's ENLIGHTENMENT. Cannot be blocked by FORTITUDE, affected by SPIRITUAL ORDINANCES or mitigated by SANCTUARY.",
+    },
+
+    [tarnishTypes.LUNIC]: {
+        name: "LUNIC TARNISHMENT",
+        type: entryTypes.TARNISHMENT_TYPE,
+        description:
+            "Reduces the target's MAX ENLIGHTENMENT. Cannot be blocked by FORTITUDE, affected by SPIRITUAL ORDINANCES or mitigated by SANCTUARY.",
+    },
+
+    [effectKeys.FORTITUDE]: {
+        name: "FORTITUDE",
+        type: entryTypes.MECHANIC,
+        description: "Reduces PHYSICAL TARNISHMENT received.",
+    },
+
+    [effectKeys.INTEGRITY]: {
+        name: "INTEGRITY",
+        type: entryTypes.MECHANIC,
+        description:
+            "Defaults to 0%. Raises FORTITUDE by a percentage of the user's REVELATION equivalent to INTEGRITY on self.",
+    },
+
+    [effectKeys.DEFILEMENT]: {
+        name: "DEFILEMENT",
+        type: entryTypes.MECHANIC,
+        description:
+            "When inflicting PHYSICAL TARNISHMENT, ignores a portion of the target's FORTITUDE equal to the battlefield's DEFILEMENT. Raises the battlefield's DEFILEMENT by the sum of all entities DEFENSE PENETRATION.",
+    },
+
+    [entryTypes.SPIRITUAL_ORDINANCE]: {
+        name: "SPIRITUAL ORDINANCES",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes MALEDICTION, BENEDICTION, GRACE and DISGRACE. All sources of SPIRITUAL ORDINANCES stack multiplicatively.",
+    },
+
+    [effectKeys.MALEDICTION]: {
+        name: "MALEDICTION",
+        type: entryTypes.SPIRITUAL_ORDINANCE,
+        description:
+            "Defaults to 0%. Increases PHYSICAL TARNISHMENT and PIERCING TARNISHMENT inflicted by the percentage.",
+    },
+
+    [effectKeys.BENEDICTION]: {
+        name: "BENEDICTION",
+        type: entryTypes.SPIRITUAL_ORDINANCE,
+        description:
+            "Defaults to 0%. Decreases PHYSICAL TARNISHMENT and PIERCING TARNISHMENT inflicted by the percentage.",
+    },
+
+    [effectKeys.GRACE]: {
+        name: "GRACE",
+        type: entryTypes.SPIRITUAL_ORDINANCE,
+        description:
+            "Defaults to 0%. Decreases PHYSICAL TARNISHMENT and PIERCING TARNISHMENT received by the percentage.",
+    },
+
+    [effectKeys.DISGRACE]: {
+        name: "DISGRACE",
+        type: entryTypes.SPIRITUAL_ORDINANCE,
+        description:
+            "Defaults to 0%. Increases PHYSICAL TARNISHMENT and PIERCING TARNISHMENT received by the percentage.",
+    },
+
+    [entryTypes.HEAVENLY_CHOIR]: {
+        name: "HEAVENLY CHOIRS",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes HEAVENLY CHOIR: THE FIRST, HEAVENLY CHOIR: THE SECOND, HEAVENLY CHOIR: THE THIRD, HEAVENLY CHOIR: THE FOURTH, HEAVENLY CHOIR: THE FIFTH, HEAVENLY CHOIR: THE SIXTH, HEAVENLY CHOIR: THE SEVENTH, HEAVENLY CHOIR: THE EIGHTH and HEAVENLY CHOIR: THE NINTH. Each of the HEAVENLY CHOIRS inherits the effects of all previous HEAVENLY CHOIRS. Upon initiating the HEAVENLY CHOIRS, enters HEAVENLY CHOIR: THE FIRST. Upon exiting the HEAVENLY CHOIRS, disables all EDICTS.",
+    },
+
+    [actionKeys.CONDEMN]: {
+        name: "CONDEMN",
+        type: entryTypes.OFFENSIVE_ACTION,
+        description:
+            "Inflicts PHYSICAL TARNISHMENT equal to the user's REVELATION.",
+    },
+
+    [actionKeys.SUPPLICATE]: {
+        name: "SUPPLICATE",
+        type: entryTypes.DEFENSIVE_ACTION,
+        description: "Restores RESOURCES on self equal to REVELATION.",
+    },
+
+    [actionKeys.DISCERN]: {
+        name: "DISCERN",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Raises REVELATION for every 5% PROVIDENCE on the battlefield.",
+    },
+
+    [actionKeys.ATONE]: {
+        name: "ATONE",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Consumes all REVELATION and FORTITUDE on self and PROVIDENCE on the battlefield. Raises BURDEN OF STIGMA rank for every 20% PROVIDENCE consumed. Raises ATTRIBUTES equal to REVELATION consumed. Then, exits ASCENDENCE OF SPIRIT.",
+    },
+
+    [effectKeys.BURDEN_OF_STIGMA]: {
+        name: "BURDEN OF STIGMA",
+        type: entryTypes.RANKED_RESOURCE,
+        description:
+            "Cannot Die. At turn start, lowers BURDEN OF STIGMA rank by 1.",
+    },
+
+    [entryTypes.EDICT]: {
+        name: "EDICTS",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes EDICT OF ANGELS, EDICT OF ARCHANGELS, EDICT OF PRINCIPALITIES, EDICT OF POWERS, EDICT OF VIRTUES, EDICT OF DOMINIONS, EDICT OF THRONES, EDICT OF CHERUBIM and EDICT OF SERAPHIM. Multiple EDICTS may be enabled at a time.",
+    },
+
+    [choirKeys.FIRST]: {
+        name: "HEAVENLY CHOIR: THE FIRST",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF ANGELS. At turn start, becomes HEAVENLY CHOIR: THE SECOND.",
+    },
+
+    [edictKeys.ANGELS]: {
+        name: "EDICT OF ANGELS",
+        type: entryTypes.EDICT,
+        description:
+            "When using CONDEMN, halves the user's total ENLIGHTENMENT. Then, increases the tarnishment inflicted by the ENLIGHTENMENT lost.",
+    },
+
+    [choirKeys.SECOND]: {
+        name: "HEAVENLY CHOIR: THE SECOND",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF ARCHANGELS. At turn start, becomes HEAVENLY CHOIR: THE THIRD.",
+    },
+
+    [edictKeys.ARCHANGELS]: {
+        name: "EDICT OF ARCHANGELS",
+        type: entryTypes.EDICT,
+        description:
+            "Raises GRACE and MALEDICTION by the user's missing ENLIGHTENMENT percentage. When losing ENLIGHTENMENT or INSIGHT, gains MARTHYR equal to the amount lost.",
+    },
+
+    [effectKeys.MARTHYR]: {
+        name: "MARTHYR",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn end, lose all MARTHYR. Then, raises TARNISHED SIN on self by 0.5% per MARTHYR lost and the battlefield's PROVIDENCE by 2.5% per MARTHYR lost.",
+    },
+
+    [choirKeys.THIRD]: {
+        name: "HEAVENLY CHOIR: THE THIRD",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF PRINCIPALITIES. At turn start, becomes HEAVENLY CHOIR: THE FOURTH.",
+    },
+
+    [edictKeys.PRINCIPALITIES]: {
+        name: "EDICT OF PRINCIPALITIES",
+        type: entryTypes.EDICT,
+        description:
+            "Raises the user's INTEGRITY by the battlefield's PROVIDENCE. When using SUPPLICATE, instead of restoring RESOURCES, gains SANCTUARY equal to the user's FORTITUDE and enters IMMACULATE state.",
+    },
+
+    [effectKeys.SANCTUARY]: {
+        name: "SANCTUARY",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When receiving PHYSICAL TARNISHMENT or PIERCING TARNISHMENT, consumes SANCTUARY to reduce the tarnishment received, then gains SACRILEGE equal to the amount lost. At turn start, loses all SANCTUARY and raises PROVIDENCE on the battlefield by 2.5% for every SANCTUARY lost.",
+    },
+
+    [effectKeys.SACRILEGE]: {
+        name: "SACRILEGE",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When using CONDEMN, consumes all SACRILEGE on self, then increases the tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 0.5% for every SACRILEGE lost.",
+    },
+
+    [effectKeys.IMMACULATE]: {
+        name: "IMMACULATE",
+        type: entryTypes.STATE,
+        description: "Nullifies the user's FORTITUDE.",
+    },
+
+    [choirKeys.FOURTH]: {
+        name: "HEAVENLY CHOIR: THE FOURTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF POWERS. At turn start, becomes HEAVENLY CHOIR: THE FIFTH.",
+    },
+
+    [edictKeys.POWERS]: {
+        name: "EDICT OF POWERS",
+        type: entryTypes.EDICT,
+        description:
+            "When using DISCERN, consumes RESOURCES on self for every 5% PROVIDENCE on the battlefield. Then, gains SACRED FLAMES equal to the amount consumed.",
+    },
+
+    [effectKeys.SACRED_FLAMES]: {
+        name: "SACRED FLAMES",
+        type: entryTypes.MECHANIC,
+        description:
+            "At turn end, restores RESOURCES equal to SACRED FLAMES on self.",
+    },
+
+    [choirKeys.FIFTH]: {
+        name: "HEAVENLY CHOIR: THE FIFTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF VIRTUES. At turn start, becomes HEAVENLY CHOIR: THE SIXTH.",
+    },
+
+    [edictKeys.VIRTUES]: {
+        name: "EDICT OF VIRTUES",
+        type: entryTypes.EDICT,
+        description:
+            "When using ACTIONS, if not already a FREE ACTION, consumes 10% PROVIDENCE to become a FREE ACTION. Increases the PROVIDENCE consumed by 10% for every time this effect has triggered on the current turn. Does not activate if there's not enough PROVIDENCE on the battlefield.",
+    },
+
+    [choirKeys.SIXTH]: {
+        name: "HEAVENLY CHOIR: THE SIXTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF DOMINIONS and HALLOWED ECHOES. At turn start, becomes HEAVENLY CHOIR: THE SEVENTH.",
+    },
+
+    [edictKeys.DOMINIONS]: {
+        name: "EDICT OF DOMINIONS",
+        type: entryTypes.EDICT,
+        description:
+            "When using CONDEMN, lowers HALLOWED ECHOES by 15%. When using SUPPLICATE, raises HALLOWED ECHOES by 15%. When using DISCERN, inverts HALLOWED ECHOES.",
+    },
+
+    [effectKeys.HALLOWED_ECHOES]: {
+        name: "HALLOWED ECHOES",
+        type: entryTypes.FIXED_RESOURCE,
+        description:
+            "Starts at 0. Can go from -75% to 75%. Raises MALEDICTION and DISGRACE equal to HALLOWED ECHOES lower than 0. Raises BENEDICTION and GRACE equal to HALLOWED ECHOES higher than 0. At turn start, resets HALLOWED ECHOES to 0. When exiting ASCENDENCE OF SPIRIT, sets HALLOWED ECHOES to 0.",
+    },
+
+    [choirKeys.SEVENTH]: {
+        name: "HEAVENLY CHOIR: THE SEVENTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF THRONES and the CODEX OF BLASPHEMY. At turn start, becomes HEAVENLY CHOIR: THE EIGHTH.",
+    },
+
+    [edictKeys.THRONES]: {
+        name: "EDICT OF THRONES",
+        type: entryTypes.EDICT,
+        description:
+            "When using CONDEMN, SUPPLICATE or DISCERN, add BLASPHEMY OF YESTERDAY, BLASPHEMY OF TODAY or BLASPHEMY OF TOMORROW to the CODEX OF BLASPHEMY, respectively.",
+    },
+
+    [effectKeys.CODEX_OF_BLASPHEMY]: {
+        name: "CODEX OF BLASPHEMY",
+        type: entryTypes.MECHANIC,
+        description:
+            "Can hold up to three BLASPHEMIES. When a fourth one is added, expunge the oldest one to make space. Click on any blasphemy to expunge it. When exiting ASCENDENCE OF SPIRIT, expunge all BLASPHEMIES, starting from the oldest.",
+    },
+
+    [entryTypes.BLASPHEMY]: {
+        name: "BLASPHEMIES",
+        type: entryTypes.CATEGORY,
+        description:
+            "Includes BLASPHEMY OF YESTERDAY, BLASPHEMY OF TODAY and BLASPHEMY OF TOMORROW. When BLASPHEMIES are expunged, raise TARNISHED SIN on self by 5% and remove them from the CODEX OF BLASPHEMY.",
+    },
+
+    [blasphemyKeys.YESTERDAY]: {
+        name: "BLASPHEMY OF YESTERDAY",
+        type: entryTypes.BLASPHEMY,
+        description:
+            "When expunged, transfers a tenth of the TARNISHED SIN on self to the opponent.",
+    },
+
+    [blasphemyKeys.TODAY]: {
+        name: "BLASPHEMY OF TODAY",
+        type: entryTypes.BLASPHEMY,
+        description:
+            "When expunged, gains MARTHYR equal to the user's missing ENLIGHTENMENT.",
+    },
+
+    [blasphemyKeys.TOMORROW]: {
+        name: "BLASPHEMY OF TOMORROW",
+        type: entryTypes.BLASPHEMY,
+        description:
+            "When expunged, gains COVENANT for every 5% missing PROVIDENCE on the battlefield.",
+    },
+
+    [effectKeys.COVENANT]: {
+        name: "COVENANT",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "When using CONDEMN, consumes all COVENANT, then increases the tarnishment inflicted by the amount consumed. When using SUPPLICATE, consumes all COVENANT, then restores resources equal to the amount lost. At turn end, lose all COVENANT and raises TARNISHED SIN on self by 0.5% per COVENANT lost.",
+    },
+
+    [choirKeys.EIGHTH]: {
+        name: "HEAVENLY CHOIR: THE EIGHTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description:
+            "Unlocks EDICT OF CHERUBIM. At turn start, becomes HEAVENLY CHOIR: THE NINTH and awakens the EYE OF HEAVENS.",
+    },
+
+    [edictKeys.CHERUBIM]: {
+        name: "EDICT OF CHERUBIM",
+        type: entryTypes.EDICT,
+        description:
+            "When the battlefield's PROVIDENCE is consumed, gains STARS OF APOCALYPSE for every 2.5% consumption. When the battlefield's PROVIDENCE is restored, gains STARS OF GENESIS for every 2.5% restored.",
+    },
+
+    [entryTypes.CELESTIAL_STAR]: {
+        name: "CELESTIAL STARS",
+        type: entryTypes.CATEGORY,
+        description: "Includes STARS OF APOCALYPSE and STARS OF GENESIS.",
+    },
+
+    [effectKeys.STARS_OF_APOCALYPSE]: {
+        name: "STARS OF APOCALYPSE",
+        type: entryTypes.CELESTIAL_STAR,
+        description:
+            "Raises DISGRACE by 2.5% for every STARS OF APOCALYPSE on self. Click to consume a star and inflict 1 TRUE TARNISHMENT on all entities.",
+    },
+
+    [effectKeys.STARS_OF_GENESIS]: {
+        name: "STARS OF GENESIS",
+        type: entryTypes.CELESTIAL_STAR,
+        description:
+            "Raises BENEDICTION by 2.5% for every STARS OF GENESIS on self. Click to consume a star and restore 1 RESOURCES to all entities.",
+    },
+
+    [choirKeys.NINTH]: {
+        name: "HEAVENLY CHOIR: THE NINTH",
+        type: entryTypes.HEAVENLY_CHOIR,
+        description: "Unlocks EDICT OF SERAPHIM.",
+    },
+
+    [effectKeys.EYE_OF_HEAVENS]: {
+        name: "EYE OF HEAVENS",
+        type: entryTypes.MECHANIC,
+        description:
+            "Can be CLOSED or OPEN. Awakens as OPEN. Enables RECKONING.",
+    },
+
+    [effectKeys.RECKONING]: {
+        name: "RECKONING",
+        type: entryTypes.BATTLE_PHASE,
+        description:
+            "Added to ROUND QUEUE after ROUND START. At RECKONING, if there's no entity on the battlefield on HEAVENLY CHOIR: THE NINTH, returns the EYE OF HEAVENS to dormancy.",
+    },
+
+    [eyeKeys.CLOSED]: {
+        name: "CLOSED",
+        type: entryTypes.MECHANIC,
+        description: "At RECKONING, becomes OPEN.",
+    },
+
+    [eyeKeys.OPEN]: {
+        name: "OPEN",
+        type: entryTypes.MECHANIC,
+        description: "At RECKONING, becomes CLOSED.",
+    },
+
+    [edictKeys.SERAPHIM]: {
+        name: "EDICT OF SERAPHIM",
+        type: entryTypes.EDICT,
+        description:
+            "When the EYE OF HEAVENS is OPEN: Raises BENEDICTION and GRACE on self by half the battlefield's PROVIDENCE. Raises MALEDICTION and DISGRACE on self by half the battlefield's missing PROVIDENCE. When the EYE OF HEAVENS is CLOSED: Raises MALEDICTION and DISGRACE on self by half the battlefield's PROVIDENCE. Raises BENEDICTION and GRACE on self by half the battlefield's missing PROVIDENCE.",
     },
 };
 
