@@ -54,7 +54,7 @@ export const constants = Object.freeze({
     MAX_SIN: 100,
     MAX_PROVIDENCE: 100,
     EXCESS_PROV_RESTORE_RATE: 1 / 2,
-    DISCERN_RATE: 1 / 5,
+    DISCERN_RATE: 1 / 10,
     BASE_SIN_GAIN: 0.5,
     BASE_PROV_GAIN: 2.5,
     POWERS_RATE: 1 / 5,
@@ -72,6 +72,9 @@ export const constants = Object.freeze({
     HALLOW_SUPPLICATE: 15,
     MIN_HALLOW: -75,
     MAX_HALLOW: 75,
+    HIGH_SIN_GAIN: 2.5,
+    YEST_SIN_RATE: 1 / 10,
+    TOMOR_RATE: 1 / 10,
 
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
@@ -113,7 +116,7 @@ export const constants = Object.freeze({
     GRAVITATION_GAIN: 5,
     MAX_GRAVITATION: 100,
     MAX_ACCRETION: 100,
-    
+
     WITHER_LUNACY_MULT: 1,
     LUNAR_TIDE_MULT: 2,
     MAX_LUNACY: 100,
@@ -150,6 +153,7 @@ export const constants = Object.freeze({
 });
 
 export const MITIGATION_RESOURCES = [
+    effectKeys.SANCTUARY,
     effectKeys.FAULTY_FIRMAMENT,
     effectKeys.FRACTURED_DOME,
     effectKeys.HALO,
@@ -172,6 +176,10 @@ export const FREE_RESOURCES = [
     effectKeys.STARDUST,
     effectKeys.MOONSHINE,
     effectKeys.RADIANCE,
+    effectKeys.SACRILEGE,
+    effectKeys.MARTHYR,
+    effectKeys.COVENANT,
+    effectKeys.SACRED_FLAMES,
 ];
 
 export const presetAi = {
@@ -296,6 +304,8 @@ const offensiveActions = [
     actionKeys.LUNAR_SMITE,
     actionKeys.LUNAR_SHED,
     actionKeys.CHALK,
+
+    actionKeys.CONDEMN,
 ];
 
 const defensiveActions = [
@@ -306,6 +316,9 @@ const defensiveActions = [
     actionKeys.LUNAR_GROWTH,
     actionKeys.LUNAR_SHROUD,
     actionKeys.LUNAR_TIDE,
+
+    actionKeys.SUPPLICATE,
+    actionKeys.ATONE,
 ];
 
 const transformativeActions = [
@@ -326,6 +339,11 @@ const transformativeActions = [
     actionKeys.REFRACT,
     actionKeys.MIRROR,
     actionKeys.SHATTER,
+
+    actionKeys.RISE,
+    actionKeys.ASCEND,
+    actionKeys.JUDGEMENT,
+    actionKeys.DISCERN,
 ];
 
 export const actionsClass = {
@@ -493,11 +511,6 @@ export const roundPhasesMap = {
         descKey: effectKeys.STARFALL,
         name: "Player Two Starfall",
     },
-
-    [roundPhases.ROUND_END]: {
-        descKey: roundPhases.ROUND_END,
-        name: "Round End",
-    },
     [roundPhases.P1_SINGULARITY]: {
         descKey: effectKeys.SINGULARITY,
         name: "Player One Singularity",
@@ -505,6 +518,26 @@ export const roundPhasesMap = {
     [roundPhases.P2_SINGULARITY]: {
         descKey: effectKeys.SINGULARITY,
         name: "Player Two Singularity",
+    },
+    [roundPhases.RECKONING]: {
+        descKey: roundPhases.RECKONING,
+        name: "Reckoning",
+    },
+    [roundPhases.ANOINTMENT]: {
+        descKey: roundPhases.ANOINTMENT,
+        name: "Anointment",
+    },
+    [roundPhases.P1_TRIAL]: {
+        descKey: effectKeys.TRIAL,
+        name: "Player One Trial",
+    },
+    [roundPhases.P2_TRIAL]: {
+        descKey: effectKeys.TRIAL,
+        name: "Player Two Trial",
+    },
+    [roundPhases.ROUND_END]: {
+        descKey: roundPhases.ROUND_END,
+        name: "Round End",
     },
 };
 
@@ -558,8 +591,14 @@ export const entryTypesMap = {
     [entryTypes.TRANSFORMATIVE_ACTION]: "TRANSFORMATIVE ACTION",
     [entryTypes.RUNES]: "RUNE",
     [entryTypes.CONTROLLER]: "CONTROLLER",
+    [entryTypes.TARNISHMENT_TYPE]: "TARNISHMENT TYPE",
+    [entryTypes.SPIRITUAL_ORDINANCE]: "SPIRITUAL ORDINANCE",
+    [entryTypes.BLASPHEMY]: "BLASPHEMY",
+    [entryTypes.CELESTIAL_STAR]: "CELESTIAL STAR",
+    [entryTypes.GLOBAL_RESOURCE]: "GLOBAL RESOURCE",
+    [entryTypes.EDICT]: "EDICT",
+    [entryTypes.HEAVENLY_CHOIR]: "HEAVENLY CHOIR",
 };
-
 export const actionMap = {
     [actionKeys.ATTACK]: { name: "Attack", specialClass: "" },
     [actionKeys.HEAL]: { name: "Heal", specialClass: "action-verdandi" },
@@ -603,6 +642,14 @@ export const actionMap = {
 
     [actionKeys.CARVE]: { name: "Carve", specialClass: "" },
     [actionKeys.CURSE]: { name: "Curse", specialClass: "" },
+
+    [actionKeys.RISE]: { name: "Rise", specialClass: "" },
+    [actionKeys.ASCEND]: { name: "Ascend", specialClass: "" },
+    [actionKeys.JUDGEMENT]: { name: "Judgement", specialClass: "" },
+    [actionKeys.CONDEMN]: { name: "Condemn", specialClass: "" },
+    [actionKeys.SUPPLICATE]: { name: "Supplicate", specialClass: "" },
+    [actionKeys.DISCERN]: { name: "Discern", specialClass: "" },
+    [actionKeys.ATONE]: { name: "Atone", specialClass: "" },
 };
 
 export const entryTypeClassMap = {
@@ -629,6 +676,14 @@ export const entryTypeClassMap = {
     [entryTypes.CATEGORY]: "type-category",
     [entryTypes.STAR]: "type-star",
     [entryTypes.RUNES]: "type-runes",
+    [entryTypes.CONTROLLER]: "type-controller",
+    [entryTypes.TARNISHMENT_TYPE]: "type-tarnishment-type",
+    [entryTypes.SPIRITUAL_ORDINANCE]: "type-spiritual-ordinance",
+    [entryTypes.BLASPHEMY]: "type-blasphemy",
+    [entryTypes.CELESTIAL_STAR]: "type-celestial-star",
+    [entryTypes.GLOBAL_RESOURCE]: "type-global-resource",
+    [entryTypes.EDICT]: "type-edict",
+    [entryTypes.HEAVENLY_CHOIR]: "type-heavenly-choir",
 };
 
 export const FIXED_RESOURCES = [
@@ -642,6 +697,7 @@ export const FIXED_RESOURCES = [
     effectKeys.GRAVITATION,
     effectKeys.ACCRETION,
     effectKeys.LUNACY,
+    effectKeys.TARNISHED_SIN,
 ];
 
 export const RANKED_RESOURCES = [
@@ -651,6 +707,7 @@ export const RANKED_RESOURCES = [
     effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.AZURE_CONSTELLATION,
     effectKeys.MOONLIT_TEARS,
+    effectKeys.BURDEN_OF_STIGMA,
 ];
 
 export const FREE_ACTIONS = [
@@ -670,12 +727,20 @@ export const INITIAL_GLOSSARY_SPECS = {
 
 export const playerMap = Object.freeze({
     [entityKeys.PLAYER_ONE]: {
-        turn: [roundPhases.PLAYER_ONE_TURN, roundPhases.P1_SINGULARITY],
-        extra: [roundPhases.P1_SINGULARITY],
+        turn: [
+            roundPhases.PLAYER_ONE_TURN,
+            roundPhases.P1_SINGULARITY,
+            roundPhases.P1_TRIAL,
+        ],
+        extra: [roundPhases.P1_SINGULARITY, roundPhases.P1_TRIAL],
     },
     [entityKeys.PLAYER_TWO]: {
-        turn: [roundPhases.PLAYER_TWO_TURN, roundPhases.P2_SINGULARITY],
-        extra: [roundPhases.P2_SINGULARITY],
+        turn: [
+            roundPhases.PLAYER_TWO_TURN,
+            roundPhases.P2_SINGULARITY,
+            roundPhases.P2_TRIAL,
+        ],
+        extra: [roundPhases.P2_SINGULARITY, roundPhases.P2_TRIAL],
     },
 });
 

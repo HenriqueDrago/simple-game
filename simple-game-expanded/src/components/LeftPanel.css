@@ -1,0 +1,88 @@
+/* Left Panel Layout */
+.player-panel-left-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    min-height: 0;
+}
+
+.player-panel-left {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    box-sizing: border-box;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 85%, transparent 100%);
+}
+
+.player-panel-left::-webkit-scrollbar {
+    display: none;
+}
+
+.player-panel-left::after {
+    content: "";
+    display: block;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+/* Resource Section Headers */
+.resource-category-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resource-section-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.resource-category-section.is-empty .resource-section-label {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* Counter Items */
+.counter-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-width: 1px;
+    border-style: solid;
+    box-sizing: border-box;
+    transition:
+        opacity 0.2s ease,
+        filter 0.2s ease;
+}
+
+.counter-item.is-new-preview {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+.counter-amount {
+    font-variant-numeric: tabular-nums;
+}
+
+.counter-amount.is-preview {
+    opacity: 0.75;
+}

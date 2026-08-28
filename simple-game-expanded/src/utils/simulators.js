@@ -28,6 +28,7 @@ import {
     extractEntity,
     getFortitude,
     advanceChoir,
+    processExitAscendence,
 } from "./entities.js";
 import {
     actionKeys,
@@ -1015,9 +1016,9 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = extractEntity(post, agentKey);
     for (
-        let count = newProv;
-        newProv >= constants.ASCEND_SKIP_RATE;
-        count -= constants.ASCEND_SKIP_RATE
+        let remainingProv = newProv;
+        remainingProv >= constants.ASCEND_SKIP_RATE;
+        remainingProv -= constants.ASCEND_SKIP_RATE
     ) {
         draftAgent = advanceChoir(draftAgent);
     }
@@ -1032,6 +1033,29 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
+
+    // Covenant
+    const cov = draftAgent.resources[effectKeys.COVENANT];
+    if (cov > 0) {
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.COVENANT]: 0,
+            },
+        };
+
+        post = replaceEntity(post, draftAgent, agentKey);
+        post = newDealDmg(
+            post,
+            cov,
+            [nonAgentKey],
+            tarnishTypes.LUNIC,
+            agentKey,
+        );
+        draftAgent = extractEntity(post, agentKey);
+    }
+
     let extraDmg = 0;
 
     // Edict of Angels
@@ -1059,7 +1083,7 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
         post.entities[agentKey][effectKeys.REVELATION] + extraDmg,
         [nonAgentKey],
         tarnishTypes.PHYSICAL,
-        [agentKey],
+        agentKey,
     );
 
     return post;
@@ -1071,6 +1095,20 @@ function simulateSupplicate({ prev, agentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
+
+    // Covenant
+    const cov = draftAgent.resources[effectKeys.COVENANT];
+    if (cov > 0) {
+        draftAgent = {
+            ...draftAgent,
+            [effectKeys.MAX_ENLIGHTENMENT]:
+                draftAgent[effectKeys.MAX_ENLIGHTENMENT] + cov,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.COVENANT]: 0,
+            },
+        };
+    }
 
     // Edict of Principalities
     if (draftAgent.edicts[edictKeys.PRINCIPALITIES]) {
@@ -1123,10 +1161,8 @@ function simulateDiscern({ prev, agentKey }) {
     if (draftAgent.edicts[edictKeys.POWERS]) {
         const result = consumeResources(
             draftAgent,
-            Math.floor(
-                post.btt[effectKeys.PROVIDENCE] * constants.POWERS_RATE,
-                edictKeys.POWERS,
-            ),
+            Math.floor(post.btt[effectKeys.PROVIDENCE] * constants.POWERS_RATE),
+            edictKeys.POWERS,
         );
         draftAgent = result.draftEntity;
 
@@ -1135,7 +1171,7 @@ function simulateDiscern({ prev, agentKey }) {
             resources: {
                 ...draftAgent.resources,
                 [effectKeys.SACRED_FLAMES]:
-                    draftAgent[effectKeys.SACRED_FLAMES] +
+                    draftAgent.resources[effectKeys.SACRED_FLAMES] +
                     result.resourcesConsumed.totalConsumption,
             },
         };
@@ -1175,10 +1211,12 @@ function simulateAtone({ prev, agentKey }) {
         },
     };
 
+    post = processExitAscendence(post, agentKey);
+
     return post;
 }
 
-function simulateJudgment({ prev, nonAgentKey }) {
+function simulateJudgment({ prev, agentKey, nonAgentKey }) {
     let post = {
         ...prev,
     };
@@ -1188,6 +1226,13 @@ function simulateJudgment({ prev, nonAgentKey }) {
         entities: {
             ...post.entities,
             [nonAgentKey]: deleteCondition(post.entities[nonAgentKey]),
+            [agentKey]: {
+                ...post.entities[agentKey],
+                states: {
+                    ...post.entities[agentKey].states,
+                    [effectKeys.ANOINTED_PROXY]: false,
+                },
+            },
         },
     };
 

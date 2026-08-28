@@ -168,6 +168,13 @@ export const GENERAL_DESCRIPTIONS = {
         description: "Starts at 10. Limits how much MANA you can hold.",
     },
 
+    [effectKeys.MANA_OVERFLOW]: {
+        name: "MANA OVERFLOW",
+        type: entryTypes.OVERFLOWN_RESOURCE,
+        description:
+            "Used before MANA by abilities that consume MANA. At turn end, loses all MANA OVERFLOW on self and takes TRUE DAMAGE equal to the amount lost.",
+    },
+
     [effectKeys.STR]: {
         name: "STR",
         type: entryTypes.BASE_ATTRIBUTES,
@@ -283,49 +290,56 @@ export const GENERAL_DESCRIPTIONS = {
         name: "RESOURCES",
         type: entryTypes.MECHANIC,
         description:
-            "Can be subdivided into MITIGATION RESOURCES, FREE RESOURCES, OVERFLOWN RESOURCES, LIMITED RESOURCES, RANKED RESOURCES, FIXED RESOURCES and GLOBAL RESOURCES. Abilities that consume RESOURCES, consume MITIGATION RESOURCES, FREE RESOURCES and LIMITED RESOURCES in this order. Abilities that restore RESOURCES follow reverse order.",
+            "Can be subdivided into FREE RESOURCES, LIMITED RESOURCES, OVERFLOWN RESOURCES, MITIGATION RESOURCES, RANKED RESOURCES, FIXED RESOURCES and GLOBAL RESOURCES. Abilities that consume RESOURCES, consume MITIGATION RESOURCES, FREE RESOURCES and LIMITED RESOURCES in this order. Abilities that restore RESOURCES follow reverse order.",
     },
 
     [entryTypes.FREE_RESOURCE]: {
         name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, DISSONANCE, PRECOGNITION, PROPHECY OF DOOM, BLOOD SACRIFICE, STARDUST, MOONSHINE and RADIANCE. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, DISSONANCE, PRECOGNITION, PROPHECY OF DOOM, BLOOD SACRIFICE, STARDUST, MOONSHINE, RADIANCE, SAACRILEGE, MARTHYR, COVENANT and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
         name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that has a non-fixed upper cap. Includes ENLIGHTENMENT, MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continues to the following RESOURCES on the list. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise continues to the following RESOURCES on the list.",
+            "A subset of RESOURCES that has a non-fixed upper cap. Includes ENLIGHTENMENT, MANA and HEALTH. When LIMITED RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. Cannot restore LIMITED RESOURCES when their max limit is 0, instead, continue to the following RESOURCES on the list. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise continue to the following RESOURCES on the list.",
     },
 
     [entryTypes.OVERFLOWN_RESOURCE]: {
         name: "OVERFLOWN RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that can be gained when restoring LIMITED RESOURCES above their cap. Includes SILVER BLOOD and MANA OVERFLOW. When consuming LIMITED RESOURCES, consumes the corresponding OVERFLOWN RESOURCES first.",
+            "A subset of RESOURCES that can be gained when restoring LIMITED RESOURCES above their cap. Includes INSIGHT, SILVER BLOOD and MANA OVERFLOW. When consuming LIMITED RESOURCES, consumes the corresponding OVERFLOWN RESOURCES first.",
     },
 
     [entryTypes.FIXED_RESOURCE]: {
         name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, ACCRETION and LUNACY.",
+            "A subset of RESOURCES that are percentage-based and have strict limits. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, ACCRETION, LUNACY and TARNISHED SIN.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes FAULTY FIRMAMENT, FRACTURED DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM and HARMONY. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION and MOONLIT TEARS.",
+            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, MOONLIT TEARS and BURDEN OF STIGMA.",
+    },
+
+    [entryTypes.GLOBAL_RESOURCE]: {
+        name: "GLOBAL RESOURCES",
+        type: entryTypes.CATEGORY,
+        description:
+            "A subset of RESOURCES that are shared between players. Includes PROVIDENCE and DEFILEMENT.",
     },
 
     [entryTypes.ATTRIBUTES]: {
@@ -346,7 +360,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SPECIAL ATTRIBUTES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of ATTRIBUTES. Includes ENERGY LEVEL, MOONLIGHT and REVELATION.",
+            "A subset of ATTRIBUTES. Includes ENERGY LEVEL, MOONLIGHT, REVELATION and FORTITUDE.",
     },
 
     [entryTypes.MECHANIC]: {
@@ -416,13 +430,6 @@ export const WARLOCK_DESCRIPTIONS = {
         type: entryTypes.OFFENSIVE_ACTION,
         description:
             "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STR. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA equal to the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA equal to the difference. Cannot be when MANA is lower than 60% of MAX MANA.",
-    },
-
-    [effectKeys.MANA_OVERFLOW]: {
-        name: "MANA OVERFLOW",
-        type: entryTypes.OVERFLOWN_RESOURCE,
-        description:
-            "Used before MANA by abilities that consume MANA. At turn end, loses all MANA OVERFLOW on self and takes TRUE DAMAGE equal to the amount lost.",
     },
 };
 
@@ -1419,7 +1426,7 @@ export const SERAPH_DESCRIPTIONS = {
             "Cannot act. If there's no entity on ANOINTED PROXY on the battlefield, awakens the EYE OF HEAVENS and triggers ANOINTMENT.",
     },
 
-    [effectKeys.ANOINTMENT]: {
+    [roundPhases.ANOINTMENT]: {
         name: "ANOINTMENT",
         type: entryTypes.BATTLE_PHASE,
         description:
@@ -1450,7 +1457,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS, EFFECTIVE DEFENSE, DEFENSE EFFECTIVENESS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES, FORTITUDE, INTEGRITY and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 0.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS, EFFECTIVE DEFENSE, DEFENSE EFFECTIVENESS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES, FORTITUDE, INTEGRITY and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1573,7 +1580,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "DISCERN",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Raises REVELATION for every 5% PROVIDENCE on the battlefield.",
+            "Raises REVELATION for every 10% PROVIDENCE on the battlefield.",
     },
 
     [actionKeys.ATONE]: {
@@ -1761,21 +1768,21 @@ export const SERAPH_DESCRIPTIONS = {
         name: "BLASPHEMY OF TODAY",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, gains MARTHYR equal to the user's missing ENLIGHTENMENT.",
+            "When expunged, inflicts PHYSICAL TARNISHMENT on all entities equal to the user's missing ENLIGHTENMENT.",
     },
 
     [blasphemyKeys.TOMORROW]: {
         name: "BLASPHEMY OF TOMORROW",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, gains COVENANT for every 5% missing PROVIDENCE on the battlefield.",
+            "When expunged, gains COVENANT for every 10% missing PROVIDENCE on the battlefield.",
     },
 
     [effectKeys.COVENANT]: {
         name: "COVENANT",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using CONDEMN, consumes all COVENANT, then increases the tarnishment inflicted by the amount consumed. When using SUPPLICATE, consumes all COVENANT, then restores resources equal to the amount lost. At turn end, lose all COVENANT and raises TARNISHED SIN on self by 0.5% per COVENANT lost.",
+            "When using CONDEMN, consumes all COVENANT, then inflicts LUNIC TARNISHMENT equal to the amount consumed. When using SUPPLICATE, consumes all COVENANT, then raises MAX ENLIGHTENMENT on self equal to the amount consumed. At turn end, lose all COVENANT, then raise TARNISHED SIN on self by 0.5% for every COVENANT lost.",
     },
 
     [choirKeys.EIGHTH]: {
@@ -1825,7 +1832,7 @@ export const SERAPH_DESCRIPTIONS = {
             "Can be CLOSED or OPEN. Awakens as OPEN. Enables RECKONING.",
     },
 
-    [effectKeys.RECKONING]: {
+    [roundPhases.RECKONING]: {
         name: "RECKONING",
         type: entryTypes.BATTLE_PHASE,
         description:
@@ -1864,4 +1871,5 @@ export const DESCRIPTIONS = {
     ...SHADOW_SORCERER_DESCRIPTIONS,
     ...VOYAGER_DESCRIPTIONS,
     ...LUNATIC_DESCRIPTIONS,
+    ...SERAPH_DESCRIPTIONS,
 };

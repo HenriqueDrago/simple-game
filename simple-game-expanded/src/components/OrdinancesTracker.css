@@ -1,0 +1,21 @@
+.ordinances-tracker-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 4px 0;
+}
+
+.ordinances-tracker-container span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #ffffff;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.ordinances-tracker-container span.is-preview {
+    opacity: 0.75;
+}

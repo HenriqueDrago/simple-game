@@ -1,0 +1,81 @@
+.tarnished-sin-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    background: rgba(18, 4, 7, 0.85);
+    border: 1px solid rgba(179, 0, 27, 0.4);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 8px rgba(128, 0, 16, 0.25);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.tarnished-sin-bar-container.is-new-preview {
+    opacity: 0.6;
+    filter: grayscale(40%);
+}
+
+.tarnished-sin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.tarnished-sin-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #ff3b56;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 6px rgba(255, 26, 60, 0.4);
+}
+
+.tarnished-sin-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #ffb3bd;
+    letter-spacing: 0.5px;
+}
+
+.tarnished-sin-value.is-preview {
+    opacity: 0.75;
+}
+
+.tarnished-sin-track {
+    width: 100%;
+    height: 16px;
+    background-color: #000000;
+    border: 1px solid rgba(255, 59, 86, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.95);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.tarnished-sin-fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        #800010 0%,
+        #d6001c 25%,
+        #ff2e4c 50%,
+        #d6001c 75%,
+        #800010 100%
+    );
+    transition: width 0.3s ease-in-out;
+}
+
+.tarnished-sin-animated {
+    background-size: 200% 100%;
+    animation: flowLightCrimson 8s linear infinite;
+}
+
+@keyframes flowLightCrimson {
+    0% {
+        background-position: 0% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}

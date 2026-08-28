@@ -243,7 +243,7 @@ export function createBaseEntity() {
             runeKeys.EMPTY,
         ],
         lasersUsedThisTurn: 0,
-        [entryTypes.HEAVENLY_CHOIR]: [choirKeys.NONE],
+        [entryTypes.HEAVENLY_CHOIR]: choirKeys.NONE,
         [effectKeys.CODEX_OF_BLASPHEMY]: [
             blasphemyKeys.NONE,
             blasphemyKeys.NONE,
@@ -337,8 +337,6 @@ export function createBaseEntity() {
             [effectKeys.INDIGO_STAR]: 0,
             [effectKeys.VIOLET_STAR]: 0,
         },
-        unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
-        attributes: baseAttributes,
         edicts: {
             [edictKeys.ANGELS]: false,
             [edictKeys.ARCHANGELS]: false,
@@ -350,6 +348,8 @@ export function createBaseEntity() {
             [edictKeys.CHERUBIM]: false,
             [edictKeys.SERAPHIM]: false,
         },
+        unspentPoints: constants.INITIAL_POINTS_AVAILABLE,
+        attributes: baseAttributes,
     };
 }
 
@@ -379,7 +379,7 @@ export function gainHp(entity, amount) {
     };
 
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftEntity = gainSin(draftEntity, amount);
+        draftEntity = gainSin(draftEntity, amount * constants.HIGH_SIN_GAIN);
         amount = 0;
     }
 
@@ -471,7 +471,7 @@ export function gainMana(entity, amount) {
     };
 
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftEntity = gainSin(draftEntity, amount);
+        draftEntity = gainSin(draftEntity, amount * constants.HIGH_SIN_GAIN);
         amount = 0;
     }
 
@@ -1739,16 +1739,16 @@ export function canUseAction(prev, entityKey, action) {
     }
 
     // Ascendence Actions
-    const ancendedActions = [
-        actionKeys.BLACK_MAYHEM,
-        actionKeys.SHADOW_MANTLE,
-        actionKeys.RITUAL_OF_ASH,
-        actionKeys.DARK_PROMISE,
+    const ascendedActions = [
+        actionKeys.CONDEMN,
+        actionKeys.SUPPLICATE,
+        actionKeys.DISCERN,
+        actionKeys.ATONE,
     ];
     if (states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        return ancendedActions.includes(action);
+        return ascendedActions.includes(action);
     }
-    if (ancendedActions.includes(action)) {
+    if (ascendedActions.includes(action)) {
         return false;
     }
 
@@ -2136,7 +2136,7 @@ export function canUseCombatInteractions(
     // Extra Turn
     if (
         !allowExtraTurn &&
-        !playerMap[entityKey].extra.includes(currRoundPhase)
+        playerMap[entityKey].extra.includes(currRoundPhase)
     ) {
         return false;
     }
@@ -3263,7 +3263,7 @@ export function getDisgrace(prev, entityKey) {
         entity[effectKeys.TARNISHED_SIN] > 0 &&
         entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]
     ) {
-        disgrace *= 1 + entity[effectKeys.TARNISHED_SIN];
+        disgrace *= 1 + entity[effectKeys.TARNISHED_SIN] / 100;
     }
 
     // Hallowed Echoes
@@ -3303,6 +3303,14 @@ export function getFortitude(prev, entityKey) {
     );
 
     return fort;
+}
+
+export function getRevelation(prev, entityKey) {
+    const entity = extractEntity(prev, entityKey);
+
+    let rev = entity[effectKeys.REVELATION];
+
+    return rev;
 }
 
 export function getDefilement(prev) {
@@ -3525,6 +3533,7 @@ export function processExitAscendence(prev, entityKey) {
         states: {
             ...draftEntity.states,
             [effectKeys.CUTOFF_WINGS]: true,
+            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
         },
     };
 
@@ -3544,4 +3553,103 @@ export function exitChoirs(prev, entityKey) {
         },
         entityKey,
     );
+}
+
+export function addBlasphemy(prev, targetKey, nonTargetKey, newBlas) {
+    let post = {
+        ...prev,
+    };
+
+    let draftTarget = extractEntity(post, targetKey);
+
+    const disposedBlasphemy =
+        draftTarget[effectKeys.CODEX_OF_BLASPHEMY][0] || blasphemyKeys.NONE;
+
+    // Expunge Old Blasphemy
+    post = expungeBlas(post, targetKey, nonTargetKey, disposedBlasphemy);
+
+    // Add the new Blasphemy
+    draftTarget = extractEntity(post, targetKey);
+    const newCodex = [
+        ...draftTarget[effectKeys.CODEX_OF_BLASPHEMY].slice(1),
+        newBlas,
+    ];
+    draftTarget = {
+        ...draftTarget,
+        [effectKeys.CODEX_OF_BLASPHEMY]: [...newCodex],
+    };
+
+    post = replaceEntity(post, draftTarget, targetKey);
+
+    return post;
+}
+
+export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
+    let post = {
+        ...prev,
+    };
+
+    let draftTarget = extractEntity(post, targetKey);
+    let draftNonTarget = extractEntity(post, nonTargetKey);
+
+    switch (blasphemy) {
+        case blasphemyKeys.YESTERDAY: {
+            const sinTransfer =
+                draftTarget[effectKeys.TARNISHED_SIN] * constants.YEST_SIN_RATE;
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.TARNISHED_SIN]:
+                    draftTarget[effectKeys.TARNISHED_SIN] - sinTransfer,
+            };
+
+            draftNonTarget = {
+                ...draftNonTarget,
+                [effectKeys.TARNISHED_SIN]: Math.min(
+                    constants.MAX_SIN,
+                    draftNonTarget[effectKeys.TARNISHED_SIN] + sinTransfer,
+                ),
+            };
+            break;
+        }
+
+        case blasphemyKeys.TODAY: {
+            const missingEnlit = Math.max(
+                0,
+                getMaxEnlit(draftTarget) - getTotalEnlit(draftTarget),
+            );
+
+            post = newDealDmg(
+                post,
+                missingEnlit,
+                [targetKey, nonTargetKey],
+                tarnishTypes.PHYSICAL,
+                targetKey,
+            );
+
+            break;
+        }
+
+        case blasphemyKeys.TOMORROW: {
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.COVENANT]:
+                        draftTarget.resources[effectKeys.COVENANT] +
+                        post.btt[effectKeys.PROVIDENCE] * constants.TOMOR_RATE,
+                },
+            };
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+
+    post = replaceEntity(post, draftTarget, targetKey);
+    post = replaceEntity(post, draftNonTarget, nonTargetKey);
+
+    return post;
 }

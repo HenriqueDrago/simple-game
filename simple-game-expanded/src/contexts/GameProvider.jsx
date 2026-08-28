@@ -4,6 +4,7 @@ import {
     canUseCombatInteractions,
     createBaseEntity,
     distributePoints,
+    expungeBlas,
     extractEntity,
     getCurrActivePlayer,
     getEntityElement,
@@ -81,6 +82,9 @@ function resetGameState(prev) {
             [entityKeys.PLAYER_ONE]: playerOne,
             [entityKeys.PLAYER_TWO]: playerTwo,
         },
+        btt: {
+            ...INITIAL_GAME_STATE.btt,
+        }
     };
 }
 
@@ -699,6 +703,26 @@ export default function GameProvider({ children }) {
         });
     }
 
+    function handleBlasphemy(agentKey, nonAgentKey, index) {
+        setGame((prev) => {
+            let post = {
+                ...prev,
+            };
+
+            let draftEntity = extractEntity(post, agentKey);
+
+            const blas = draftEntity?.[effectKeys.CODEX_OF_BLASPHEMY]?.[index];
+
+            if (!blas) {
+                return post;
+            }
+
+            post = expungeBlas(post, agentKey, nonAgentKey, blas);
+
+            return post;
+        });
+    }
+
     // === Efeitos ===
     // Turn Management
     useEffect(() => {
@@ -1221,6 +1245,7 @@ export default function GameProvider({ children }) {
             handleUndo,
             handleRedo,
             handleCelestialStars,
+            handleBlasphemy,
         }),
         [game, simGame],
     );

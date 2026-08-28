@@ -7,12 +7,14 @@ import {
 import {
     canUseAction,
     consumeResources,
+    deleteCondition,
     extractEntity,
     gainHp,
     gainSin,
     getEntityColoredStars,
     getEntityElement,
     getEntityTotalMana,
+    isChoirActive,
     isElementActive,
     loseMana,
     loseProvidence,
@@ -35,6 +37,8 @@ import {
     playerTurnPhases,
     eventKeys,
     edictKeys,
+    choirKeys,
+    eyeKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
@@ -782,6 +786,36 @@ export function buildRoundQueue(prev) {
         newQueue.push(roundPhases.ROUND_START);
     }
 
+    // Anointment
+    const hasAnointed =
+        p1.states[effectKeys.ANOINTED_PROXY] ||
+        p2.states[effectKeys.ANOINTED_PROXY];
+    const hasAbandoned =
+        p1.states[effectKeys.ABANDONED_BY_GRACE] ||
+        p2.states[effectKeys.ABANDONED_BY_GRACE];
+    if (
+        hasAbandoned &&
+        !hasAnointed &&
+        !newQueue.includes(roundPhases.ANOINTMENT)
+    ) {
+        newQueue.push(roundPhases.ANOINTMENT);
+    }
+
+    // Trial
+    if (
+        p1.states[effectKeys.ANOINTED_PROXY] &&
+        !newQueue.includes(roundPhases.P1_TRIAL)
+    ) {
+        newQueue.push(roundPhases.P1_TRIAL);
+    }
+
+    if (
+        p2.states[effectKeys.ANOINTED_PROXY] &&
+        !newQueue.includes(roundPhases.P2_TRIAL)
+    ) {
+        newQueue.push(roundPhases.P2_TRIAL);
+    }
+
     // Player Logic Helper
     const playerLogic = (entityKey, turnKey, starfallKey, singularityKey) => {
         // Player Turn
@@ -1287,4 +1321,92 @@ export function buildHistory(prev, event, info = {}) {
         ...prev,
         history: history,
     };
+}
+
+export function processReckoning(prev) {
+    let post = {
+        ...prev,
+    };
+
+    let eye = post.btt[effectKeys.EYE_OF_HEAVENS];
+    // Disables the Eye
+    if (
+        !isChoirActive(
+            extractEntity(post, entityKeys.PLAYER_ONE),
+            choirKeys.NINTH,
+        ) &&
+        !isChoirActive(
+            extractEntity(post, entityKeys.PLAYER_TWO),
+            choirKeys.NINTH,
+        )
+    ) {
+        eye = eyeKeys.DORMANT;
+    }
+
+    // Switch Eye
+    if (eye === eyeKeys.OPEN) {
+        eye = eyeKeys.CLOSED;
+    } else if (eye === eyeKeys.CLOSED) {
+        eye = eyeKeys.OPEN;
+    }
+
+    return processDeathCheck({
+        ...post,
+        status: turnStatus.ROUND_TRANSITION,
+        btt: {
+            ...post.btt,
+            [effectKeys.EYE_OF_HEAVENS]: eye,
+        },
+    });
+}
+
+export function processAnointment(prev) {
+    let post = {
+        ...prev,
+    };
+
+    let p1 = extractEntity(post, entityKeys.PLAYER_ONE);
+    let p2 = extractEntity(post, entityKeys.PLAYER_TWO);
+
+    if (p1.states[effectKeys.ABANDONED_BY_GRACE]) {
+        if (p2.states[effectKeys.ABANDONED_BY_GRACE]) {
+            p1 = deleteCondition(p1);
+            p2 = deleteCondition(p2);
+        } else {
+            p2 = {
+                ...p2,
+                states: {
+                    ...p2.states,
+                    [effectKeys.ANOINTED_PROXY]: true,
+                },
+            };
+        }
+    } else if (p2.states[effectKeys.ABANDONED_BY_GRACE]) {
+        p1 = {
+            ...p1,
+            states: {
+                ...p1.states,
+                [effectKeys.ANOINTED_PROXY]: true,
+            },
+        };
+    } else {
+        console.error("Invalid Anointment");
+
+        return processDeathCheck({
+            ...post,
+            status: turnStatus.ROUND_TRANSITION,
+        });
+    }
+
+    post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
+    post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+
+    return processDeathCheck({
+        ...post,
+        status: turnStatus.ROUND_TRANSITION,
+        btt: {
+            ...post.btt,
+            [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
+        },
+    });
 }

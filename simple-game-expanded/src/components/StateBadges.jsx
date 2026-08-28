@@ -22,6 +22,13 @@ const STATE_MAPPINGS = [
     { key: effectKeys.MOON_DEW, label: "Moon Dew" },
     { key: effectKeys.VISIONARY, label: "Visionary" },
     { key: effectKeys.EVENT_HORIZON, label: "Event Horizon" },
+
+    { key: effectKeys.ASCENDENCE_OF_SPIRIT, label: "Ascendence of Spirit" },
+    { key: effectKeys.ZENITH_OF_MORTALITY, label: "Zenith of Mortality" },
+    { key: effectKeys.IMMACULATE, label: "Immaculate" },
+    { key: effectKeys.CUTOFF_WINGS, label: "Cutoff Wings" },
+    { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
+    { key: effectKeys.ABANDONED_BY_GRACE, label: "Immaculate" },
 ];
 
 function StateBadges({ entityKey }) {

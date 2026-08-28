@@ -1,0 +1,23 @@
+/* Right Panel Layout */
+.player-panel-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 310px;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.attributes-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stats-panel-warning {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 8px;
+}

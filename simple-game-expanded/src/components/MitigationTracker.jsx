@@ -1,6 +1,7 @@
 import {
     Amphora,
     ChartNoAxesCombined,
+    Church,
     Flame,
     Hexagon,
     Moon,
@@ -59,6 +60,11 @@ const mitigators = {
         icon: <ChartNoAxesCombined className="svg-icon" strokeWidth={2.5} />,
         color: "#00e676",
         borderColor: "rgba(0, 230, 118, 0.25)",
+    },
+    [effectKeys.SANCTUARY]: {
+        icon: <Church className="svg-icon" strokeWidth={2.5} />,
+        color: "#ffd54f",
+        borderColor: "rgba(255, 213, 79, 0.25)",
     },
 };
 

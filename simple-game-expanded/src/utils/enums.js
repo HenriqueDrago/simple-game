@@ -20,6 +20,11 @@ export const roundPhases = Object.freeze({
     P1_SINGULARITY: "p1Singularity",
     P2_SINGULARITY: "p2Singularity",
 
+    RECKONING: "reckoning",
+    ANOINTMENT: "anointment",
+    P1_TRIAL: "trial",
+    P2_TRIAL: "trial",
+
     ROUND_END: "roundEnd",
 });
 
@@ -289,9 +294,7 @@ export const effectKeys = Object.freeze({
     STARS_OF_GENESIS: "starsOfGenesis",
     BURDEN_OF_STIGMA: "burdenOfStigma",
     MARTHYR: "marthyr",
-    ANOINTMENT: "anointment",
-    TRIAL: "trial",
-    RECKONING: "reckoning",
+    TRIAL: "trial"
 });
 
 export const runeKeys = Object.freeze({
@@ -333,6 +336,7 @@ export const entryTypes = Object.freeze({
     SPECIAL_ATTRIBUTES: "alternateStats",
     RUNES: "runes",
     CONTROLLER: "controller",
+
     TARNISHMENT_TYPE: "tarnishmentType",
     SPIRITUAL_ORDINANCE: "spiritualOrdinance",
     BLASPHEMY: "blasphemy",
