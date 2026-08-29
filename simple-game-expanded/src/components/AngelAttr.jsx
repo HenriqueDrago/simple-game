@@ -21,31 +21,29 @@ export default function AngelAttr({ entityKey }) {
     const displayFort = simGame ? simFort : realFort;
 
     return (
-        <div className="angel-attr-container">
+        <div className="angel-attr-bar">
             <div
-                className="angel-attr-row"
+                className="attr-node"
                 onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.REVELATION)}
             >
-                <span className="angel-attr-label">REVELATION</span>
-                <span
-                    className={`angel-attr-value ${
-                        isRevChanged ? "is-preview" : ""
-                    }`}
-                >
+                <span className="attr-title">REV</span>
+                <span className={`attr-count ${isRevChanged ? "is-preview" : ""}`}>
                     {displayRev}
                 </span>
             </div>
 
+            <div className="attr-center-mark">
+                <span className="mark-line" />
+                <span className="mark-gem">✦</span>
+                <span className="mark-line" />
+            </div>
+
             <div
-                className="angel-attr-row"
+                className="attr-node"
                 onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.FORTITUDE)}
             >
-                <span className="angel-attr-label">FORTITUDE</span>
-                <span
-                    className={`angel-attr-value ${
-                        isFortChanged ? "is-preview" : ""
-                    }`}
-                >
+                <span className="attr-title">FORT</span>
+                <span className={`attr-count ${isFortChanged ? "is-preview" : ""}`}>
                     {displayFort}
                 </span>
             </div>

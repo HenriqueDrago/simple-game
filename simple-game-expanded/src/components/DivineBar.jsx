@@ -1,7 +1,7 @@
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import { constants } from "../utils/constants";
-import { canUseAction } from "../utils/entities";
+import { canUseAction, canUseCombatInteractions } from "../utils/entities";
 import { actionKeys, effectKeys, entityKeys } from "../utils/enums";
 import "./DivineBar.css";
 import GradientBar from "./GradientBar";
@@ -19,6 +19,8 @@ export default function DivineBar({ entityKey }) {
     if (entity[effectKeys.DIVINE_SPARK] <= 0) {
         return null;
     }
+
+    const canUseAscend = canUseAction(game, entityKey, actionKeys.ASCEND);
 
     return (
         <div className="divine-bar">
@@ -47,12 +49,16 @@ export default function DivineBar({ entityKey }) {
                 />
             </div>
             <button
+                className={`${canUseAscend ? "ascend-enabled" : ""}`}
                 onClick={() => {
                     handleClearTooltip();
                     handleAction(actionKeys.ASCEND, entityKey, otherEntityKey);
                 }}
                 onMouseDown={(e) => handleSpawnTooltip(e, actionKeys.ASCEND)}
-                disabled={!canUseAction(game, entityKey, actionKeys.ASCEND)}
+                disabled={
+                    !canUseAscend ||
+                    !canUseCombatInteractions(game, entityKey, true, true)
+                }
             >
                 Ascend
             </button>

@@ -5,6 +5,7 @@ import {
     FREE_ACTIONS,
 } from "./constants.js";
 import {
+    advanceChoir,
     canUseAction,
     consumeResources,
     deleteCondition,
@@ -15,6 +16,7 @@ import {
     getEntityElement,
     getEntityTotalMana,
     isChoirActive,
+    isEdictActive,
     isElementActive,
     loseMana,
     loseProvidence,
@@ -43,6 +45,7 @@ import {
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
 
+// eslint-disable-next-line no-unused-vars
 export function processUpkeep(prev, targetKey, nonTargetKey) {
     let post = {
         ...prev,
@@ -52,9 +55,13 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         ...post.entities[targetKey],
     };
 
-    let draftNonTarget = {
-        ...post.entities[nonTargetKey],
-    };
+    // Hallowed Echoes
+    if (draftTarget[effectKeys.HALLOWED_ECHOES] > 0) {
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.HALLOWED_ECHOES]: 0,
+        };
+    }
 
     // Irradiation
     if (draftTarget[effectKeys.IRRADIATION] > 0) {
@@ -89,7 +96,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 entities: {
                     ...post.entities,
                     [targetKey]: draftTarget,
-                    [nonTargetKey]: draftNonTarget,
                 },
             };
 
@@ -102,7 +108,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             );
 
             draftTarget = { ...post.entities[targetKey] };
-            draftNonTarget = { ...post.entities[nonTargetKey] };
         }
     }
 
@@ -123,14 +128,12 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             entities: {
                 ...post.entities,
                 [targetKey]: draftTarget,
-                [nonTargetKey]: draftNonTarget,
             },
         };
 
         post = newDealDmg(post, dmgTaken, targetKey, dmgTypes.TRUE, null);
 
         draftTarget = { ...post.entities[targetKey] };
-        draftNonTarget = { ...post.entities[nonTargetKey] };
     }
 
     // Stardust
@@ -290,7 +293,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             entities: {
                 ...post.entities,
                 [targetKey]: draftTarget,
-                [nonTargetKey]: draftNonTarget,
             },
         };
 
@@ -303,7 +305,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         );
 
         draftTarget = { ...post.entities[targetKey] };
-        draftNonTarget = { ...post.entities[nonTargetKey] };
     }
 
     // Mana Bleed
@@ -434,6 +435,11 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = extractEntity(post, targetKey);
     }
 
+    // Heavenly Choir
+    if (draftTarget.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        draftTarget = advanceChoir(draftTarget);
+    }
+
     // Burden of Stigma
     if (draftTarget[effectKeys.BURDEN_OF_STIGMA] > 0) {
         draftTarget = {
@@ -462,6 +468,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.DIMMING_DARKNESS]: false,
             [effectKeys.PRISMATIC]: false,
             [effectKeys.EVENT_HORIZON]: false,
+            [effectKeys.IMMACULATE]: false,
         },
     };
 
@@ -474,9 +481,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             ...post.entities,
             [targetKey]: {
                 ...draftTarget,
-            },
-            [nonTargetKey]: {
-                ...draftNonTarget,
             },
         },
     });
@@ -1145,11 +1149,7 @@ export function processExtraTurn(prev, agentKey, action) {
     let isFreeAction = FREE_ACTIONS.includes(action);
 
     const entity = extractEntity(post, agentKey);
-    if (
-        !isFreeAction &&
-        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        entity.edicts[edictKeys.VIRTUES]
-    ) {
+    if (!isFreeAction && isEdictActive(entity, edictKeys.VIRTUES)) {
         const provNecessary =
             constants.BASE_VIRTUES_COST +
             constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
@@ -1157,6 +1157,13 @@ export function processExtraTurn(prev, agentKey, action) {
         if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
             post = loseProvidence(post, provNecessary);
             isFreeAction = true;
+
+            let draftAgent = extractEntity(post, agentKey);
+            draftAgent = {
+                ...draftAgent,
+                virtuesUsedThisTurn: draftAgent.virtuesUsedThisTurn + 1,
+            };
+            post = replaceEntity(post, draftAgent, agentKey);
         }
     }
 
@@ -1180,11 +1187,19 @@ export function processPlan(prev, agentKey, action) {
 
     let isFreeAction = FREE_ACTIONS.includes(action);
 
+    const isAbandoned =
+        extractEntity(prev, entityKeys.PLAYER_ONE).states[
+            effectKeys.ABANDONED_BY_GRACE
+        ] ||
+        extractEntity(prev, entityKeys.PLAYER_TWO).states[
+            effectKeys.ABANDONED_BY_GRACE
+        ];
+
     const entity = extractEntity(post, agentKey);
     if (
         !isFreeAction &&
-        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] &&
-        entity.edicts[edictKeys.VIRTUES]
+        isEdictActive(entity, edictKeys.VIRTUES) &&
+        !isAbandoned
     ) {
         const provNecessary =
             constants.BASE_VIRTUES_COST +
@@ -1193,13 +1208,21 @@ export function processPlan(prev, agentKey, action) {
         if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
             post = loseProvidence(post, provNecessary);
             isFreeAction = true;
+
+            let draftAgent = extractEntity(post, agentKey);
+            draftAgent = {
+                ...draftAgent,
+                virtuesUsedThisTurn: draftAgent.virtuesUsedThisTurn + 1,
+            };
+            post = replaceEntity(post, draftAgent, agentKey);
         }
     }
 
     // Free actions do not advance turn subphase
-    const newQueue = isFreeAction
-        ? post.playerQueue
-        : post.playerQueue.slice(1);
+    const newQueue =
+        isFreeAction && !isAbandoned
+            ? post.playerQueue
+            : post.playerQueue.slice(1);
 
     // Guarantes Commit executes without a round transition
     const newStatus =

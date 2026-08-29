@@ -2,7 +2,6 @@ import {
     Sword,
     Shield,
     HeartCrack,
-    ShieldCogCorner,
     ChevronsDown,
     Crosshair,
 } from "lucide-react";
@@ -10,7 +9,8 @@ import "./ModifiersTracker.css";
 import { effectKeys } from "../utils/enums";
 import { useUI } from "../contexts/UIContext";
 import { useGame } from "../contexts/GameContext";
-import { getEntityDamageBonus, getEntityDefEffect, getEntityDefPen, getEntityDR, getEntityFragility, getEntityWeakness } from "../utils/entities";
+import { getEntityDamageBonus, getEntityDefPen, getEntityDR, getEntityFragility, getEntityWeakness } from "../utils/entities";
+import { customRound } from "../utils/general";
 
 export default function ModifiersTracker({ entityKey }) {
     const { game } = useGame();
@@ -18,40 +18,33 @@ export default function ModifiersTracker({ entityKey }) {
 
     const simGame = game?.simGame;
 
-    const realDmg = Math.round((getEntityDamageBonus(game, entityKey) - 1) * 100);
+    const realDmg = customRound((getEntityDamageBonus(game, entityKey) - 1) * 100, 1);
     const simDmg = simGame
-        ? Math.round((getEntityDamageBonus(simGame, entityKey)  - 1) * 100)
+        ? customRound((getEntityDamageBonus(simGame, entityKey)  - 1) * 100, 1)
         : realDmg;
     const isDmgChanged = simGame && simDmg !== realDmg;
     const displayDmg = simGame ? simDmg : realDmg;
 
-    const realWeak = Math.round((1 - getEntityWeakness(game, entityKey) ) * 100);
+    const realWeak = customRound((1 - getEntityWeakness(game, entityKey) ) * 100, 1);
     const simWeak = simGame
-        ? Math.round((1 - getEntityWeakness(simGame, entityKey) ) * 100)
+        ? customRound((1 - getEntityWeakness(simGame, entityKey) ) * 100, 1)
         : realWeak;
     const isWeakChanged = simGame && simWeak !== realWeak;
     const displayWeak = simGame ? simWeak : realWeak;
 
-    const realDR = Math.round((1 - getEntityDR(game, entityKey) ) * 100);
+    const realDR = customRound((1 - getEntityDR(game, entityKey) ) * 100, 1);
     const simDR = simGame
-        ? Math.round((1 - getEntityDR(simGame, entityKey) ) * 100)
+        ? customRound((1 - getEntityDR(simGame, entityKey) ) * 100, 1)
         : realDR;
     const isDRChanged = simGame && simDR !== realDR;
     const displayDR = simGame ? simDR : realDR;
 
-    const realFrag = Math.round((getEntityFragility(game, entityKey) - 1) * 100);
+    const realFrag = customRound((getEntityFragility(game, entityKey) - 1) * 100, 1);
     const simFrag = simGame
-        ? Math.round((getEntityFragility(simGame, entityKey)  - 1) * 100)
+        ? customRound((getEntityFragility(simGame, entityKey)  - 1) * 100, 1)
         : realFrag;
     const isFragChanged = simGame && simFrag !== realFrag;
     const displayFrag = simGame ? simFrag : realFrag;
-
-    const realDef = Math.round(getEntityDefEffect(game, entityKey)  * 100);
-    const simDef = simGame
-        ? Math.round(getEntityDefEffect(simGame, entityKey)  * 100)
-        : realDef;
-    const isDefChanged = simGame && simDef !== realDef;
-    const displayDef = simGame ? simDef : realDef;
 
     const realDefPen = getEntityDefPen(game, entityKey);
     const simDefPen = simGame ? getEntityDefPen(simGame, entityKey) : realDefPen;
@@ -93,18 +86,9 @@ export default function ModifiersTracker({ entityKey }) {
                 {displayFrag}%
             </span>
             <span
-                className={isDefChanged ? "is-preview" : ""}
-                onMouseDown={(e) =>
-                    handleSpawnTooltip(e, effectKeys.DEF_EFFECTIVENESS)
-                }
-            >
-                <ShieldCogCorner size={18} />
-                {displayDef}%
-            </span>
-            <span
                 className={isDefPenChanged ? "is-preview" : ""}
                 onMouseDown={(e) =>
-                    handleSpawnTooltip(e, effectKeys.DEF_PEN)
+                    handleSpawnTooltip(e, effectKeys.BREACH)
                 }
             >
                 <Crosshair size={18} />

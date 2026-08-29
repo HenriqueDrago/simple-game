@@ -29,6 +29,7 @@ import {
     getFortitude,
     advanceChoir,
     processExitAscendence,
+    isEdictActive,
 } from "./entities.js";
 import {
     actionKeys,
@@ -927,17 +928,18 @@ function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
     return post;
 }
 
-function simulateRise({ prev, agentKey }) {
-    let draftAgent = extractEntity(prev, agentKey);
+function simulateRise({ prev, agentKey, nonAgentKey }) {
+    let post = exitAllStates(prev, agentKey, nonAgentKey);
+    let draftAgent = extractEntity(post, agentKey);
 
     draftAgent = {
         ...draftAgent,
         attributes: {
             ...draftAgent.attributes,
-            str: {
-                ...draftAgent.attributes.str,
+            def: {
+                ...draftAgent.attributes.def,
                 value:
-                    draftAgent.attributes.str.value + constants.RISE_STR_GAIN,
+                    draftAgent.attributes.def.value + getEntityStr(draftAgent),
             },
         },
         states: {
@@ -946,7 +948,7 @@ function simulateRise({ prev, agentKey }) {
         },
     };
 
-    return replaceEntity(prev, draftAgent, agentKey);
+    return replaceEntity(post, draftAgent, agentKey);
 }
 
 function simulateAscend({ prev, agentKey, nonAgentKey }) {
@@ -1059,8 +1061,10 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
     let extraDmg = 0;
 
     // Edict of Angels
-    if (draftAgent.edicts[edictKeys.ANGELS]) {
-        const enlitConsumed = getTotalEnlit(draftAgent);
+    if (isEdictActive(draftAgent, edictKeys.ANGELS)) {
+        const enlitConsumed = Math.floor(
+            getTotalEnlit(draftAgent) * constants.ANGEL_LOSE,
+        );
         draftAgent = loseEnlit(draftAgent, enlitConsumed);
 
         extraDmg += enlitConsumed;
@@ -1110,8 +1114,10 @@ function simulateSupplicate({ prev, agentKey }) {
         };
     }
 
-    // Edict of Principalities
-    if (draftAgent.edicts[edictKeys.PRINCIPALITIES]) {
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    // Supplicate
+    if (isEdictActive(draftAgent, edictKeys.PRINCIPALITIES)) {
         draftAgent = {
             ...draftAgent,
             resources: {
@@ -1120,21 +1126,21 @@ function simulateSupplicate({ prev, agentKey }) {
                     draftAgent.resources[effectKeys.SANCTUARY] +
                     getFortitude(post, agentKey),
             },
-            states: {
-                ...draftAgent.states,
-                [effectKeys.IMMACULATE]: true,
-            },
         };
-
-        post = replaceEntity(post, draftAgent, agentKey);
     } else {
-        draftAgent = restoreResources(
-            draftAgent,
-            draftAgent[effectKeys.REVELATION],
-        );
-
-        post = replaceEntity(post, draftAgent, agentKey);
+        draftAgent = restoreResources(draftAgent, getFortitude(post, agentKey));
     }
+
+    // Enters Immaculate
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.IMMACULATE]: true,
+        },
+    };
+
+    post = replaceEntity(post, draftAgent, agentKey);
 
     return post;
 }
@@ -1158,21 +1164,16 @@ function simulateDiscern({ prev, agentKey }) {
     };
 
     // Powers
-    if (draftAgent.edicts[edictKeys.POWERS]) {
-        const result = consumeResources(
-            draftAgent,
-            Math.floor(post.btt[effectKeys.PROVIDENCE] * constants.POWERS_RATE),
-            edictKeys.POWERS,
-        );
-        draftAgent = result.draftEntity;
-
+    if (isEdictActive(draftAgent, edictKeys.POWERS)) {
         draftAgent = {
             ...draftAgent,
             resources: {
                 ...draftAgent.resources,
                 [effectKeys.SACRED_FLAMES]:
                     draftAgent.resources[effectKeys.SACRED_FLAMES] +
-                    result.resourcesConsumed.totalConsumption,
+                    Math.floor(
+                        post.btt[effectKeys.PROVIDENCE] * constants.POWERS_RATE,
+                    ),
             },
         };
     }
@@ -1197,6 +1198,9 @@ function simulateAtone({ prev, agentKey }) {
         ...draftAgent,
         [effectKeys.REVELATION]: 0,
         [effectKeys.FORTITUDE]: 0,
+        [effectKeys.BURDEN_OF_STIGMA]: Math.floor(
+            post.btt[effectKeys.PROVIDENCE] * constants.STIGMA_RATE,
+        ),
     };
 
     post = {

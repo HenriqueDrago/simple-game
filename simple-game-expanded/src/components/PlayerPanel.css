@@ -222,3 +222,55 @@
             inset 0 0 20px rgba(255, 0, 0, 0.35);
     }
 }
+
+.player-panel-container.state-zenith-of-mortality {
+    border-color: #ffffff;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.08),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 20px rgba(255, 255, 255, 0.55),
+        inset 0 0 15px rgba(255, 255, 255, 0.18);
+}
+
+.player-panel-container.state-ascendence-of-spirit {
+    border-color: #ffd700;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 215, 0, 0.08),
+        rgba(15, 15, 20, 0.94)
+    );
+    box-shadow:
+        0 0 25px rgba(255, 215, 0, 0.6),
+        inset 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.player-panel-container.state-abandoned-by-grace {
+    border-color: #b3001b;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(179, 0, 27, 0.1),
+        rgba(15, 15, 20, 0.95)
+    );
+    box-shadow:
+        0 0 22px rgba(179, 0, 27, 0.65),
+        inset 0 0 18px rgba(128, 0, 16, 0.3);
+}
+
+.player-panel-container.state-anointed-proxy {
+    border-color: #fff5c0;
+    border-image: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 245, 192, 0.08),
+        rgba(15, 15, 20, 0.92)
+    );
+    box-shadow:
+        0 0 22px rgba(255, 245, 192, 0.7),
+        inset 0 0 15px rgba(255, 215, 0, 0.25);
+}

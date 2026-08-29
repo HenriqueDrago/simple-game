@@ -1,0 +1,56 @@
+.choir-tracker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    background: radial-gradient(
+        ellipse at top,
+        rgba(35, 30, 18, 0.7) 0%,
+        rgba(8, 8, 12, 0.95) 80%
+    );
+    border: 1px solid rgba(229, 193, 88, 0.25);
+    border-radius: 2px;
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.85),
+        inset 0 0 15px rgba(229, 193, 88, 0.05);
+    box-sizing: border-box;
+}
+
+.choir-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.choir-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(229, 193, 88, 0.4),
+        transparent
+    );
+}
+
+.choir-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #e5c158;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 6px rgba(229, 193, 88, 0.3);
+    white-space: nowrap;
+}
+
+.choir-name {
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    margin-top: 2px;
+}

@@ -9,6 +9,7 @@ import {
     getCurrActivePlayer,
     getEntityElement,
     getOtherEntity,
+    isEdictUnlocked,
     isElementActive,
     newDealDmg,
     processDeathCheck,
@@ -52,6 +53,7 @@ import {
     processExtraTurn,
     processStarfallTurn,
     processUpkeep,
+    processAnointment,
 } from "../utils/turnManagement";
 import { centralAIManagement, setConstellation } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
@@ -84,7 +86,7 @@ function resetGameState(prev) {
         },
         btt: {
             ...INITIAL_GAME_STATE.btt,
-        }
+        },
     };
 }
 
@@ -723,6 +725,26 @@ export default function GameProvider({ children }) {
         });
     }
 
+    function handleEdict(agentKey, edict) {
+        setGame((prev) => {
+            let draftAgent = extractEntity(prev, agentKey);
+
+            if (!isEdictUnlocked(draftAgent, edict)) {
+                return prev;
+            }
+
+            draftAgent = {
+                ...draftAgent,
+                edicts: {
+                    ...draftAgent.edicts,
+                    [edict]: !draftAgent.edicts[edict],
+                },
+            };
+
+            return replaceEntity(prev, draftAgent, agentKey);
+        });
+    }
+
     // === Efeitos ===
     // Turn Management
     useEffect(() => {
@@ -765,6 +787,13 @@ export default function GameProvider({ children }) {
                     nextState = processMoonPhase(gameState);
                     delayAmount = 800 * gameSpeeds[game.speed].mod;
                     historyKey = eventKeys.MOON_PHASE;
+                    break;
+                }
+
+                case roundPhases.ANOINTMENT: {
+                    nextState = processAnointment(gameState);
+                    delayAmount = 800 * gameSpeeds[game.speed].mod;
+                    historyKey = eventKeys.ANOINTMENT;
                     break;
                 }
 
@@ -879,6 +908,12 @@ export default function GameProvider({ children }) {
                                     0 ||
                                 currEntity.resources[effectKeys.MANA_OVERFLOW] >
                                     0 ||
+                                currEntity.resources[effectKeys.SACRED_FLAMES] >
+                                    0 ||
+                                currEntity.resources[effectKeys.SACRILEGE] >
+                                    0 ||
+                                currEntity.resources[effectKeys.COVENANT] > 0 ||
+                                currEntity.resources[effectKeys.MARTHYR] > 0 ||
                                 currEntity[effectKeys.BAD_OMEN] > 0);
 
                         nextState = commitTurn(
@@ -1201,6 +1236,12 @@ export default function GameProvider({ children }) {
                     ),
                 ),
             );
+
+            const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
+
+            sim = isExtraTurn
+                ? processExtraTurn(sim, agentKey, game.simSpecs.action)
+                : processPlan(sim, agentKey, game.simSpecs.action);
         }
 
         if (game?.simSpecs?.commit) {
@@ -1246,6 +1287,7 @@ export default function GameProvider({ children }) {
             handleRedo,
             handleCelestialStars,
             handleBlasphemy,
+            handleEdict,
         }),
         [game, simGame],
     );

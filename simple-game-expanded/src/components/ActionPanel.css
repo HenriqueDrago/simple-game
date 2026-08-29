@@ -11,29 +11,31 @@
 
 .button-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); 
-    gap: 15px; 
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
     max-width: 800px;
     width: 100%;
 }
 
 .button-grid button {
     width: 100%;
-    height: 100%; 
+    height: 100%;
     padding: 12px 10px;
     box-sizing: border-box;
-    display: flex; 
+    display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    
+
     background-color: #000000;
     color: #ffffff;
     border: 1px solid #ffffff;
     border-radius: 0;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .button-grid button:not(:disabled):hover {
@@ -43,7 +45,7 @@
 
 .enemy-wait {
     font-size: 1.2rem;
-    color: #ffffff; 
+    color: #ffffff;
     padding: 8px 16px;
     letter-spacing: 1px;
     border-bottom: 2px solid #ffffff;
@@ -52,12 +54,12 @@
 .action-description-box {
     width: 100%;
     max-width: 600px;
-    min-height: 48px; 
+    min-height: 48px;
     padding: 10px 15px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; 
+    align-items: flex-start;
     justify-content: flex-start;
     text-align: left;
     line-height: 1.4;
@@ -83,7 +85,7 @@ button:disabled {
     opacity: 0.4;
     pointer-events: none;
     filter: grayscale(80%);
-    
+
     animation: none !important;
     box-shadow: none !important;
 }
@@ -97,7 +99,7 @@ button:disabled:hover {
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 20px 0;
+    padding: 20px 50px;
 }
 
 .meltdown-button {
@@ -110,7 +112,9 @@ button:disabled:hover {
     text-transform: uppercase;
     letter-spacing: 2px;
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), inset 0 0 10px rgba(255, 102, 0, 0.5);
+    box-shadow:
+        0 0 15px rgba(255, 0, 0, 0.8),
+        inset 0 0 10px rgba(255, 102, 0, 0.5);
     animation: pulse-fire 1.2s infinite alternate;
 }
 
@@ -121,10 +125,14 @@ button:disabled:hover {
 
 @keyframes pulse-fire {
     0% {
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), inset 0 0 5px rgba(255, 102, 0, 0.3);
+        box-shadow:
+            0 0 10px rgba(255, 0, 0, 0.6),
+            inset 0 0 5px rgba(255, 102, 0, 0.3);
     }
     100% {
-        box-shadow: 0 0 25px rgba(255, 51, 0, 1), inset 0 0 15px rgba(255, 153, 51, 0.8);
+        box-shadow:
+            0 0 25px rgba(255, 51, 0, 1),
+            inset 0 0 15px rgba(255, 153, 51, 0.8);
     }
 }
 
@@ -146,15 +154,17 @@ button:disabled:hover {
     height: 100%;
     padding: 12px 10px;
     box-sizing: border-box;
-    display: flex; 
+    display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    
-    background-color: #110e17; 
+
+    background-color: #110e17;
     color: #c9b3e6;
-    border: 1px solid #4a2b66; 
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(74, 43, 102, 0.5);
+    border: 1px solid #4a2b66;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.8),
+        inset 0 0 10px rgba(74, 43, 102, 0.5);
     transition: all 0.2s ease-in-out;
     cursor: pointer;
 }
@@ -162,84 +172,19 @@ button:disabled:hover {
 .shadow-button-grid button:not(:disabled):hover {
     background-color: #2b1147;
     color: #f2e6ff;
-    border-color: #9d00ff; 
-    box-shadow: 0 6px 12px rgba(157, 0, 255, 0.3), inset 0 0 15px rgba(157, 0, 255, 0.5);
-    transform: translateY(-2px);
-}
-
-.angel-button-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    max-width: 700px;
-    width: 100%;
-}
-
-.good-angel-button {
-    width: 100%;
-    height: 100%;
-    padding: 12px 10px;
-    box-sizing: border-box;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    
-    background-color: transparent;
-    color: #FFD700; 
-    border: 1px solid #FFD700; 
-    box-shadow: 0 4px 6px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.good-angel-button:not(:disabled):hover {
-    background-color: #FFF8DC; 
-    color: #b89600; 
-    border-color: #FFD700;
-    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.8);
-    transform: translateY(-2px);
-}
-
-.bad-angel-button {
-    width: 100%;
-    height: 100%;
-    padding: 12px 10px;
-    box-sizing: border-box;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    
-    background-color: #140f04;
-    color: #a88a4f; 
-    border: 1px solid #8B6508; 
-    border-radius: 0; /* Enforcing sharp edges */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8), inset 0 0 5px rgba(139, 101, 8, 0.2);
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.bad-angel-button:not(:disabled):hover {
-    background-color: #8B6508; 
-    color: #ffffff; 
-    border-color: #a67c00;
-    box-shadow: 0 6px 10px rgba(139, 101, 8, 0.5);
+    border-color: #9d00ff;
+    box-shadow:
+        0 6px 12px rgba(157, 0, 255, 0.3),
+        inset 0 0 15px rgba(157, 0, 255, 0.5);
     transform: translateY(-2px);
 }
 
 .actions-buttons-text-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-
+    width: 100%;
 }
 
 .actions-mouse-wheel-explainer {
@@ -248,7 +193,7 @@ button:disabled:hover {
     font-size: 0.9rem;
     color: #9ca3af; /* Soft, muted gray */
     font-style: italic;
-    
+
     letter-spacing: 0.03em;
     opacity: 0.8;
 
@@ -257,77 +202,13 @@ button:disabled:hover {
     padding: 5px;
 }
 
-.ascend-button {
-    background-color: #0a0f1d; /* Deep cosmic dark blue/black */
-    color: #ffffff;
-    border: 2px solid #ffffff;
-    border-radius: 0; /* Enforcing sharp edges matching the layout */
-    padding: 20px 50px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    cursor: pointer;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.3);
-    animation: pulse-zenith 1.5s infinite alternate;
-    transition: all 0.2s ease-in-out;
-}
-
-.ascend-button:not(:disabled):hover {
-    background-color: #ffffff;
-    color: #0a0f1d;
-    border-color: #ffd700; /* Gold accent on hover */
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 1);
-    transform: translateY(-2px);
-}
-
-@keyframes pulse-zenith {
-    0% {
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
-    }
-    100% {
-        box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.5);
-    }
-}
-
-.judgement-button {
-    background-color: #1f1d17; /* Heavy, ancient stone dark slate */
-    color: #ffffff;
-    border: 2px solid #e5c158; /* Blinding radiant absolute gold */
-    border-radius: 0;
-    padding: 20px 50px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    cursor: pointer;
-    box-shadow: 0 0 15px rgba(229, 193, 88, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
-    animation: pulse-judgement 1.6s infinite alternate;
-    transition: all 0.2s ease-in-out;
-}
-
-.judgement-button:not(:disabled):hover {
-    background-color: #e5c158;
-    color: #1f1d17;
-    border-color: #ffffff;
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.9);
-    transform: translateY(-2px);
-}
-
-@keyframes pulse-judgement {
-    0% {
-        box-shadow: 0 0 10px rgba(229, 193, 88, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.1);
-    }
-    100% {
-        box-shadow: 0 0 25px rgba(255, 255, 255, 0.7), inset 0 0 15px rgba(229, 193, 88, 0.5);
-    }
-}
-
 /* Visionary Rune Action Effects */
 .actions-buttons-text-container.is-visionary .action-urd {
     color: #00f0ff;
     border-color: #00f0ff;
-    box-shadow: 0 0 8px rgba(0, 240, 255, 0.35), inset 0 0 6px rgba(0, 240, 255, 0.15);
+    box-shadow:
+        0 0 8px rgba(0, 240, 255, 0.35),
+        inset 0 0 6px rgba(0, 240, 255, 0.15);
 }
 
 .actions-buttons-text-container.is-visionary .action-urd:not(:disabled):hover {
@@ -339,10 +220,13 @@ button:disabled:hover {
 .actions-buttons-text-container.is-visionary .action-verdandi {
     color: #4caf50;
     border-color: #4caf50;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.35), inset 0 0 6px rgba(76, 175, 80, 0.15);
+    box-shadow:
+        0 0 8px rgba(76, 175, 80, 0.35),
+        inset 0 0 6px rgba(76, 175, 80, 0.15);
 }
 
-.actions-buttons-text-container.is-visionary .action-verdandi:not(:disabled):hover {
+.actions-buttons-text-container.is-visionary
+    .action-verdandi:not(:disabled):hover {
     background-color: #4caf50;
     color: #000000;
     box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
@@ -351,11 +235,128 @@ button:disabled:hover {
 .actions-buttons-text-container.is-visionary .action-skuld {
     color: #b388ff;
     border-color: #b388ff;
-    box-shadow: 0 0 8px rgba(179, 136, 255, 0.35), inset 0 0 6px rgba(179, 136, 255, 0.15);
+    box-shadow:
+        0 0 8px rgba(179, 136, 255, 0.35),
+        inset 0 0 6px rgba(179, 136, 255, 0.15);
 }
 
-.actions-buttons-text-container.is-visionary .action-skuld:not(:disabled):hover {
+.actions-buttons-text-container.is-visionary
+    .action-skuld:not(:disabled):hover {
     background-color: #b388ff;
     color: #000000;
     box-shadow: 0 0 15px rgba(179, 136, 255, 0.7);
+}
+
+/* Ascended Grid Styling (Angel State) */
+.ascended-button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.ascended-button-grid button {
+    width: 100%;
+    height: 100%;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    background-color: #14120a;
+    color: #f7e7a9;
+    border: 1px solid #d4af37;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.8),
+        inset 0 0 10px rgba(212, 175, 55, 0.35);
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.ascended-button-grid button:not(:disabled):hover {
+    background-color: #382c09;
+    color: #ffffff;
+    border-color: #ffe87c;
+    box-shadow:
+        0 6px 12px rgba(255, 215, 0, 0.45),
+        inset 0 0 15px rgba(255, 215, 0, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Action: Ascend */
+.action-ascend {
+    background: linear-gradient(135deg, #2b2204 0%, #4a3b0a 100%) !important;
+    color: #fff4ca !important;
+    border: 2px solid #ffd700 !important;
+    padding: 18px 45px !important;
+    font-size: 1.4rem !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 225, 89, 0.3) !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    animation: pulse-gold 2s infinite alternate;
+}
+
+.action-ascend:not(:disabled):hover {
+    background: #ffd700 !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    box-shadow:
+        0 0 25px rgba(255, 215, 0, 0.9),
+        inset 0 0 15px rgba(255, 255, 255, 0.8) !important;
+}
+
+@keyframes pulse-gold {
+    0% {
+        box-shadow:
+            0 0 10px rgba(255, 215, 0, 0.4),
+            inset 0 0 5px rgba(255, 225, 89, 0.2);
+    }
+    100% {
+        box-shadow:
+            0 0 20px rgba(255, 215, 0, 0.8),
+            inset 0 0 12px rgba(255, 225, 89, 0.5);
+    }
+}
+
+/* Action: Judgement */
+.action-judgement {
+    background: linear-gradient(135deg, #3d0c00 0%, #6e1900 100%) !important;
+    color: #ffebd7 !important;
+    border: 2px solid #ff5500 !important;
+    padding: 18px 45px !important;
+    font-size: 1.4rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 3px !important;
+    box-shadow:
+        0 0 20px rgba(255, 85, 0, 0.7),
+        inset 0 0 12px rgba(255, 140, 0, 0.4) !important;
+    animation: pulse-judgement 1.5s infinite alternate;
+}
+
+.action-judgement:not(:disabled):hover {
+    background-color: #ff5500 !important;
+    color: #ffffff !important;
+    border-color: #ffe600 !important;
+    box-shadow:
+        0 0 30px rgba(255, 85, 0, 1),
+        inset 0 0 20px rgba(255, 230, 0, 0.8) !important;
+    transform: translateY(-2px);
+}
+
+@keyframes pulse-judgement {
+    0% {
+        box-shadow:
+            0 0 12px rgba(255, 85, 0, 0.5),
+            inset 0 0 6px rgba(255, 140, 0, 0.3);
+    }
+    100% {
+        box-shadow:
+            0 0 28px rgba(255, 85, 0, 0.9),
+            inset 0 0 16px rgba(255, 200, 0, 0.6);
+    }
 }

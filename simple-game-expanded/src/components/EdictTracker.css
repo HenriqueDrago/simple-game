@@ -1,0 +1,62 @@
+.edict-tracker-container {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.individual-edict-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    user-select: none;
+    box-sizing: border-box;
+    border: none;
+    transition: all 0.2s ease;
+    color: rgba(139, 101, 8, 0.3);
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.7) 0%, transparent 70%);
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+    opacity: 0.4;
+}
+
+.individual-edict-container.edict-unlocked {
+    color: #8b6508;
+    background: radial-gradient(circle, rgba(139, 101, 8, 0.2) 0%, rgba(0, 0, 0, 0.6) 45%, transparent 70%);
+    text-shadow: 0 0 6px rgba(139, 101, 8, 0.6);
+    opacity: 1;
+}
+
+.individual-edict-container.edict-enabled {
+    color: #ffffff;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 75%);
+    text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.9),
+        0 0 16px rgba(255, 215, 0, 0.8),
+        0 0 24px rgba(255, 215, 0, 0.5);
+    opacity: 1;
+}
+
+.individual-edict-container:not([disabled]) {
+    cursor: pointer;
+}
+
+.individual-edict-container.edict-unlocked:not([disabled]):hover {
+    color: #ffe87c;
+    background: radial-gradient(circle, rgba(229, 193, 88, 0.3) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 70%);
+    text-shadow:
+        0 0 8px rgba(229, 193, 88, 0.8),
+        0 0 14px rgba(229, 193, 88, 0.5);
+}
+
+.individual-edict-container.edict-enabled:not([disabled]):hover {
+    color: #ffffff;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.5) 0%, rgba(0, 0, 0, 0.8) 55%, transparent 80%);
+    text-shadow:
+        0 0 12px rgba(255, 255, 255, 1),
+        0 0 22px rgba(255, 215, 0, 1),
+        0 0 32px rgba(255, 215, 0, 0.8);
+}

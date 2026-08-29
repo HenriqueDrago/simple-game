@@ -4,7 +4,6 @@ import {
     consumeMitigationResources,
     consumeResources,
     getEntityDef,
-    getEntityDefEffect,
     getEntityDefPen,
     getEntityMaxHealth,
     getEntityStr,
@@ -17,12 +16,7 @@ import {
     restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
-import {
-    actionKeys,
-    effectKeys,
-    elementalKeys,
-    moonKeys,
-} from "./enums.js";
+import { actionKeys, effectKeys, elementalKeys, moonKeys } from "./enums.js";
 import { simulateFullStarfall } from "./starfall.js";
 import {
     commitTurn,
@@ -265,10 +259,8 @@ export function assignStarsAI(context) {
         return Math.ceil(
             (Math.max(
                 0,
-                Math.floor(
-                    getEntityDef(sim.entities[nonAgentKey]) *
-                        getEntityDefEffect(sim, nonAgentKey),
-                ) - getEntityDefPen(sim, agentKey),
+                getEntityDef(sim.entities[nonAgentKey]),
+                -getEntityDefPen(sim, agentKey),
             ) *
                 constants.ACC_STARBLIGHT_CONVERSION) /
                 constants.GRAVITATION_GAIN,
@@ -1707,8 +1699,7 @@ export function maestroAI(context) {
 }
 
 export function starfarerAI(context) {
-    const { prev, nonAgentKey, agentKey, assignedStars, isExtraTurn } =
-        context;
+    const { prev, nonAgentKey, agentKey, assignedStars, isExtraTurn } = context;
 
     function simulateActionStarfallHelper(action) {
         return simulateStarsHelper(

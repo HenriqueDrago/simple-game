@@ -176,14 +176,14 @@ export const GENERAL_DESCRIPTIONS = {
     },
 
     [effectKeys.STR]: {
-        name: "STR",
+        name: "STRENGTH",
         type: entryTypes.BASE_ATTRIBUTES,
         description:
             "The main offensive BASE ATTRIBUTES. Increases the damage dealt by certain ACTIONS.",
     },
 
     [effectKeys.DEF]: {
-        name: "DEF",
+        name: "DEFENSE",
         type: entryTypes.BASE_ATTRIBUTES,
         description:
             "The main defensive BASE ATTRIBUTES. Decreases the PHYSICAL DAMAGE taken.",
@@ -193,42 +193,35 @@ export const GENERAL_DESCRIPTIONS = {
         name: "DAMAGE TYPE",
         type: entryTypes.CATEGORY,
         description:
-            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE. All damage taken has a minimum of 1, regardless of DAMAGE TYPE, EFFECTIVE DEFENSE or DAMAGE MODIFIERS.",
+            "A property that defines how the resulting damage will be calculated and applied. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE and LUNIC DAMAGE. All damage taken has a minimum of 1, regardless of DAMAGE TYPE, DEFENSE or DAMAGE MODIFIERS.",
     },
 
     [dmgTypes.PHYSICAL]: {
         name: "PHYSICAL DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's HEALTH. Can be blocked by EFFECTIVE DEFENSE, affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
+            "Reduces the target's HEALTH. Can be blocked by DEFENSE, affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
     },
 
     [dmgTypes.PIERCING]: {
         name: "PIERCING DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's HEALTH. Ignores EFFECTIVE DEFENSE, but can be affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
+            "Reduces the target's HEALTH. Ignores DEFENSE, but can be affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
     },
 
     [dmgTypes.TRUE]: {
         name: "TRUE DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's HEALTH. Cannot be blocked by EFFECTIVE DEFENSE, affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
+            "Reduces the target's HEALTH. Cannot be blocked by DEFENSE, affected by DAMAGE MODIFIERS or mitigated by MITIGATION RESOURCES.",
     },
 
-    [effectKeys.EFFECTIVE_DEF]: {
-        name: "EFFECTIVE DEFENSE",
+    [effectKeys.BREACH]: {
+        name: "BREACH",
         type: entryTypes.MECHANIC,
         description:
-            "Decreases PHYSICAL DAMAGE taken based on DEF and DEF EFFECTIVENESS.",
-    },
-
-    [effectKeys.DEF_EFFECTIVENESS]: {
-        name: "DEF EFFECTIVENESS",
-        type: entryTypes.MECHANIC,
-        description:
-            "Defaults to 100%. Used to calculate EFFECTIVE DEFENSE. Defines how much PHYSICAL DAMAGE a point of DEF can block.",
+            "When dealing PHYSICAL DAMAGE, ignores a portion of the target's DEFENSE equal to the user's BREACH.",
     },
 
     [entryTypes.DAMAGE_MODIFIERS]: {
@@ -332,7 +325,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, MOONLIT TEARS and BURDEN OF STIGMA.",
+            "A subset of RESOURCES that are rank-based. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, MOONLIT TEARS and STIGMATA.",
     },
 
     [entryTypes.GLOBAL_RESOURCE]: {
@@ -353,7 +346,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "BASE ATTRIBUTES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of ATTRIBUTES. Includes STR and DEF. During setup, players have 10 points to distribute freely between their BASE ATTRIBUTES. When raising or lowering BASE ATTRIBUTES via combat effects, alternates between each attribute, starting with STR.",
+            "A subset of ATTRIBUTES. Includes STRENGTH and DEFENSE. During setup, players have 10 points to distribute freely between their BASE ATTRIBUTES. When raising or lowering BASE ATTRIBUTES via combat effects, alternates between each attribute, starting with STRENGTH.",
     },
 
     [entryTypes.SPECIAL_ATTRIBUTES]: {
@@ -394,7 +387,7 @@ export const BASIC_DESCRIPTIONS = {
     [actionKeys.ATTACK]: {
         name: "ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Deals PHYSICAL DAMAGE equal to the user's STR.",
+        description: "Deals PHYSICAL DAMAGE equal to the user's STRENGTH.",
     },
 
     [actionKeys.GUARD]: {
@@ -407,7 +400,7 @@ export const BASIC_DESCRIPTIONS = {
         name: "GUARDING",
         type: entryTypes.STATE,
         description:
-            "Raises DEF EFFECTIVENESS and DAMAGE REDUCTION by 50%. At turn start, exits this state.",
+            "Raises DAMAGE REDUCTION by 50%. At turn start, exits this state.",
     },
 
     [actionKeys.HEAL]: {
@@ -429,7 +422,7 @@ export const WARLOCK_DESCRIPTIONS = {
         name: "SPECIAL ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STR. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA equal to the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA equal to the difference. Cannot be when MANA is lower than 60% of MAX MANA.",
+            "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STRENGTH. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA equal to the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA equal to the difference. Cannot be when MANA is lower than 60% of MAX MANA.",
     },
 };
 
@@ -482,13 +475,13 @@ export const PALADIN_DESCRIPTIONS = {
         name: "AEGIS",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Gains HALO equal to twice the user's DEF. Enters RADIANT state. Cannot be used at 0 or less DEF.",
+            "Gains HALO equal to twice the user's DEFENSE. Enters RADIANT state. Cannot be used at 0 or less DEFENSE.",
     },
 
     [effectKeys.RADIANT]: {
         name: "RADIANT",
         type: entryTypes.STATE,
-        description: "Nullifies all DEF EFFECTIVENESS.",
+        description: "Nullifies all DEFENSE.",
     },
 
     [effectKeys.HALO]: {
@@ -509,7 +502,7 @@ export const PALADIN_DESCRIPTIONS = {
         name: "DIVINE SPARK",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises STR for every 5% DIVINE SPARK on self. When raising DIVINE SPARK above 100%, restores RESOURCES for every 2% excess.",
+            "Capped at 100%. Raises STRENGTH for every 5% DIVINE SPARK on self. When raising DIVINE SPARK above 100%, restores RESOURCES for every 2% excess.",
     },
 };
 
@@ -790,14 +783,14 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF URD",
         type: entryTypes.RUNES,
         description:
-            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 50%. While on RUNIC ARRAY: Lowers the user's STR by 3. Upon detonation: Restores HEALTH equal to 15% of MAX HEALTH.",
+            "Gained from GUARD. Upon acquisition: Raises RECOLLECTION by 50%. While on RUNIC ARRAY: Lowers the user's STRENGTH by 3. Upon detonation: Restores HEALTH equal to 15% of MAX HEALTH.",
     },
 
     [effectKeys.RECOLLECTION]: {
         name: "RECOLLECTION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. Raises STR by a percentage of DEF equivalent to RECOLLECTION on self. When raising RECOLLECTION above 100%, gains PRECOGNITION for every 10% excess. When using an OFFENSIVE ACTION, lose all RECOLLECTION.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. Raises STRENGTH by a percentage of DEFENSE equivalent to RECOLLECTION on self. When raising RECOLLECTION above 100%, gains PRECOGNITION for every 10% excess. When using an OFFENSIVE ACTION, lose all RECOLLECTION.",
     },
 
     [effectKeys.PRECOGNITION]: {
@@ -811,7 +804,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF VERDANDI",
         type: entryTypes.RUNES,
         description:
-            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's DEF. While on RUNIC ARRAY: Lowers the user's DEF by 3. Upon detonation: Replenishes 60% missing MANA.",
+            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's DEFENSE. While on RUNIC ARRAY: Lowers the user's DEFENSE by 3. Upon detonation: Replenishes 60% missing MANA.",
     },
 
     [effectKeys.CONJECTURE]: {
@@ -855,7 +848,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "VOYAGER",
         type: entryTypes.CONTROLLER,
         description:
-            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS and VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects and OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action and the LUNATIC enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS or VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects or OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action and the LUNATIC enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.CHART]: {
@@ -995,14 +988,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "STARBLIGHT",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Increases DEFENSE PENETRATION by its rank. At turn end, sets STARBLIGHT to 0.",
-    },
-
-    [effectKeys.DEF_PEN]: {
-        name: "DEFENSE PENETRATION",
-        type: entryTypes.MECHANIC,
-        description:
-            "When dealing PHYSICAL DAMAGE, ignores EFFECTIVE DEFENSE equal to the user's DEFENSE PENETRATION.",
+            "Raises BREACH by its rank. At turn end, sets STARBLIGHT to 0.",
     },
 
     [effectKeys.CONSTELLATION]: {
@@ -1016,21 +1002,21 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "AZURE CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises DEF equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all AZURE CONSTELLATION.",
+            "Raises DEFENSE equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At turn end, lose all AZURE CONSTELLATION.",
     },
 
     [effectKeys.CRIMSON_CONSTELLATION]: {
         name: "CRIMSON CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises STR equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At turn end, lose all CRIMSON CONSTELLATION.",
+            "Raises STRENGTH equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the PLAN subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At turn end, lose all CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.GREEN_STAR]: {
         name: "GREEN STAR",
         type: entryTypes.STAR,
         description:
-            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Consumes WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Restores RESOURCES on self equal to augmented GREEN STAR converted.",
+            "At GREEN STARFALL, converts all GREEN STAR into WHITE STAR. Consumes WHITE STAR and restores RESOURCES equal to normal GREEN STAR converted. Converts WHITE STAR into GRAY STAR and restores RESOURCES on self equal to augmented GREEN STAR converted.",
     },
 
     [effectKeys.BLUE_STAR]: {
@@ -1177,14 +1163,14 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "FROST",
         type: entryTypes.MECHANIC,
         description:
-            "While active, raises DEF by MOONLIGHT on self. Replaces AEGIS with LUNAR SHROUD.",
+            "While active, raises DEFENSE by MOONLIGHT on self. Replaces AEGIS with LUNAR SHROUD.",
     },
 
     [actionKeys.LUNAR_SHROUD]: {
         name: "LUNAR SHROUD",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Gains REFRACTED DIVINITY equal to the user's DEF, then enters PRISMATIC state.",
+            "Gains REFRACTED DIVINITY equal to the user's DEFENSE, then enters PRISMATIC state.",
     },
 
     [effectKeys.PRISMATIC]: {
@@ -1245,13 +1231,13 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "SCORCH",
         type: entryTypes.MECHANIC,
         description:
-            "While active, raises STR by MOONLIGHT on self. Additionally, replaces SPECIAL ATTACK with LUNAR STRIKE.",
+            "While active, raises STRENGTH by MOONLIGHT on self. Additionally, replaces SPECIAL ATTACK with LUNAR STRIKE.",
     },
 
     [actionKeys.LUNAR_STRIKE]: {
         name: "LUNAR STRIKE",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Deals PIERCING DAMAGE equal to half the user's STR.",
+        description: "Deals PIERCING DAMAGE equal to half the user's STRENGTH.",
     },
 
     [elementalKeys.OCEAN]: {
@@ -1348,7 +1334,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNIC DAMAGE",
         type: entryTypes.DAMAGE_TYPE,
         description:
-            "Reduces the target's MAX HEALTH. Ignores EFFECTIVE DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES.",
+            "Reduces the target's MAX HEALTH. Ignores DEFENSE, DAMAGE MODIFIERS and MITIGATION RESOURCES.",
     },
 };
 
@@ -1363,7 +1349,8 @@ export const SERAPH_DESCRIPTIONS = {
     [actionKeys.RISE]: {
         name: "RISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
-        description: "Raises STR by 10. Enters ZENITH OF MORTALITY.",
+        description:
+            "Exits all states. Then, raises DEFENSE by the user's STRENGTH and enters ZENITH OF MORTALITY.",
     },
 
     [effectKeys.ZENITH_OF_MORTALITY]: {
@@ -1376,7 +1363,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all LIMITED RESOURCES on self and sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0 and replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises REVELATION by the user's STR. Raises FORTITUDE by the user's DEF. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all LIMITED RESOURCES on self and sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0 and replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
@@ -1389,7 +1376,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "PROVIDENCE",
         type: entryTypes.GLOBAL_RESOURCE,
         description:
-            "Capped at 100%. When restoring PROVIDENCE above 100%, restores RESOURCES to all entities for every 2.5% excess.",
+            "Capped at 100%. When restoring PROVIDENCE above 100%, evenly redistributes the excess as TARNISHED SIN between all entities.",
     },
 
     [effectKeys.ENLIGHTENMENT]: {
@@ -1457,7 +1444,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS, EFFECTIVE DEFENSE, DEFENSE EFFECTIVENESS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES, FORTITUDE, INTEGRITY and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1505,13 +1492,6 @@ export const SERAPH_DESCRIPTIONS = {
         name: "FORTITUDE",
         type: entryTypes.MECHANIC,
         description: "Reduces PHYSICAL TARNISHMENT received.",
-    },
-
-    [effectKeys.INTEGRITY]: {
-        name: "INTEGRITY",
-        type: entryTypes.MECHANIC,
-        description:
-            "Defaults to 0%. Raises FORTITUDE by a percentage of the user's REVELATION equivalent to INTEGRITY on self.",
     },
 
     [effectKeys.DEFILEMENT]: {
@@ -1573,7 +1553,15 @@ export const SERAPH_DESCRIPTIONS = {
     [actionKeys.SUPPLICATE]: {
         name: "SUPPLICATE",
         type: entryTypes.DEFENSIVE_ACTION,
-        description: "Restores RESOURCES on self equal to REVELATION.",
+        description:
+            "Restores RESOURCES equal to the user's FORTITUDE. Then, enters IMMACULATE state.",
+    },
+
+    [effectKeys.IMMACULATE]: {
+        name: "IMMACULATE",
+        type: entryTypes.STATE,
+        description:
+            "Lowers the user's FORTITUDE by a percentage equivalent to the battlefield's missing PROVIDENCE. At turn start, exit this state.",
     },
 
     [actionKeys.DISCERN]: {
@@ -1587,14 +1575,13 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ATONE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Consumes all REVELATION and FORTITUDE on self and PROVIDENCE on the battlefield. Raises BURDEN OF STIGMA rank for every 20% PROVIDENCE consumed. Raises ATTRIBUTES equal to REVELATION consumed. Then, exits ASCENDENCE OF SPIRIT.",
+            "Consumes all REVELATION and FORTITUDE on self and PROVIDENCE on the battlefield. Raises STIGMATA rank for every 20% PROVIDENCE consumed. Raises ATTRIBUTES equal to REVELATION consumed. Then, exits ASCENDENCE OF SPIRIT.",
     },
 
     [effectKeys.BURDEN_OF_STIGMA]: {
-        name: "BURDEN OF STIGMA",
+        name: "STIGMATA",
         type: entryTypes.RANKED_RESOURCE,
-        description:
-            "Cannot Die. At turn start, lowers BURDEN OF STIGMA rank by 1.",
+        description: "Cannot Die. At turn start, lowers STIGMATA rank by 1.",
     },
 
     [entryTypes.EDICT]: {
@@ -1629,7 +1616,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF ARCHANGELS",
         type: entryTypes.EDICT,
         description:
-            "Raises GRACE and MALEDICTION by the user's missing ENLIGHTENMENT percentage. When losing ENLIGHTENMENT or INSIGHT, gains MARTHYR equal to the amount lost.",
+            "Raises MALEDICTION by half the user's missing ENLIGHTENMENT percentage. When losing ENLIGHTENMENT or INSIGHT, gains MARTHYR equal to the amount lost.",
     },
 
     [effectKeys.MARTHYR]: {
@@ -1650,7 +1637,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF PRINCIPALITIES",
         type: entryTypes.EDICT,
         description:
-            "Raises the user's INTEGRITY by the battlefield's PROVIDENCE. When using SUPPLICATE, instead of restoring RESOURCES, gains SANCTUARY equal to the user's FORTITUDE and enters IMMACULATE state.",
+            "Raises the user's FORTITUDE by a percentage of their REVELATION equivalent to the battlefield's PROVIDENCE. When using SUPPLICATE, gains SANCTUARY instead of restoring RESOURCES.",
     },
 
     [effectKeys.SANCTUARY]: {
@@ -1667,12 +1654,6 @@ export const SERAPH_DESCRIPTIONS = {
             "When using CONDEMN, consumes all SACRILEGE on self, then increases the tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 0.5% for every SACRILEGE lost.",
     },
 
-    [effectKeys.IMMACULATE]: {
-        name: "IMMACULATE",
-        type: entryTypes.STATE,
-        description: "Nullifies the user's FORTITUDE.",
-    },
-
     [choirKeys.FOURTH]: {
         name: "HEAVENLY CHOIR: THE FOURTH",
         type: entryTypes.HEAVENLY_CHOIR,
@@ -1684,7 +1665,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF POWERS",
         type: entryTypes.EDICT,
         description:
-            "When using DISCERN, consumes RESOURCES on self for every 5% PROVIDENCE on the battlefield. Then, gains SACRED FLAMES equal to the amount consumed.",
+            "When using DISCERN, gains SACRED FLAMES for every 10% PROVIDENCE on the battlefield.",
     },
 
     [effectKeys.SACRED_FLAMES]: {

@@ -1,9 +1,8 @@
-/* Right Panel Layout */
 .angel-panel-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-width: 310px;
+    min-width: 300px;
     flex: 1;
     box-sizing: border-box;
 }

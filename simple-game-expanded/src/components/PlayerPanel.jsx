@@ -9,6 +9,7 @@ import StarsPanel from "./StarsPanel";
 import "./PlayerPanel.css";
 import TarnishedSinBar from "./TarnishedSinBar";
 import AngelPanel from "./AngelPanel";
+import EdictTracker from "./EdictTracker";
 
 export default function PlayerPanel({ entityKey, reversed = false }) {
     const { game } = useGame();
@@ -18,6 +19,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
     const states = entity.states;
 
     const isStargazer = states?.[effectKeys.STARGAZER];
+    const isAscended = states?.[effectKeys.ASCENDENCE_OF_SPIRIT];
 
     const stateClassMap = {
         [effectKeys.UMBRAL_CORE]: "state-umbral",
@@ -37,6 +39,10 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
         [effectKeys.PRISMATIC]: "state-prismatic",
         [effectKeys.MOON_DEW]: "state-moon-dew",
         [effectKeys.VISIONARY]: "state-visionary",
+        [effectKeys.ZENITH_OF_MORTALITY]: "state-zenith-of-mortality",
+        [effectKeys.ABANDONED_BY_GRACE]: "state-abandoned-by-grace",
+        [effectKeys.ANOINTED_PROXY]: "state-anointed-proxy",
+        [effectKeys.ASCENDENCE_OF_SPIRIT]: "state-ascendence-of-spirit",
     };
 
     const activeStates = Object.keys(stateClassMap)
@@ -59,14 +65,19 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
                 <ControlPanel entityKey={entityKey} />
 
                 <div className="player-panel-secondary-container">
+                    <LeftPanel entityKey={entityKey} />
+
+                    {isAscended && <EdictTracker entityKey={entityKey} />}
+
                     {isStargazer && (
                         <StarsPanel entityKey={entityKey} reversed={reversed} />
                     )}
 
-                    <LeftPanel entityKey={entityKey} />
-                    
-                    {!showAngel ? <RightPanel entityKey={entityKey} /> : <AngelPanel entityKey={entityKey} />}
-                    
+                    {!showAngel ? (
+                        <RightPanel entityKey={entityKey} />
+                    ) : (
+                        <AngelPanel entityKey={entityKey} />
+                    )}
                 </div>
 
                 <TarnishedSinBar entityKey={entityKey} />

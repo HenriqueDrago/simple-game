@@ -164,7 +164,6 @@ export const effectKeys = Object.freeze({
     STR: "str",
     DEF: "def",
     DAMAGE_REDUCTION: "dr",
-    DEF_EFFECTIVENESS: "defEffect",
     WHITE_STAR: "white",
     GRAY_STAR: "gray",
     RED_STAR: "red",
@@ -260,6 +259,7 @@ export const effectKeys = Object.freeze({
     IRRADIATION: "irradiation",
 
     DEF_PEN: "defPen",
+    BREACH: "breach",
 
     // Seraph
     ZENITH_OF_MORTALITY: "zenithOfMortality",

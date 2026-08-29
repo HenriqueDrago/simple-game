@@ -92,6 +92,9 @@ function getStatColors(attr, entity) {
         if (entity[effectKeys.CONSTELLATION] > 1) {
             colors.push(EFFECT_COLORS.CONSTELLATION);
         }
+        if (entity.states[effectKeys.RADIANT]) {
+            colors.push(EFFECT_COLORS.DIVINE_SPARK);
+        }
     }
 
     return colors;

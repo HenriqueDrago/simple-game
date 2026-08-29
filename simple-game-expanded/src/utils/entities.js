@@ -1015,6 +1015,15 @@ export function processEntityDeathStates(prev, entityKey) {
                 [effectKeys.ABANDONED_BY_GRACE]: true,
             },
         };
+
+        post = replaceEntity(post, draftEntity, entityKey);
+        post = {
+            ...post,
+            btt: {
+                ...post.btt,
+                [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
+            },
+        };
     }
 
     post = replaceEntity(post, draftEntity, entityKey);
@@ -1095,6 +1104,10 @@ export function getEntityDef(entity) {
     let draftEntity = {
         ...entity,
     };
+
+    if (draftEntity.states[effectKeys.RADIANT]) {
+        return 0;
+    }
 
     let bonusDEF = 0;
 
@@ -2393,9 +2406,9 @@ export function newDealDmg(
     let dmgDealt = baseDmg;
 
     // Calculates Final Damage Dealt
-    let defPen = 0;
+    let breach = 0;
     if (dealerKey && prev?.entities?.[dealerKey]) {
-        defPen = getEntityDefPen(prev, dealerKey);
+        breach = getEntityDefPen(prev, dealerKey);
         switch (dmgType) {
             case dmgTypes.PHYSICAL:
             case dmgTypes.PIERCING: {
@@ -2433,10 +2446,10 @@ export function newDealDmg(
 
     dmgDealt += finalDmgBonus;
 
-    return newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen);
+    return newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach);
 }
 
-export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen = 0) {
+export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
     let processedGame = {
         ...prev,
     };
@@ -2497,12 +2510,7 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, defPen = 0) {
         const disgraceMult = getDisgrace(prev, entityKey);
 
         // Flat Reduction
-        const flatDR = Math.max(
-            0,
-            Math.floor(
-                getEntityDef(draftTaker) * getEntityDefEffect(prev, entityKey),
-            ) - defPen,
-        );
+        const flatDR = Math.max(0, getEntityDef(draftTaker) - breach);
 
         // Fortitude
         const fort = Math.max(
@@ -2682,21 +2690,6 @@ export function getEntityDR(prev, entityKey) {
     }
 
     return drMult;
-}
-
-export function getEntityDefEffect(prev, entityKey) {
-    const entity = {
-        ...prev.entities[entityKey],
-    };
-    let defEffect = 1.0;
-    if (entity.states[effectKeys.GUARDING_STATE]) {
-        defEffect *= constants.STANDARD_DEF_EFFECT_INCREASE;
-    }
-    if (entity.states[effectKeys.RADIANT]) {
-        defEffect *= constants.RADIANT_DEF_EFFECT_MULTIPLIER;
-    }
-
-    return defEffect;
 }
 
 export function getEntityDefPen(prev, entityKey) {
@@ -2954,6 +2947,7 @@ export function getOtherEntity(entityKey) {
 export function deleteCondition(entity) {
     const newAttr = resetAttr(entity).attributes;
     return {
+        ...entity,
         ...createBaseEntity(),
         [effectKeys.MAX_HEALTH]: 0,
         [effectKeys.HEALTH]: 0,
@@ -2963,6 +2957,7 @@ export function deleteCondition(entity) {
         attributes: {
             ...newAttr,
         },
+        unspentPoints: entity.unspentPoints,
     };
 }
 
@@ -3027,7 +3022,7 @@ export function loseEnlit(entity, amount) {
     };
 
     // Gain Marthyr
-    if (draftEntity.edicts[edictKeys.ARCHANGELS]) {
+    if (isEdictActive(draftEntity, edictKeys.ARCHANGELS)) {
         draftEntity = {
             ...draftEntity,
             resources: {
@@ -3101,7 +3096,10 @@ export function gainSin(entity, amount) {
         ...entity,
     };
 
-    const sinGain = Math.min(constants.MAX_SIN, amount);
+    const sinGain = Math.min(
+        constants.MAX_SIN - draftEntity[effectKeys.TARNISHED_SIN],
+        amount,
+    );
 
     draftEntity = {
         ...draftEntity,
@@ -3123,7 +3121,7 @@ export function getBenediction(prev, entityKey) {
     }
 
     // Seraphim
-    if (entity.edicts[edictKeys.SERAPHIM]) {
+    if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
             const prov = prev.btt[effectKeys.PROVIDENCE];
             bene *= 1 - prov * constants.SERAPHIM_MULT;
@@ -3141,7 +3139,7 @@ export function getBenediction(prev, entityKey) {
 
     // Hallowed Echoes
     if (entity[effectKeys.HALLOWED_ECHOES] > 0) {
-        bene *= 1 + entity[effectKeys.HALLOWED_ECHOES];
+        bene *= 1 + entity[effectKeys.HALLOWED_ECHOES] / 100;
     }
 
     return bene;
@@ -3152,19 +3150,19 @@ export function getMalediction(prev, entityKey) {
     let male = 1.0;
 
     // Archangels
-    if (entity.edicts[edictKeys.ARCHANGELS]) {
+    if (isEdictActive(entity, edictKeys.ARCHANGELS)) {
         const missingEnlit = Math.max(
             0,
             getMaxEnlit(entity) - getTotalEnlit(entity),
         );
         male *=
             getMaxEnlit(entity) > 0
-                ? Math.max(0, 1 + missingEnlit / getMaxEnlit(entity))
+                ? Math.max(0, 1 + (missingEnlit / getMaxEnlit(entity)) * 0.5)
                 : 1;
     }
 
     // Seraphim
-    if (entity.edicts[edictKeys.SERAPHIM]) {
+    if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
             const prov = prev.btt[effectKeys.PROVIDENCE];
             male *= 1 + prov * constants.SERAPHIM_MULT;
@@ -3182,7 +3180,7 @@ export function getMalediction(prev, entityKey) {
 
     // Hallowed Echoes
     if (entity[effectKeys.HALLOWED_ECHOES] < 0) {
-        male *= 1 - entity[effectKeys.HALLOWED_ECHOES];
+        male *= 1 - entity[effectKeys.HALLOWED_ECHOES] / 100;
     }
 
     return male;
@@ -3193,20 +3191,8 @@ export function getGrace(prev, entityKey) {
 
     let grace = 1.0;
 
-    // Archangels
-    if (entity.edicts[edictKeys.ARCHANGELS]) {
-        const missingEnlit = Math.max(
-            0,
-            getMaxEnlit(entity) - getTotalEnlit(entity),
-        );
-        grace *=
-            getMaxEnlit(entity) > 0
-                ? Math.max(0, 1 - missingEnlit / getMaxEnlit(entity))
-                : 1;
-    }
-
     // Seraphim
-    if (entity.edicts[edictKeys.SERAPHIM]) {
+    if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
             const prov = prev.btt[effectKeys.PROVIDENCE];
             grace *= 1 - prov * constants.SERAPHIM_MULT;
@@ -3224,7 +3210,7 @@ export function getGrace(prev, entityKey) {
 
     // Hallowed Echoes
     if (entity[effectKeys.HALLOWED_ECHOES] > 0) {
-        grace *= 1 - entity[effectKeys.HALLOWED_ECHOES];
+        grace *= 1 - entity[effectKeys.HALLOWED_ECHOES] / 100;
     }
 
     return grace;
@@ -3242,7 +3228,7 @@ export function getDisgrace(prev, entityKey) {
     }
 
     // Seraphim
-    if (entity.edicts[edictKeys.SERAPHIM]) {
+    if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
             const prov = prev.btt[effectKeys.PROVIDENCE];
             disgrace *= 1 + prov * constants.SERAPHIM_MULT;
@@ -3268,39 +3254,36 @@ export function getDisgrace(prev, entityKey) {
 
     // Hallowed Echoes
     if (entity[effectKeys.HALLOWED_ECHOES] < 0) {
-        disgrace *= 1 - entity[effectKeys.HALLOWED_ECHOES];
+        disgrace *= 1 - entity[effectKeys.HALLOWED_ECHOES] / 100;
     }
 
     return disgrace;
 }
 
-export function getIntegrity(prev, entityKey) {
-    const entity = extractEntity(prev, entityKey);
-
-    let integrity = 0.0;
-
-    if (entity.edicts[edictKeys.PRINCIPALITIES]) {
-        integrity += prev.btt[effectKeys.PROVIDENCE];
-    }
-
-    return integrity;
-}
-
 export function getFortitude(prev, entityKey) {
     const entity = extractEntity(prev, entityKey);
 
-    if (entity.states[effectKeys.IMMACULATE]) {
-        return 0;
-    }
-
     let fort = entity[effectKeys.FORTITUDE];
 
-    fort += Math.max(
-        0,
-        Math.floor(
-            entity[effectKeys.REVELATION] * getIntegrity(prev, entityKey),
-        ),
-    );
+    if (isEdictActive(entity, edictKeys.PRINCIPALITIES)) {
+        fort += Math.max(
+            0,
+            Math.floor(
+                (entity[effectKeys.REVELATION] *
+                    prev.btt[effectKeys.PROVIDENCE]) /
+                    100,
+            ),
+        );
+    }
+
+    if (entity.states[effectKeys.IMMACULATE]) {
+        const missingProv = Math.max(
+            0,
+            constants.MAX_PROVIDENCE - prev.btt[effectKeys.PROVIDENCE],
+        );
+
+        fort -= Math.floor(fort * (missingProv / 100));
+    }
 
     return fort;
 }
@@ -3393,12 +3376,13 @@ export function raiseProvidence(prev, amount) {
         },
     };
 
-    const restore = Math.floor(
-        (amount - provGain) * constants.EXCESS_PROV_RESTORE_RATE,
-    );
-    if (restore > 0) {
-        const p1 = restoreResources(post.entities[entityKeys.PLAYER_ONE]);
-        const p2 = restoreResources(post.entities[entityKeys.PLAYER_TWO]);
+    const sinGain = Math.floor((amount - provGain) / 2);
+
+    console.log(sinGain);
+
+    if (sinGain > 0) {
+        const p1 = gainSin(extractEntity(post, entityKeys.PLAYER_ONE), sinGain);
+        const p2 = gainSin(extractEntity(post, entityKeys.PLAYER_TWO), sinGain);
 
         post = {
             ...post,
@@ -3495,7 +3479,7 @@ export function loseProvidence(prev, amount) {
 }
 
 export function isEdictActive(entity, edict) {
-    return !isEdictUnlocked(entity, edict) && entity?.edicts?.[edict];
+    return isEdictUnlocked(entity, edict) && entity?.edicts?.[edict];
 }
 
 export function processExitAscendence(prev, entityKey) {
@@ -3523,11 +3507,6 @@ export function processExitAscendence(prev, entityKey) {
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
     };
 
-    draftEntity = restoreResources(
-        draftEntity,
-        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
-    );
-
     draftEntity = {
         ...draftEntity,
         states: {
@@ -3536,6 +3515,11 @@ export function processExitAscendence(prev, entityKey) {
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
         },
     };
+
+    draftEntity = restoreResources(
+        draftEntity,
+        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+    );
 
     post = replaceEntity(post, draftEntity, entityKey);
 

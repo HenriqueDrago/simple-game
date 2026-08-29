@@ -30,7 +30,8 @@ function ActionPanel() {
 
     // Visibility Constraints
     const showButtons =
-        currPlayerKey && canUseCombatInteractions(game, currPlayerKey, true, true);
+        currPlayerKey &&
+        canUseCombatInteractions(game, currPlayerKey, true, true);
     const currActorLabel = getEntityLabel(game, currPlayerKey);
 
     let waitLabel = null;
@@ -51,6 +52,10 @@ function ActionPanel() {
         waitLabel = "Starfall";
     } else if (currPhase === roundPhases.MOON_TURN) {
         waitLabel = "Moon Phase";
+    } else if (currPhase === roundPhases.ANOINTMENT) {
+        waitLabel = "Anointment";
+    } else if (currPhase === roundPhases.RECKONING) {
+        waitLabel = "Reckoning";
     }
 
     // Process Action List & Classes dynamically via shared state logic
@@ -69,10 +74,16 @@ function ActionPanel() {
             };
         });
 
-        if (currEntity.states[effectKeys.THERMAL_OVERLOAD]) {
+        if (
+            currEntity.states[effectKeys.THERMAL_OVERLOAD] ||
+            currEntity.states[effectKeys.ANOINTED_PROXY] ||
+            currEntity.states[effectKeys.ZENITH_OF_MORTALITY]
+        ) {
             containerClass = "single-button-container";
         } else if (currEntity.states[effectKeys.UMBRAL_CORE]) {
             containerClass = "shadow-button-grid";
+        } else if (currEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+            containerClass = "ascended-button-grid";
         } else {
             showHelperText = true;
         }

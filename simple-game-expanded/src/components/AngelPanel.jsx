@@ -6,6 +6,8 @@ import "./AngelPanel.css";
 import EnlightenmentBar from "./EnlightenmentBar";
 import OrdinancesTracker from "./OrdinancesTracker";
 import AngelAttr from "./AngelAttr";
+import ChoirTracker from "./ChoirTracker";
+import HallowedEchoesBar from "./HallowedEchoesBar";
 
 export default function AngelPanel({ entityKey }) {
     const { game } = useGame();
@@ -25,6 +27,10 @@ export default function AngelPanel({ entityKey }) {
             <OrdinancesTracker entityKey={entityKey} />
 
             <AngelAttr entityKey={entityKey} />
+
+            <HallowedEchoesBar entityKey={entityKey} />
+
+            <ChoirTracker entityKey={entityKey} />
 
             {showWarning && (
                 <div className="stats-panel-warning">

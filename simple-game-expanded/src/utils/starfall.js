@@ -266,13 +266,17 @@ export function processGreenStar(
     // Restores resources
     draftMaster = restoreResources(draftMaster, normalStars + augmentedStars);
 
-    // lose normal stars used
+    // lose normal stars used and convert augmented into gray
     draftMaster = {
         ...draftMaster,
         stars: {
             ...draftMaster.stars,
             [effectKeys.WHITE_STAR]:
-                draftMaster.stars[effectKeys.WHITE_STAR] - normalStars,
+                draftMaster.stars[effectKeys.WHITE_STAR] -
+                normalStars -
+                augmentedStars,
+            [effectKeys.GRAY_STAR]:
+                draftMaster.stars[effectKeys.GRAY_STAR] + augmentedStars,
         },
     };
 

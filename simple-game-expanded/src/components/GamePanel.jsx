@@ -3,14 +3,14 @@ import PlayerPanel from "./PlayerPanel";
 import Timeline from "./Timeline";
 
 import { entityKeys } from "../utils/enums";
-import BttTracker from "./BttTracker";
+import FieldTracker from "./FieldTracker";
 
 function GamePanel() {
     return (
         <div className="game-panel-container">
             <Timeline />
 
-            <BttTracker />
+            <FieldTracker />
 
             <div className="stats-panels-container">
                 <div className="player-panel-wrapper p1-wrapper">

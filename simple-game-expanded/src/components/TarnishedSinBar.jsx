@@ -27,13 +27,11 @@ export default function TarnishedSinBar({ entityKey }) {
     const displayAmount = simEntity ? simAmount : realAmount;
     const willDisappear = realAmount > 0 && simAmount <= 0;
 
-    const maxSin = constants.MAX_TARNISHED_SIN || 100;
-
     if (realAmount <= 0 && simAmount <= 0) {
         return null;
     }
 
-    const fillPercentage = Math.max(0, Math.min(100, (displayAmount / maxSin) * 100));
+    const fillPercentage = Math.max(0, Math.min(100, (displayAmount / constants.MAX_SIN) * 100));
 
     return (
         <div
@@ -49,7 +47,7 @@ export default function TarnishedSinBar({ entityKey }) {
                         isNumberChanged && !isNewResource && !willDisappear ? "is-preview" : ""
                     }`}
                 >
-                    {displayAmount} / {maxSin}
+                    {displayAmount}%
                 </span>
             </div>
             <div className="tarnished-sin-track">

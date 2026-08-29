@@ -12,10 +12,23 @@
     align-items: center;
     gap: 4px;
     font-size: 0.85rem;
-    color: #ffffff;
+    font-weight: 700;
     transition: opacity 0.2s ease, filter 0.2s ease;
+    cursor: pointer;
 }
 
 .ordinances-tracker-container span.is-preview {
     opacity: 0.75;
+}
+
+.ordinances-tracker-container .ordinance-male,
+.ordinances-tracker-container .ordinance-disgrace {
+    color: #ff4d4d;
+    text-shadow: 0 0 6px rgba(255, 77, 77, 0.4);
+}
+
+.ordinances-tracker-container .ordinance-bene,
+.ordinances-tracker-container .ordinance-grace {
+    color: #80d8ff;
+    text-shadow: 0 0 6px rgba(128, 216, 255, 0.4);
 }

@@ -47,6 +47,12 @@
     font-weight: bold;
     color: rgba(255, 255, 255, 0.85);
     letter-spacing: 0.5px;
+    transition: opacity 0.2s ease;
+}
+
+.btt-numeric-value.is-preview,
+.btt-roman-value.is-preview {
+    opacity: 0.75;
 }
 
 .btt-bar-track {
@@ -57,6 +63,7 @@
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9);
     overflow: hidden;
     box-sizing: border-box;
+    position: relative;
 }
 
 .btt-bar-fill {
@@ -70,6 +77,7 @@
         #ffe87c 100%
     );
     transition: width 0.3s ease-in-out;
+    position: relative;
 }
 
 .providence-bar-animated {
@@ -86,6 +94,27 @@
     }
 }
 
+.prov-preview-chunk {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+}
+
+.prov-preview-chunk.prov-loss {
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    transition: width 0.2s ease-out;
+    z-index: 2;
+}
+
+.prov-preview-chunk.prov-gain {
+    background-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+    z-index: 2;
+}
+
 .btt-center {
     display: flex;
     align-items: center;
@@ -100,4 +129,5 @@
     color: #ffffff;
     letter-spacing: 2px;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 18px rgba(229, 193, 88, 0.4);
+    transition: opacity 0.2s ease;
 }

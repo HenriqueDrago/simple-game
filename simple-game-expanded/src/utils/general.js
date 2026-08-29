@@ -29,3 +29,9 @@ export function toRoman(num) {
     }
     return roman;
 }
+
+export function customRound(num, houses) {
+    const divider = Math.pow(10, Math.max(1, houses));
+
+    return Math.ceil(num * divider) / divider;
+}

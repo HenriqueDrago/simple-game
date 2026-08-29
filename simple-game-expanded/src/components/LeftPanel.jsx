@@ -6,7 +6,7 @@ import {
     FREE_RESOURCES,
     RANKED_RESOURCES,
 } from "../utils/constants";
-import { effectKeys, turnStatus } from "../utils/enums";
+import { effectKeys, entryTypes, turnStatus } from "../utils/enums";
 
 import GradientBar from "./GradientBar";
 import RankedCounter from "./RankedCounter";
@@ -86,7 +86,7 @@ const RANKED_COUNTERS_CONFIG = {
         },
     },
     [effectKeys.BURDEN_OF_STIGMA]: {
-        label: "BURDEN OF STIGMA",
+        label: "STIGMATA",
         style: {
             color: "#e0a96d",
             borderColor: "#b87333",
@@ -269,7 +269,12 @@ export default function LeftPanel({ entityKey }) {
                         activeBars.length === 0 ? "is-empty" : ""
                     }`}
                 >
-                    <span className="resource-section-label">
+                    <span
+                        className="resource-section-label"
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(e, entryTypes.FIXED_RESOURCE)
+                        }
+                    >
                         Fixed Resources
                     </span>
                     {activeBars.map((key) => {
@@ -294,7 +299,12 @@ export default function LeftPanel({ entityKey }) {
                         activeCounters.length === 0 ? "is-empty" : ""
                     }`}
                 >
-                    <span className="resource-section-label">
+                    <span
+                        className="resource-section-label"
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(e, entryTypes.RANKED_RESOURCE)
+                        }
+                    >
                         Ranked Resources
                     </span>
                     {activeCounters.map((key) => {
@@ -318,7 +328,12 @@ export default function LeftPanel({ entityKey }) {
                         activeStacks.length === 0 ? "is-empty" : ""
                     }`}
                 >
-                    <span className="resource-section-label">
+                    <span
+                        className="resource-section-label"
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(e, entryTypes.FREE_RESOURCE)
+                        }
+                    >
                         Free Resources
                     </span>
                     {activeStacks.map((key) => {

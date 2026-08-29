@@ -3,7 +3,6 @@ import {
     ChevronsDown,
     Shield,
     HeartCrack,
-    ShieldCogCorner,
 } from "lucide-react";
 import "./OrdinancesTracker.css";
 import { effectKeys } from "../utils/enums";
@@ -14,8 +13,8 @@ import {
     getBenediction,
     getGrace,
     getDisgrace,
-    getIntegrity,
 } from "../utils/entities";
+import { customRound } from "../utils/general";
 
 export default function OrdinancesTracker({ entityKey }) {
     const { game } = useGame();
@@ -23,45 +22,38 @@ export default function OrdinancesTracker({ entityKey }) {
 
     const simGame = game?.simGame;
 
-    const realMale = Math.round((getMalediction(game, entityKey) - 1) * 100);
+    const realMale = customRound((getMalediction(game, entityKey) - 1) * 100, 1);
     const simMale = simGame
-        ? Math.round((getMalediction(simGame, entityKey) - 1) * 100)
+        ? customRound((getMalediction(simGame, entityKey) - 1) * 100, 1)
         : realMale;
     const isMaleChanged = simGame && simMale !== realMale;
     const displayMale = simGame ? simMale : realMale;
 
-    const realBene = Math.round((1 - getBenediction(game, entityKey)) * 100);
+    const realBene = customRound((1 - getBenediction(game, entityKey)) * 100, 1);
     const simBene = simGame
-        ? Math.round((1 - getBenediction(simGame, entityKey)) * 100)
+        ? customRound((1 - getBenediction(simGame, entityKey)) * 100, 1)
         : realBene;
     const isBeneChanged = simGame && simBene !== realBene;
     const displayBene = simGame ? simBene : realBene;
 
-    const realGrace = Math.round((1 - getGrace(game, entityKey)) * 100);
+    const realGrace = customRound((1 - getGrace(game, entityKey)) * 100, 1);
     const simGrace = simGame
-        ? Math.round((1 - getGrace(simGame, entityKey)) * 100)
+        ? customRound((1 - getGrace(simGame, entityKey)) * 100, 1)
         : realGrace;
     const isGraceChanged = simGame && simGrace !== realGrace;
     const displayGrace = simGame ? simGrace : realGrace;
 
-    const realDisgrace = Math.round((getDisgrace(game, entityKey) - 1) * 100);
+    const realDisgrace = customRound((getDisgrace(game, entityKey) - 1) * 100, 1);
     const simDisgrace = simGame
-        ? Math.round((getDisgrace(simGame, entityKey) - 1) * 100)
+        ? customRound((getDisgrace(simGame, entityKey) - 1) * 100, 1)
         : realDisgrace;
     const isDisgraceChanged = simGame && simDisgrace !== realDisgrace;
     const displayDisgrace = simGame ? simDisgrace : realDisgrace;
 
-    const realIntegrity = Math.round(getIntegrity(game, entityKey) * 100);
-    const simIntegrity = simGame
-        ? Math.round(getIntegrity(simGame, entityKey) * 100)
-        : realIntegrity;
-    const isIntegrityChanged = simGame && simIntegrity !== realIntegrity;
-    const displayIntegrity = simGame ? simIntegrity : realIntegrity;
-
     return (
         <div className="ordinances-tracker-container">
             <span
-                className={isMaleChanged ? "is-preview" : ""}
+                className={`ordinance-male ${isMaleChanged ? "is-preview" : ""}`}
                 onMouseDown={(e) =>
                     handleSpawnTooltip(e, effectKeys.MALEDICTION)
                 }
@@ -70,7 +62,7 @@ export default function OrdinancesTracker({ entityKey }) {
                 {displayMale}%
             </span>
             <span
-                className={isBeneChanged ? "is-preview" : ""}
+                className={`ordinance-bene ${isBeneChanged ? "is-preview" : ""}`}
                 onMouseDown={(e) =>
                     handleSpawnTooltip(e, effectKeys.BENEDICTION)
                 }
@@ -79,7 +71,7 @@ export default function OrdinancesTracker({ entityKey }) {
                 {displayBene}%
             </span>
             <span
-                className={isGraceChanged ? "is-preview" : ""}
+                className={`ordinance-grace ${isGraceChanged ? "is-preview" : ""}`}
                 onMouseDown={(e) =>
                     handleSpawnTooltip(e, effectKeys.GRACE)
                 }
@@ -88,22 +80,13 @@ export default function OrdinancesTracker({ entityKey }) {
                 {displayGrace}%
             </span>
             <span
-                className={isDisgraceChanged ? "is-preview" : ""}
+                className={`ordinance-disgrace ${isDisgraceChanged ? "is-preview" : ""}`}
                 onMouseDown={(e) =>
                     handleSpawnTooltip(e, effectKeys.DISGRACE)
                 }
             >
                 <HeartCrack size={18} />
                 {displayDisgrace}%
-            </span>
-            <span
-                className={isIntegrityChanged ? "is-preview" : ""}
-                onMouseDown={(e) =>
-                    handleSpawnTooltip(e, effectKeys.INTEGRITY)
-                }
-            >
-                <ShieldCogCorner size={18} />
-                {displayIntegrity}%
             </span>
         </div>
     );
