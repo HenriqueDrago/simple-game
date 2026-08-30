@@ -277,6 +277,7 @@ export function createBaseEntity() {
             [effectKeys.SACRILEGE]: 0,
             [effectKeys.COVENANT]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
+            [effectKeys.INSPIRATION]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -3292,6 +3293,10 @@ export function getRevelation(prev, entityKey) {
     const entity = extractEntity(prev, entityKey);
 
     let rev = entity[effectKeys.REVELATION];
+
+    if (entity.resources[effectKeys.INSPIRATION] > 0) {
+        rev += entity.resources[effectKeys.INSPIRATION];
+    }
 
     return rev;
 }

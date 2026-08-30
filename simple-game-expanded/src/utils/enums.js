@@ -294,7 +294,8 @@ export const effectKeys = Object.freeze({
     STARS_OF_GENESIS: "starsOfGenesis",
     BURDEN_OF_STIGMA: "burdenOfStigma",
     MARTHYR: "marthyr",
-    TRIAL: "trial"
+    TRIAL: "trial",
+    INSPIRATION: "inspiration",
 });
 
 export const runeKeys = Object.freeze({

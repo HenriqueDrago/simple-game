@@ -66,10 +66,10 @@ export const constants = Object.freeze({
     GENE_BENE: 2.5,
     SERAPHIM_MULT: 0.5,
     ASCEND_SKIP_RATE: 20,
-    HALLOW_CONDEMN: -15,
-    HALLOW_SUPPLICATE: 15,
-    MIN_HALLOW: -75,
-    MAX_HALLOW: 75,
+    HALLOW_CONDEMN: -10,
+    HALLOW_SUPPLICATE: 10,
+    MIN_HALLOW: -50,
+    MAX_HALLOW: 50,
     HIGH_SIN_GAIN: 2.5,
     YEST_SIN_RATE: 1 / 10,
     TOMOR_RATE: 1 / 10,
@@ -179,6 +179,7 @@ export const FREE_RESOURCES = [
     effectKeys.SACRILEGE,
     effectKeys.MARTHYR,
     effectKeys.COVENANT,
+    effectKeys.INSPIRATION,
     effectKeys.SACRED_FLAMES,
 ];
 
@@ -645,7 +646,10 @@ export const actionMap = {
 
     [actionKeys.RISE]: { name: "Rise", specialClass: "" },
     [actionKeys.ASCEND]: { name: "Ascend", specialClass: "action-ascend" },
-    [actionKeys.JUDGEMENT]: { name: "Judgement", specialClass: "action-judgement" },
+    [actionKeys.JUDGEMENT]: {
+        name: "Judgement",
+        specialClass: "action-judgement",
+    },
     [actionKeys.CONDEMN]: { name: "Condemn", specialClass: "" },
     [actionKeys.SUPPLICATE]: { name: "Supplicate", specialClass: "" },
     [actionKeys.DISCERN]: { name: "Discern", specialClass: "" },

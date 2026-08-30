@@ -209,6 +209,14 @@ const FREE_STACKS_CONFIG = {
             backgroundColor: "rgba(225, 245, 254, 0.2)",
         },
     },
+    [effectKeys.INSPIRATION]: {
+        label: "Inspiration",
+        style: {
+            color: "#fffcbf",
+            borderColor: "#fffcbf",
+            backgroundColor: "rgba(254, 253, 225, 0.2)",
+        },
+    },
     [effectKeys.DISSONANCE]: {
         label: "Dissonance",
         style: {

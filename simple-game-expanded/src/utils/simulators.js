@@ -1058,7 +1058,8 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
         draftAgent = extractEntity(post, agentKey);
     }
 
-    let extraDmg = 0;
+    let extraFinalDmg = 0;
+    let extraBaseDmg = 0;
 
     // Edict of Angels
     if (isEdictActive(draftAgent, edictKeys.ANGELS)) {
@@ -1067,27 +1068,31 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
         );
         draftAgent = loseEnlit(draftAgent, enlitConsumed);
 
-        extraDmg += enlitConsumed;
+        extraFinalDmg += enlitConsumed;
     }
 
-    extraDmg += draftAgent.resources[effectKeys.SACRILEGE];
+    // Sacrilege
+    if (draftAgent.resources[effectKeys.SACRILEGE] > 0) {
+        extraBaseDmg += draftAgent.resources[effectKeys.SACRILEGE];
 
-    draftAgent = {
-        ...draftAgent,
-        resources: {
-            ...draftAgent.resources,
-            [effectKeys.SACRILEGE]: 0,
-        },
-    };
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.SACRILEGE]: 0,
+            },
+        };
+    }
 
     post = replaceEntity(post, draftAgent, agentKey);
 
     post = newDealDmg(
         post,
-        post.entities[agentKey][effectKeys.REVELATION] + extraDmg,
+        post.entities[agentKey][effectKeys.REVELATION] + extraBaseDmg,
         [nonAgentKey],
         tarnishTypes.PHYSICAL,
         agentKey,
+        extraFinalDmg,
     );
 
     return post;
@@ -1156,11 +1161,14 @@ function simulateDiscern({ prev, agentKey }) {
 
     draftAgent = {
         ...draftAgent,
-        [effectKeys.REVELATION]:
-            draftAgent[effectKeys.REVELATION] +
-            Math.floor(
-                post.btt[effectKeys.PROVIDENCE] * constants.DISCERN_RATE,
-            ),
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.INSPIRATION]:
+                draftAgent.resources[effectKeys.INSPIRATION] +
+                Math.floor(
+                    post.btt[effectKeys.PROVIDENCE] * constants.DISCERN_RATE,
+                ),
+        },
     };
 
     // Powers

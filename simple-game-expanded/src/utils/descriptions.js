@@ -1568,7 +1568,14 @@ export const SERAPH_DESCRIPTIONS = {
         name: "DISCERN",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Raises REVELATION for every 10% PROVIDENCE on the battlefield.",
+            "Gains INSPIRATION for every 10% PROVIDENCE on the battlefield.",
+    },
+
+    [effectKeys.INSPIRATION]: {
+        name: "INSPIRATION",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Raises REVELATION equal to INSPIRATION on self. At turn end, lose all INSPIRATION, then raises the battlefield's PROVIDENCE by 2.5% per INSPIRATION lost.",
     },
 
     [actionKeys.ATONE]: {
@@ -1602,7 +1609,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF ANGELS",
         type: entryTypes.EDICT,
         description:
-            "When using CONDEMN, halves the user's total ENLIGHTENMENT. Then, increases the tarnishment inflicted by the ENLIGHTENMENT lost.",
+            "When using CONDEMN, halves the user's total ENLIGHTENMENT. Then, increases the final tarnishment inflicted by the ENLIGHTENMENT lost.",
     },
 
     [choirKeys.SECOND]: {
@@ -1651,7 +1658,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "SACRILEGE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using CONDEMN, consumes all SACRILEGE on self, then increases the tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 0.5% for every SACRILEGE lost.",
+            "When using CONDEMN, consumes all SACRILEGE on self, then increases the base tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 0.5% for every SACRILEGE lost.",
     },
 
     [choirKeys.FOURTH]: {
@@ -1672,7 +1679,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "SACRED FLAMES",
         type: entryTypes.MECHANIC,
         description:
-            "At turn end, restores RESOURCES equal to SACRED FLAMES on self.",
+            "At turn end, raises TARNISHED SIN by 0.5% and restores RESOURCES for every SACRED FLAMES on self.",
     },
 
     [choirKeys.FIFTH]: {
@@ -1700,14 +1707,14 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF DOMINIONS",
         type: entryTypes.EDICT,
         description:
-            "When using CONDEMN, lowers HALLOWED ECHOES by 15%. When using SUPPLICATE, raises HALLOWED ECHOES by 15%. When using DISCERN, inverts HALLOWED ECHOES.",
+            "When using CONDEMN, lowers HALLOWED ECHOES by 10%. When using SUPPLICATE, raises HALLOWED ECHOES by 10%. When using DISCERN, inverts HALLOWED ECHOES.",
     },
 
     [effectKeys.HALLOWED_ECHOES]: {
         name: "HALLOWED ECHOES",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Starts at 0. Can go from -75% to 75%. Raises MALEDICTION and DISGRACE equal to HALLOWED ECHOES lower than 0. Raises BENEDICTION and GRACE equal to HALLOWED ECHOES higher than 0. At turn start, resets HALLOWED ECHOES to 0. When exiting ASCENDENCE OF SPIRIT, sets HALLOWED ECHOES to 0.",
+            "Starts at 0. Can go from -50% to 50%. Raises MALEDICTION and DISGRACE equal to HALLOWED ECHOES lower than 0. Raises BENEDICTION and GRACE equal to HALLOWED ECHOES higher than 0. At turn start, resets HALLOWED ECHOES to 0. When exiting ASCENDENCE OF SPIRIT, sets HALLOWED ECHOES to 0.",
     },
 
     [choirKeys.SEVENTH]: {

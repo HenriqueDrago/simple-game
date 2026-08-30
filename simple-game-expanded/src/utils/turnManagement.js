@@ -56,7 +56,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
     };
 
     // Hallowed Echoes
-    if (draftTarget[effectKeys.HALLOWED_ECHOES] > 0) {
+    if (draftTarget[effectKeys.HALLOWED_ECHOES] !== 0) {
         draftTarget = {
             ...draftTarget,
             [effectKeys.HALLOWED_ECHOES]: 0,
@@ -500,10 +500,33 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
 
     // Sacred Flames
     if (draftCurrActor.resources[effectKeys.SACRED_FLAMES] > 0) {
+        draftCurrActor = gainSin(
+            draftCurrActor,
+            draftCurrActor.resources[effectKeys.SACRED_FLAMES] *
+                constants.BASE_SIN_GAIN,
+        );
+
         draftCurrActor = restoreResources(
             draftCurrActor,
             draftCurrActor.resources[effectKeys.SACRED_FLAMES],
         );
+    }
+
+    // Inspiration
+    if (draftCurrActor.resources[effectKeys.INSPIRATION] > 0) {
+        const insp = draftCurrActor.resources[effectKeys.INSPIRATION];
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.INSPIRATION]: 0,
+            },
+        };
+
+        post = replaceEntity(post, draftCurrActor, currActorKey);
+        post = raiseProvidence(post, insp);
+        draftCurrActor = extractEntity(post, currActorKey);
     }
 
     // Marthyr
@@ -1148,8 +1171,18 @@ export function processExtraTurn(prev, agentKey, action) {
 
     let isFreeAction = FREE_ACTIONS.includes(action);
 
+    const isAbandoned =
+        extractEntity(prev, entityKeys.PLAYER_ONE)[effectKeys.TARNISHED_SIN] >=
+            constants.MAX_SIN ||
+        extractEntity(prev, entityKeys.PLAYER_TWO)[effectKeys.TARNISHED_SIN] >=
+            constants.MAX_SIN;
+
     const entity = extractEntity(post, agentKey);
-    if (!isFreeAction && isEdictActive(entity, edictKeys.VIRTUES)) {
+    if (
+        !isFreeAction &&
+        isEdictActive(entity, edictKeys.VIRTUES) &&
+        !isAbandoned
+    ) {
         const provNecessary =
             constants.BASE_VIRTUES_COST +
             constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
@@ -1168,9 +1201,10 @@ export function processExtraTurn(prev, agentKey, action) {
     }
 
     // Free actions do not end singularity
-    const newStatus = isFreeAction
-        ? turnStatus.ONGOING
-        : turnStatus.ROUND_TRANSITION;
+    const newStatus =
+        isFreeAction && !isAbandoned
+            ? turnStatus.ONGOING
+            : turnStatus.ROUND_TRANSITION;
 
     return buildRoundQueue({
         ...post,
@@ -1188,12 +1222,10 @@ export function processPlan(prev, agentKey, action) {
     let isFreeAction = FREE_ACTIONS.includes(action);
 
     const isAbandoned =
-        extractEntity(prev, entityKeys.PLAYER_ONE).states[
-            effectKeys.ABANDONED_BY_GRACE
-        ] ||
-        extractEntity(prev, entityKeys.PLAYER_TWO).states[
-            effectKeys.ABANDONED_BY_GRACE
-        ];
+        extractEntity(prev, entityKeys.PLAYER_ONE)[effectKeys.TARNISHED_SIN] >=
+            constants.MAX_SIN ||
+        extractEntity(prev, entityKeys.PLAYER_TWO)[effectKeys.TARNISHED_SIN] >=
+            constants.MAX_SIN;
 
     const entity = extractEntity(post, agentKey);
     if (
