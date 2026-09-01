@@ -3,6 +3,7 @@ import {
     canUseAction,
     consumeMitigationResources,
     consumeResources,
+    extractEntity,
     getEntityDef,
     getEntityDefPen,
     getEntityMaxHealth,
@@ -1417,7 +1418,8 @@ export function shadowSorcererAI(context) {
                 simMayhem,
                 nonAgentKey,
                 agentKey,
-            )
+            ) &&
+            !willEntityEffectivelyDie(extractEntity(simMayhem, agentKey))
         ) {
             return actionKeys.BLACK_MAYHEM;
         }
@@ -1447,7 +1449,8 @@ export function shadowSorcererAI(context) {
                 nonAgentKey,
                 agentKey,
             ) &&
-            !willEntityDieImmediately(simSpAtkPromise.entities[agentKey])
+            !willEntityDieImmediately(simSpAtkPromise.entities[agentKey]) &&
+            !willEntityDieImmediately(simPromise.entities[agentKey])
         ) {
             return actionKeys.DARK_PROMISE;
         }
@@ -1474,6 +1477,8 @@ export function shadowSorcererAI(context) {
 
             if (netHpGain > 0) {
                 return actionKeys.SHADOW_MANTLE;
+            } else {
+                return actionKeys.RITUAL_OF_ASH;
             }
         }
 

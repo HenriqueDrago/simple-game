@@ -214,8 +214,8 @@ export const presetAi = {
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
         best: {
-            str: 5,
-            def: 5,
+            str: 10,
+            def: 0,
         },
         caller: bloodknightAI,
         desc: [...Object.keys(BLOODKNIGHT_DESCRIPTIONS)],

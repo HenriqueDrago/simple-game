@@ -1218,8 +1218,8 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                     cause === actionKeys.SHADOW_PACT ||
                     cause === actionKeys.BLACK_MAYHEM) &&
                 currResourceKey === effectKeys.LINGERING_EMBER
-            ) ||
-            !(isCauseDamage && currResourceKey === effectKeys.SANCTUARY) ||
+            ) &&
+            !(isCauseDamage && currResourceKey === effectKeys.SANCTUARY) &&
             !(isCauseTarnish && currResourceKey !== effectKeys.SANCTUARY)
         ) {
             const currAmount = draftEntity.resources[currResourceKey];
@@ -1240,22 +1240,6 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                     [currResourceKey]: currAmount - consumption,
                 },
             };
-
-            // Lingering Ember
-            if (
-                isCauseDamage &&
-                currResourceKey === effectKeys.LINGERING_EMBER
-            ) {
-                const currentCinders =
-                    draftEntity.resources[effectKeys.CINDERS];
-                draftEntity = {
-                    ...draftEntity,
-                    resources: {
-                        ...draftEntity.resources,
-                        [effectKeys.CINDERS]: currentCinders + consumption,
-                    },
-                };
-            }
 
             // Halo
             if (isCauseDamage && currResourceKey === effectKeys.HALO) {
@@ -1328,15 +1312,13 @@ export function consumeFreeResources(entity, amount, cause = null) {
     while (amount > 0 && i < FREE_RESOURCES.length) {
         const currResourceKey = FREE_RESOURCES[i];
 
-        // Avoid shadowflame and related actions from consuming Shadowflame and unrelenting shadows
-        // Avoid glimpse consumingthe flames itself
+        // Avoid shadowflame and related actions from consuming Shadowflame
         if (
             !(
                 (cause === effectKeys.SHADOWFLAME ||
                     cause === actionKeys.SHADOW_PACT ||
                     cause === actionKeys.BLACK_MAYHEM) &&
-                (currResourceKey === effectKeys.SHADOWFLAME ||
-                    currResourceKey === effectKeys.UNRELENTING_SHADOWS)
+                currResourceKey === effectKeys.SHADOWFLAME
             )
         ) {
             const currAmount = draftEntity.resources[currResourceKey];

@@ -511,28 +511,21 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW SORCERER",
         type: entryTypes.CONTROLLER,
         description:
-            "The fourth challenge. Focuses on managing SHADOWFLAME, utilizing of SHADOW MANTLE when at low RESOURCES and RITUAL OF ASH when risking losing control; eventually finishing battle with BLACK MAYHEM consumption or DARK PROMISE restoration bomb. In PROGRESSION MODE, defeat this enemy to unlock the SHADOW PACT action and the CYBORG enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The fourth challenge. Focuses on managing SHADOWFLAME, using SHADOW MANTLE to restore RESOURCES when at low amounts, and RITUAL OF ASH to convert SHADOWFLAME when at risk of losing control; uses BLACK MAYHEM to build CINDERS and pressure the enemy, eventually finishing with either BLACK MAYHEM burning or a DARK PROMISE restoration bomb. In PROGRESSION MODE, defeat this enemy to unlock the SHADOW PACT action, alongside the CYBORG enemy and the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.SHADOW_PACT]: {
         name: "SHADOW PACT",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all STATES and enters UMBRAL CORE. Then, burns 5 RESOURCES on self and gains SHADOWFLAME equal to the amount burned. Cannot burn SHADOWFLAME, LINGERING EMBER or UNRELENTING SHADOWS this way. When exiting this state, loses all SHADOWFLAME, LINGERING EMBER and CINDERS on self, then gains UNRELENTING SHADOWS equal to SHADOWFLAME consumed plus half the LINGERING EMBER consumed.",
-    },
-
-    [effectKeys.SHADOWFLAME]: {
-        name: "SHADOWFLAME",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, burns RESOURCES on self equal to current SHADOWFLAME, then gains SHADOWFLAME equal to the amount burned. Cannot burn SHADOWFLAME, LINGERING EMBER or UNRELENTING SHADOWS this way.",
+            "Exits all STATES. Enters UMBRAL CORE. Burns RESOURCES equal to the user's STRENGTH. Then, gains SHADOWFLAME equal to the amount burned. Gains LINGERING EMBER equal to the user's DEFENSE.",
     },
 
     [effectKeys.UMBRAL_CORE]: {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
         description:
-            "Replaces all actions with SHADOW MANTLE, BLACK MAYHEM, RITUAL OF ASH, and DARK PROMISE. At turn start, if at no SHADOWFLAME and no LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
+            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER and CINDERS on self. Then, gains UNRELENTING SHADOWS equal to SHADOWFLAME extinguished plus half the LINGERING EMBER extinguished. At turn start, if at 0 SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -541,11 +534,25 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         description: "Cannot use SHADOW PACT.",
     },
 
-    [actionKeys.BLACK_MAYHEM]: {
-        name: "BLACK MAYHEM",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
+    [effectKeys.SHADOWFLAME]: {
+        name: "SHADOWFLAME",
+        type: entryTypes.FREE_RESOURCE,
         description:
-            "Burns the target's RESOURCES equal to the user's SHADOWFLAME. Grants CINDERS to the target equal to the amount of RESOURCES burnt. When burning CINDERS, does not grant CINDERS. Cannot burn SHADOWFLAME, LINGERING EMBER or UNRELENTING SHADOWS this way.",
+            "Cannot be burned. At turn start, burns RESOURCES on self equal to the user's SHADOWFLAME. Then, gains SHADOWFLAME equal to the amount burned.",
+    },
+
+    [effectKeys.LINGERING_EMBER]: {
+        name: "LINGERING EMBER",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "Cannot be burned. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, extinguishes LINGERING EMBER to reduce the damage taken. At turn start, extinguishes half the LINGERING EMBER on self. Then, gains both SHADOWFLAME and CINDERS equal to the amount extinguished.",
+    },
+
+    [effectKeys.UNRELENTING_SHADOWS]: {
+        name: "UNRELENTING SHADOWS",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, extinguishes all UNRELENTING SHADOWS on self. Then, restores RESOURCES equal to the amount extinguished.",
     },
 
     [effectKeys.CINDERS]: {
@@ -554,53 +561,46 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         description: "No effect.",
     },
 
+    [actionKeys.BLACK_MAYHEM]: {
+        name: "BLACK MAYHEM",
+        type: entryTypes.TRANSFORMATIVE_ACTION,
+        description:
+            "Burns RESOURCES on all entities equal to SHADOWFLAME on self. Gains CINDERS equal to the total amount burned. When burning CINDERS, does not gain CINDERS.",
+    },
+
     [actionKeys.SHADOW_MANTLE]: {
         name: "SHADOW MANTLE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Gains UNRELENTING SHADOWS equal to SHADOWFLAME on self. Enters DARK EMBRACE.",
-    },
-
-    [effectKeys.UNRELENTING_SHADOWS]: {
-        name: "UNRELENTING SHADOWS",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "At turn start, loses all UNRELENTING SHADOWS and restores RESOURCES equal to the amount lost.",
+            "Gains UNRELENTING SHADOWS equal to the user's SHADOWFLAME. Enters DARK EMBRACE.",
     },
 
     [effectKeys.DARK_EMBRACE]: {
         name: "DARK EMBRACE",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. While active, does not trigger SHADOWFLAME turn start effects. At turn start, exits this state.",
+            "Raises DAMAGE REDUCTION by 50%. Does not trigger SHADOWFLAME turn start effects. At turn start, exits this state.",
     },
 
     [actionKeys.RITUAL_OF_ASH]: {
         name: "RITUAL OF ASH",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME on self, then gains LINGERING EMBER equal to the amount extinguished.",
-    },
-
-    [effectKeys.LINGERING_EMBER]: {
-        name: "LINGERING EMBER",
-        type: entryTypes.MITIGATION_RESOURCE,
-        description:
-            "Cannot be consumed by SHADOWFLAME. When suffering PHYSICAL DAMAGE or PIERCING DAMAGE, consumes LINGERING EMBER to reduce the damage taken and gains CINDERS equal to the amount lost this way. At turn start, converts half of current LINGERING EMBER into both SHADOWFLAME and CINDERS.",
+            "Extinguishes all SHADOWFLAME on self. Gains LINGERING EMBER equal to the amount extinguished.",
     },
 
     [actionKeys.DARK_PROMISE]: {
         name: "DARK PROMISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Loses all SHADOWFLAME, LINGERING EMBER and CINDERS on self, then restores RESOURCES on all entities equal to the SHADOWFLAME lost plus half the LINGERING EMBER lost. Afterwards, exits UMBRAL CORE and enters DIMMING DARKNESS. ",
+            "Extinguishes all SHADOWFLAME, LINGERING EMBER and CINDERS on self. Restores RESOURCES to all entities equal to half the SHADOWFLAME extinguished. Then, exits UMBRAL CORE and enters DIMMING DARKNESS.",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
         name: "DIMMING DARKNESS",
         type: entryTypes.STATE,
         description:
-            "Does not activate MANA OVERFLOW turn end effects. At turn start, exits this state.",
+            "Does not trigger MANA OVERFLOW turn end effects. At turn start, exits this state.",
     },
 };
 

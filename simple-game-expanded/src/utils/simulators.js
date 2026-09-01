@@ -286,37 +286,54 @@ function simulateHeal({ prev, agent, agentKey }) {
     };
 }
 
-function simulateShadowPact({ prev, agentKey, nonAgent, nonAgentKey }) {
-    const newGameState = exitAllStates(prev, agentKey, nonAgentKey);
+function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
+    let post = exitAllStates(prev, agentKey, nonAgentKey);
 
-    const { draftEntity, resourcesConsumed } = consumeResources(
-        { ...newGameState.entities[agentKey] },
-        constants.SHADOW_PACT_BURN,
-        actionKeys.SHADOW_PACT,
-    );
+    let draftAgent = extractEntity(post, agentKey);
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: {
-                ...nonAgent,
+    const str = getEntityStr(draftAgent);
+    const def = getEntityDef(draftAgent);
+
+    if (str > 0) {
+        const result = consumeResources(
+            draftAgent,
+            str,
+            actionKeys.SHADOW_PACT,
+        );
+
+        draftAgent = {
+            ...result.draftEntity,
+            resources: {
+                ...result.draftEntity.resources,
+                [effectKeys.SHADOWFLAME]:
+                    result.draftEntity.resources[effectKeys.SHADOWFLAME] +
+                    result.resourcesConsumed.totalConsumption,
             },
-            [agentKey]: {
-                ...draftEntity,
-                states: {
-                    ...draftEntity.states,
-                    [effectKeys.UMBRAL_CORE]: true,
-                },
-                resources: {
-                    ...draftEntity.resources,
-                    [effectKeys.SHADOWFLAME]:
-                        draftEntity.resources[effectKeys.SHADOWFLAME] +
-                        resourcesConsumed.totalConsumption,
-                },
+        };
+    }
+
+    if (def > 0) {
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.LINGERING_EMBER]:
+                    draftAgent.resources[effectKeys.LINGERING_EMBER] + def,
             },
+        };
+    }
+
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.UMBRAL_CORE]: true,
         },
     };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateShadowMantle({
@@ -368,18 +385,17 @@ function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     };
 }
 
-function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    let draftAgent = {
-        ...agent,
+function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
     };
 
-    let draftNonAgent = {
-        ...nonAgent,
-    };
+    let draftAgent = extractEntity(post, agentKey);
+    let draftNonAgent = extractEntity(post, nonAgentKey);
 
-    const toBeRestored =
-        draftAgent.resources[effectKeys.SHADOWFLAME] +
-        Math.floor(draftAgent.resources[effectKeys.LINGERING_EMBER] / 2);
+    const toBeRestored = Math.floor(
+        draftAgent.resources[effectKeys.SHADOWFLAME] / 2,
+    );
 
     draftAgent = {
         ...draftAgent,
@@ -399,51 +415,55 @@ function simulateDarkPromise({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     draftAgent = restoreResources(draftAgent, toBeRestored);
     draftNonAgent = restoreResources(draftNonAgent, toBeRestored);
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-            [nonAgentKey]: {
-                ...draftNonAgent,
-            },
-        },
-    };
+    post = replaceEntity(post, draftAgent, agentKey);
+    post = replaceEntity(post, draftNonAgent, nonAgentKey);
+
+    return post;
 }
 
-function simulateBlackMayhem({ prev, agent, nonAgent, nonAgentKey }) {
-    const { draftEntity, resourcesConsumed } = consumeResources(
-        { ...nonAgent },
-        agent.resources.shadowflame,
+function simulateBlackMayhem({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+    let draftNonAgent = extractEntity(post, nonAgentKey);
+
+    const burn = draftAgent.resources[effectKeys.SHADOWFLAME];
+
+    const resultAgent = consumeResources(
+        draftAgent,
+        burn,
         actionKeys.BLACK_MAYHEM,
     );
+    draftAgent = resultAgent.draftEntity;
 
-    const draftNonAgent = {
-        ...draftEntity,
-    };
+    const resultNonAgent = consumeResources(
+        draftNonAgent,
+        burn,
+        actionKeys.BLACK_MAYHEM,
+    );
+    draftNonAgent = resultNonAgent.draftEntity;
 
-    const burntNonCindersNonRad =
-        resourcesConsumed.totalConsumption - (resourcesConsumed.cinders || 0);
+    const cinderGain =
+        resultAgent.resourcesConsumed.totalConsumption +
+        resultNonAgent.resourcesConsumed.totalConsumption -
+        (resultAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0) -
+        (resultNonAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0);
 
-    const newNonAgentCinders =
-        draftNonAgent.resources.cinders +
-        burntNonCindersNonRad * constants.RESOURCES_CINDERS_MULT;
-
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: {
-                ...draftNonAgent,
-                resources: {
-                    ...draftNonAgent.resources,
-                    cinders: newNonAgentCinders,
-                },
-            },
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.CINDERS]:
+                draftAgent.resources[effectKeys.CINDERS] + cinderGain,
         },
     };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+    post = replaceEntity(post, draftNonAgent, nonAgentKey);
+
+    return post;
 }
 
 function simulateAttune({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
