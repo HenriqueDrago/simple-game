@@ -2,6 +2,7 @@ import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import { constants } from "../utils/constants";
 import { effectKeys } from "../utils/enums";
+import { roundNumber } from "../utils/general";
 import "./TarnishedSinBar.css";
 
 export default function TarnishedSinBar({ entityKey }) {
@@ -31,7 +32,10 @@ export default function TarnishedSinBar({ entityKey }) {
         return null;
     }
 
-    const fillPercentage = Math.max(0, Math.min(100, (displayAmount / constants.MAX_SIN) * 100));
+    const fillPercentage = Math.max(
+        0,
+        Math.min(100, (displayAmount / constants.MAX_SIN) * 100),
+    );
 
     return (
         <div
@@ -44,10 +48,12 @@ export default function TarnishedSinBar({ entityKey }) {
                 <span className="tarnished-sin-label">Tarnished Sin</span>
                 <span
                     className={`tarnished-sin-value ${
-                        isNumberChanged && !isNewResource && !willDisappear ? "is-preview" : ""
+                        isNumberChanged && !isNewResource && !willDisappear
+                            ? "is-preview"
+                            : ""
                     }`}
                 >
-                    {displayAmount}%
+                    {roundNumber(displayAmount, 2)}%
                 </span>
             </div>
             <div className="tarnished-sin-track">

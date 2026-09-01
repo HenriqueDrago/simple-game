@@ -233,6 +233,22 @@ const FREE_STACKS_CONFIG = {
             backgroundColor: "rgba(0, 229, 255, 0.18)",
         },
     },
+    [effectKeys.MOTES_OF_RUIN]: {
+        label: "Motes of Ruin",
+        style: {
+            color: "#ff4d4d",
+            borderColor: "#ff4d4d",
+            backgroundColor: "rgba(255, 77, 77, 0.2)",
+        },
+    },
+    [effectKeys.MOTES_OF_CREATION]: {
+        label: "Motes of Creation",
+        style: {
+            color: "#80d8ff",
+            borderColor: "#80d8ff",
+            backgroundColor: "rgba(128, 216, 255, 0.18)",
+        },
+    },
 };
 
 export default function LeftPanel({ entityKey }) {

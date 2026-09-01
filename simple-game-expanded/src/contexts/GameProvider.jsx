@@ -9,6 +9,7 @@ import {
     getCurrActivePlayer,
     getEntityElement,
     getOtherEntity,
+    getTotalEnlit,
     isEdictUnlocked,
     isElementActive,
     newDealDmg,
@@ -21,6 +22,7 @@ import {
 } from "../utils/entities";
 import {
     aiKeys,
+    blasphemyKeys,
     effectKeys,
     elementalKeys,
     entityKeys,
@@ -37,7 +39,6 @@ import {
 import {
     CHECKPOINT_STATES,
     coloredStars,
-    constants,
     gameSpeeds,
     INITIAL_GAME_STATE,
     playerMap,
@@ -669,7 +670,17 @@ export default function GameProvider({ children }) {
 
             let draftEntity = extractEntity(post, entityKey);
 
-            const starsUsed = Math.min(amount, draftEntity?.[starKey] ?? 0);
+            let starsUsed = Math.min(amount, draftEntity?.[starKey] ?? 0);
+            if (starKey === effectKeys.STARS_OF_APOCALYPSE) {
+                starsUsed = Math.max(
+                    0,
+                    Math.min(starsUsed, getTotalEnlit(draftEntity) - 1),
+                );
+            }
+
+            if (starsUsed <= 0) {
+                return prev;
+            }
 
             draftEntity = {
                 ...draftEntity,
@@ -681,27 +692,27 @@ export default function GameProvider({ children }) {
             if (starKey === effectKeys.STARS_OF_APOCALYPSE) {
                 post = newDealDmg(
                     post,
-                    amount * constants.APOC_BASE_DMG,
+                    starsUsed,
                     [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
                     tarnishTypes.TRUE,
                 );
             } else if (starKey === effectKeys.STARS_OF_GENESIS) {
                 let p1 = restoreResources(
                     extractEntity(post, entityKeys.PLAYER_ONE),
-                    amount * constants.GENE_BASE_RESTORE,
+                    starsUsed,
                 );
                 post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
 
                 let p2 = restoreResources(
                     extractEntity(post, entityKeys.PLAYER_TWO),
-                    amount * constants.GENE_BASE_RESTORE,
+                    starsUsed,
                 );
                 post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
             } else {
                 return post;
             }
 
-            return post;
+            return processDeathCheck(post);
         });
     }
 
@@ -710,15 +721,31 @@ export default function GameProvider({ children }) {
             let post = {
                 ...prev,
             };
-
             let draftEntity = extractEntity(post, agentKey);
 
-            const blas = draftEntity?.[effectKeys.CODEX_OF_BLASPHEMY]?.[index];
+            const oldCodex = draftEntity?.[effectKeys.CODEX_OF_BLASPHEMY] || [];
+            const blas = oldCodex[index];
 
-            if (!blas) {
+            if (!blas || blas === blasphemyKeys.NONE) {
                 return post;
             }
 
+            const remaining = oldCodex.filter(
+                (item, i) => i !== index && item !== blasphemyKeys.NONE,
+            );
+
+            const newCodex = [
+                remaining[2] || blasphemyKeys.NONE,
+                remaining[1] || blasphemyKeys.NONE,
+                remaining[0] || blasphemyKeys.NONE,
+            ];
+
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.CODEX_OF_BLASPHEMY]: newCodex,
+            };
+
+            post = replaceEntity(post, draftEntity, agentKey);
             post = expungeBlas(post, agentKey, nonAgentKey, blas);
 
             return post;
@@ -1223,6 +1250,19 @@ export default function GameProvider({ children }) {
                 !playerMap?.[agentKey]?.extra?.includes(currPhase))
         ) {
             return null;
+        }
+
+        if (game?.simSpecs?.blasphemy) {
+            sim = processDeathCheck(
+                buildRoundQueue(
+                    expungeBlas(
+                        sim ? sim : game,
+                        agentKey,
+                        nonAgentKey,
+                        game.simSpecs.blasphemy,
+                    ),
+                ),
+            );
         }
 
         if (game?.simSpecs?.action) {

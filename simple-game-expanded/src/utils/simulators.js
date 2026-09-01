@@ -1036,15 +1036,13 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
         },
     };
 
-    draftAgent = extractEntity(post, agentKey);
     for (
         let remainingProv = newProv;
         remainingProv >= constants.ASCEND_SKIP_RATE;
         remainingProv -= constants.ASCEND_SKIP_RATE
     ) {
-        draftAgent = advanceChoir(draftAgent);
+        post = advanceChoir(post, agentKey);
     }
-    post = replaceEntity(post, draftAgent, agentKey);
 
     return post;
 }

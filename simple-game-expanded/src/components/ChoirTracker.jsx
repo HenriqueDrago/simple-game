@@ -1,4 +1,5 @@
 import { useGame } from "../contexts/GameContext";
+import { useUI } from "../contexts/UIContext";
 import { choirKeys, entryTypes } from "../utils/enums";
 import "./ChoirTracker.css";
 
@@ -52,6 +53,7 @@ const choirMap = {
 
 export default function ChoirTracker({ entityKey }) {
     const { game } = useGame();
+    const { handleSpawnTooltip } = useUI();
 
     const entity = game.entities[entityKey];
     const simEntity = game?.simGame?.entities?.[entityKey];
@@ -62,7 +64,10 @@ export default function ChoirTracker({ entityKey }) {
     const choirData = choirMap[currChoir];
 
     return (
-        <div className="choir-tracker">
+        <div
+            className="choir-tracker"
+            onMouseDown={(e) => handleSpawnTooltip(e, currChoir)}
+        >
             <div className="choir-header">
                 <span className="choir-divider-line" />
                 <span className="choir-label">HEAVENLY CHOIR</span>

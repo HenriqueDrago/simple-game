@@ -8,6 +8,8 @@ import OrdinancesTracker from "./OrdinancesTracker";
 import AngelAttr from "./AngelAttr";
 import ChoirTracker from "./ChoirTracker";
 import HallowedEchoesBar from "./HallowedEchoesBar";
+import CodexOfBlasphemy from "./CodexOfBlasphemy";
+import CelestialStars from "./CelestialStars";
 
 export default function AngelPanel({ entityKey }) {
     const { game } = useGame();
@@ -27,6 +29,12 @@ export default function AngelPanel({ entityKey }) {
             <OrdinancesTracker entityKey={entityKey} />
 
             <AngelAttr entityKey={entityKey} />
+
+            <div className="stars-codex-container">
+                <CodexOfBlasphemy entityKey={entityKey} />
+
+                <CelestialStars entityKey={entityKey} />
+            </div>
 
             <HallowedEchoesBar entityKey={entityKey} />
 

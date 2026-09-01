@@ -30,6 +30,7 @@ import {
     tarnishTypes,
     eyeKeys,
 } from "./enums.js";
+import { roundNumber } from "./general.js";
 import { buildHistory } from "./turnManagement.js";
 
 export function restoreResources(entity, amount) {
@@ -278,6 +279,8 @@ export function createBaseEntity() {
             [effectKeys.COVENANT]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
             [effectKeys.INSPIRATION]: 0,
+            [effectKeys.MOTES_OF_CREATION]: 0,
+            [effectKeys.MOTES_OF_RUIN]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -821,6 +824,42 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             }
             case actionKeys.SPECIAL_ATTACK: {
                 post = addRune(post, agentKey, nonAgentKey, runeKeys.SKULD);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    // Blasphemies
+    if (isEdictActive(extractEntity(post, agentKey), edictKeys.THRONES)) {
+        switch (action) {
+            case actionKeys.CONDEMN: {
+                post = addBlasphemy(
+                    post,
+                    agentKey,
+                    nonAgentKey,
+                    blasphemyKeys.YESTERDAY,
+                );
+                break;
+            }
+            case actionKeys.SUPPLICATE: {
+                post = addBlasphemy(
+                    post,
+                    agentKey,
+                    nonAgentKey,
+                    blasphemyKeys.TODAY,
+                );
+                break;
+            }
+            case actionKeys.DISCERN: {
+                post = addBlasphemy(
+                    post,
+                    agentKey,
+                    nonAgentKey,
+                    blasphemyKeys.TOMORROW,
+                );
                 break;
             }
             default: {
@@ -3100,13 +3139,16 @@ export function getBenediction(prev, entityKey) {
 
     // Genesis
     if (entity[effectKeys.STARS_OF_GENESIS] > 0) {
-        bene *= 1 - entity[effectKeys.STARS_OF_GENESIS] * constants.GENE_BENE;
+        bene *=
+            1 -
+            (entity[effectKeys.STARS_OF_GENESIS] * constants.GENE_BENE) / 100;
     }
 
     // Seraphim
     if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
-            const prov = prev.btt[effectKeys.PROVIDENCE];
+            const prov =
+                prev.btt[effectKeys.PROVIDENCE] / constants.MAX_PROVIDENCE;
             bene *= 1 - prov * constants.SERAPHIM_MULT;
         } else if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
             const missingProv = Math.max(
@@ -3147,7 +3189,8 @@ export function getMalediction(prev, entityKey) {
     // Seraphim
     if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
-            const prov = prev.btt[effectKeys.PROVIDENCE];
+            const prov =
+                prev.btt[effectKeys.PROVIDENCE] / constants.MAX_PROVIDENCE;
             male *= 1 + prov * constants.SERAPHIM_MULT;
         } else if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
             const missingProv = Math.max(
@@ -3177,7 +3220,8 @@ export function getGrace(prev, entityKey) {
     // Seraphim
     if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
-            const prov = prev.btt[effectKeys.PROVIDENCE];
+            const prov =
+                prev.btt[effectKeys.PROVIDENCE] / constants.MAX_PROVIDENCE;
             grace *= 1 - prov * constants.SERAPHIM_MULT;
         } else if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
             const missingProv = Math.max(
@@ -3207,13 +3251,15 @@ export function getDisgrace(prev, entityKey) {
     if (entity[effectKeys.STARS_OF_APOCALYPSE] > 0) {
         disgrace *=
             1 +
-            entity[effectKeys.STARS_OF_APOCALYPSE] * constants.APOC_DISGRACE;
+            (entity[effectKeys.STARS_OF_APOCALYPSE] * constants.APOC_DISGRACE) /
+                100;
     }
 
     // Seraphim
     if (isEdictActive(entity, edictKeys.SERAPHIM)) {
         if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.CLOSED) {
-            const prov = prev.btt[effectKeys.PROVIDENCE];
+            const prov =
+                prev.btt[effectKeys.PROVIDENCE] / constants.MAX_PROVIDENCE;
             disgrace *= 1 + prov * constants.SERAPHIM_MULT;
         } else if (prev.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.OPEN) {
             const missingProv = Math.max(
@@ -3292,30 +3338,50 @@ export function getDefilement(prev) {
     return defil;
 }
 
-export function advanceChoir(entity) {
-    let draftEntity = {
-        ...entity,
+export function advanceChoir(prev, entityKey) {
+    let post = {
+        ...prev,
     };
 
+    let draftEntity = extractEntity(post, entityKey);
+
     const choirs = Object.values(choirKeys);
+    const oldChoir = draftEntity?.[entryTypes.HEAVENLY_CHOIR];
 
     if (
-        !draftEntity[entryTypes.HEAVENLY_CHOIR] ||
-        !choirs.includes(draftEntity[entryTypes.HEAVENLY_CHOIR]) ||
-        draftEntity[entryTypes.HEAVENLY_CHOIR] === choirKeys.NONE
+        !oldChoir ||
+        !choirs.includes(oldChoir) ||
+        oldChoir === choirKeys.NONE
     ) {
-        return draftEntity;
+        return post;
     }
 
-    const currIndex = choirs.indexOf(draftEntity[entryTypes.HEAVENLY_CHOIR]);
+    const currIndex = choirs.indexOf(oldChoir);
     const newIndex = Math.min(currIndex + 1, choirs.length - 1);
 
     const newChoir = choirs[newIndex];
 
-    return {
+    draftEntity = {
         ...draftEntity,
         [entryTypes.HEAVENLY_CHOIR]: newChoir,
     };
+
+    post = replaceEntity(post, draftEntity, entityKey);
+
+    if (
+        isChoirActive(draftEntity, choirKeys.NINTH) &&
+        post.btt[effectKeys.EYE_OF_HEAVENS] === eyeKeys.DORMANT
+    ) {
+        post = {
+            ...post,
+            btt: {
+                ...post.btt,
+                [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
+            },
+        };
+    }
+
+    return post;
 }
 
 export function isChoirActive(entity, targetChoir) {
@@ -3365,8 +3431,6 @@ export function raiseProvidence(prev, amount) {
 
     const sinGain = Math.floor((amount - provGain) / 2);
 
-    console.log(sinGain);
-
     if (sinGain > 0) {
         const p1 = gainSin(extractEntity(post, entityKeys.PLAYER_ONE), sinGain);
         const p2 = gainSin(extractEntity(post, entityKeys.PLAYER_TWO), sinGain);
@@ -3387,9 +3451,12 @@ export function raiseProvidence(prev, amount) {
     if (isEdictActive(p1, edictKeys.CHERUBIM)) {
         p1 = {
             ...p1,
-            [effectKeys.STARS_OF_GENESIS]:
-                p1[effectKeys.STARS_OF_GENESIS] +
-                Math.floor(provGain * constants.STAR_GAIN_RATE),
+            resources: {
+                ...p1.resources,
+                [effectKeys.MOTES_OF_CREATION]:
+                    p1.resources[effectKeys.MOTES_OF_CREATION] +
+                    Math.floor(provGain * constants.STAR_GAIN_RATE),
+            },
         };
 
         post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
@@ -3398,9 +3465,12 @@ export function raiseProvidence(prev, amount) {
     if (isEdictActive(p2, edictKeys.CHERUBIM)) {
         p2 = {
             ...p2,
-            [effectKeys.STARS_OF_GENESIS]:
-                p2[effectKeys.STARS_OF_GENESIS] +
-                Math.floor(provGain * constants.STAR_GAIN_RATE),
+            resources: {
+                ...p2.resources,
+                [effectKeys.MOTES_OF_CREATION]:
+                    p2.resources[effectKeys.MOTES_OF_CREATION] +
+                    Math.floor(provGain * constants.STAR_GAIN_RATE),
+            },
         };
 
         post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
@@ -3437,9 +3507,12 @@ export function loseProvidence(prev, amount) {
     if (isEdictActive(p1, edictKeys.CHERUBIM)) {
         p1 = {
             ...p1,
-            [effectKeys.STARS_OF_APOCALYPSE]:
-                p1[effectKeys.STARS_OF_APOCALYPSE] +
-                Math.floor(provLost * constants.STAR_GAIN_RATE),
+            resources: {
+                ...p1.resources,
+                [effectKeys.MOTES_OF_RUIN]:
+                    p1.resources[effectKeys.MOTES_OF_RUIN] +
+                    Math.floor(provLost * constants.STAR_GAIN_RATE),
+            },
         };
 
         post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
@@ -3448,9 +3521,12 @@ export function loseProvidence(prev, amount) {
     if (isEdictActive(p2, edictKeys.CHERUBIM)) {
         p2 = {
             ...p2,
-            [effectKeys.STARS_OF_APOCALYPSE]:
-                p2[effectKeys.STARS_OF_APOCALYPSE] +
-                Math.floor(provLost * constants.STAR_GAIN_RATE),
+            resources: {
+                ...p2.resources,
+                [effectKeys.MOTES_OF_RUIN]:
+                    p2.resources[effectKeys.MOTES_OF_RUIN] +
+                    Math.floor(provLost * constants.STAR_GAIN_RATE),
+            },
         };
 
         post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
@@ -3565,8 +3641,10 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
 
     switch (blasphemy) {
         case blasphemyKeys.YESTERDAY: {
-            const sinTransfer =
-                draftTarget[effectKeys.TARNISHED_SIN] * constants.YEST_SIN_RATE;
+            const sinTransfer = roundNumber(
+                draftTarget[effectKeys.TARNISHED_SIN] * constants.YEST_SIN_RATE,
+                2,
+            );
 
             draftTarget = {
                 ...draftTarget,
@@ -3597,6 +3675,9 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
                 tarnishTypes.PHYSICAL,
                 targetKey,
             );
+
+            draftTarget = extractEntity(post, targetKey);
+            draftNonTarget = extractEntity(post, nonTargetKey);
 
             break;
         }

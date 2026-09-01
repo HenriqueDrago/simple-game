@@ -435,9 +435,35 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = extractEntity(post, targetKey);
     }
 
+    // Motes of Creation
+    if (
+        draftTarget.resources[effectKeys.MOTES_OF_CREATION] >=
+        constants.MOTE_CONVERSION
+    ) {
+        const starGain = Math.floor(
+            draftTarget.resources[effectKeys.MOTES_OF_CREATION] /
+                constants.MOTE_CONVERSION,
+        );
+        const remainingMote =
+            draftTarget.resources[effectKeys.MOTES_OF_CREATION] %
+            constants.MOTE_CONVERSION;
+
+        draftTarget = {
+            ...draftTarget,
+            [effectKeys.STARS_OF_GENESIS]:
+                draftTarget[effectKeys.STARS_OF_GENESIS] + starGain,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.MOTES_OF_CREATION]: remainingMote,
+            },
+        };
+    }
+
     // Heavenly Choir
     if (draftTarget.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftTarget = advanceChoir(draftTarget);
+        post = replaceEntity(post, draftTarget, targetKey);
+        post = advanceChoir(post, targetKey);
+        draftTarget = extractEntity(post, targetKey);
     }
 
     // Burden of Stigma
@@ -569,6 +595,30 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
 
         draftCurrActor = gainSin(draftCurrActor, sinGained);
         post = replaceEntity(post, draftCurrActor, currActorKey);
+    }
+
+    // Motes of Ruin
+    if (
+        draftCurrActor.resources[effectKeys.MOTES_OF_RUIN] >=
+        constants.MOTE_CONVERSION
+    ) {
+        const starGain = Math.floor(
+            draftCurrActor.resources[effectKeys.MOTES_OF_RUIN] /
+                constants.MOTE_CONVERSION,
+        );
+        const remainingMote =
+            draftCurrActor.resources[effectKeys.MOTES_OF_RUIN] %
+            constants.MOTE_CONVERSION;
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            [effectKeys.STARS_OF_APOCALYPSE]:
+                draftCurrActor[effectKeys.STARS_OF_APOCALYPSE] + starGain,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.MOTES_OF_RUIN]: remainingMote,
+            },
+        };
     }
 
     // Venting

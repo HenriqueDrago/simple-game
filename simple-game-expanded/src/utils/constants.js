@@ -59,9 +59,7 @@ export const constants = Object.freeze({
     POWERS_RATE: 1 / 10,
     BASE_VIRTUES_COST: 10,
     VIRTUES_EXTRA_COST: 10,
-    STAR_GAIN_RATE: 1 / 2.5,
-    APOC_BASE_DMG: 1,
-    GENE_BASE_RESTORE: 1,
+    STAR_GAIN_RATE: 1 / 0.5,
     APOC_DISGRACE: 2.5,
     GENE_BENE: 2.5,
     SERAPHIM_MULT: 0.5,
@@ -75,6 +73,7 @@ export const constants = Object.freeze({
     TOMOR_RATE: 1 / 10,
     ANGEL_LOSE: 0.5,
     STIGMA_RATE: 1 / 20,
+    MOTE_CONVERSION: 10,
 
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
@@ -180,6 +179,8 @@ export const FREE_RESOURCES = [
     effectKeys.MARTHYR,
     effectKeys.COVENANT,
     effectKeys.INSPIRATION,
+    effectKeys.MOTES_OF_RUIN,
+    effectKeys.MOTES_OF_CREATION,
     effectKeys.SACRED_FLAMES,
 ];
 

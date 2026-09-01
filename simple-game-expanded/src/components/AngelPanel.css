@@ -14,3 +14,9 @@
     text-align: center;
     margin-top: 8px;
 }
+
+.stars-codex-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}

@@ -1784,7 +1784,21 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF CHERUBIM",
         type: entryTypes.EDICT,
         description:
-            "When the battlefield's PROVIDENCE is consumed, gains STARS OF APOCALYPSE for every 2.5% consumption. When the battlefield's PROVIDENCE is restored, gains STARS OF GENESIS for every 2.5% restored.",
+            "When the battlefield's PROVIDENCE is consumed, gains MOTES OF RUIN for every 0.5% consumption. When the battlefield's PROVIDENCE is restored, gains MOTES OF CREATION for every 0.5% restored.",
+    },
+
+    [effectKeys.MOTES_OF_RUIN]: {
+        name: "MOTES OF RUIN",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn end, converts MOTES OF RUIN into STARS OF APOCALYPSE for every 10 MOTES OF RUIN on self.",
+    },
+
+    [effectKeys.MOTES_OF_CREATION]: {
+        name: "MOTES OF CREATION",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "At turn start, converts MOTES OF CREATION into STARS OF GENESIS for every 10 MOTES OF CREATION on self.",
     },
 
     [entryTypes.CELESTIAL_STAR]: {
@@ -1797,14 +1811,14 @@ export const SERAPH_DESCRIPTIONS = {
         name: "STARS OF APOCALYPSE",
         type: entryTypes.CELESTIAL_STAR,
         description:
-            "Raises DISGRACE by 2.5% for every STARS OF APOCALYPSE on self. Click to consume a star and inflict 1 TRUE TARNISHMENT on all entities.",
+            "Raises DISGRACE by 2.5% for every STARS OF APOCALYPSE on self. Click to enact a star and inflict 1 TRUE TARNISHMENT on all entities. Left click to enact in batches of 10.",
     },
 
     [effectKeys.STARS_OF_GENESIS]: {
         name: "STARS OF GENESIS",
         type: entryTypes.CELESTIAL_STAR,
         description:
-            "Raises BENEDICTION by 2.5% for every STARS OF GENESIS on self. Click to consume a star and restore 1 RESOURCES to all entities.",
+            "Raises BENEDICTION by 2.5% for every STARS OF GENESIS on self. Click to enact a star and restore 1 RESOURCES to all entities. Left click to enact in batches of 10.",
     },
 
     [choirKeys.NINTH]: {

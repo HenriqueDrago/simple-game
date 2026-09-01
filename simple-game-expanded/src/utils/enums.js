@@ -296,6 +296,9 @@ export const effectKeys = Object.freeze({
     MARTHYR: "marthyr",
     TRIAL: "trial",
     INSPIRATION: "inspiration",
+
+    MOTES_OF_RUIN: "moteRuin",
+    MOTES_OF_CREATION: "moteCreation",
 });
 
 export const runeKeys = Object.freeze({
