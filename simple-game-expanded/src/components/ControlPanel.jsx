@@ -95,7 +95,6 @@ function ControlPanel({ entityKey }) {
                                         (game.progressMode &&
                                             game.progressStatus[aiKey] ===
                                                 progKeys.LOCKED) ||
-                                        aiKey === aiKeys.SERAPH ||
                                         (game.progressMode &&
                                             entityKey ===
                                                 entityKeys.PLAYER_TWO &&

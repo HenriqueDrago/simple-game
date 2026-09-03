@@ -281,6 +281,7 @@ export function createBaseEntity() {
             [effectKeys.INSPIRATION]: 0,
             [effectKeys.MOTES_OF_CREATION]: 0,
             [effectKeys.MOTES_OF_RUIN]: 0,
+            [effectKeys.PENITENCE]: 0,
 
             // Mitigation
             [effectKeys.HALO]: 0,
@@ -328,6 +329,7 @@ export function createBaseEntity() {
             [effectKeys.ZENITH_OF_MORTALITY]: false,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
             [effectKeys.IMMACULATE]: false,
+            [effectKeys.PIOUS]: false,
         },
         stars: {
             [effectKeys.WHITE_STAR]: 0,
@@ -3295,13 +3297,8 @@ export function getFortitude(prev, entityKey) {
     let fort = entity[effectKeys.FORTITUDE];
 
     if (isEdictActive(entity, edictKeys.PRINCIPALITIES)) {
-        fort += Math.max(
-            0,
-            Math.floor(
-                (entity[effectKeys.REVELATION] *
-                    prev.btt[effectKeys.PROVIDENCE]) /
-                    100,
-            ),
+        fort += Math.floor(
+            (fort * prev.btt[effectKeys.PROVIDENCE]) / constants.MAX_PROVIDENCE,
         );
     }
 
@@ -3311,10 +3308,10 @@ export function getFortitude(prev, entityKey) {
             constants.MAX_PROVIDENCE - prev.btt[effectKeys.PROVIDENCE],
         );
 
-        fort -= Math.floor(fort * (missingProv / 100));
+        fort -= Math.floor(fort * (missingProv / constants.MAX_PROVIDENCE));
     }
 
-    return fort;
+    return Math.max(0, fort);
 }
 
 export function getRevelation(prev, entityKey) {
@@ -3326,7 +3323,11 @@ export function getRevelation(prev, entityKey) {
         rev += entity.resources[effectKeys.INSPIRATION];
     }
 
-    return rev;
+    if (entity.resources[effectKeys.PENITENCE] > 0) {
+        rev -= entity.resources[effectKeys.PENITENCE];
+    }
+
+    return Math.max(0, rev);
 }
 
 export function getDefilement(prev) {
@@ -3556,8 +3557,35 @@ export function processExitAscendence(prev, entityKey) {
 
     draftEntity = {
         ...draftEntity,
+        states: {
+            ...draftEntity.states,
+            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
+            [effectKeys.PIOUS]: false,
+            [effectKeys.IMMACULATE]: false,
+        },
+    };
+
+    let newAttr = {
+        ...draftEntity.attributes,
+    };
+
+    newAttr = {
+        ...newAttr,
+        str: {
+            ...newAttr.str,
+            value: newAttr.str.value + getRevelation(post, entityKey),
+        },
+        def: {
+            ...newAttr.def,
+            value: newAttr.def.value + getFortitude(post, entityKey),
+        },
+    };
+
+    draftEntity = {
+        ...draftEntity,
         [effectKeys.REVELATION]: 0,
         [effectKeys.FORTITUDE]: 0,
+        attributes: newAttr,
     };
 
     const result = consumeLimitedResources(draftEntity, Infinity);
@@ -3575,7 +3603,6 @@ export function processExitAscendence(prev, entityKey) {
         states: {
             ...draftEntity.states,
             [effectKeys.CUTOFF_WINGS]: true,
-            [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
         },
     };
 
@@ -3636,6 +3663,25 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
         ...prev,
     };
 
+    // If it's a valid blapshemy, take true tarnish
+    if (
+        [
+            blasphemyKeys.YESTERDAY,
+            blasphemyKeys.TODAY,
+            blasphemyKeys.TOMORROW,
+        ].includes(blasphemy)
+    ) {
+        post = newDealDmg(
+            post,
+            getMaxEnlit(extractEntity(post, targetKey)) *
+                constants.BLAS_TARNISH,
+            [targetKey],
+            tarnishTypes.TRUE,
+        );
+    } else {
+        return post;
+    }
+
     let draftTarget = extractEntity(post, targetKey);
     let draftNonTarget = extractEntity(post, nonTargetKey);
 
@@ -3694,14 +3740,21 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
             };
             break;
         }
-
-        default: {
-            break;
-        }
     }
 
     post = replaceEntity(post, draftTarget, targetKey);
     post = replaceEntity(post, draftNonTarget, nonTargetKey);
 
     return post;
+}
+
+export function getProvForVirtues(entity) {
+    return (
+        constants.BASE_VIRTUES_COST +
+        constants.VIRTUES_EXTRA_COST * (entity.virtuesUsedThisTurn ?? 0)
+    );
+}
+
+export function countBlasphemies(codex, blasKey) {
+    return codex.filter((blas) => blas === blasKey).length;
 }

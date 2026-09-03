@@ -20,7 +20,6 @@ import {
     gainEnlit,
     resetAttr,
     raiseProvidence,
-    raiseStats,
     deleteCondition,
     getTotalEnlit,
     loseEnlit,
@@ -30,6 +29,7 @@ import {
     advanceChoir,
     processExitAscendence,
     isEdictActive,
+    getRevelation,
 } from "./entities.js";
 import {
     actionKeys,
@@ -1106,12 +1106,40 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
 
     post = newDealDmg(
         post,
-        post.entities[agentKey][effectKeys.REVELATION] + extraBaseDmg,
+        getRevelation(post, agentKey) + extraBaseDmg,
         [nonAgentKey],
         tarnishTypes.PHYSICAL,
         agentKey,
         extraFinalDmg,
     );
+
+    draftAgent = extractEntity(post, agentKey);
+
+    if (draftAgent.states[effectKeys.PIOUS]) {
+        // Gains Penitence
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.PENITENCE]:
+                    draftAgent.resources[effectKeys.PENITENCE] +
+                    Math.floor(
+                        getRevelation(post, agentKey) * constants.PIOUS_MULT,
+                    ),
+            },
+        };
+    } else {
+        // Enters Pious
+        draftAgent = {
+            ...draftAgent,
+            states: {
+                ...draftAgent.states,
+                [effectKeys.PIOUS]: true,
+            },
+        };
+    }
+
+    post = replaceEntity(post, draftAgent, agentKey);
 
     return post;
 }
@@ -1214,16 +1242,12 @@ function simulateAtone({ prev, agentKey }) {
         ...prev,
     };
 
-    let draftAgent = {
-        ...post.entities[agentKey],
-    };
+    post = processExitAscendence(post, agentKey);
 
-    draftAgent = raiseStats(draftAgent, draftAgent[effectKeys.REVELATION]);
+    let draftAgent = extractEntity(post, agentKey);
 
     draftAgent = {
         ...draftAgent,
-        [effectKeys.REVELATION]: 0,
-        [effectKeys.FORTITUDE]: 0,
         [effectKeys.BURDEN_OF_STIGMA]: Math.floor(
             post.btt[effectKeys.PROVIDENCE] * constants.STIGMA_RATE,
         ),
@@ -1231,17 +1255,13 @@ function simulateAtone({ prev, agentKey }) {
 
     post = {
         ...post,
-        entities: {
-            ...post.entities,
-            [agentKey]: draftAgent,
-        },
         btt: {
             ...post.btt,
             [effectKeys.PROVIDENCE]: 0,
         },
     };
 
-    post = processExitAscendence(post, agentKey);
+    post = replaceEntity(post, draftAgent, agentKey);
 
     return post;
 }

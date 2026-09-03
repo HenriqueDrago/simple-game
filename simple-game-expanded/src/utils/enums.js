@@ -299,6 +299,8 @@ export const effectKeys = Object.freeze({
 
     MOTES_OF_RUIN: "moteRuin",
     MOTES_OF_CREATION: "moteCreation",
+    PIOUS: "pietous",
+    PENITENCE: "penitence",
 });
 
 export const runeKeys = Object.freeze({
@@ -443,4 +445,14 @@ export const blasphemyKeys = Object.freeze({
     YESTERDAY: "yesterday",
     TODAY: "today",
     TOMORROW: "tomorrow",
+});
+
+export const commandKeys = Object.freeze({
+    USE_ACTION: "useAction",
+    ASSIGN_STARS: "assignStars",
+    SET_ELEMENT: "setElement",
+    USE_CELESTIAL_STARS: "celestialStars",
+    SET_EDICTS: "setEdicts",
+    EXPUNGE_BLAS: "expunge",
+    SET_CONSTELLATION: "constellation",
 });

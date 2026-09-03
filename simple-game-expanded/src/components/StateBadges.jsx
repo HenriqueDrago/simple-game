@@ -29,6 +29,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.CUTOFF_WINGS, label: "Cutoff Wings" },
     { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
     { key: effectKeys.ABANDONED_BY_GRACE, label: "Abandoned by Grace" },
+    { key: effectKeys.PIOUS, label: "Pious" },
 ];
 
 function StateBadges({ entityKey }) {

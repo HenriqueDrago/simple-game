@@ -7,7 +7,6 @@ import {
     expungeBlas,
     extractEntity,
     getCurrActivePlayer,
-    getEntityElement,
     getOtherEntity,
     getTotalEnlit,
     isEdictUnlocked,
@@ -18,11 +17,11 @@ import {
     replaceEntity,
     resetPlayerEntity,
     restoreResources,
-    translateElementIntoCrystals,
 } from "../utils/entities";
 import {
     aiKeys,
     blasphemyKeys,
+    commandKeys,
     effectKeys,
     elementalKeys,
     entityKeys,
@@ -38,7 +37,6 @@ import {
 } from "../utils/enums";
 import {
     CHECKPOINT_STATES,
-    coloredStars,
     gameSpeeds,
     INITIAL_GAME_STATE,
     playerMap,
@@ -56,7 +54,7 @@ import {
     processUpkeep,
     processAnointment,
 } from "../utils/turnManagement";
-import { centralAIManagement, setConstellation } from "../utils/aiControllers";
+import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
 import { simulateFullStarfall } from "../utils/starfall";
 
@@ -80,6 +78,7 @@ function resetGameState(prev) {
         paused: false,
         undoPile: [],
         redoPile: [],
+        aiQueue: [],
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -334,6 +333,7 @@ export default function GameProvider({ children }) {
                     startingPlayer: startingPlayer,
                     undoPile: [],
                     redoPile: [],
+                    aiQueue: [],
                 },
                 eventKeys.BATTLE_START,
             );
@@ -989,7 +989,7 @@ export default function GameProvider({ children }) {
         game.paused,
     ]);
 
-    // AI turn
+    // AI Controller
     useEffect(() => {
         if (game.paused || !getCurrActivePlayer(game)) {
             return;
@@ -997,164 +997,56 @@ export default function GameProvider({ children }) {
 
         const targetKey = getCurrActivePlayer(game);
         const nonTargetKey = getOtherEntity(targetKey);
-
         const activePlayer = game.entities[targetKey];
 
         if (
             canUseCombatInteractions(game, targetKey, true, false) &&
             activePlayer.controller !== aiKeys.HUMAN
         ) {
-            const aiTimer = setTimeout(() => {
-                setGame((prev) => {
-                    let newGame = {
-                        ...prev,
-                    };
+            let delay = 0;
+            const command = game?.aiQueue?.[0];
 
-                    let draftTarget = {
-                        ...prev.entities[targetKey],
-                    };
+            switch (command?.type) {
+                case commandKeys.USE_ACTION:
+                case commandKeys.USE_CELESTIAL_STARS:
+                case commandKeys.EXPUNGE_BLAS: {
+                    delay = 1200;
+                    break;
+                }
+                case commandKeys.SET_CONSTELLATION:
+                case commandKeys.SET_EDICTS:
+                case commandKeys.SET_ELEMENT:
+                case commandKeys.ASSIGN_STARS: {
+                    delay = 900;
+                    break;
+                }
+                default:
+                    break;
+            }
 
-                    const {
-                        assignedStars,
-                        selectedElement,
-                        action,
-                        selectedConstellation,
-                    } = centralAIManagement(prev, targetKey, nonTargetKey);
+            const aiTimer = setTimeout(async () => {
+                // Await the async result first so setGame receives clean state object, not a Promise
+                const updatedGame = await centralAIManagement(
+                    game,
+                    targetKey,
+                    nonTargetKey,
+                );
+                setGame(updatedGame);
+            }, delay * gameSpeeds[game.speed].mod);
 
-                    console.log(`${targetKey} has used ${action}`);
-
-                    // Process Element
-                    if (
-                        !isElementActive(
-                            draftTarget,
-                            elementalKeys.SHATTERED,
-                        ) &&
-                        draftTarget.states[effectKeys.SELENIAN]
-                    ) {
-                        // Translate combined elements into their base crystal components
-                        const crystals =
-                            translateElementIntoCrystals(selectedElement);
-
-                        draftTarget = {
-                            ...draftTarget,
-                            [effectKeys.ELEMENTAL_CRYSTALS]: crystals,
-                        };
-
-                        // Run processHealth
-                        draftTarget = processHealth(draftTarget);
-
-                        newGame = {
-                            ...newGame,
-                            entities: {
-                                ...prev.entities,
-                                [targetKey]: draftTarget,
-                            },
-                        };
-                    }
-
-                    // Process Stars
-                    const colors = Object.values(coloredStars).map(
-                        (starType) => {
-                            return starType.star;
-                        },
-                    );
-
-                    const currentStars = draftTarget.stars;
-
-                    // Convert all active colored stars back to the white star pool
-                    let returnedToWhite = 0;
-                    colors.forEach((color) => {
-                        returnedToWhite += currentStars[color];
-                    });
-
-                    let newWhite =
-                        currentStars[effectKeys.WHITE_STAR] + returnedToWhite;
-
-                    // Create reset stars state
-                    let newStars = {
-                        ...currentStars,
-                        [effectKeys.WHITE_STAR]: newWhite,
-                    };
-
-                    colors.forEach((color) => {
-                        newStars = {
-                            ...newStars,
-                            [color]: 0,
-                        };
-                    });
-
-                    colors.forEach((color) => {
-                        const amount = assignedStars[color];
-
-                        const actualAllocated = Math.min(
-                            newStars[effectKeys.WHITE_STAR],
-                            amount,
-                        );
-
-                        newStars = {
-                            ...newStars,
-                            [effectKeys.WHITE_STAR]:
-                                newStars[effectKeys.WHITE_STAR] -
-                                actualAllocated,
-                            [color]: newStars[color] + actualAllocated,
-                        };
-                    });
-
-                    newGame = {
-                        ...newGame,
-                        entities: {
-                            ...prev.entities,
-                            [targetKey]: {
-                                ...draftTarget,
-                                stars: newStars,
-                            },
-                        },
-                    };
-
-                    // Process Constellation
-                    newGame = setConstellation(
-                        newGame,
-                        targetKey,
-                        selectedConstellation,
-                    );
-
-                    // History
-                    if (getEntityElement(activePlayer) !== selectedElement) {
-                        newGame = buildHistory(newGame, eventKeys.SET_ELEMENT, {
-                            player: targetKey,
-                        }); // Element Change
-                    }
-
-                    // Use Action
-                    const currPhase =
-                        prev.roundQueue && prev.roundQueue[prev.roundIndex];
-                    const isExtraTurn =
-                        playerMap[targetKey].extra.includes(currPhase);
-
-                    newGame = processActionUse(
-                        newGame,
-                        targetKey,
-                        nonTargetKey,
-                        action,
-                    );
-
-                    newGame = isExtraTurn
-                        ? processExtraTurn(newGame, targetKey, action)
-                        : processPlan(newGame, targetKey, action);
-
-                    return newGame;
-                });
-            }, 1200 * gameSpeeds[game.speed].mod);
-
-            return () => clearTimeout(aiTimer);
+            return () => {
+                clearTimeout(aiTimer);
+            };
         }
     }, [
         game.status,
         game.roundIndex,
-        game.playerQueue,
-        game.entities,
         game.paused,
-        game.roundQueue,
+        game.aiQueue?.length,
+        game.playerQueue?.length,
+        game.entities,
+        game.roundQueue?.length,
+        getCurrActivePlayer(game),
     ]);
 
     // Round Transition

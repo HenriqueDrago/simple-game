@@ -1444,7 +1444,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. When exiting this state, exits the HEAVENLY CHOIRS, lose all REVELATION and FORTITUDE on self, consumes all LIMITED RESOURCES on self, sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, then restores RESOURCES equal to the LIMITED RESOURCES consumed and enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS, PIOUS and IMMACULATE, consumes all REVELATION and FORTITUDE on self and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises STRENGTH equal to REVELATION consumed, raises DEFENSE equal to FORTITUDE consumed and enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1547,7 +1547,21 @@ export const SERAPH_DESCRIPTIONS = {
         name: "CONDEMN",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Inflicts PHYSICAL TARNISHMENT equal to the user's REVELATION.",
+            "Inflicts PHYSICAL TARNISHMENT equal to the user's REVELATION. Then, enters PIOUS state.",
+    },
+
+    [effectKeys.PIOUS]: {
+        name: "PIOUS",
+        type: entryTypes.STATE,
+        description:
+            "When using CONDEMN, gains PENITENCE equal to half the user's REVELATION. At turn start, exits this state.",
+    },
+
+    [effectKeys.PENITENCE]: {
+        name: "PENITENCE",
+        type: entryTypes.FREE_RESOURCE,
+        description:
+            "Lowers REVELATION by the user's PENITENCE. At turn end, lose all PENITENCE and raise TARNISHED SIN by 0.5% per PENITENCE lost.",
     },
 
     [actionKeys.SUPPLICATE]: {
@@ -1575,14 +1589,14 @@ export const SERAPH_DESCRIPTIONS = {
         name: "INSPIRATION",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Raises REVELATION equal to INSPIRATION on self. At turn end, lose all INSPIRATION, then raises the battlefield's PROVIDENCE by 2.5% per INSPIRATION lost.",
+            "Raises REVELATION by the user's INSPIRATION. At turn end, lose all INSPIRATION, then raises the battlefield's PROVIDENCE by 2.5% per INSPIRATION lost.",
     },
 
     [actionKeys.ATONE]: {
         name: "ATONE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Consumes all REVELATION and FORTITUDE on self and PROVIDENCE on the battlefield. Raises STIGMATA rank for every 20% PROVIDENCE consumed. Raises ATTRIBUTES equal to REVELATION consumed. Then, exits ASCENDENCE OF SPIRIT.",
+            "Exits ASCENDENCE OF SPIRIT. Consumes all PROVIDENCE on the battlefield. Raises STIGMATA rank for every 20% PROVIDENCE consumed.",
     },
 
     [effectKeys.BURDEN_OF_STIGMA]: {
@@ -1644,7 +1658,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF PRINCIPALITIES",
         type: entryTypes.EDICT,
         description:
-            "Raises the user's FORTITUDE by a percentage of their REVELATION equivalent to the battlefield's PROVIDENCE. When using SUPPLICATE, gains SANCTUARY instead of restoring RESOURCES.",
+            "Raises FORTITUDE by a percentage of itself equal to the battlefield's PROVIDENCE. When using SUPPLICATE, gains SANCTUARY instead of restoring RESOURCES.",
     },
 
     [effectKeys.SANCTUARY]: {
@@ -1658,7 +1672,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "SACRILEGE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using CONDEMN, consumes all SACRILEGE on self, then increases the base tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 0.5% for every SACRILEGE lost.",
+            "When using CONDEMN, consumes all SACRILEGE on self, then increases the base tarnishment inflicted by the amount lost. At turn end, loses all SACRILEGE and raises TARNISHED SIN on self by 2.5% for every SACRILEGE lost.",
     },
 
     [choirKeys.FOURTH]: {
@@ -1742,7 +1756,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "BLASPHEMIES",
         type: entryTypes.CATEGORY,
         description:
-            "Includes BLASPHEMY OF YESTERDAY, BLASPHEMY OF TODAY and BLASPHEMY OF TOMORROW. When BLASPHEMIES are expunged, raise TARNISHED SIN on self by 5% and remove them from the CODEX OF BLASPHEMY.",
+            "Includes BLASPHEMY OF YESTERDAY, BLASPHEMY OF TODAY and BLASPHEMY OF TOMORROW. When BLASPHEMIES are expunged, receives TRUE TARNISHMENT equal 30% of MAX ENLIGHTENMENT and remove them from the CODEX OF BLASPHEMY.",
     },
 
     [blasphemyKeys.YESTERDAY]: {
@@ -1784,21 +1798,21 @@ export const SERAPH_DESCRIPTIONS = {
         name: "EDICT OF CHERUBIM",
         type: entryTypes.EDICT,
         description:
-            "When the battlefield's PROVIDENCE is consumed, gains MOTES OF RUIN for every 0.5% consumption. When the battlefield's PROVIDENCE is restored, gains MOTES OF CREATION for every 0.5% restored.",
+            "When the battlefield's PROVIDENCE is consumed, gains MOTES OF RUIN for every 2.5% consumption. When the battlefield's PROVIDENCE is restored, gains MOTES OF CREATION for every 2.5% restored.",
     },
 
     [effectKeys.MOTES_OF_RUIN]: {
         name: "MOTES OF RUIN",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn end, converts MOTES OF RUIN into STARS OF APOCALYPSE for every 10 MOTES OF RUIN on self.",
+            "At turn end, converts MOTES OF RUIN into STARS OF APOCALYPSE for every 4 MOTES OF RUIN on self.",
     },
 
     [effectKeys.MOTES_OF_CREATION]: {
         name: "MOTES OF CREATION",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "At turn start, converts MOTES OF CREATION into STARS OF GENESIS for every 10 MOTES OF CREATION on self.",
+            "At turn start, converts MOTES OF CREATION into STARS OF GENESIS for every 4 MOTES OF CREATION on self.",
     },
 
     [entryTypes.CELESTIAL_STAR]: {

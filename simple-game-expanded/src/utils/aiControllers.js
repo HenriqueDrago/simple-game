@@ -1,9 +1,21 @@
-import { constants, FREE_ACTIONS, playerMap, presetAi } from "./constants.js";
+import {
+    coloredStars,
+    constants,
+    FREE_ACTIONS,
+    playerMap,
+    presetAi,
+} from "./constants.js";
 import {
     canUseAction,
+    canUseCombatInteractions,
     consumeMitigationResources,
     consumeResources,
+    countBlasphemies,
+    createBaseEntity,
+    expungeBlas,
     extractEntity,
+    getBenediction,
+    getDisgrace,
     getEntityDef,
     getEntityDefPen,
     getEntityMaxHealth,
@@ -11,20 +23,463 @@ import {
     getEntityTotalHealth,
     getEntityTotalMana,
     getEntityUsableStars,
+    getFortitude,
+    getGrace,
+    getMalediction,
+    getMaxEnlit,
+    getProvForVirtues,
+    getRevelation,
+    getTotalEnlit,
+    isEdictUnlocked,
     isElementActive,
     isEntityDead,
+    newDealDmg,
     processDeathCheck,
+    processHealth,
+    replaceEntity,
     restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
-import { actionKeys, effectKeys, elementalKeys, moonKeys } from "./enums.js";
+import {
+    actionKeys,
+    aiKeys,
+    blasphemyKeys,
+    choirKeys,
+    commandKeys,
+    edictKeys,
+    effectKeys,
+    elementalKeys,
+    entityKeys,
+    entryTypes,
+    moonKeys,
+    tarnishTypes,
+} from "./enums.js";
 import { simulateFullStarfall } from "./starfall.js";
 import {
     commitTurn,
     processActionUse,
+    processExtraTurn,
     processMoonPhase,
+    processPlan,
     processUpkeep,
 } from "./turnManagement.js";
+
+const EDICT_LIST = Object.values(edictKeys);
+const EDICT_PERMUTATION_CACHE = {};
+
+// Central router
+export async function centralAIManagement(
+    prev,
+    agentKey,
+    nonAgentKey,
+    commandOverride = null,
+) {
+    let post = {
+        ...prev,
+    };
+
+    let command = commandOverride ? commandOverride : post?.aiQueue?.[0];
+    let newQueue = [];
+
+    if (command?.field === null || command?.field === undefined) {
+        command = null;
+    } else {
+        newQueue = post.aiQueue.slice(1);
+    }
+
+    // Overrides
+    if (extractEntity(prev, agentKey).states[effectKeys.ANOINTED_PROXY]) {
+        command = {
+            type: commandKeys.USE_ACTION,
+            field: actionKeys.JUDGEMENT,
+        };
+    }
+
+    switch (command?.type) {
+        case commandKeys.USE_ACTION: {
+            // Use Action
+            const currPhase =
+                post.roundQueue && post.roundQueue[post.roundIndex];
+            const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
+
+            const action = command.field;
+
+            post = processActionUse(post, agentKey, nonAgentKey, action);
+
+            post = isExtraTurn
+                ? processExtraTurn(post, agentKey, action)
+                : processPlan(post, agentKey, action);
+            break;
+        }
+        case commandKeys.EXPUNGE_BLAS: {
+            let draftEntity = extractEntity(post, agentKey);
+
+            const oldCodex = draftEntity?.[effectKeys.CODEX_OF_BLASPHEMY] || [];
+            const blas = oldCodex?.[command?.field];
+
+            if (!blas || blas === blasphemyKeys.NONE) {
+                break;
+            }
+
+            const remaining = oldCodex.filter(
+                (item, i) =>
+                    i !== command?.field && item !== blasphemyKeys.NONE,
+            );
+
+            const newCodex = [
+                remaining[2] || blasphemyKeys.NONE,
+                remaining[1] || blasphemyKeys.NONE,
+                remaining[0] || blasphemyKeys.NONE,
+            ];
+
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.CODEX_OF_BLASPHEMY]: newCodex,
+            };
+
+            post = replaceEntity(post, draftEntity, agentKey);
+            post = expungeBlas(post, agentKey, nonAgentKey, blas);
+
+            break;
+        }
+        case commandKeys.SET_CONSTELLATION: {
+            let draftAgent = setConstellation(
+                extractEntity(post, agentKey),
+                command.field,
+            );
+            post = replaceEntity(post, draftAgent, agentKey);
+
+            break;
+        }
+        case commandKeys.USE_CELESTIAL_STARS: {
+            if (command.field === effectKeys.STARS_OF_APOCALYPSE) {
+                const draftAgent = extractEntity(post, agentKey);
+
+                const starsUsed = Math.max(
+                    0,
+                    Math.min(
+                        draftAgent[effectKeys.STARS_OF_APOCALYPSE],
+                        getTotalEnlit(draftAgent) - 1,
+                    ),
+                );
+
+                if (starsUsed <= 0) {
+                    break;
+                }
+
+                post = newDealDmg(
+                    post,
+                    starsUsed,
+                    [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
+                    tarnishTypes.TRUE,
+                );
+            }
+
+            if (command.field === effectKeys.STARS_OF_GENESIS) {
+                let draftAgent = extractEntity(post, agentKey);
+                let draftNonAgent = extractEntity(post, nonAgentKey);
+
+                const starsUsed = draftAgent[effectKeys.STARS_OF_GENESIS];
+
+                if (starsUsed <= 0) {
+                    break;
+                }
+
+                draftAgent = restoreResources(draftAgent, starsUsed);
+                draftNonAgent = restoreResources(draftNonAgent, starsUsed);
+
+                post = replaceEntity(post, draftAgent, agentKey);
+                post = replaceEntity(post, draftNonAgent, nonAgentKey);
+            }
+
+            break;
+        }
+        case commandKeys.SET_ELEMENT: {
+            let draftAgent = extractEntity(post, agentKey);
+            if (
+                !isElementActive(draftAgent, elementalKeys.SHATTERED) &&
+                draftAgent.states[effectKeys.SELENIAN]
+            ) {
+                // Translate combined elements into their base crystal components
+                const crystals = translateElementIntoCrystals(command.field);
+
+                draftAgent = {
+                    ...draftAgent,
+                    [effectKeys.ELEMENTAL_CRYSTALS]: crystals,
+                };
+
+                // Run processHealth
+                draftAgent = processHealth(draftAgent);
+
+                post = replaceEntity(post, draftAgent, agentKey);
+            }
+            break;
+        }
+        case commandKeys.SET_EDICTS: {
+            let draftAgent = extractEntity(post, agentKey);
+
+            if (draftAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+                for (let edict of Object.entries(command.field)) {
+                    if (isEdictUnlocked(draftAgent, edict[0])) {
+                        draftAgent = {
+                            ...draftAgent,
+                            edicts: {
+                                ...draftAgent.edicts,
+                                [edict[0]]: edict[1],
+                            },
+                        };
+                    }
+                }
+            }
+
+            post = replaceEntity(post, draftAgent, agentKey);
+
+            break;
+        }
+        case commandKeys.ASSIGN_STARS: {
+            let draftAgent = extractEntity(post, agentKey);
+
+            // Process Stars
+            const colors = Object.values(coloredStars).map((starType) => {
+                return starType.star;
+            });
+
+            const currentStars = draftAgent?.stars ?? createBaseEntity().stars;
+
+            // Convert all active colored stars back to the white star pool
+            let returnedToWhite = 0;
+            colors.forEach((color) => {
+                returnedToWhite += currentStars[color];
+            });
+
+            let newWhite =
+                currentStars[effectKeys.WHITE_STAR] + returnedToWhite;
+
+            // Create reset stars state
+            let newStars = {
+                ...currentStars,
+                [effectKeys.WHITE_STAR]: newWhite,
+            };
+
+            colors.forEach((color) => {
+                newStars = {
+                    ...newStars,
+                    [color]: 0,
+                };
+            });
+
+            colors.forEach((color) => {
+                const amount = command.field[color];
+
+                const actualAllocated = Math.min(
+                    newStars[effectKeys.WHITE_STAR],
+                    amount,
+                );
+
+                newStars = {
+                    ...newStars,
+                    [effectKeys.WHITE_STAR]:
+                        newStars[effectKeys.WHITE_STAR] - actualAllocated,
+                    [color]: newStars[color] + actualAllocated,
+                };
+            });
+
+            draftAgent = {
+                ...draftAgent,
+                stars: newStars,
+            };
+
+            post = replaceEntity(post, draftAgent, agentKey);
+            break;
+        }
+        default: {
+            // Build context
+            const agent = prev.entities[agentKey];
+            const nonAgent = prev.entities[nonAgentKey];
+
+            const currPhase =
+                prev.roundQueue && prev.roundQueue.length > 0
+                    ? prev.roundQueue[prev.roundIndex]
+                    : null;
+
+            const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
+
+            let context = {
+                prev,
+                agent,
+                agentKey,
+                nonAgent,
+                nonAgentKey,
+                hasManaForSpecial:
+                    getEntityTotalMana(agent) >=
+                    constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+                isExtraTurn,
+            };
+
+            let caller = presetAi?.[agent?.controller]?.caller || simpleAI;
+            let newAgent = extractEntity(post, agentKey);
+
+            switch (agent?.controller) {
+                case aiKeys.VOYAGER: {
+                    // Process Stars
+                    const assignedStars = assignStarsAI(context);
+                    // Process Constellation
+                    const selectedConstellation =
+                        selectConstellationAI(context);
+
+                    if (assignedStars) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.ASSIGN_STARS,
+                                field: assignedStars,
+                            },
+                        ];
+
+                        newAgent = {
+                            ...newAgent,
+                            stars: {
+                                ...agent.stars,
+                                ...assignedStars,
+                            },
+                        };
+                    }
+
+                    if (selectedConstellation) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.SET_CONSTELLATION,
+                                field: selectedConstellation,
+                            },
+                        ];
+
+                        newAgent = setConstellation(
+                            newAgent,
+                            selectedConstellation,
+                        );
+                    }
+
+                    context = {
+                        ...context,
+                        assignedStars:
+                            assignedStars ?? createBaseEntity().stars,
+                        selectedConstellation:
+                            selectedConstellation ?? effectKeys.CONSTELLATION,
+                        agent: newAgent,
+                        prev: replaceEntity(post, newAgent, agentKey),
+                    };
+
+                    // Calculate action
+                    let action = caller(context);
+
+                    if (action) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.USE_ACTION,
+                                field: action,
+                            },
+                        ];
+                    }
+
+                    break;
+                }
+                case aiKeys.LUNATIC: {
+                    // Process Element
+                    const selectedElement = selectElementAI(context);
+
+                    if (selectedElement) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.SET_ELEMENT,
+                                field: selectedElement,
+                            },
+                        ];
+                    }
+
+                    if (selectedElement) {
+                        newAgent = {
+                            ...newAgent,
+                            [effectKeys.ELEMENTAL_CRYSTALS]:
+                                translateElementIntoCrystals(selectedElement),
+                        };
+                    }
+
+                    context = {
+                        ...context,
+                        selectedElement:
+                            selectedElement ?? elementalKeys.DULLED,
+                        agent: newAgent,
+                        prev: replaceEntity(post, newAgent, agentKey),
+                    };
+
+                    // Calculate action
+                    let action = caller(context);
+
+                    if (action) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.USE_ACTION,
+                                field: action,
+                            },
+                        ];
+                    }
+
+                    break;
+                }
+                case aiKeys.SERAPH: {
+                    const aiResults = await seraphAI(context);
+
+                    if (!aiResults || agent.states[effectKeys.UMBRAL_CORE]) {
+                        let action = shadowSorcererAI(context);
+
+                        if (action) {
+                            newQueue = [
+                                ...newQueue,
+                                {
+                                    type: commandKeys.USE_ACTION,
+                                    field: action,
+                                },
+                            ];
+                        }
+
+                        break;
+                    }
+
+                    newQueue = Array.isArray(aiResults)
+                        ? aiResults
+                        : [aiResults];
+
+                    break;
+                }
+                default: {
+                    // Calculate action
+                    let action = caller(context);
+
+                    if (action) {
+                        newQueue = [
+                            ...newQueue,
+                            {
+                                type: commandKeys.USE_ACTION,
+                                field: action,
+                            },
+                        ];
+                    }
+                }
+            }
+        }
+    }
+
+    post = {
+        ...post,
+        aiQueue: newQueue,
+    };
+
+    return processDeathCheck(post);
+}
 
 // Auxiliary Functions
 function createSimulator({ agentKey, nonAgentKey, prev }) {
@@ -39,6 +494,39 @@ function createSimulator({ agentKey, nonAgentKey, prev }) {
             ),
         );
     };
+}
+
+function getEdictPermutations(edictNum) {
+    if (EDICT_PERMUTATION_CACHE[edictNum]) {
+        return EDICT_PERMUTATION_CACHE[edictNum];
+    }
+
+    const count = 1 << edictNum;
+    const permutations = new Array(count);
+
+    for (let i = 0; i < count; i++) {
+        const edictObj = createBaseEntity().edicts;
+        for (let bit = 0; bit < edictNum; bit++) {
+            if (i & (1 << bit)) {
+                edictObj[EDICT_LIST[bit]] = true;
+            }
+        }
+        permutations[i] = { mask: i, edicts: edictObj };
+    }
+
+    EDICT_PERMUTATION_CACHE[edictNum] = permutations;
+    return permutations;
+}
+
+function getAgentEdictMask(agent, edictNum) {
+    let mask = 0;
+    const edicts = agent?.edicts ?? {};
+    for (let bit = 0; bit < edictNum; bit++) {
+        if (edicts[EDICT_LIST[bit]]) {
+            mask |= 1 << bit;
+        }
+    }
+    return mask;
 }
 
 function createAvailabilityChecker({ agentKey, prev }) {
@@ -57,15 +545,11 @@ function willEntityDieImmediately(entity) {
 }
 
 function willEntityEffectivelyDie(entity) {
-    if (getEntityTotalHealth(entity) <= 0) {
+    if (entity[effectKeys.TARNISHED_SIN] >= constants.MAX_SIN) {
         return true;
     }
 
-    if (getEntityMaxHealth(entity) <= 0) {
-        return true;
-    }
-
-    return false;
+    return isEntityDead(entity);
 }
 
 function willEntityImmediatelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
@@ -136,34 +620,34 @@ function simulateStarsHelper(
     return simulateFullStarfall(newSim, agentKey, nonAgentKey);
 }
 
-export function setConstellation(sim, targetkey, constellation) {
+export function setConstellation(entity, constellation) {
     const totalConst =
-        sim.entities[targetkey][effectKeys.CONSTELLATION] +
-        sim.entities[targetkey][effectKeys.AZURE_CONSTELLATION] +
-        sim.entities[targetkey][effectKeys.CRIMSON_CONSTELLATION];
+        entity[effectKeys.CONSTELLATION] +
+        entity[effectKeys.AZURE_CONSTELLATION] +
+        entity[effectKeys.CRIMSON_CONSTELLATION];
     return {
-        ...sim,
-        entities: {
-            ...sim.entities,
-            [targetkey]: {
-                ...sim.entities[targetkey],
-                [effectKeys.CONSTELLATION]:
-                    constellation === effectKeys.CONSTELLATION ? totalConst : 0,
-                [effectKeys.AZURE_CONSTELLATION]:
-                    constellation === effectKeys.AZURE_CONSTELLATION
-                        ? totalConst
-                        : 0,
-                [effectKeys.CRIMSON_CONSTELLATION]:
-                    constellation === effectKeys.CRIMSON_CONSTELLATION
-                        ? totalConst
-                        : 0,
-            },
-        },
+        ...entity,
+        [effectKeys.CONSTELLATION]:
+            constellation === effectKeys.CONSTELLATION ? totalConst : 0,
+        [effectKeys.AZURE_CONSTELLATION]:
+            constellation === effectKeys.AZURE_CONSTELLATION ? totalConst : 0,
+        [effectKeys.CRIMSON_CONSTELLATION]:
+            constellation === effectKeys.CRIMSON_CONSTELLATION ? totalConst : 0,
     };
 }
 
 // Select Constellation
-export function selectConstellationAI() {
+export function selectConstellationAI(context) {
+    const { agent } = context;
+
+    if (
+        agent[effectKeys.CONSTELLATION] <= 0 &&
+        agent[effectKeys.AZURE_CONSTELLATION] <= 0 &&
+        agent[effectKeys.CRIMSON_CONSTELLATION] <= 0
+    ) {
+        return null;
+    }
+
     return effectKeys.CRIMSON_CONSTELLATION;
 }
 
@@ -184,9 +668,13 @@ export function assignStarsAI(context) {
 
     let remainingWhite = getEntityUsableStars(agent);
 
-    // Early return if no stars or during singularity
-    if (remainingWhite <= 0 || isExtraTurn) {
-        return allocations;
+    // Early return if no stars or during singularity or not in Stargazer
+    if (
+        remainingWhite <= 0 ||
+        isExtraTurn ||
+        !agent.states[effectKeys.STARGAZER]
+    ) {
+        return null;
     }
 
     const relevantActions = [
@@ -474,10 +962,13 @@ export function assignStarsAI(context) {
 
             // Singularity Kill Check
             if (simStar.entities[agentKey].states[effectKeys.EVENT_HORIZON]) {
-                simStar = setConstellation(
+                simStar = replaceEntity(
                     simStar,
+                    setConstellation(
+                        extractEntity(simStar, agentKey),
+                        effectKeys.CRIMSON_CONSTELLATION,
+                    ),
                     agentKey,
-                    effectKeys.CRIMSON_CONSTELLATION,
                 );
 
                 for (const singAction of relevantActions) {
@@ -866,24 +1357,22 @@ export function assignStarsAI(context) {
 export function selectElementAI(context) {
     const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
 
+    // If not on Selenian, cancel
+    if (!agent.states[effectKeys.SELENIAN]) {
+        return null;
+    }
+
+    // If shattered, return shattered
+    if (isElementActive(agent, elementalKeys.SHATTERED)) {
+        return elementalKeys.SHATTERED;
+    }
+
     const maxHealthNature = getEntityMaxHealth({
         ...agent,
         [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
             elementalKeys.NATURE,
         ),
     });
-
-    // If shattered, remain shattered
-    if (
-        agent[effectKeys.ELEMENTAL_CRYSTALS].includes(elementalKeys.SHATTERED)
-    ) {
-        return elementalKeys.SHATTERED;
-    }
-
-    // If not on Selenian, forced on dulled
-    if (!agent.states[effectKeys.SELENIAN]) {
-        return elementalKeys.DULLED;
-    }
 
     // Helper function for using the simulations with the correct element
     const simWithElement = (element, actionKey) => {
@@ -1039,94 +1528,6 @@ export function selectElementAI(context) {
 
     // If on Waning, use Frost
     return elementalKeys.FROST;
-}
-
-// Central router
-export function centralAIManagement(prev, agentKey, nonAgentKey) {
-    // Build context
-    const agent = prev.entities[agentKey];
-    const nonAgent = prev.entities[nonAgentKey];
-
-    const currPhase =
-        prev.roundQueue && prev.roundQueue.length > 0
-            ? prev.roundQueue[prev.roundIndex]
-            : null;
-
-    const isExtraTurn = playerMap[agentKey].extra.includes(currPhase);
-
-    let context = {
-        prev,
-        agent,
-        agentKey,
-        nonAgent,
-        nonAgentKey,
-        hasManaForSpecial:
-            getEntityTotalMana(agent) >=
-            constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
-        isExtraTurn,
-    };
-
-    let caller = presetAi[agent.controller].caller || simpleAI;
-
-    // AI overrides
-    // Use SS AI if on Umbral
-    if (agent.states[effectKeys.UMBRAL_CORE]) {
-        caller = shadowSorcererAI;
-    }
-
-    // Process Stars
-    const assignedStars = assignStarsAI(context);
-
-    // Process Element
-    const selectedElement = selectElementAI(context);
-
-    // Process Constellation
-    const selectedConstellation = selectConstellationAI();
-
-    let newAgent = {
-        ...agent,
-        [effectKeys.ELEMENTAL_CRYSTALS]:
-            translateElementIntoCrystals(selectedElement),
-        stars: {
-            ...agent.stars,
-            ...assignedStars,
-        },
-    };
-
-    let post = {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: newAgent,
-        },
-    };
-
-    post = setConstellation(post, agentKey, selectedConstellation);
-
-    context = {
-        ...context,
-        assignedStars,
-        selectedElement,
-        selectedConstellation,
-        agent: post.entities[agentKey],
-        prev: post,
-    };
-
-    // Calculate action
-    let action = caller(context);
-
-    // Action overrides
-    // Use Meltdown if on Overload
-    if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
-        action = actionKeys.MELTDOWN;
-    }
-
-    return {
-        assignedStars,
-        selectedElement,
-        selectedConstellation,
-        action,
-    };
 }
 
 // AIs
@@ -1704,7 +2105,14 @@ export function maestroAI(context) {
 }
 
 export function starfarerAI(context) {
-    const { prev, nonAgentKey, agentKey, assignedStars, isExtraTurn } = context;
+    const {
+        prev,
+        nonAgentKey,
+        agentKey,
+        assignedStars,
+        isExtraTurn,
+        selectedConstellation,
+    } = context;
 
     function simulateActionStarfallHelper(action) {
         return simulateStarsHelper(
@@ -1771,10 +2179,13 @@ export function starfarerAI(context) {
             sim.entities[agentKey].states[effectKeys.EVENT_HORIZON] &&
             !isExtraTurn
         ) {
-            const settedSim = setConstellation(
+            const settedSim = replaceEntity(
                 sim,
+                setConstellation(
+                    extractEntity(sim, agentKey),
+                    selectedConstellation,
+                ),
                 agentKey,
-                selectConstellationAI(),
             );
 
             for (let subAction of relevantActions) {
@@ -2135,4 +2546,568 @@ export function augurAI(context) {
 
     // Fallback: Guard
     return actionKeys.GUARD;
+}
+
+export async function seraphAI(context) {
+    const { prev, agent, agentKey, nonAgentKey } = context;
+
+    const actionAvailable = createAvailabilityChecker(context);
+
+    // Helper for building action array
+    const buildAction = (action, command = commandKeys.USE_ACTION) => {
+        return {
+            type: command,
+            field: action,
+        };
+    };
+
+    // On Cutoff Wings, skip
+    if (agent?.states[effectKeys.CUTOFF_WINGS]) {
+        return null;
+    }
+
+    // On Zenith, use Ascend
+    if (
+        agent?.states[effectKeys.ZENITH_OF_MORTALITY] &&
+        actionAvailable(actionKeys.ASCEND)
+    ) {
+        return buildAction(actionKeys.ASCEND);
+    }
+
+    // If not on Ascendence, build for Ascend
+    if (!agent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
+        // Use Rise if available
+        if (actionAvailable(actionKeys.RISE)) {
+            return buildAction(actionKeys.RISE);
+        }
+
+        // Use Ascend if high enough on Spark
+        const threshold = Math.min(
+            getEntityDef(agent) *
+                (13 - prev.roundCount - agent.attributes.str.points),
+            constants.MAX_DIVINE_SPARK,
+        );
+
+        if (
+            agent[effectKeys.DIVINE_SPARK] >= threshold &&
+            actionAvailable(actionKeys.ASCEND)
+        ) {
+            return buildAction(actionKeys.ASCEND);
+        }
+
+        // default: Aegis
+        return buildAction(actionKeys.AEGIS);
+    }
+
+    // === Ascendence ===
+
+    // Helper for calculating score
+    const rateSim = (sim) => {
+        let simPostCommit = commitTurn(sim, agentKey, nonAgentKey);
+        let postSim = processUpkeep(simPostCommit, agentKey, nonAgentKey);
+
+        const tempAgent = extractEntity(postSim, agentKey);
+        const tempNonAgent = extractEntity(postSim, nonAgentKey);
+
+        // Lowest score on lose
+        if (
+            willEntityEffectivelyDie(tempAgent) ||
+            willEntityEffectivelyDie(extractEntity(simPostCommit, agentKey)) ||
+            willEntityEffectivelyDie(extractEntity(sim, agentKey))
+        ) {
+            return -Infinity;
+        }
+
+        // Highest score on win
+        if (willEntityEffectivelyDie(tempNonAgent)) {
+            return Infinity;
+        }
+
+        let score = 0;
+
+        score += -tempAgent[effectKeys.TARNISHED_SIN]; // Lose score by sin on self
+        score += tempNonAgent[effectKeys.TARNISHED_SIN]; // Gain score for sin on the opponent
+        score += postSim.btt[effectKeys.PROVIDENCE]; // Gain score for prov in the battlefield
+
+        const missingEnlitPercent =
+            Math.max(0, getMaxEnlit(tempAgent) - getTotalEnlit(tempAgent)) /
+            getMaxEnlit(tempAgent);
+        score -= missingEnlitPercent * 50; // lose score for missing enlit on self
+
+        score -= tempAgent[effectKeys.STARS_OF_APOCALYPSE] * 5; // lose score for having stars of apoc on self (disgrace debuff)
+
+        score += getGrace(simPostCommit, agentKey) * 0.5; // gain score for having grace on turn end
+        score -= getDisgrace(simPostCommit, agentKey) * 0.5; // lose score for having disgrace on turn end
+
+        score -=
+            Math.max(0, tempAgent.resources[effectKeys.SACRED_FLAMES] - 10) *
+            2.5; // lose points for having high flames
+
+        return score;
+    };
+
+    // Helper for checking edict/command combination relevancy
+    const isRelevantCombination = (sim, edicts, command) => {
+        if (!command) {
+            return false;
+        }
+
+        const prov = sim?.btt?.[effectKeys.PROVIDENCE] ?? 0;
+        let draftAgent = extractEntity(sim, agentKey);
+
+        // === Condemn ===
+
+        // Skip at low Revelation
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            command.field === actionKeys.CONDEMN &&
+            getRevelation(sim, agentKey) <= 5
+        ) {
+            return false;
+        }
+
+        // === Supplicate ===
+
+        // Skip at high health (if Pricipalities is available and not being used)
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            command.field === actionKeys.SUPPLICATE &&
+            !edicts[edictKeys.PRINCIPALITIES] &&
+            isEdictUnlocked(draftAgent, edictKeys.PRINCIPALITIES) &&
+            getMaxEnlit(draftAgent) <= getTotalEnlit(draftAgent)
+        ) {
+            return false;
+        }
+
+        // Skip at low Fortitude
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            command.field === actionKeys.SUPPLICATE &&
+            getFortitude(sim, agentKey) < 10
+        ) {
+            return false;
+        }
+
+        // Skip Sanctuary if we have used Discern
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            edicts[edictKeys.PRINCIPALITIES] &&
+            command.field === actionKeys.SUPPLICATE &&
+            draftAgent.resources[effectKeys.INSPIRATION] > 0
+        ) {
+            return false;
+        }
+
+        // === Discern ===
+
+        // Skip at low Providence (if not using Dominions)
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            command.field === actionKeys.DISCERN &&
+            !edicts[edictKeys.DOMINIONS] &&
+            prov < 50
+        ) {
+            return false;
+        }
+
+        // === Angels ===
+
+        // Always on with Condemn, unless at low health
+        if (
+            !edicts[edictKeys.ANGELS] &&
+            isEdictUnlocked(draftAgent, edictKeys.ANGELS) &&
+            command.field === actionKeys.CONDEMN &&
+            getTotalEnlit(draftAgent) >=
+                Math.ceil(getMaxEnlit(draftAgent) * 0.3)
+        ) {
+            return false;
+        }
+
+        // Always off if not Condemn
+        if (edicts[edictKeys.ANGELS] && command.field !== actionKeys.CONDEMN) {
+            return false;
+        }
+
+        // === Archangels ===
+
+        // Always on
+        if (
+            !edicts[edictKeys.ARCHANGELS] &&
+            isEdictUnlocked(draftAgent, edictKeys.ARCHANGELS)
+        ) {
+            return false;
+        }
+
+        // === Principalities ===
+
+        // Always on, unless we're using Supplicate
+        if (
+            !edicts[edictKeys.PRINCIPALITIES] &&
+            isEdictUnlocked(draftAgent, edictKeys.PRINCIPALITIES) &&
+            command.field !== actionKeys.SUPPLICATE
+        ) {
+            return false;
+        }
+
+        // === Powers ===
+
+        // Must be disabled if not using Discern
+        if (edicts[edictKeys.POWERS] && command.field !== actionKeys.DISCERN) {
+            return false;
+        }
+
+        // Must be disabled at low Providence
+        if (edicts[edictKeys.POWERS] && prov < constants.POWERS_RATE) {
+            return false;
+        }
+
+        // Must be disabled at high flames
+        if (
+            edicts[edictKeys.POWERS] &&
+            draftAgent.resources[effectKeys.SACRED_FLAMES] >=
+                getMaxEnlit(draftAgent) * 0.5
+        ) {
+            return false;
+        }
+
+        // === Virtues ===
+
+        // Must be disabled if at less than enough providence
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            getProvForVirtues(sim, agentKey) > prov
+        ) {
+            return false;
+        }
+
+        // === Dominions ===
+
+        // If Echoes different from 0, Dominions must be enabled (if Dominions is unlocked)
+        const echoes = draftAgent[effectKeys.HALLOWED_ECHOES];
+        if (
+            !edicts[edictKeys.DOMINIONS] &&
+            isEdictUnlocked(draftAgent, edictKeys.DOMINIONS) &&
+            echoes !== 0
+        ) {
+            return false;
+        }
+
+        // If Dominions is enabled...
+        if (edicts[edictKeys.DOMINIONS]) {
+            // Does not use Condemn on positive echoes
+            if (command?.field === actionKeys.CONDEMN && echoes > 0) {
+                return false;
+            }
+
+            // Does not use Supplicate on negative echoes
+            if (command?.field === actionKeys.SUPPLICATE && echoes < 0) {
+                return false;
+            }
+
+            // Does not use Discern on zero echoes
+            if (command?.field === actionKeys.DISCERN && echoes === 0) {
+                return false;
+            }
+
+            // Does not use Discern on negative echoes if not our final action
+            if (
+                !edicts[edictKeys.VIRTUES] &&
+                command?.field === actionKeys.DISCERN &&
+                echoes < 0
+            ) {
+                return false;
+            }
+        }
+
+        // Thrones
+
+        // // If it's unlocked and we have missing runes, it must be enabled
+        if (
+            !edicts[edictKeys.THRONES] &&
+            isEdictUnlocked(draftAgent, edictKeys.THRONES) &&
+            countBlasphemies(
+                draftAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                blasphemyKeys.NONE,
+            ) > 0
+        ) {
+            return false;
+        }
+
+        // If we're full, it must be disabled
+        if (
+            edicts[edictKeys.THRONES] &&
+            countBlasphemies(
+                draftAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                blasphemyKeys.NONE,
+            ) <= 0
+        ) {
+            return false;
+        }
+
+        // === Cherubim ===
+
+        // Always on
+        if (
+            !edicts[edictKeys.CHERUBIM] &&
+            isEdictUnlocked(draftAgent, edictKeys.CHERUBIM)
+        ) {
+            return false;
+        }
+
+        // === Seraphim ===
+
+        // Must disable Seraphim if not using condemn and not the last action
+        if (
+            edicts[edictKeys.VIRTUES] &&
+            edicts[edictKeys.SERAPHIM] &&
+            command.field !== actionKeys.CONDEMN
+        ) {
+            return false;
+        }
+
+        // If Seraphim is unlocked, check which one deals more dmg and blocks the other
+        if (
+            isEdictUnlocked(draftAgent, edictKeys.SERAPHIM) &&
+            command.field === actionKeys.CONDEMN
+        ) {
+            draftAgent = {
+                ...draftAgent,
+                edicts: {
+                    ...edicts,
+                    [edictKeys.SERAPHIM]: true,
+                },
+            };
+
+            let tempSim = replaceEntity(sim, draftAgent, agentKey);
+
+            const d1 =
+                100 *
+                getMalediction(tempSim, agentKey) *
+                getBenediction(tempSim, agentKey);
+
+            draftAgent = {
+                ...draftAgent,
+                edicts: {
+                    ...edicts,
+                    [edictKeys.SERAPHIM]: false,
+                },
+            };
+
+            tempSim = replaceEntity(sim, draftAgent, agentKey);
+
+            const d2 =
+                100 *
+                getMalediction(tempSim, agentKey) *
+                getBenediction(tempSim, agentKey);
+
+            if (d1 >= d2 && !edicts[edictKeys.SERAPHIM]) {
+                return false;
+            }
+
+            if (d2 > d1 && edicts[edictKeys.SERAPHIM]) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    const edictNumMap = {
+        [choirKeys.NONE]: 0,
+        [choirKeys.FIRST]: 1,
+        [choirKeys.SECOND]: 2,
+        [choirKeys.THIRD]: 3,
+        [choirKeys.FOURTH]: 4,
+        [choirKeys.FIFTH]: 5,
+        [choirKeys.SIXTH]: 6,
+        [choirKeys.SEVENTH]: 7,
+        [choirKeys.EIGHTH]: 8,
+        [choirKeys.NINTH]: 9,
+    };
+
+    const edictNum = edictNumMap?.[agent?.[entryTypes.HEAVENLY_CHOIR]] ?? 0;
+
+    const actionCommands = [
+        {
+            type: commandKeys.USE_ACTION,
+            field: actionKeys.SUPPLICATE,
+        },
+        {
+            type: commandKeys.USE_ACTION,
+            field: actionKeys.DISCERN,
+        },
+        {
+            type: commandKeys.USE_ACTION,
+            field: actionKeys.CONDEMN,
+        },
+    ];
+
+    const evaluatePath = async (
+        sim,
+        commandArray,
+        depth = 0,
+        nodeTracker = { count: 0 },
+    ) => {
+        let best = {
+            score: rateSim(sim),
+            commandArray,
+        };
+
+        if (depth > 10) {
+            console.error("Max Depth reached in Seraph AI");
+            return best;
+        }
+
+        if (!canUseCombatInteractions(sim, agentKey, true, false)) {
+            return best;
+        }
+
+        const currentAgent = extractEntity(sim, agentKey);
+
+        const simActionAvailable = createAvailabilityChecker({
+            agentKey,
+            prev: sim,
+        });
+
+        // Overrides
+        if (simActionAvailable(actionKeys.JUDGEMENT)) {
+            const commandSim = await centralAIManagement(
+                sim,
+                agentKey,
+                nonAgentKey,
+                buildAction(actionKeys.JUDGEMENT),
+            );
+
+            const newScore = rateSim(commandSim);
+
+            if (newScore !== -Infinity) {
+                return {
+                    score: Infinity,
+                    commandArray: [
+                        ...commandArray,
+                        buildAction(actionKeys.JUDGEMENT),
+                    ],
+                };
+            }
+        }
+
+        // Sin Transfer Blasphemy
+        if (
+            currentAgent?.[effectKeys.TARNISHED_SIN] > 50 &&
+            countBlasphemies(
+                currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                blasphemyKeys.YESTERDAY,
+            ) > 0 &&
+            getTotalEnlit(currentAgent) >
+                getMaxEnlit(currentAgent) * constants.BLAS_TARNISH
+        ) {
+            const index = currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY].indexOf(
+                blasphemyKeys.YESTERDAY,
+            );
+
+            if (index !== -1) {
+                sim = await centralAIManagement(sim, agentKey, nonAgentKey, {
+                    type: commandKeys.EXPUNGE_BLAS,
+                    field: index,
+                });
+
+                commandArray = [
+                    ...commandArray,
+                    {
+                        type: commandKeys.EXPUNGE_BLAS,
+                        field: index,
+                    },
+                ];
+            }
+        }
+
+        const permutations = getEdictPermutations(edictNum);
+        const currentMask = getAgentEdictMask(currentAgent, edictNum);
+
+        for (const command of actionCommands) {
+            // Verfy if an action is available
+            if (
+                command.type === commandKeys.USE_ACTION &&
+                !simActionAvailable(command.field)
+            ) {
+                continue;
+            }
+
+            for (let i = 0; i < permutations.length; i++) {
+                const { mask, edicts } = permutations[i];
+
+                if (!isRelevantCombination(sim, edicts, command)) {
+                    continue;
+                }
+
+                nodeTracker.count++;
+                if (nodeTracker.count % 20 === 0) {
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+
+                console.log("path");
+
+                // Bypass state creation if target edicts match current state
+                const edictSim =
+                    mask === currentMask
+                        ? sim
+                        : await centralAIManagement(sim, agentKey, nonAgentKey, {
+                              type: commandKeys.SET_EDICTS,
+                              field: edicts,
+                          });
+
+                const commandSim = await centralAIManagement(
+                    edictSim,
+                    agentKey,
+                    nonAgentKey,
+                    command,
+                );
+
+                const newScore = rateSim(commandSim);
+
+                // Immediately reject losing states
+                if (newScore === -Infinity) {
+                    continue;
+                }
+
+                const nextCommands = [...commandArray];
+                if (mask !== currentMask) {
+                    nextCommands.push({
+                        type: commandKeys.SET_EDICTS,
+                        field: edicts,
+                    });
+                }
+                nextCommands.push(command);
+
+                // Immediately accepts winning states
+                if (newScore === Infinity) {
+                    return {
+                        score: Infinity,
+                        commandArray: nextCommands,
+                    };
+                }
+
+                const pathFound = await evaluatePath(
+                    commandSim,
+                    nextCommands,
+                    depth + 1,
+                    nodeTracker,
+                );
+
+                if (pathFound.score >= best.score) {
+                    best = pathFound;
+                }
+            }
+        }
+
+        return best;
+    };
+
+    const aiPath = await evaluatePath(prev, [], 0, { count: 0 });
+
+    if (aiPath.commandArray.length === 0 || aiPath?.score === -Infinity) {
+        return buildAction(actionKeys.ATONE);
+    }
+
+    return aiPath.commandArray;
 }

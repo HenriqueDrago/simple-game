@@ -15,6 +15,7 @@ import {
     getEntityColoredStars,
     getEntityElement,
     getEntityTotalMana,
+    getProvForVirtues,
     isChoirActive,
     isEdictActive,
     isElementActive,
@@ -41,6 +42,7 @@ import {
     edictKeys,
     choirKeys,
     eyeKeys,
+    tarnishTypes,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
@@ -495,6 +497,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.PRISMATIC]: false,
             [effectKeys.EVENT_HORIZON]: false,
             [effectKeys.IMMACULATE]: false,
+            [effectKeys.PIOUS]: false,
         },
     };
 
@@ -583,13 +586,31 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
     if (draftCurrActor.resources[effectKeys.SACRILEGE] > 0) {
         const sinGained =
             draftCurrActor.resources[effectKeys.SACRILEGE] *
-            constants.BASE_SIN_GAIN;
+            constants.HIGH_SIN_GAIN;
 
         draftCurrActor = {
             ...draftCurrActor,
             resources: {
                 ...draftCurrActor.resources,
                 [effectKeys.SACRILEGE]: 0,
+            },
+        };
+
+        draftCurrActor = gainSin(draftCurrActor, sinGained);
+        post = replaceEntity(post, draftCurrActor, currActorKey);
+    }
+
+    // Penitence
+    if (draftCurrActor.resources[effectKeys.PENITENCE] > 0) {
+        const sinGained =
+            draftCurrActor.resources[effectKeys.PENITENCE] *
+            constants.BASE_SIN_GAIN;
+
+        draftCurrActor = {
+            ...draftCurrActor,
+            resources: {
+                ...draftCurrActor.resources,
+                [effectKeys.PENITENCE]: 0,
             },
         };
 
@@ -1227,15 +1248,13 @@ export function processExtraTurn(prev, agentKey, action) {
         extractEntity(prev, entityKeys.PLAYER_TWO)[effectKeys.TARNISHED_SIN] >=
             constants.MAX_SIN;
 
-    const entity = extractEntity(post, agentKey);
+    const tempAgent = extractEntity(post, agentKey);
     if (
         !isFreeAction &&
-        isEdictActive(entity, edictKeys.VIRTUES) &&
+        isEdictActive(tempAgent, edictKeys.VIRTUES) &&
         !isAbandoned
     ) {
-        const provNecessary =
-            constants.BASE_VIRTUES_COST +
-            constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
+        const provNecessary = getProvForVirtues(tempAgent);
 
         if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
             post = loseProvidence(post, provNecessary);
@@ -1277,15 +1296,13 @@ export function processPlan(prev, agentKey, action) {
         extractEntity(prev, entityKeys.PLAYER_TWO)[effectKeys.TARNISHED_SIN] >=
             constants.MAX_SIN;
 
-    const entity = extractEntity(post, agentKey);
+    const tempAgent = extractEntity(post, agentKey);
     if (
         !isFreeAction &&
-        isEdictActive(entity, edictKeys.VIRTUES) &&
+        isEdictActive(tempAgent, edictKeys.VIRTUES) &&
         !isAbandoned
     ) {
-        const provNecessary =
-            constants.BASE_VIRTUES_COST +
-            constants.VIRTUES_EXTRA_COST * entity.virtuesUsedThisTurn;
+        const provNecessary = getProvForVirtues(tempAgent);
 
         if (post.btt[effectKeys.PROVIDENCE] >= provNecessary) {
             post = loseProvidence(post, provNecessary);
@@ -1334,6 +1351,10 @@ export function buildHistory(prev, event, info = {}) {
         [dmgTypes.PIERCING]: "Piercing Damage",
         [dmgTypes.TRUE]: "True Damage",
         [dmgTypes.LUNIC]: "Lunic Damage",
+        [tarnishTypes.PHYSICAL]: "Physical Tarnishment",
+        [tarnishTypes.PIERCING]: "Piercing Tarnishment",
+        [tarnishTypes.TRUE]: "True Tarnishment",
+        [tarnishTypes.LUNIC]: "Lunic Tarnishment",
     };
 
     const starMap = {

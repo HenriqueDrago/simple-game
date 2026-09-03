@@ -129,6 +129,14 @@ const FREE_STACKS_CONFIG = {
             backgroundColor: "rgba(255, 171, 0, 0.2)",
         },
     },
+    [effectKeys.PENITENCE]: {
+        label: "Penitence",
+        style: {
+            color: "#f59e0b",
+            borderColor: "#d97706",
+            backgroundColor: "rgba(217, 119, 6, 0.2)",
+        },
+    },
     [effectKeys.BLOOD_SACRIFICE]: {
         label: "Blood Sacrifice",
         style: {

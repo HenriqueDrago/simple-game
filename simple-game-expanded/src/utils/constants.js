@@ -59,7 +59,7 @@ export const constants = Object.freeze({
     POWERS_RATE: 1 / 10,
     BASE_VIRTUES_COST: 10,
     VIRTUES_EXTRA_COST: 10,
-    STAR_GAIN_RATE: 1 / 0.5,
+    STAR_GAIN_RATE: 1 / 2.5,
     APOC_DISGRACE: 2.5,
     GENE_BENE: 2.5,
     SERAPHIM_MULT: 0.5,
@@ -73,7 +73,9 @@ export const constants = Object.freeze({
     TOMOR_RATE: 1 / 10,
     ANGEL_LOSE: 0.5,
     STIGMA_RATE: 1 / 20,
-    MOTE_CONVERSION: 10,
+    MOTE_CONVERSION: 4,
+    PIOUS_MULT: 0.5,
+    BLAS_TARNISH: 0.3,
 
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
@@ -178,6 +180,7 @@ export const FREE_RESOURCES = [
     effectKeys.SACRILEGE,
     effectKeys.MARTHYR,
     effectKeys.COVENANT,
+    effectKeys.PENITENCE,
     effectKeys.INSPIRATION,
     effectKeys.MOTES_OF_RUIN,
     effectKeys.MOTES_OF_CREATION,
@@ -285,7 +288,7 @@ export const presetAi = {
         desc: [...Object.keys(LUNATIC_DESCRIPTIONS)],
     },
     [aiKeys.SERAPH]: {
-        name: "Seraph (Unimplemented)",
+        name: "Seraph",
         best: {
             str: 0,
             def: 10,
@@ -434,6 +437,7 @@ export const INITIAL_GAME_STATE = {
     paused: false,
     undoPile: [],
     redoPile: [],
+    aiQueue: [],
 
     speed: speedKeys.ONE,
 
