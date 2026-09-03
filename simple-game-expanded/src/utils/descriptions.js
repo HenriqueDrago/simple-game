@@ -1376,7 +1376,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "PROVIDENCE",
         type: entryTypes.GLOBAL_RESOURCE,
         description:
-            "Capped at 100%. When restoring PROVIDENCE above 100%, evenly redistributes the excess as TARNISHED SIN between all entities.",
+            "Capped at 100%. When restoring PROVIDENCE above 100%, raises TARNISHED SIN on all entities by a fifth of the excess.",
     },
 
     [effectKeys.ENLIGHTENMENT]: {
@@ -1444,7 +1444,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS, PIOUS and IMMACULATE, consumes all REVELATION and FORTITUDE on self and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises STRENGTH equal to REVELATION consumed, raises DEFENSE equal to FORTITUDE consumed and enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS, PIOUS and IMMACULATE, loses all REVELATION and FORTITUDE and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1763,28 +1763,21 @@ export const SERAPH_DESCRIPTIONS = {
         name: "BLASPHEMY OF YESTERDAY",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, transfers a tenth of the TARNISHED SIN on self to the opponent.",
+            "When expunged, lowers the user's TARNISHED SIN by a tenth of their missing ENLIGTENMENT percentage.",
     },
 
     [blasphemyKeys.TODAY]: {
         name: "BLASPHEMY OF TODAY",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, inflicts PHYSICAL TARNISHMENT on all entities equal to the user's missing ENLIGHTENMENT.",
+            "When expunged, lowers the user's TARNISHED SIN by a tenth of the battlefield's PROVIDENCE.",
     },
 
     [blasphemyKeys.TOMORROW]: {
         name: "BLASPHEMY OF TOMORROW",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, gains COVENANT for every 10% missing PROVIDENCE on the battlefield.",
-    },
-
-    [effectKeys.COVENANT]: {
-        name: "COVENANT",
-        type: entryTypes.FREE_RESOURCE,
-        description:
-            "When using CONDEMN, consumes all COVENANT, then inflicts LUNIC TARNISHMENT equal to the amount consumed. When using SUPPLICATE, consumes all COVENANT, then raises MAX ENLIGHTENMENT on self equal to the amount consumed. At turn end, lose all COVENANT, then raise TARNISHED SIN on self by 0.5% for every COVENANT lost.",
+            "When expunged, transfers a tenth of the user's TARNISHED SIN to the opponent.",
     },
 
     [choirKeys.EIGHTH]: {

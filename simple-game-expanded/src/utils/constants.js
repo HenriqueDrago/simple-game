@@ -76,6 +76,7 @@ export const constants = Object.freeze({
     MOTE_CONVERSION: 4,
     PIOUS_MULT: 0.5,
     BLAS_TARNISH: 0.3,
+    PROV_EXCESS_RATE: 0.5 / 2.5,
 
     IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,

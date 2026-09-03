@@ -3430,7 +3430,7 @@ export function raiseProvidence(prev, amount) {
         },
     };
 
-    const sinGain = Math.floor((amount - provGain) / 2);
+    const sinGain = Math.floor((amount - provGain) * constants.PROV_EXCESS_RATE);
 
     if (sinGain > 0) {
         const p1 = gainSin(extractEntity(post, entityKeys.PLAYER_ONE), sinGain);
@@ -3565,27 +3565,14 @@ export function processExitAscendence(prev, entityKey) {
         },
     };
 
-    let newAttr = {
-        ...draftEntity.attributes,
-    };
-
-    newAttr = {
-        ...newAttr,
-        str: {
-            ...newAttr.str,
-            value: newAttr.str.value + getRevelation(post, entityKey),
-        },
-        def: {
-            ...newAttr.def,
-            value: newAttr.def.value + getFortitude(post, entityKey),
-        },
-    };
+    const raisedStats = Math.floor(
+        (getRevelation(post, entityKey) + getFortitude(post, entityKey)) / 2,
+    );
 
     draftEntity = {
         ...draftEntity,
         [effectKeys.REVELATION]: 0,
         [effectKeys.FORTITUDE]: 0,
-        attributes: newAttr,
     };
 
     const result = consumeLimitedResources(draftEntity, Infinity);
@@ -3598,6 +3585,13 @@ export function processExitAscendence(prev, entityKey) {
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
     };
 
+    draftEntity = restoreResources(
+        draftEntity,
+        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+    );
+
+    draftEntity = raiseStats(draftEntity, raisedStats);
+
     draftEntity = {
         ...draftEntity,
         states: {
@@ -3605,11 +3599,6 @@ export function processExitAscendence(prev, entityKey) {
             [effectKeys.CUTOFF_WINGS]: true,
         },
     };
-
-    draftEntity = restoreResources(
-        draftEntity,
-        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
-    );
 
     post = replaceEntity(post, draftEntity, entityKey);
 
@@ -3687,6 +3676,42 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
 
     switch (blasphemy) {
         case blasphemyKeys.YESTERDAY: {
+            const missingEnlitPercent =
+                Math.max(
+                    0,
+                    (getMaxEnlit(draftTarget) - getTotalEnlit(draftTarget)) /
+                        getMaxEnlit(draftTarget),
+                ) * 100;
+
+            const sinTransfer = roundNumber(
+                missingEnlitPercent * constants.YEST_SIN_RATE,
+                2,
+            );
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.TARNISHED_SIN]:
+                    draftTarget[effectKeys.TARNISHED_SIN] - sinTransfer,
+            };
+
+            break;
+        }
+
+        case blasphemyKeys.TODAY: {
+            const sinTransfer = roundNumber(
+                post.btt[effectKeys.PROVIDENCE] * constants.YEST_SIN_RATE,
+                2,
+            );
+
+            draftTarget = {
+                ...draftTarget,
+                [effectKeys.TARNISHED_SIN]:
+                    draftTarget[effectKeys.TARNISHED_SIN] - sinTransfer,
+            };
+            break;
+        }
+
+        case blasphemyKeys.TOMORROW: {
             const sinTransfer = roundNumber(
                 draftTarget[effectKeys.TARNISHED_SIN] * constants.YEST_SIN_RATE,
                 2,
@@ -3704,39 +3729,6 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
                     constants.MAX_SIN,
                     draftNonTarget[effectKeys.TARNISHED_SIN] + sinTransfer,
                 ),
-            };
-            break;
-        }
-
-        case blasphemyKeys.TODAY: {
-            const missingEnlit = Math.max(
-                0,
-                getMaxEnlit(draftTarget) - getTotalEnlit(draftTarget),
-            );
-
-            post = newDealDmg(
-                post,
-                missingEnlit,
-                [targetKey, nonTargetKey],
-                tarnishTypes.PHYSICAL,
-                targetKey,
-            );
-
-            draftTarget = extractEntity(post, targetKey);
-            draftNonTarget = extractEntity(post, nonTargetKey);
-
-            break;
-        }
-
-        case blasphemyKeys.TOMORROW: {
-            draftTarget = {
-                ...draftTarget,
-                resources: {
-                    ...draftTarget.resources,
-                    [effectKeys.COVENANT]:
-                        draftTarget.resources[effectKeys.COVENANT] +
-                        post.btt[effectKeys.PROVIDENCE] * constants.TOMOR_RATE,
-                },
             };
             break;
         }

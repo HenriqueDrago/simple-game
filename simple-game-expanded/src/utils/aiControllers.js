@@ -496,6 +496,16 @@ function createSimulator({ agentKey, nonAgentKey, prev }) {
     };
 }
 
+function getEffectiveHealth(entity) {
+    const mit = consumeMitigationResources(entity, Infinity)
+        .mitigationResourcesConsumed.totalMitigationResourcesConsumption;
+    return getTotalEnlit(entity) + getEntityTotalHealth(entity) + mit;
+}
+
+function getEffectiveMaxHealth(entity) {
+    return getMaxEnlit(entity) + getEntityMaxHealth(entity);
+}
+
 function getEdictPermutations(edictNum) {
     if (EDICT_PERMUTATION_CACHE[edictNum]) {
         return EDICT_PERMUTATION_CACHE[edictNum];
@@ -625,6 +635,7 @@ export function setConstellation(entity, constellation) {
         entity[effectKeys.CONSTELLATION] +
         entity[effectKeys.AZURE_CONSTELLATION] +
         entity[effectKeys.CRIMSON_CONSTELLATION];
+
     return {
         ...entity,
         [effectKeys.CONSTELLATION]:
@@ -1484,10 +1495,10 @@ export function selectElementAI(context) {
     // If our Chalk is strong enough, proceed to enter shattered
     const chalkSim = simWithElement(elementalKeys.SHATTERED, actionKeys.CHALK);
     const chalkDamage =
-        getEntityMaxHealth(nonAgent) -
-        getEntityMaxHealth(chalkSim.entities[nonAgentKey]);
+        getEffectiveMaxHealth(nonAgent) -
+        getEffectiveMaxHealth(chalkSim.entities[nonAgentKey]);
 
-    if (chalkDamage >= getEntityMaxHealth(nonAgent) * 0.5) {
+    if (chalkDamage >= getEffectiveMaxHealth(nonAgent) * 0.5) {
         const tempAgent = {
             ...agent,
             [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
@@ -1670,11 +1681,11 @@ export function bloodknightAI(context) {
     = half their max health
     */
     const enemyHealthLost =
-        getEntityTotalHealth(nonAgent) -
-        getEntityTotalHealth(simAttack.entities[nonAgentKey]);
+        getEffectiveHealth(nonAgent) -
+        getEffectiveHealth(simAttack.entities[nonAgentKey]);
 
     if (
-        enemyHealthLost > getEntityMaxHealth(nonAgent) * 0.5 ||
+        enemyHealthLost > getEffectiveMaxHealth(nonAgent) * 0.5 ||
         simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0
     ) {
         return actionKeys.ATTACK;
@@ -1765,7 +1776,8 @@ export function paladinAI(context) {
 }
 
 export function shadowSorcererAI(context) {
-    const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
+    const { prev, agent, agentKey, nonAgentKey, nonAgent, hasManaForSpecial } =
+        context;
 
     const simulate = createSimulator(context);
 
@@ -1851,7 +1863,8 @@ export function shadowSorcererAI(context) {
                 agentKey,
             ) &&
             !willEntityDieImmediately(simSpAtkPromise.entities[agentKey]) &&
-            !willEntityDieImmediately(simPromise.entities[agentKey])
+            !willEntityDieImmediately(simPromise.entities[agentKey]) &&
+            !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
         ) {
             return actionKeys.DARK_PROMISE;
         }
@@ -2243,10 +2256,10 @@ export function lunaticAI(context) {
             const simStrike = simulate(actionKeys.LUNAR_STRIKE);
             const simAttack = simulate(actionKeys.ATTACK);
 
-            const enemyHpStrike = getEntityTotalHealth(
+            const enemyHpStrike = getEffectiveHealth(
                 simStrike.entities[nonAgentKey],
             );
-            const enemyHpAttack = getEntityTotalHealth(
+            const enemyHpAttack = getEffectiveHealth(
                 simAttack.entities[nonAgentKey],
             );
 
@@ -2426,17 +2439,9 @@ export function augurAI(context) {
 
     // Offensive Pressure
     const dealtGoodDmg = (sim) => {
-        const enemyTrueHealth =
-            getEntityTotalHealth(nonAgent) +
-            consumeMitigationResources(nonAgent, Infinity)
-                .mitigationResourcesConsumed
-                .totalMitigationResourcesConsumption;
+        const enemyTrueHealth = getEffectiveHealth(nonAgent);
         const simEnemy = sim.entities[nonAgentKey];
-        const enemyTrueHealthPostSim =
-            getEntityTotalHealth(simEnemy) +
-            consumeMitigationResources(simEnemy, Infinity)
-                .mitigationResourcesConsumed
-                .totalMitigationResourcesConsumption;
+        const enemyTrueHealthPostSim = getEffectiveHealth(simEnemy);
 
         const dmgDealt = enemyTrueHealth - enemyTrueHealthPostSim;
 
@@ -2444,17 +2449,9 @@ export function augurAI(context) {
     };
 
     const getDmgDealt = (sim) => {
-        const enemyTrueHealth =
-            getEntityTotalHealth(nonAgent) +
-            consumeMitigationResources(nonAgent, Infinity)
-                .mitigationResourcesConsumed
-                .totalMitigationResourcesConsumption;
+        const enemyTrueHealth = getEffectiveHealth(nonAgent);
         const simEnemy = sim.entities[nonAgentKey];
-        const enemyTrueHealthPostSim =
-            getEntityTotalHealth(simEnemy) +
-            consumeMitigationResources(simEnemy, Infinity)
-                .mitigationResourcesConsumed
-                .totalMitigationResourcesConsumption;
+        const enemyTrueHealthPostSim = getEffectiveHealth(simEnemy);
 
         return enemyTrueHealth - enemyTrueHealthPostSim;
     };
@@ -2632,7 +2629,7 @@ export async function seraphAI(context) {
         const missingEnlitPercent =
             Math.max(0, getMaxEnlit(tempAgent) - getTotalEnlit(tempAgent)) /
             getMaxEnlit(tempAgent);
-        score -= missingEnlitPercent * 50; // lose score for missing enlit on self
+        score -= missingEnlitPercent * 100; // lose score for missing enlit on self
 
         score -= tempAgent[effectKeys.STARS_OF_APOCALYPSE] * 5; // lose score for having stars of apoc on self (disgrace debuff)
 
@@ -2947,9 +2944,10 @@ export async function seraphAI(context) {
         commandArray,
         depth = 0,
         nodeTracker = { count: 0 },
+        oldBestScore = null,
     ) => {
         let best = {
-            score: rateSim(sim),
+            score: oldBestScore ? oldBestScore : rateSim(sim),
             commandArray,
         };
 
@@ -2969,7 +2967,7 @@ export async function seraphAI(context) {
             prev: sim,
         });
 
-        // Overrides
+        // Judgment Override
         if (simActionAvailable(actionKeys.JUDGEMENT)) {
             const commandSim = await centralAIManagement(
                 sim,
@@ -2991,38 +2989,189 @@ export async function seraphAI(context) {
             }
         }
 
-        // Sin Transfer Blasphemy
-        if (
-            currentAgent?.[effectKeys.TARNISHED_SIN] > 50 &&
-            countBlasphemies(
-                currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
-                blasphemyKeys.YESTERDAY,
-            ) > 0 &&
-            getTotalEnlit(currentAgent) >
-                getMaxEnlit(currentAgent) * constants.BLAS_TARNISH
-        ) {
-            const index = currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY].indexOf(
-                blasphemyKeys.YESTERDAY,
-            );
-
-            if (index !== -1) {
+        let loop = 0;
+        while (loop < 7) {
+            // Genesis Stars
+            if (currentAgent?.[effectKeys.STARS_OF_GENESIS] > 0) {
                 sim = await centralAIManagement(sim, agentKey, nonAgentKey, {
-                    type: commandKeys.EXPUNGE_BLAS,
-                    field: index,
+                    type: commandKeys.USE_CELESTIAL_STARS,
+                    field: effectKeys.STARS_OF_GENESIS,
                 });
 
                 commandArray = [
                     ...commandArray,
                     {
-                        type: commandKeys.EXPUNGE_BLAS,
-                        field: index,
+                        type: commandKeys.USE_CELESTIAL_STARS,
+                        field: effectKeys.STARS_OF_GENESIS,
                     },
                 ];
+
+                loop += 1;
+                continue;
             }
+
+            // Blasphemies
+            if (
+                getTotalEnlit(currentAgent) >
+                getMaxEnlit(currentAgent) * constants.BLAS_TARNISH
+            ) {
+                // Yesterday
+                if (
+                    countBlasphemies(
+                        currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                        blasphemyKeys.YESTERDAY,
+                    ) > 0
+                ) {
+
+                    // Use if Enlightenment after use <= 50%
+                    if (
+                        getTotalEnlit(currentAgent) -
+                            getMaxEnlit(currentAgent) *
+                                constants.BLAS_TARNISH <=
+                        getMaxEnlit(currentAgent) * 0.5
+                    ) {
+                        const index = currentAgent?.[
+                            effectKeys.CODEX_OF_BLASPHEMY
+                        ].indexOf(blasphemyKeys.YESTERDAY);
+
+                        if (index !== -1) {
+                            console.log("test")
+                            sim = await centralAIManagement(
+                                sim,
+                                agentKey,
+                                nonAgentKey,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            );
+
+                            commandArray = [
+                                ...commandArray,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            ];
+
+                            loop += 1;
+                            continue;
+                        }
+                    }
+                }
+
+                // Today
+                if (
+                    countBlasphemies(
+                        currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                        blasphemyKeys.TODAY,
+                    ) > 0
+                ) {
+                    // Use if Providence >= 50%
+                    if (sim.btt[effectKeys.PROVIDENCE] >= 50) {
+                        const index = currentAgent?.[
+                            effectKeys.CODEX_OF_BLASPHEMY
+                        ].indexOf(blasphemyKeys.TOMORROW);
+
+                        if (index !== -1) {
+                            sim = await centralAIManagement(
+                                sim,
+                                agentKey,
+                                nonAgentKey,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            );
+
+                            commandArray = [
+                                ...commandArray,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            ];
+
+                            loop += 1;
+                            continue;
+                        }
+                    }
+                }
+
+                // Tomorrow
+                if (
+                    countBlasphemies(
+                        currentAgent?.[effectKeys.CODEX_OF_BLASPHEMY],
+                        blasphemyKeys.TOMORROW,
+                    ) > 0
+                ) {
+                    // Use if Sin >= 50%
+                    if (currentAgent?.[effectKeys.TARNISHED_SIN] >= 50) {
+                        const index = currentAgent?.[
+                            effectKeys.CODEX_OF_BLASPHEMY
+                        ].indexOf(blasphemyKeys.TOMORROW);
+
+                        if (index !== -1) {
+                            sim = await centralAIManagement(
+                                sim,
+                                agentKey,
+                                nonAgentKey,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            );
+
+                            commandArray = [
+                                ...commandArray,
+                                {
+                                    type: commandKeys.EXPUNGE_BLAS,
+                                    field: index,
+                                },
+                            ];
+
+                            loop += 1;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // Apocalypse Stars
+            if (
+                currentAgent?.[effectKeys.STARS_OF_APOCALYPSE] > 0 &&
+                getTotalEnlit(currentAgent) > 1
+            ) {
+                sim = await centralAIManagement(sim, agentKey, nonAgentKey, {
+                    type: commandKeys.USE_CELESTIAL_STARS,
+                    field: effectKeys.STARS_OF_APOCALYPSE,
+                });
+
+                commandArray = [
+                    ...commandArray,
+                    {
+                        type: commandKeys.USE_CELESTIAL_STARS,
+                        field: effectKeys.STARS_OF_APOCALYPSE,
+                    },
+                ];
+
+                loop += 1;
+                continue;
+            }
+
+            break;
         }
 
         const permutations = getEdictPermutations(edictNum);
         const currentMask = getAgentEdictMask(currentAgent, edictNum);
+
+        // Allow UI to load
+        if (
+            nodeTracker.count === 0 &&
+            isEdictUnlocked(currentAgent, edictKeys.VIRTUES)
+        ) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+        }
 
         for (const command of actionCommands) {
             // Verfy if an action is available
@@ -3041,20 +3190,25 @@ export async function seraphAI(context) {
                 }
 
                 nodeTracker.count++;
-                if (nodeTracker.count % 20 === 0) {
+                if (nodeTracker.count % 40 === 0) {
                     await new Promise((resolve) => setTimeout(resolve, 10));
                 }
 
-                console.log("path");
+                // console.log("path");
 
                 // Bypass state creation if target edicts match current state
                 const edictSim =
                     mask === currentMask
                         ? sim
-                        : await centralAIManagement(sim, agentKey, nonAgentKey, {
-                              type: commandKeys.SET_EDICTS,
-                              field: edicts,
-                          });
+                        : await centralAIManagement(
+                              sim,
+                              agentKey,
+                              nonAgentKey,
+                              {
+                                  type: commandKeys.SET_EDICTS,
+                                  field: edicts,
+                              },
+                          );
 
                 const commandSim = await centralAIManagement(
                     edictSim,
@@ -3103,7 +3257,7 @@ export async function seraphAI(context) {
         return best;
     };
 
-    const aiPath = await evaluatePath(prev, [], 0, { count: 0 });
+    const aiPath = await evaluatePath(prev, [], 0, { count: 0 }, -Infinity);
 
     if (aiPath.commandArray.length === 0 || aiPath?.score === -Infinity) {
         return buildAction(actionKeys.ATONE);

@@ -27,7 +27,7 @@ export default function EdictTracker({ entityKey }) {
 
     const entity = extractEntity(game, entityKey);
 
-    const canInteract = canUseCombatInteractions(game, entityKey, true, true);
+    const canInteract = canUseCombatInteractions(game, entityKey);
 
     return (
         <div className="edict-tracker-container">
@@ -38,7 +38,9 @@ export default function EdictTracker({ entityKey }) {
                     <div
                         className={`individual-edict-container ${enabled ? "edict-enabled" : ""} ${unlocked ? "edict-unlocked" : ""}`}
                         onClick={() => {
-                            handleEdict(entityKey, key);
+                            if (unlocked && canInteract) {
+                                handleEdict(entityKey, key);
+                            }
                         }}
                         onMouseDown={(e) => handleSpawnTooltip(e, key)}
                         disabled={!unlocked || !canInteract}

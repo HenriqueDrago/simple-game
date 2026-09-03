@@ -210,6 +210,7 @@ export default function GameProvider({ children }) {
                     ? {
                           ...prev.simSpecs,
                           action: null,
+                          blasphemy: null,
                       }
                     : null,
                 speed: prev.speed,
@@ -237,6 +238,7 @@ export default function GameProvider({ children }) {
                     ? {
                           ...prev.simSpecs,
                           action: null,
+                          blasphemy: null,
                       }
                     : null,
                 speed: prev.speed,
@@ -748,7 +750,16 @@ export default function GameProvider({ children }) {
             post = replaceEntity(post, draftEntity, agentKey);
             post = expungeBlas(post, agentKey, nonAgentKey, blas);
 
-            return post;
+            return {
+                ...post,
+                simSpecs: post.simSpecs
+                    ? {
+                          ...post.simSpecs,
+                          action: null,
+                          blasphemy: null,
+                      }
+                    : null,
+            };
         });
     }
 

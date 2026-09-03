@@ -1,7 +1,12 @@
 import { PiStarOfDavid } from "react-icons/pi";
 import "./CelestialStars.css";
 import { choirKeys, effectKeys } from "../utils/enums";
-import { extractEntity, getTotalEnlit, isChoirActive } from "../utils/entities";
+import {
+    canUseCombatInteractions,
+    extractEntity,
+    getTotalEnlit,
+    isChoirActive,
+} from "../utils/entities";
 import { useUI } from "../contexts/UIContext";
 import { useGame } from "../contexts/GameContext";
 
@@ -21,14 +26,18 @@ export default function CelestialStars({ entityKey }) {
         simEntity?.[effectKeys.STARS_OF_APOCALYPSE] ?? realApocStars;
     const displayApocStars = simEntity ? simApocStars : realApocStars;
     const isApocChanged = simEntity && realApocStars !== simApocStars;
-    const isApocClickable = realApocStars > 0 && getTotalEnlit(entity) > 1;
+    const isApocClickable =
+        realApocStars > 0 &&
+        getTotalEnlit(entity) > 1 &&
+        canUseCombatInteractions(game, entityKey);
 
     const realGenStars = entity?.[effectKeys.STARS_OF_GENESIS] ?? 0;
     const simGenStars =
         simEntity?.[effectKeys.STARS_OF_GENESIS] ?? realGenStars;
     const displayGenStars = simEntity ? simGenStars : realGenStars;
     const isGenChanged = simEntity && realGenStars !== simGenStars;
-    const isGenClickable = realGenStars > 0;
+    const isGenClickable =
+        realGenStars > 0 && canUseCombatInteractions(game, entityKey);
 
     return (
         <div className="celestial-star-container">
@@ -41,21 +50,25 @@ export default function CelestialStars({ entityKey }) {
                 <div
                     className="star-icon-btn"
                     onClick={() => {
-                        handleCelestialStars(
-                            entityKey,
-                            1,
-                            effectKeys.STARS_OF_APOCALYPSE,
-                        );
+                        if (isApocClickable) {
+                            handleCelestialStars(
+                                entityKey,
+                                1,
+                                effectKeys.STARS_OF_APOCALYPSE,
+                            );
+                        }
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        handleCelestialStars(
-                            entityKey,
-                            10,
-                            effectKeys.STARS_OF_APOCALYPSE,
-                        );
+                        if (isApocClickable) {
+                            handleCelestialStars(
+                                entityKey,
+                                10,
+                                effectKeys.STARS_OF_APOCALYPSE,
+                            );
+                        }
                     }}
                     disabled={!isApocClickable}
                 >
@@ -77,21 +90,25 @@ export default function CelestialStars({ entityKey }) {
                 <div
                     className="star-icon-btn"
                     onClick={() => {
-                        handleCelestialStars(
-                            entityKey,
-                            1,
-                            effectKeys.STARS_OF_GENESIS,
-                        );
+                        if (isGenClickable) {
+                            handleCelestialStars(
+                                entityKey,
+                                1,
+                                effectKeys.STARS_OF_GENESIS,
+                            );
+                        }
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        handleCelestialStars(
-                            entityKey,
-                            10,
-                            effectKeys.STARS_OF_GENESIS,
-                        );
+                        if (isGenClickable) {
+                            handleCelestialStars(
+                                entityKey,
+                                10,
+                                effectKeys.STARS_OF_GENESIS,
+                            );
+                        }
                     }}
                     disabled={!isGenClickable}
                 >

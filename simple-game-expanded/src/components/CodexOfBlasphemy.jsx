@@ -1,6 +1,7 @@
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import {
+    canUseCombatInteractions,
     extractEntity,
     getOtherEntity,
     isChoirActive,
@@ -91,9 +92,17 @@ export default function CodexOfBlasphemy({ entityKey }) {
                             )
                         }
                         onClick={() => {
+                            if (!canUseCombatInteractions(game, entityKey)) {
+                                return;
+                            }
+
                             handleBlasphemy(entityKey, otherEntity, ogIndex);
                         }}
                         onMouseEnter={() => {
+                            if (!canUseCombatInteractions(game, entityKey)) {
+                                return;
+                            }
+
                             if (
                                 !isBlasChanged &&
                                 displayBlasphemy !== blasphemyKeys.NONE
@@ -110,6 +119,10 @@ export default function CodexOfBlasphemy({ entityKey }) {
                             }
                         }}
                         onMouseLeave={() => {
+                            if (!canUseCombatInteractions(game, entityKey)) {
+                                return;
+                            }
+
                             if (
                                 !isBlasChanged &&
                                 displayBlasphemy !== blasphemyKeys.NONE
@@ -125,6 +138,7 @@ export default function CodexOfBlasphemy({ entityKey }) {
                                 });
                             }
                         }}
+                        disabled={!canUseCombatInteractions(game, entityKey)}
                     >
                         {blasphemyMap[displayBlasphemy]}
                     </div>
