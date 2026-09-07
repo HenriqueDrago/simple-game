@@ -29,7 +29,7 @@ export default function ModifiersTracker({ entityKey }) {
         1,
     );
     const simDmg = simGame
-        ? roundNumber((getEntityDamageBonus(simGame, entityKey) - 1) * 100, 1)
+        ? roundNumber((getEntityDamageBonus(simGame, entityKey) - 1) * 100, 0)
         : realDmg;
     const isDmgChanged = simGame && simDmg !== realDmg;
     const displayDmg = simGame ? simDmg : realDmg;
@@ -39,14 +39,14 @@ export default function ModifiersTracker({ entityKey }) {
         1,
     );
     const simWeak = simGame
-        ? roundNumber((1 - getEntityWeakness(simGame, entityKey)) * 100, 1)
+        ? roundNumber((1 - getEntityWeakness(simGame, entityKey)) * 100, 0)
         : realWeak;
     const isWeakChanged = simGame && simWeak !== realWeak;
     const displayWeak = simGame ? simWeak : realWeak;
 
-    const realDR = roundNumber((1 - getEntityDR(game, entityKey)) * 100, 1);
+    const realDR = roundNumber((1 - getEntityDR(game, entityKey)) * 100, 0);
     const simDR = simGame
-        ? roundNumber((1 - getEntityDR(simGame, entityKey)) * 100, 1)
+        ? roundNumber((1 - getEntityDR(simGame, entityKey)) * 100, 0)
         : realDR;
     const isDRChanged = simGame && simDR !== realDR;
     const displayDR = simGame ? simDR : realDR;
@@ -56,7 +56,7 @@ export default function ModifiersTracker({ entityKey }) {
         1,
     );
     const simFrag = simGame
-        ? roundNumber((getEntityFragility(simGame, entityKey) - 1) * 100, 1)
+        ? roundNumber((getEntityFragility(simGame, entityKey) - 1) * 100, 0)
         : realFrag;
     const isFragChanged = simGame && simFrag !== realFrag;
     const displayFrag = simGame ? simFrag : realFrag;

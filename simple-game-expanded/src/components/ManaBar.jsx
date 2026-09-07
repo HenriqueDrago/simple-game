@@ -1,12 +1,13 @@
 import { useUI } from "../contexts/UIContext";
+import { getMaxMana } from "../utils/entities";
 import { effectKeys } from "../utils/enums";
 import "./ManaBar.css";
 
 function ManaBar({ entity, simEntity }) {
     const { handleSpawnTooltip } = useUI();
 
-    const baseMaxMana = entity.maxMana;
-    const simMaxMana = simEntity ? simEntity.maxMana : baseMaxMana;
+    const baseMaxMana = getMaxMana(entity);
+    const simMaxMana = simEntity ? getMaxMana(simEntity) : baseMaxMana;
     const isMaxManaSimulating = simEntity && simMaxMana !== baseMaxMana;
 
     const displayMaxMana = isMaxManaSimulating ? simMaxMana : baseMaxMana;
@@ -55,10 +56,7 @@ function ManaBar({ entity, simEntity }) {
               )
             : 0;
 
-    const activeEntity =
-        isManaSimulating || isMaxManaSimulating ? simEntity : entity;
-    const backgroundColor =
-        activeEntity[effectKeys.MANA_BLEED] > 0 ? "purple" : "blue";
+    const backgroundColor = "blue";
     const textColor = displayHasOverflow ? "cyan" : "inherit";
 
     return (

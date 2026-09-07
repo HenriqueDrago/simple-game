@@ -27,6 +27,8 @@ import {
     getGrace,
     getMalediction,
     getMaxEnlit,
+    getMaxMana,
+    getMissingHealth,
     getProvForVirtues,
     getRevelation,
     getTotalEnlit,
@@ -109,6 +111,7 @@ export async function centralAIManagement(
             post = isExtraTurn
                 ? processExtraTurn(post, agentKey, action)
                 : processPlan(post, agentKey, action);
+
             break;
         }
         case commandKeys.EXPUNGE_BLAS: {
@@ -312,7 +315,7 @@ export async function centralAIManagement(
                 nonAgentKey,
                 hasManaForSpecial:
                     getEntityTotalMana(agent) >=
-                    constants.SP_ATTACK_COST * agent[effectKeys.MAX_MANA],
+                    constants.SP_ATTACK_COST * getMaxMana(agent),
                 isExtraTurn,
             };
 
@@ -433,22 +436,6 @@ export async function centralAIManagement(
                 case aiKeys.SERAPH: {
                     const aiResults = await seraphAI(context);
 
-                    if (!aiResults || agent.states[effectKeys.UMBRAL_CORE]) {
-                        let action = shadowSorcererAI(context);
-
-                        if (action) {
-                            newQueue = [
-                                ...newQueue,
-                                {
-                                    type: commandKeys.USE_ACTION,
-                                    field: action,
-                                },
-                            ];
-                        }
-
-                        break;
-                    }
-
                     newQueue = Array.isArray(aiResults)
                         ? aiResults
                         : [aiResults];
@@ -477,6 +464,8 @@ export async function centralAIManagement(
         ...post,
         aiQueue: newQueue,
     };
+
+    console.log(post.aiQueue);
 
     return processDeathCheck(post);
 }
@@ -832,8 +821,7 @@ export function assignStarsAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost =
-                    agentEnt[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST;
+                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -863,8 +851,7 @@ export function assignStarsAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost =
-                    agentEnt[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST;
+                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -894,8 +881,7 @@ export function assignStarsAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost =
-                    agentEnt[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST;
+                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -1573,162 +1559,166 @@ export function simpleAI(context) {
 - Heal if at low health
 */
 export function warlockAI(context) {
-    const { agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
+    const { agent, agentKey, nonAgentKey } = context;
 
     const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
 
     // Simulate Special Attack
     // If it kills, use it
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
     if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
     ) {
-        return actionKeys.ATTACK;
-    }
-
-    if (
-        getEntityTotalMana(agent) <=
-        agent[effectKeys.MAX_MANA] -
-            agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN
-    ) {
-        return actionKeys.GUARD;
-    }
-
-    // if has enough mana, use special attack as fallback
-    if (hasManaForSpecial) {
         return actionKeys.SPECIAL_ATTACK;
     }
 
-    // else, se default attack
-    return actionKeys.ATTACK;
-}
-
-export function bloodknightAI(context) {
-    const { agent, agentKey, nonAgentKey, nonAgent, hasManaForSpecial } =
-        context;
-
-    const simulate = createSimulator(context);
-
-    // Simulate Special Attack
-    // If it kills, use it
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
     // Simulate Attack
     // If it kills, use it
     const simAttack = simulate(actionKeys.ATTACK);
     if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+        willEntityEffectivelyDieByNextUpkeep(
+            simAttack,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.ATTACK)
     ) {
         return actionKeys.ATTACK;
     }
 
-    const missingHp = getEntityMaxHealth(agent) - getEntityTotalHealth(agent);
-    const missingMana = agent[effectKeys.MAX_MANA] - getEntityTotalMana(agent);
-    const nextTurnHeal = Math.min(
-        getEntityTotalMana(agent),
-        agent[effectKeys.MANA_BLEED],
-    );
-
-    // Guard to recover mana
-    /*
-    Conditions:
-    - Array not active
-    - next turn mana bleed heal won't heal all of our missing Health
-    - we have mana bleed and it will consume all out mana
-    - we won't lose any of the mana gained from guard (due to overcap)
-    - missing hp is considerable (25% of max)
-    */
-    if (
-        nextTurnHeal < missingHp &&
-        agent[effectKeys.MANA_BLEED] > getEntityTotalMana(agent) &&
-        missingMana >=
-            agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN &&
-        missingHp >= getEntityMaxHealth(agent) * 0.25
-    ) {
-        return actionKeys.GUARD;
-    }
-
-    // Attack
-    /*
-    Conditions
-    - We'll deal a considerable amount of damage
-    = half their max health
-    */
-    const enemyHealthLost =
-        getEffectiveHealth(nonAgent) -
-        getEffectiveHealth(simAttack.entities[nonAgentKey]);
-
-    if (
-        enemyHealthLost > getEffectiveMaxHealth(nonAgent) * 0.5 ||
-        simAttack.entities[nonAgentKey][effectKeys.HEALTH] <= 0
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Sacrifice to accumulate damage
-    /*
-    Conditions:
-    - Health is high enough = more than 60% full
-    - Sacrifice won't kill us
-    */
-    const simSac = simulate(actionKeys.SACRIFICE);
-    if (
-        getEntityTotalHealth(agent) >= getEntityMaxHealth(agent) * 0.6 &&
-        !willEntityEffectivelyDieByNextUpkeep(simSac, agentKey, nonAgentKey)
-    ) {
-        return actionKeys.SACRIFICE;
-    }
-
-    // If no bloodsacrifice and low hp, use heal or guard
-    if (
-        getEntityTotalHealth(agent) < getEntityMaxHealth(agent) * 0.6 &&
-        agent[effectKeys.MANA_BLEED] <= 0
-    ) {
-        if (agent[effectKeys.MANA] >= 5) {
+    // Low health
+    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
+        // If high enough mana, heal
+        // otherwise, guard to recover it
+        if (getEntityTotalMana(agent) >= 4) {
             return actionKeys.HEAL;
         } else {
             return actionKeys.GUARD;
         }
     }
 
-    // Attack if not array or halo or divinity
+    // Prioritize restoring Mana
     if (
-        !(
-            nonAgent.resources[effectKeys.HALO] > 0 ||
-            nonAgent.resources[effectKeys.REFRACTED_DIVINITY] > 0
-        )
+        getEntityTotalMana(agent) <=
+        getMaxMana(agent) - getMaxMana(agent) * constants.GUARD_MANA_REGEN
+    ) {
+        return actionKeys.GUARD;
+    }
+
+    // Use Sp Atk if available
+    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // else, default to attack
+    return actionKeys.ATTACK;
+}
+
+export function bloodknightAI(context) {
+    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
+
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    // Simulate Special Attack
+    // If it kills, use it
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simAttack,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.ATTACK)
     ) {
         return actionKeys.ATTACK;
     }
 
-    // Guard fallback
-    return actionKeys.GUARD;
+    // Use Sacrifice at high health
+    if (
+        getEntityTotalHealth(agent) > getEntityMaxHealth(agent) * 0.5 &&
+        isActionAvailable(actionKeys.SACRIFICE)
+    ) {
+        return actionKeys.SACRIFICE;
+    }
+
+    // Use defense if needed
+    const hpThreshold =
+        nonAgent.states[effectKeys.DEPLOYMENT] ||
+        nonAgent.states[effectKeys.WEAPONS_DEPLOYED] ||
+        nonAgent.states[effectKeys.VENTING]
+            ? 5
+            : 2;
+
+    const postCommitAgent = extractEntity(
+        commitTurn(prev, agentKey, nonAgentKey),
+        agentKey,
+    );
+    if (getEntityTotalHealth(postCommitAgent) <= hpThreshold) {
+        if (getEntityDef(agent) >= 5 && isActionAvailable(actionKeys.AEGIS)) {
+            return actionKeys.AEGIS;
+        }
+
+        if (
+            Math.min(getMissingHealth(agent), getEntityTotalHealth(agent)) >=
+            getEntityTotalHealth(postCommitAgent, agentKey) - hpThreshold
+        ) {
+            return actionKeys.HEAL;
+        }
+
+        return actionKeys.GUARD;
+    }
+
+    // Use Attack or SpAtk (whichever is stronger) if it deals considerable dmg
+    const spAtkDmgDealt =
+        getEffectiveHealth(nonAgent) -
+        getEffectiveHealth(extractEntity(simSpecial, nonAgentKey));
+    const atkDmgDealt =
+        getEffectiveHealth(nonAgent) -
+        getEffectiveHealth(extractEntity(simAttack, nonAgentKey));
+
+    const dmgThreshold = nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ? getEffectiveHealth(nonAgent)
+        : getEffectiveHealth(nonAgent) * 0.5;
+
+    if (
+        spAtkDmgDealt > atkDmgDealt &&
+        spAtkDmgDealt >= dmgThreshold &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    if (atkDmgDealt >= dmgThreshold) {
+        return actionKeys.ATTACK;
+    }
+
+    const sacSim = simulate(actionKeys.SACRIFICE);
+    if (getEntityTotalHealth(extractEntity(sacSim, agentKey)) > hpThreshold) {
+        return actionKeys.SACRIFICE;
+    }
+
+    return actionKeys.ATTACK;
 }
 
 export function paladinAI(context) {
@@ -1848,17 +1838,30 @@ export function shadowSorcererAI(context) {
             agentKey,
             nonAgentKey,
         );
+        const simUpkeepPromise = processUpkeep(
+            simPromise,
+            nonAgentKey,
+            agentKey,
+        );
         const simSpAtkPromise = processActionUse(
-            processDeathCheck(processUpkeep(simPromise, nonAgentKey, agentKey)),
+            simUpkeepPromise,
             nonAgentKey,
             agentKey,
             actionKeys.SPECIAL_ATTACK,
         );
 
+        console.log(simUpkeepPromise);
+        console.log(simSpAtkPromise);
+
         // if enemy dies by their next commit after they use an sp atk and we don't, use it
         if (
             willEntityEffectivelyDieByNextCommit(
                 simSpAtkPromise,
+                nonAgentKey,
+                agentKey,
+            ) &&
+            willEntityEffectivelyDieByNextCommit(
+                simUpkeepPromise,
                 nonAgentKey,
                 agentKey,
             ) &&
@@ -1929,8 +1932,8 @@ export function cyborgAI(context) {
 
         if (
             getEntityTotalMana(agent) +
-                constants.GUARD_MANA_REGEN * agent[effectKeys.MAX_MANA] <=
-                agent[effectKeys.MAX_MANA] &&
+                constants.GUARD_MANA_REGEN * getMaxMana(agent) <=
+                getMaxMana(agent) &&
             canUseAction(prev, nonAgentKey, actionKeys.SPECIAL_ATTACK)
         ) {
             return actionKeys.GUARD;
@@ -2548,6 +2551,7 @@ export function augurAI(context) {
 export async function seraphAI(context) {
     const { prev, agent, agentKey, nonAgentKey } = context;
 
+    const simulate = createSimulator(context);
     const actionAvailable = createAvailabilityChecker(context);
 
     // Helper for building action array
@@ -2558,9 +2562,41 @@ export async function seraphAI(context) {
         };
     };
 
-    // On Cutoff Wings, skip
+    if (actionAvailable(actionKeys.JUDGEMENT)) {
+        return buildAction(actionKeys.JUDGEMENT);
+    }
+
+    // Simulate Special Attack
+    // If it kills, use it
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        actionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return buildAction(actionKeys.SPECIAL_ATTACK);
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simAttack,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        actionAvailable(actionKeys.ATTACK)
+    ) {
+        return buildAction(actionKeys.ATTACK);
+    }
+
+    // On Cutoff Wings, play shadow sorcerer
     if (agent?.states[effectKeys.CUTOFF_WINGS]) {
-        return null;
+        return buildAction(shadowSorcererAI(context));
     }
 
     // On Zenith, use Ascend
@@ -2590,6 +2626,19 @@ export async function seraphAI(context) {
             actionAvailable(actionKeys.ASCEND)
         ) {
             return buildAction(actionKeys.ASCEND);
+        }
+
+        // Use Ascend if gonna die from Radiance or Dissonance (and can use Ascend, else Attack)
+        if (
+            agent.resources[effectKeys.RADIANCE] +
+                agent.resources[effectKeys.DISSONANCE] >=
+            getEntityTotalHealth(agent)
+        ) {
+            if (actionAvailable(actionKeys.ASCEND)) {
+                return buildAction(actionKeys.ASCEND);
+            }
+
+            return buildAction(actionKeys.ATTACK);
         }
 
         // default: Aegis
@@ -2960,7 +3009,7 @@ export async function seraphAI(context) {
             return best;
         }
 
-        const currentAgent = extractEntity(sim, agentKey);
+        let currentAgent = extractEntity(sim, agentKey);
 
         const simActionAvailable = createAvailabilityChecker({
             agentKey,
@@ -2991,6 +3040,8 @@ export async function seraphAI(context) {
 
         let loop = 0;
         while (loop < 7) {
+            currentAgent = extractEntity(sim, agentKey);
+
             // Genesis Stars
             if (currentAgent?.[effectKeys.STARS_OF_GENESIS] > 0) {
                 sim = await centralAIManagement(sim, agentKey, nonAgentKey, {
@@ -3022,20 +3073,18 @@ export async function seraphAI(context) {
                         blasphemyKeys.YESTERDAY,
                     ) > 0
                 ) {
-
-                    // Use if Enlightenment after use <= 50%
+                    // Use if Enlightenment after use <= 60%
                     if (
                         getTotalEnlit(currentAgent) -
                             getMaxEnlit(currentAgent) *
                                 constants.BLAS_TARNISH <=
-                        getMaxEnlit(currentAgent) * 0.5
+                        getMaxEnlit(currentAgent) * 0.6
                     ) {
                         const index = currentAgent?.[
                             effectKeys.CODEX_OF_BLASPHEMY
                         ].indexOf(blasphemyKeys.YESTERDAY);
 
                         if (index !== -1) {
-                            console.log("test")
                             sim = await centralAIManagement(
                                 sim,
                                 agentKey,
@@ -3067,8 +3116,8 @@ export async function seraphAI(context) {
                         blasphemyKeys.TODAY,
                     ) > 0
                 ) {
-                    // Use if Providence >= 50%
-                    if (sim.btt[effectKeys.PROVIDENCE] >= 50) {
+                    // Use if Providence >= 40%
+                    if (sim.btt[effectKeys.PROVIDENCE] >= 40) {
                         const index = currentAgent?.[
                             effectKeys.CODEX_OF_BLASPHEMY
                         ].indexOf(blasphemyKeys.TOMORROW);
@@ -3105,8 +3154,8 @@ export async function seraphAI(context) {
                         blasphemyKeys.TOMORROW,
                     ) > 0
                 ) {
-                    // Use if Sin >= 50%
-                    if (currentAgent?.[effectKeys.TARNISHED_SIN] >= 50) {
+                    // Use if Sin >= 40%
+                    if (currentAgent?.[effectKeys.TARNISHED_SIN] >= 40) {
                         const index = currentAgent?.[
                             effectKeys.CODEX_OF_BLASPHEMY
                         ].indexOf(blasphemyKeys.TOMORROW);

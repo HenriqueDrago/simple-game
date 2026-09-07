@@ -177,7 +177,7 @@
     box-shadow: 0 0 15px rgba(169, 169, 169, 0.45);
 }
 
-.player-panel-container.state-sacrificial {
+.player-panel-container.state-CEREMONIAL {
     border-color: #dc143c;
     border-image: none;
     background: linear-gradient(

@@ -28,7 +28,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
         [effectKeys.THERMAL_OVERLOAD]: "state-thermal-overload",
         [effectKeys.VENTING]: "state-venting",
         [effectKeys.GUARDING_STATE]: "state-guarding",
-        [effectKeys.SACRIFICIAL_STATE]: "state-sacrificial",
+        [effectKeys.CEREMONIAL]: "state-CEREMONIAL",
         [effectKeys.RADIANT]: "state-radiant",
         [effectKeys.DEPLOYMENT]: "state-deployment",
         [effectKeys.DARK_EMBRACE]: "state-dark-embrace",

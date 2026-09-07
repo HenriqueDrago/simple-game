@@ -46,19 +46,17 @@ export function restoreResources(entity, amount) {
             return draftEntity; // Early return since on Ocean all excess Health becomes Silver Blood
         }
 
-        const missingHp = Math.max(
-            0,
-            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
-        );
-        const restoredHp = Math.min(missingHp, amount);
+        const restoredHp = Math.min(getMissingHealth(draftEntity), amount);
 
         amount -= restoredHp;
 
         draftEntity = gainHp(draftEntity, restoredHp);
     }
 
+    // Skip Blood Sacrifice
+
     // Mana
-    if (entity[effectKeys.MAX_MANA] > 0) {
+    if (getMaxMana(entity) > 0) {
         draftEntity = gainMana(draftEntity, amount);
         return draftEntity; // Early return since restoring mana consumes all
     }
@@ -69,7 +67,7 @@ export function restoreResources(entity, amount) {
         return draftEntity; // Early return since restoring enlit consumes all
     }
 
-    // Safenet (unreacheable in theory): Restore Sacred Flames (first Free Resource)
+    // Safenet: Restore Sacred Flames (first Free Resource)
     if (amount > 0) {
         draftEntity = {
             ...draftEntity,
@@ -205,6 +203,7 @@ export function createBaseEntity() {
         [effectKeys.MANA]: constants.BASE_MANA,
         [effectKeys.ENLIGHTENMENT]: 0,
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
+        [effectKeys.BLOOD_SACRIFICE]: 0,
 
         // fixed resources
         [effectKeys.DIVINE_SPARK]: 0,
@@ -221,7 +220,6 @@ export function createBaseEntity() {
         [effectKeys.TARNISHED_SIN]: 0,
 
         // ranked resources
-        [effectKeys.MANA_BLEED]: 0,
         [effectKeys.MOONLIT_TEARS]: 0,
         [effectKeys.CONSTELLATION]: 0,
         [effectKeys.AZURE_CONSTELLATION]: 0,
@@ -264,7 +262,6 @@ export function createBaseEntity() {
             [effectKeys.INSIGHT]: 0,
 
             // Free
-            [effectKeys.BLOOD_SACRIFICE]: 0,
             [effectKeys.RADIANCE]: 0,
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
@@ -276,7 +273,6 @@ export function createBaseEntity() {
             [effectKeys.PROPHECY_OF_DOOM]: 0,
             [effectKeys.MARTHYR]: 0,
             [effectKeys.SACRILEGE]: 0,
-            [effectKeys.COVENANT]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
             [effectKeys.INSPIRATION]: 0,
             [effectKeys.MOTES_OF_CREATION]: 0,
@@ -298,7 +294,7 @@ export function createBaseEntity() {
         states: {
             // standalones
             [effectKeys.GUARDING_STATE]: false,
-            [effectKeys.SACRIFICIAL_STATE]: false,
+            [effectKeys.CEREMONIAL]: false,
             [effectKeys.STARGAZER]: false,
             [effectKeys.SELENIAN]: false,
             [effectKeys.RESONANT]: false,
@@ -389,10 +385,7 @@ export function gainHp(entity, amount) {
         amount = 0;
     }
 
-    const missingHp =
-        getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH];
-
-    const hpGained = Math.min(missingHp, amount);
+    const hpGained = Math.min(getMissingHealth(draftEntity), amount);
     const newHp = draftEntity[effectKeys.HEALTH] + hpGained;
 
     amount -= hpGained;
@@ -453,6 +446,15 @@ export function loseHp(entity, amount) {
 
     amount -= hpConsumed;
 
+    // Ceremonial
+    if (entity.states[effectKeys.CEREMONIAL]) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.BLOOD_SACRIFICE]:
+                draftEntity[effectKeys.BLOOD_SACRIFICE] + hpConsumed,
+        };
+    }
+
     // Wither
     if (isElementActive(entity, elementalKeys.WITHER)) {
         const newLunacy = Math.min(
@@ -481,10 +483,10 @@ export function gainMana(entity, amount) {
         amount = 0;
     }
 
-    const missingMana = draftEntity.maxMana - draftEntity.currMana;
+    const missingMana = getMaxMana(draftEntity) - draftEntity.currMana;
 
     const newMana = Math.min(
-        draftEntity.maxMana,
+        getMaxMana(draftEntity),
         draftEntity.currMana + amount,
     );
     const newManaOverflow =
@@ -501,22 +503,31 @@ export function gainMana(entity, amount) {
 }
 
 export function loseMana(entity, amount) {
-    const overflowConsumed = Math.min(amount, entity.resources.manaOverflow);
-    const newOverflow = Math.max(
-        0,
-        entity.resources.manaOverflow - overflowConsumed,
+    let draftEntity = {
+        ...entity,
+    };
+
+    const overflowConsumed = Math.min(
+        amount,
+        draftEntity.resources[effectKeys.MANA_OVERFLOW],
+    );
+    const manaConsumed = Math.min(
+        amount - overflowConsumed,
+        draftEntity[effectKeys.MANA],
     );
 
-    const newMana = Math.max(0, entity.currMana - (amount - overflowConsumed));
-
-    return {
-        ...entity,
-        currMana: newMana,
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.MANA]: draftEntity[effectKeys.MANA] - manaConsumed,
         resources: {
-            ...entity.resources,
-            manaOverflow: newOverflow,
+            ...draftEntity.resources,
+            [effectKeys.MANA_OVERFLOW]:
+                draftEntity.resources[effectKeys.MANA_OVERFLOW] -
+                overflowConsumed,
         },
     };
+
+    return draftEntity;
 }
 
 export function processExitStargazer(prev, targetKey) {
@@ -742,6 +753,21 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                 ...draftAgent,
                 [effectKeys.MIRRORED_MOON]: moonKeys.CORONAL,
             };
+        }
+
+        // Blood Sacrifice
+        if (draftAgent[effectKeys.BLOOD_SACRIFICE] > 0) {
+            const bsLost = Math.floor(
+                draftAgent[effectKeys.BLOOD_SACRIFICE] / 2,
+            );
+
+            draftAgent = {
+                ...draftAgent,
+                [effectKeys.BLOOD_SACRIFICE]:
+                    draftAgent[effectKeys.BLOOD_SACRIFICE] - bsLost,
+            };
+
+            draftAgent = gainHp(draftAgent, bsLost);
         }
     }
 
@@ -994,8 +1020,10 @@ export function processEntityDeathStates(prev, entityKey) {
 
     // Precognition
     if (draftEntity.resources[effectKeys.PRECOGNITION] > 0) {
-        const missingMana =
-            draftEntity[effectKeys.MAX_MANA] - draftEntity[effectKeys.MANA];
+        const missingMana = Math.max(
+            0,
+            getMaxMana(draftEntity) - getEntityTotalMana(draftEntity),
+        );
 
         if (missingMana > 0) {
             const precogConsumed = Math.min(
@@ -1211,7 +1239,11 @@ export function getEntityStr(entity) {
             countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
     }
 
-    return Math.max(0, draftEntity.attributes.str.value + bonusSTR);
+    if (draftEntity[effectKeys.BLOOD_SACRIFICE] > 0) {
+        bonusSTR += draftEntity[effectKeys.BLOOD_SACRIFICE];
+    }
+
+    return Math.max(0, draftEntity.attributes.str.value + Math.floor(bonusSTR));
 }
 
 export function getEntityMaxHealth(entity) {
@@ -1427,6 +1459,24 @@ export function consumeLimitedResources(entity, amount) {
         [effectKeys.MANA]: manaConsumed,
     };
 
+    // Blood Sacrifice
+    const bsConsumed = Math.min(
+        draftEntity[effectKeys.BLOOD_SACRIFICE],
+        amount,
+    );
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.BLOOD_SACRIFICE]:
+            draftEntity[effectKeys.BLOOD_SACRIFICE] - bsConsumed,
+    };
+    amount -= bsConsumed;
+
+    totalLimitedResourcesConsumption += bsConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.BLOOD_SACRIFICE]: bsConsumed,
+    };
+
     // Health
     const healthConsumed = Math.min(getEntityTotalHealth(draftEntity), amount);
     draftEntity = loseHp(draftEntity, healthConsumed);
@@ -1438,7 +1488,7 @@ export function consumeLimitedResources(entity, amount) {
         [effectKeys.HEALTH]: healthConsumed,
     };
 
-    // total
+    // Total
     limitedResourcesConsumed = {
         ...limitedResourcesConsumed,
         totalLimitedResourcesConsumption: totalLimitedResourcesConsumption,
@@ -1560,8 +1610,12 @@ export function processHealth(entity) {
         ...entity,
     };
 
-    if (draftEntity[effectKeys.HEALTH] > getEntityMaxHealth(draftEntity)) {
-        // Converts excess Health into Silver Blood
+    if (
+        draftEntity[effectKeys.HEALTH] +
+            draftEntity[effectKeys.BLOOD_SACRIFICE] >
+        getEntityMaxHealth(draftEntity)
+    ) {
+        // On Selenian, converts excess Health into Silver Blood
         if (draftEntity.states[effectKeys.SELENIAN]) {
             const excessHealth = Math.max(
                 0,
@@ -1584,24 +1638,35 @@ export function processHealth(entity) {
                 },
             };
         }
-        // Removes excess Health
+        // Else, removes excess Health
         else {
             draftEntity = {
                 ...draftEntity,
-                [effectKeys.HEALTH]: getEntityMaxHealth(entity),
+                [effectKeys.HEALTH]: Math.max(
+                    0,
+                    getEntityMaxHealth(entity) -
+                        draftEntity[effectKeys.BLOOD_SACRIFICE],
+                ),
             };
+
+            // If still above, remove excess Blood Sacrifice
+            if (
+                draftEntity[effectKeys.HEALTH] +
+                    draftEntity[effectKeys.BLOOD_SACRIFICE] >
+                getEntityMaxHealth(draftEntity)
+            ) {
+                draftEntity = {
+                    ...draftEntity,
+                    [effectKeys.BLOOD_SACRIFICE]: getEntityMaxHealth(entity),
+                };
+            }
         }
     }
 
     // Convert Silver Blood into Health
     if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
-        const missingHp = Math.max(
-            0,
-            getEntityMaxHealth(draftEntity) - draftEntity[effectKeys.HEALTH],
-        );
-
         const silverConsumed = Math.min(
-            missingHp,
+            getMissingHealth(draftEntity),
             draftEntity.resources[effectKeys.SILVER_BLOOD],
         );
 
@@ -1935,7 +2000,7 @@ export function canUseAction(prev, entityKey, action) {
         }
         return (
             getEntityTotalMana(entity) >=
-            constants.SP_ATTACK_COST * entity[effectKeys.MAX_MANA]
+            constants.SP_ATTACK_COST * getMaxMana(entity)
         );
     }
     if (action === actionKeys.SACRIFICE) {
@@ -2186,6 +2251,11 @@ export function canUseCombatInteractions(
         return false;
     }
 
+    // Abandoned by Grace
+    if (prev.entities[entityKey].states[effectKeys.ABANDONED_BY_GRACE]) {
+        return false;
+    }
+
     return true;
 }
 
@@ -2282,8 +2352,7 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
             draftTarget = {
                 ...gainMana(
                     draftTarget,
-                    draftTarget[effectKeys.MAX_MANA] *
-                        constants.SKULD_MANA_REGEN,
+                    getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
                 ),
             };
 
@@ -2352,7 +2421,7 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
 
     const missingMana = Math.max(
         0,
-        draftTarget[effectKeys.MAX_MANA] - getEntityTotalMana(draftTarget),
+        getMaxMana(draftTarget) - getEntityTotalMana(draftTarget),
     );
 
     draftTarget = gainMana(
@@ -2663,24 +2732,24 @@ export function getEntityDR(prev, entityKey) {
     if (entity.states[effectKeys.GUARDING_STATE]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
-    if (entity.states[effectKeys.SACRIFICIAL_STATE]) {
-        const missingHealth = Math.max(
-            0,
-            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
-        );
+    if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
         drMult *=
             getEntityMaxHealth(entity) > 0
-                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                ? Math.max(
+                      0,
+                      1 -
+                          (entity[effectKeys.BLOOD_SACRIFICE] /
+                              getEntityMaxHealth(entity)) * 0.5,
+                  )
                 : 1;
     }
     if (isElementActive(entity, elementalKeys.WITHER)) {
-        const missingHealth = Math.max(
-            0,
-            getEntityMaxHealth(entity) - getEntityTotalHealth(entity),
-        );
         drMult *=
             getEntityMaxHealth(entity) > 0
-                ? Math.max(0, 1 - missingHealth / getEntityMaxHealth(entity))
+                ? Math.max(
+                      0,
+                      1 - getMissingHealth(entity) / getEntityMaxHealth(entity),
+                  )
                 : 1;
     }
     if (entity.states[effectKeys.DARK_EMBRACE]) {
@@ -3430,7 +3499,9 @@ export function raiseProvidence(prev, amount) {
         },
     };
 
-    const sinGain = Math.floor((amount - provGain) * constants.PROV_EXCESS_RATE);
+    const sinGain = Math.floor(
+        (amount - provGain) * constants.PROV_EXCESS_RATE,
+    );
 
     if (sinGain > 0) {
         const p1 = gainSin(extractEntity(post, entityKeys.PLAYER_ONE), sinGain);
@@ -3749,4 +3820,17 @@ export function getProvForVirtues(entity) {
 
 export function countBlasphemies(codex, blasKey) {
     return codex.filter((blas) => blas === blasKey).length;
+}
+
+export function getMaxMana(entity) {
+    return entity?.[effectKeys.MAX_MANA] ?? 0;
+}
+
+export function getMissingHealth(entity) {
+    return Math.max(
+        0,
+        getEntityMaxHealth(entity) -
+            getEntityTotalHealth(entity) -
+            entity[effectKeys.BLOOD_SACRIFICE],
+    );
 }

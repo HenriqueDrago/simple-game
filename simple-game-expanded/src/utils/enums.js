@@ -22,8 +22,8 @@ export const roundPhases = Object.freeze({
 
     RECKONING: "reckoning",
     ANOINTMENT: "anointment",
-    P1_TRIAL: "trial",
-    P2_TRIAL: "trial",
+    P1_TRIAL: "p1Trial",
+    P2_TRIAL: "p2Trial",
 
     ROUND_END: "roundEnd",
 });
@@ -133,9 +133,7 @@ export const actionKeys = Object.freeze({
 
 export const effectKeys = Object.freeze({
     GUARDING_STATE: "guarding",
-    MANA_BLEED: "manaBleed",
     MANA_OVERFLOW: "manaOverflow",
-    SACRIFICIAL_STATE: "sacrificial",
     RADIANCE: "radiance",
     RESOURCES: "resources",
     UMBRAL_CORE: "umbralCore",
@@ -150,6 +148,7 @@ export const effectKeys = Object.freeze({
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
+    CEREMONIAL: "ceremonial",
 
     DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
@@ -254,8 +253,6 @@ export const effectKeys = Object.freeze({
     CONDITION: "condition",
     SHORTCUTS: "shorcuts",
 
-    MISSING_HEALTH: "missingHealth",
-    MISSING_MANA: "missingMana",
     IRRADIATION: "irradiation",
 
     DEF_PEN: "defPen",
@@ -289,7 +286,6 @@ export const effectKeys = Object.freeze({
     HALLOWED_ECHOES: "hallowedEchoes",
     CODEX_OF_BLASPHEMY: "codexOfBlasphemy",
 
-    COVENANT: "covenant",
     STARS_OF_APOCALYPSE: "starsOfApocalypse",
     STARS_OF_GENESIS: "starsOfGenesis",
     BURDEN_OF_STIGMA: "burdenOfStigma",

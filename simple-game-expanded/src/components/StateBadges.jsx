@@ -11,7 +11,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.THERMAL_OVERLOAD, label: "Thermal Overload" },
     { key: effectKeys.VENTING, label: "Venting" },
     { key: effectKeys.GUARDING_STATE, label: "Guarding" },
-    { key: effectKeys.SACRIFICIAL_STATE, label: "Sacrificial" },
+    { key: effectKeys.CEREMONIAL, label: "CEREMONIAL" },
     { key: effectKeys.RADIANT, label: "Radiant" },
     { key: effectKeys.DARK_EMBRACE, label: "Dark Embrace" },
     { key: effectKeys.DIMMING_DARKNESS, label: "Dimming Darkness" },

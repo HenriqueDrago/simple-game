@@ -10,16 +10,13 @@ import {
     consumeResources,
     deleteCondition,
     extractEntity,
-    gainHp,
     gainSin,
     getEntityColoredStars,
     getEntityElement,
-    getEntityTotalMana,
     getProvForVirtues,
     isChoirActive,
     isEdictActive,
     isElementActive,
-    loseMana,
     loseProvidence,
     newDealDmg,
     processActionTypeUsed,
@@ -309,17 +306,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = { ...post.entities[targetKey] };
     }
 
-    // Mana Bleed
-    if (draftTarget[effectKeys.MANA_BLEED] > 0) {
-        const manaBleed = Math.min(
-            getEntityTotalMana(draftTarget),
-            draftTarget[effectKeys.MANA_BLEED],
-        );
-
-        draftTarget = loseMana(draftTarget, manaBleed);
-        draftTarget = gainHp(draftTarget, manaBleed);
-    }
-
     // Deployment
     if (draftTarget.states.deployment) {
         draftTarget = {
@@ -490,7 +476,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         states: {
             ...draftTarget.states,
             [effectKeys.GUARDING_STATE]: false,
-            [effectKeys.SACRIFICIAL_STATE]: false,
             [effectKeys.RADIANT]: false,
             [effectKeys.DARK_EMBRACE]: false,
             [effectKeys.DIMMING_DARKNESS]: false,
@@ -498,6 +483,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.EVENT_HORIZON]: false,
             [effectKeys.IMMACULATE]: false,
             [effectKeys.PIOUS]: false,
+            [effectKeys.CEREMONIAL]: false,
         },
     };
 
@@ -512,6 +498,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 ...draftTarget,
             },
         },
+        aiQueue: [],
     });
 }
 

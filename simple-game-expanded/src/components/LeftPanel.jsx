@@ -67,15 +67,6 @@ const RANKED_COUNTERS_CONFIG = {
             boxShadow: "inset 0 0 8px rgba(128, 216, 255, 0.3)",
         },
     },
-    [effectKeys.MANA_BLEED]: {
-        label: "MANA BLEED",
-        style: {
-            color: "#e6195e",
-            borderColor: "#ff3333",
-            backgroundColor: "rgba(220, 20, 60, 0.15)",
-            boxShadow: "inset 0 0 8px rgba(41, 121, 255, 0.25)",
-        },
-    },
     [effectKeys.STARBLIGHT]: {
         label: "STARBLIGHT",
         style: {
@@ -113,14 +104,6 @@ const FREE_STACKS_CONFIG = {
             backgroundColor: "rgba(213, 0, 0, 0.2)",
         },
     },
-    [effectKeys.COVENANT]: {
-        label: "Covenant",
-        style: {
-            color: "#ffb74d",
-            borderColor: "#f57c00",
-            backgroundColor: "rgba(245, 124, 0, 0.2)",
-        },
-    },
     [effectKeys.SACRED_FLAMES]: {
         label: "Sacred Flames",
         style: {
@@ -135,14 +118,6 @@ const FREE_STACKS_CONFIG = {
             color: "#f59e0b",
             borderColor: "#d97706",
             backgroundColor: "rgba(217, 119, 6, 0.2)",
-        },
-    },
-    [effectKeys.BLOOD_SACRIFICE]: {
-        label: "Blood Sacrifice",
-        style: {
-            color: "#ff3333",
-            borderColor: "#ff3333",
-            backgroundColor: "rgba(255, 51, 51, 0.2)",
         },
     },
     [effectKeys.PROPHECY_OF_DOOM]: {

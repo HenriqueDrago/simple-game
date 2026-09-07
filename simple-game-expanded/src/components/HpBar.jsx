@@ -16,18 +16,26 @@ function HpBar({ entity, simEntity }) {
 
     const baseHp = entity.currHp;
     const silverHp = entity.resources?.[effectKeys.SILVER_BLOOD] ?? 0;
+    const baseBs = entity[effectKeys.BLOOD_SACRIFICE] ?? 0;
 
     const simHp = simEntity ? simEntity.currHp : baseHp;
     const simSilver = simEntity
         ? (simEntity.resources?.[effectKeys.SILVER_BLOOD] ?? 0)
         : silverHp;
+    const simBs = simEntity
+        ? (simEntity[effectKeys.BLOOD_SACRIFICE] ?? 0)
+        : baseBs;
 
     const isHpSimulating =
-        simEntity && (simHp !== baseHp || simSilver !== silverHp);
+        simEntity &&
+        (simHp !== baseHp || simSilver !== silverHp || simBs !== baseBs);
 
     const displayHp = isHpSimulating ? simHp : baseHp;
     const displaySilver = isHpSimulating ? simSilver : silverHp;
+    const displayBs = isHpSimulating ? simBs : baseBs;
+
     const displayHasSilver = displaySilver > 0;
+    const displayHasBs = displayBs > 0;
 
     const silverTimes =
         maxHealth > 0 ? Math.floor(displaySilver / maxHealth) : 0;
@@ -40,6 +48,37 @@ function HpBar({ entity, simEntity }) {
         maxHealth > 0
             ? Math.min(100, (Math.max(0, simHp - baseHp) / maxHealth) * 100)
             : 0;
+
+    const baseBsLeft =
+        maxHealth > 0 ? Math.min(100, (baseHp / maxHealth) * 100) : 0;
+    const baseBsPercentage =
+        maxHealth > 0
+            ? Math.min(Math.max(0, 100 - baseBsLeft), (baseBs / maxHealth) * 100)
+            : 0;
+
+    const simBsLeft =
+        maxHealth > 0 ? Math.min(100, (simHp / maxHealth) * 100) : 0;
+    const simBsPercentage =
+        maxHealth > 0
+            ? Math.min(Math.max(0, 100 - simBsLeft), (simBs / maxHealth) * 100)
+            : 0;
+
+    const baseTotal = baseHp + baseBs;
+    const simTotal = simHp + simBs;
+
+    const lossWidth =
+        isHpSimulating && maxHealth > 0 && baseBs > 0 && simTotal < baseTotal
+            ? ((baseTotal - simTotal) / maxHealth) * 100
+            : 0;
+    const lossLeft =
+        isHpSimulating && maxHealth > 0 ? (simTotal / maxHealth) * 100 : 0;
+
+    const gainWidth =
+        isHpSimulating && maxHealth > 0 && simBs > baseBs && simTotal > baseTotal
+            ? ((simTotal - baseTotal) / maxHealth) * 100
+            : 0;
+    const gainLeft =
+        isHpSimulating && maxHealth > 0 ? (baseTotal / maxHealth) * 100 : 0;
 
     const silverPercentage =
         maxHealth > 0 ? Math.min(100, (silverHp / maxHealth) * 100) : 0;
@@ -82,6 +121,11 @@ function HpBar({ entity, simEntity }) {
                         ) : (
                             <span>{displayHp}</span>
                         )}
+                        {displayHasBs && (
+                            <span className="blood-sacrifice-hp">
+                                {` (+${displayBs})`}
+                            </span>
+                        )}
                     </span>
                     <span> / </span>
                     <span
@@ -116,6 +160,46 @@ function HpBar({ entity, simEntity }) {
                         style={{
                             left: `${hpGainLeft}%`,
                             width: `${hpGainWidth}%`,
+                        }}
+                    />
+                )}
+
+                {baseBsPercentage > 0 && (
+                    <div
+                        className="bs-fill base-bs"
+                        style={{
+                            left: `${baseBsLeft}%`,
+                            width: `${baseBsPercentage}%`,
+                        }}
+                    />
+                )}
+
+                {isHpSimulating && simBsPercentage > 0 && (
+                    <div
+                        className="bs-fill sim-bs"
+                        style={{
+                            left: `${simBsLeft}%`,
+                            width: `${simBsPercentage}%`,
+                        }}
+                    />
+                )}
+
+                {lossWidth > 0 && (
+                    <div
+                        className="preview-chunk bs-loss"
+                        style={{
+                            left: `${lossLeft}%`,
+                            width: `${lossWidth}%`,
+                        }}
+                    />
+                )}
+
+                {gainWidth > 0 && (
+                    <div
+                        className="preview-chunk bs-gain"
+                        style={{
+                            left: `${gainLeft}%`,
+                            width: `${gainWidth}%`,
                         }}
                     />
                 )}

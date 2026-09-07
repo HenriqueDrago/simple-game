@@ -33,6 +33,7 @@ const EFFECT_COLORS = {
     AZURE_CONSTELLATION: "#00bfff",
     CONSTELLATION: "#DAA520",
     DIVINE_SPARK: "#ffd93b",
+    BLOOD_SACRIFICE: "#da291c",
 };
 
 function getStatColors(attr, entity) {
@@ -45,6 +46,9 @@ function getStatColors(attr, entity) {
     if (attr === "str") {
         if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0) {
             colors.push(EFFECT_COLORS.URD);
+        }
+        if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
+            colors.push(EFFECT_COLORS.BLOOD_SACRIFICE);
         }
         if (
             entity[effectKeys.RECOLLECTION] > 0 &&

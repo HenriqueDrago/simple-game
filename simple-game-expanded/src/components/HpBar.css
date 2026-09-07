@@ -46,6 +46,11 @@
     text-shadow: 0 0 3px rgba(230, 242, 255, 0.5);
 }
 
+.blood-sacrifice-hp {
+    color: #ff4d4d;
+    text-shadow: 0 0 3px rgba(255, 77, 77, 0.4);
+}
+
 .label-nature {
     color: var(--nature-color, #2e7d32);
 }
@@ -69,6 +74,22 @@
     z-index: 1;
 }
 
+.bs-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: #8a0303;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.bs-fill.base-bs {
+    z-index: 3;
+}
+
+.bs-fill.sim-bs {
+    z-index: 4;
+}
+
 .overgrowth-hp-fill {
     position: absolute;
     top: 0;
@@ -76,7 +97,7 @@
     height: 100%;
     background-color: #c2c9d2;
     transition: width 0.3s ease-in-out;
-    z-index: 3;
+    z-index: 6;
 }
 
 .preview-chunk {
@@ -98,8 +119,26 @@
 
 .preview-chunk.hp-gain {
     background-color: rgba(255, 255, 255, 0.4);
-    z-index: 2;
+    z-index: 4;
     transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.preview-chunk.bs-loss {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65);
+    transition: left 0.3s ease-in-out, width 0.2s ease-out;
+    z-index: 5;
+}
+
+.preview-chunk.bs-gain {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: rgba(218, 41, 28, 0.5);
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+    z-index: 5;
 }
 
 .preview-chunk.silver-loss {
@@ -109,11 +148,11 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.65);
     transition: width 0.2s ease-out;
-    z-index: 4;
+    z-index: 7;
 }
 
 .preview-chunk.silver-gain {
     background-color: rgba(255, 255, 255, 0.4);
-    z-index: 4;
+    z-index: 7;
     transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
 }

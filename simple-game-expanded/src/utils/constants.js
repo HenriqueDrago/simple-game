@@ -17,7 +17,6 @@ import {
     GENERAL_DESCRIPTIONS,
     LUNATIC_DESCRIPTIONS,
     MAESTRO_DESCRIPTIONS,
-    BASIC_DESCRIPTIONS,
     PALADIN_DESCRIPTIONS,
     SHADOW_SORCERER_DESCRIPTIONS,
     VOYAGER_DESCRIPTIONS,
@@ -126,8 +125,6 @@ export const constants = Object.freeze({
     LUNAR_VEIL_TEARS_GAIN: 1,
     INITIAL_POINTS_AVAILABLE: 10,
     SP_ATTACK_COST: 0.6,
-    MANA_BLEED_MULT: 0.5,
-    BLOOD_SACRIFICE_MULT: 1.0,
     ARRAY_DURATION: 3,
     MANA_SHACKLE_TURN_GAIN: 5,
     MAX_OVERHEAT: 100,
@@ -174,13 +171,11 @@ export const FREE_RESOURCES = [
     effectKeys.DISSONANCE,
     effectKeys.PRECOGNITION,
     effectKeys.PROPHECY_OF_DOOM,
-    effectKeys.BLOOD_SACRIFICE,
     effectKeys.STARDUST,
     effectKeys.MOONSHINE,
     effectKeys.RADIANCE,
     effectKeys.SACRILEGE,
     effectKeys.MARTHYR,
-    effectKeys.COVENANT,
     effectKeys.PENITENCE,
     effectKeys.INSPIRATION,
     effectKeys.MOTES_OF_RUIN,
@@ -198,15 +193,6 @@ export const presetAi = {
         caller: simpleAI,
         desc: [...Object.keys(GENERAL_DESCRIPTIONS)],
     },
-    [aiKeys.SIMPLE]: {
-        name: "Mundane",
-        best: {
-            str: 5,
-            def: 5,
-        },
-        caller: simpleAI,
-        desc: [...Object.keys(BASIC_DESCRIPTIONS)],
-    },
     [aiKeys.WARLOCK]: {
         name: "Warlock",
         best: {
@@ -219,7 +205,7 @@ export const presetAi = {
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
         best: {
-            str: 10,
+            str: 0,
             def: 0,
         },
         caller: bloodknightAI,
@@ -228,8 +214,8 @@ export const presetAi = {
     [aiKeys.PALADIN]: {
         name: "Paladin",
         best: {
-            str: 0,
-            def: 10,
+            str: 5,
+            def: 5,
         },
         caller: paladinAI,
         desc: [...Object.keys(PALADIN_DESCRIPTIONS)],
@@ -237,8 +223,8 @@ export const presetAi = {
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
-            str: 0,
-            def: 10,
+            str: 3,
+            def: 7,
         },
         caller: shadowSorcererAI,
         desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
@@ -444,8 +430,7 @@ export const INITIAL_GAME_STATE = {
 
     progressStatus: {
         [aiKeys.HUMAN]: progKeys.ALWAYS_OPEN,
-        [aiKeys.SIMPLE]: progKeys.OPEN_UNDEFEATED,
-        [aiKeys.WARLOCK]: progKeys.LOCKED,
+        [aiKeys.WARLOCK]: progKeys.OPEN_UNDEFEATED,
         [aiKeys.BLOODKNIGHT]: progKeys.LOCKED,
         [aiKeys.AUGUR]: progKeys.LOCKED,
         [aiKeys.CYBORG]: progKeys.LOCKED,
@@ -471,10 +456,10 @@ export const INITIAL_GAME_STATE = {
             ...distributePoints(
                 createBaseEntity(),
                 sdmKeys.CUSTOM,
-                presetAi[aiKeys.SIMPLE].best,
+                presetAi[aiKeys.WARLOCK].best,
                 true,
             ),
-            controller: aiKeys.SIMPLE,
+            controller: aiKeys.WARLOCK,
             statDistributionMode: sdmKeys.CUSTOM,
         },
     },
@@ -711,7 +696,6 @@ export const FIXED_RESOURCES = [
 ];
 
 export const RANKED_RESOURCES = [
-    effectKeys.MANA_BLEED,
     effectKeys.STARBLIGHT,
     effectKeys.CONSTELLATION,
     effectKeys.CRIMSON_CONSTELLATION,

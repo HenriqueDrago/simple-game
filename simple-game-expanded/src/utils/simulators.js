@@ -9,14 +9,12 @@ import {
     exitAllStates,
     getEntityDef,
     getEntityStr,
-    getEntityTotalHealth,
     loseHp,
     getEntityMaxHealth,
     getEntityTotalMana,
     addRune,
     translateElementIntoCrystals,
     newDealDmg,
-    consumeLimitedResources,
     gainEnlit,
     resetAttr,
     raiseProvidence,
@@ -30,6 +28,9 @@ import {
     processExitAscendence,
     isEdictActive,
     getRevelation,
+    getMaxMana,
+    getMissingHealth,
+    gainSin,
 } from "./entities.js";
 import {
     actionKeys,
@@ -100,10 +101,10 @@ export const simulators = {
 
 function simulateGuard({ prev, agent, agentKey }) {
     const newMana = Math.min(
-        agent[effectKeys.MAX_MANA],
+        getMaxMana(agent),
         Math.floor(
             agent[effectKeys.MANA] +
-                agent[effectKeys.MAX_MANA] * constants.GUARD_MANA_REGEN,
+                getMaxMana(agent) * constants.GUARD_MANA_REGEN,
         ),
     );
 
@@ -148,45 +149,30 @@ function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     };
 }
 
-function simulateSacrifice({ prev, agent, agentKey }) {
-    let draftAgent = {
-        ...agent,
+function simulateSacrifice({ prev, agentKey }) {
+    let post = {
+        ...prev,
     };
 
-    const realHealth = getEntityTotalHealth(draftAgent);
-    const dmgTaken = Math.ceil(realHealth * constants.SAC_HP_CONSUMPTION);
-
-    const hpConsumed = Math.min(realHealth, dmgTaken);
-    const newManaBleed =
-        draftAgent[effectKeys.MANA_BLEED] +
-        Math.ceil(hpConsumed * constants.MANA_BLEED_MULT);
-
-    draftAgent = loseHp(draftAgent, hpConsumed);
+    let draftAgent = extractEntity(post, agentKey);
 
     draftAgent = {
         ...draftAgent,
-        [effectKeys.MAX_MANA]: draftAgent[effectKeys.MAX_MANA] + hpConsumed,
-        [effectKeys.MANA_BLEED]: newManaBleed,
-        resources: {
-            ...draftAgent.resources,
-            [effectKeys.BLOOD_SACRIFICE]:
-                draftAgent.resources[effectKeys.BLOOD_SACRIFICE] + hpConsumed,
-        },
         states: {
             ...draftAgent.states,
-            [effectKeys.SACRIFICIAL_STATE]: true,
+            [effectKeys.CEREMONIAL]: true,
         },
     };
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-        },
-    };
+    const hpLoss = Math.ceil(
+        draftAgent[effectKeys.HEALTH] * constants.SAC_HP_CONSUMPTION,
+    );
+
+    draftAgent = loseHp(draftAgent, hpLoss);
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
@@ -208,9 +194,7 @@ function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
 
     post = newDealDmg(
         post,
-        getEntityStr(agent) +
-            radiance +
-            agent.resources[effectKeys.BLOOD_SACRIFICE],
+        getEntityStr(agent) + radiance,
         nonAgentKey,
         dmgTypes.PHYSICAL,
         agentKey,
@@ -227,7 +211,7 @@ function simulateSpecialAttack({ prev, agentKey, nonAgentKey }) {
     let draftAgent = extractEntity(post, agentKey);
     draftAgent = loseMana(
         draftAgent,
-        draftAgent[effectKeys.MAX_MANA] * constants.SP_ATTACK_COST,
+        getMaxMana(draftAgent) * constants.SP_ATTACK_COST,
     );
 
     post = replaceEntity(post, draftAgent, agentKey);
@@ -268,12 +252,12 @@ function simulateHeal({ prev, agent, agentKey }) {
     };
 
     const base_heal = Math.min(
-        getEntityMaxHealth(agent) - agent[effectKeys.HEALTH],
+        getMissingHealth(agent),
         getEntityTotalMana(agent),
     );
 
-    draftAgent = gainHp(draftAgent, base_heal);
     draftAgent = loseMana(draftAgent, base_heal);
+    draftAgent = gainHp(draftAgent, base_heal);
 
     return {
         ...prev,
@@ -366,7 +350,7 @@ function simulateShadowMantle({
 
 function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newLE =
-        agent.resources[effectKeys.SHADOWFLAME] +
+        Math.floor(agent.resources[effectKeys.SHADOWFLAME] / 2) +
         agent.resources[effectKeys.LINGERING_EMBER];
     return {
         ...prev,
@@ -821,9 +805,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
 
 function simulateLunarSmite({ prev, agent, agentKey, nonAgentKey }) {
     const extraDmg =
-        agent[effectKeys.MAX_HEALTH] -
-        agent[effectKeys.HEALTH] +
-        (agent[effectKeys.MAX_MANA] - agent[effectKeys.MANA]);
+        getMissingHealth(agent) + (getMaxMana(agent) - agent[effectKeys.MANA]);
 
     const baseDmg = Math.floor(
         agent[effectKeys.MOONLIGHT] *
@@ -982,21 +964,27 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
         ...post.entities[agentKey],
     };
 
-    const result = consumeLimitedResources(draftAgent, Infinity);
+    const result = consumeResources(draftAgent, Infinity, actionKeys.ASCEND);
 
     draftAgent = result.draftEntity;
 
     draftAgent = {
         ...draftAgent,
         [effectKeys.MAX_ENLIGHTENMENT]:
-            draftAgent[effectKeys.MAX_HEALTH] + draftAgent[effectKeys.MAX_MANA],
+            getEntityMaxHealth(draftAgent) + getMaxMana(draftAgent),
         [effectKeys.MAX_HEALTH]: 0,
         [effectKeys.MAX_MANA]: 0,
     };
 
     draftAgent = gainEnlit(
         draftAgent,
-        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+        result.resourcesConsumed.totalLimitedResourcesConsumption,
+    );
+
+    draftAgent = gainSin(
+        draftAgent,
+        result.resourcesConsumed.totalConsumption -
+            result.resourcesConsumed.totalLimitedResourcesConsumption,
     );
 
     draftAgent = {
@@ -1053,29 +1041,6 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
-
-    // Covenant
-    const cov = draftAgent.resources[effectKeys.COVENANT];
-    if (cov > 0) {
-        draftAgent = {
-            ...draftAgent,
-            resources: {
-                ...draftAgent.resources,
-                [effectKeys.COVENANT]: 0,
-            },
-        };
-
-        post = replaceEntity(post, draftAgent, agentKey);
-        post = newDealDmg(
-            post,
-            cov,
-            [nonAgentKey],
-            tarnishTypes.LUNIC,
-            agentKey,
-        );
-        draftAgent = extractEntity(post, agentKey);
-    }
-
     let extraFinalDmg = 0;
     let extraBaseDmg = 0;
 
@@ -1150,22 +1115,6 @@ function simulateSupplicate({ prev, agentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
-
-    // Covenant
-    const cov = draftAgent.resources[effectKeys.COVENANT];
-    if (cov > 0) {
-        draftAgent = {
-            ...draftAgent,
-            [effectKeys.MAX_ENLIGHTENMENT]:
-                draftAgent[effectKeys.MAX_ENLIGHTENMENT] + cov,
-            resources: {
-                ...draftAgent.resources,
-                [effectKeys.COVENANT]: 0,
-            },
-        };
-    }
-
-    post = replaceEntity(post, draftAgent, agentKey);
 
     // Supplicate
     if (isEdictActive(draftAgent, edictKeys.PRINCIPALITIES)) {

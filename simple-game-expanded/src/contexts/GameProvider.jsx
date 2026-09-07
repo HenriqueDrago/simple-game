@@ -411,9 +411,9 @@ export default function GameProvider({ children }) {
                             ...distributePoints(
                                 createBaseEntity(),
                                 sdmKeys.BEST,
-                                presetAi[aiKeys.SIMPLE].best,
+                                presetAi[aiKeys.WARLOCK].best,
                             ),
-                            controller: aiKeys.SIMPLE,
+                            controller: aiKeys.WARLOCK,
                             statDistributionMode: sdmKeys.BEST,
                         },
                     },
@@ -950,7 +950,6 @@ export default function GameProvider({ children }) {
                                     0 ||
                                 currEntity.resources[effectKeys.SACRILEGE] >
                                     0 ||
-                                currEntity.resources[effectKeys.COVENANT] > 0 ||
                                 currEntity.resources[effectKeys.MARTHYR] > 0 ||
                                 currEntity[effectKeys.BAD_OMEN] > 0);
 
@@ -1002,9 +1001,11 @@ export default function GameProvider({ children }) {
 
     // AI Controller
     useEffect(() => {
+        
         if (game.paused || !getCurrActivePlayer(game)) {
             return;
         }
+
 
         const targetKey = getCurrActivePlayer(game);
         const nonTargetKey = getOtherEntity(targetKey);
@@ -1036,13 +1037,20 @@ export default function GameProvider({ children }) {
             }
 
             const aiTimer = setTimeout(async () => {
+                
                 // Await the async result first so setGame receives clean state object, not a Promise
                 const updatedGame = await centralAIManagement(
                     game,
                     targetKey,
                     nonTargetKey,
                 );
-                setGame(updatedGame);
+                setGame((prev) => {
+                    return {
+                        ...updatedGame,
+                        speed: prev.speed,
+                        paused: prev.paused,
+                    };
+                });
             }, delay * gameSpeeds[game.speed].mod);
 
             return () => {
@@ -1053,11 +1061,10 @@ export default function GameProvider({ children }) {
         game.status,
         game.roundIndex,
         game.paused,
-        game.aiQueue?.length,
-        game.playerQueue?.length,
+        game.aiQueue,
+        game.playerQueue,
         game.entities,
-        game.roundQueue?.length,
-        getCurrActivePlayer(game),
+        game.roundQueue,
     ]);
 
     // Round Transition

@@ -290,7 +290,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "FREE RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, DISSONANCE, PRECOGNITION, PROPHECY OF DOOM, BLOOD SACRIFICE, STARDUST, MOONSHINE, RADIANCE, SAACRILEGE, MARTHYR, COVENANT and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
+            "A subset of RESOURCES that have no upper cap. Includes SHADOWFLAME, UNRELENTING SHADOWS, CINDERS, DISSONANCE, PRECOGNITION, PROPHECY OF DOOM, BLOOD SACRIFICE, STARDUST, MOONSHINE, RADIANCE, SAACRILEGE, MARTHYR and SACRED FLAMES. When FREE RESOURCES are consumed, they're consumed in this order. When they're restored, they're restored in reverse order.",
     },
 
     [entryTypes.LIMITED_RESOURCE]: {
@@ -376,12 +376,12 @@ export const GENERAL_DESCRIPTIONS = {
     },
 };
 
-export const BASIC_DESCRIPTIONS = {
-    [aiKeys.SIMPLE]: {
-        name: "MUNDANE",
+export const WARLOCK_DESCRIPTIONS = {
+    [aiKeys.WARLOCK]: {
+        name: "WARLOCK",
         type: entryTypes.CONTROLLER,
         description:
-            "A tutorial enemy. Repeatedly uses ATTACK, switching to GUARD or HEAL when in danger. In PROGRESSION MODE, defeat this enemy to unlock the WARLOCK enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The first challenge. Focuses on the use of SPECIAL ATTACK and on replenishing MANA for maximizing it's damage, utilizing of HEAL or GUARD when at low HEALTH. In PROGRESSION MODE, defeat this enemy to unlock the BLOODKNIGHT enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.ATTACK]: {
@@ -393,7 +393,8 @@ export const BASIC_DESCRIPTIONS = {
     [actionKeys.GUARD]: {
         name: "GUARD",
         type: entryTypes.DEFENSIVE_ACTION,
-        description: "Replenishes 30% of MAX MANA and enters GUARDING state.",
+        description:
+            "Replenishes missing MANA by 30% of MAX MANA. Enters GUARDING state.",
     },
 
     [effectKeys.GUARDING_STATE]: {
@@ -408,21 +409,12 @@ export const BASIC_DESCRIPTIONS = {
         type: entryTypes.DEFENSIVE_ACTION,
         description: "Consumes MANA to replenish missing HEALTH.",
     },
-};
-
-export const WARLOCK_DESCRIPTIONS = {
-    [aiKeys.WARLOCK]: {
-        name: "WARLOCK",
-        type: entryTypes.CONTROLLER,
-        description:
-            "The first challenge. Focuses on the use of SPECIAL ATTACK and on replenishing MANA for maximizing it's damage. In PROGRESSION MODE, defeat this enemy to unlock the BLOODKNIGHT enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
-    },
 
     [actionKeys.SPECIAL_ATTACK]: {
         name: "SPECIAL ATTACK",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STRENGTH. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA equal to the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA equal to the difference. Cannot be when MANA is lower than 60% of MAX MANA.",
+            "Consumes MANA equal to 60% of MAX MANA. Deals PIERCING DAMAGE equal to the user's STRENGTH. If the user's MANA is higher than the target's, increases final damage dealt and restores the opponent's MANA by the difference. If the user's MANA is lower than the target's, decreases final damage dealt and restores the user's MANA by the difference. Cannot be used when MANA is lower than 60% of MAX MANA.",
     },
 };
 
@@ -431,35 +423,28 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "BLOODKNIGHT",
         type: entryTypes.CONTROLLER,
         description:
-            "The second challenge. Focuses on the use of SACRIFICE to increase the PHYSICAL DAMAGE dealt, utilizing of the MANA BLEED mechanics to turn GUARD into delayed healing. In PROGRESSION MODE, defeat this enemy to unlock the SACRIFICE action and the PALADIN enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The second challenge. ???. In PROGRESSION MODE, defeat this enemy to unlock the SACRIFICE action and the PALADIN enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.SACRIFICE]: {
         name: "SACRIFICE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Halves current total HEALTH. Gains BLOOD SACRIFICE and increases MAX MANA equal to the total HEALTH lost this way, raises MANA BLEED rank by half the HEALTH lost this way. Enters SACRIFICIAL state.",
+            "Enters CEREMONIAL state. Then, halves current HEALTH.",
     },
 
-    [effectKeys.SACRIFICIAL_STATE]: {
-        name: "SACRIFICIAL",
+    [effectKeys.CEREMONIAL]: {
+        name: "CEREMONIAL",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by the user's missing HEALTH percentage. At turn start, exits this state.",
+            "When losing HEALTH, converts HEALTH lost into BLOOD SACRIFICE. At turn start, exits this state.",
     },
 
     [effectKeys.BLOOD_SACRIFICE]: {
         name: "BLOOD SACRIFICE",
-        type: entryTypes.FREE_RESOURCE,
+        type: entryTypes.LIMITED_RESOURCE,
         description:
-            "When using ATTACK, increases the damage dealt by BLOOD SACRIFICE on self.",
-    },
-
-    [effectKeys.MANA_BLEED]: {
-        name: "MANA BLEED",
-        type: entryTypes.RANKED_RESOURCE,
-        description:
-            "At turn start, loses MANA equal to MANA BLEED current rank and restores an equal amount of HEALTH.",
+            "Capped by MAX HEALTH. Cannot be replenished. Clogs the HEALTH bar, preventing further healing. Raises STRENGTH by BLOOD SACRIFICE on self. When using a DEFENSIVE ACTION, converts half the BLOOD SACRIFICE on self into HEALTH.",
     },
 };
 
@@ -586,7 +571,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "RITUAL OF ASH",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME on self. Gains LINGERING EMBER equal to the amount extinguished.",
+            "Extinguishes all SHADOWFLAME on self. Gains LINGERING EMBER equal to half the amount extinguished.",
     },
 
     [actionKeys.DARK_PROMISE]: {
@@ -855,7 +840,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "CHART",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Gains 3 WHITE STAR. Converts all GRAY STAR on self into WHITE STAR. If not on STARGAZER state, enters STARGAZER state.",
+            "Enters STARGAZER state. Gains 3 WHITE STAR. Converts all GRAY STAR on self into WHITE STAR.",
     },
 
     [effectKeys.STARGAZER]: {
@@ -1363,7 +1348,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all LIMITED RESOURCES on self and sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0 and replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises TARNISHED SIN by 0.5% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
@@ -1763,7 +1748,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "BLASPHEMY OF YESTERDAY",
         type: entryTypes.BLASPHEMY,
         description:
-            "When expunged, lowers the user's TARNISHED SIN by a tenth of their missing ENLIGTENMENT percentage.",
+            "When expunged, lowers the user's TARNISHED SIN by a tenth of their missing ENLIGHTENMENT percentage.",
     },
 
     [blasphemyKeys.TODAY]: {
@@ -1870,7 +1855,6 @@ export const SERAPH_DESCRIPTIONS = {
 
 export const DESCRIPTIONS = {
     ...GENERAL_DESCRIPTIONS,
-    ...BASIC_DESCRIPTIONS,
     ...WARLOCK_DESCRIPTIONS,
     ...BLOODKNIGHT_DESCRIPTIONS,
     ...PALADIN_DESCRIPTIONS,
