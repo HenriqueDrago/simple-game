@@ -1,4 +1,4 @@
-.header-scoreboard-bar {
+.hdr-scoreboard-bar {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -6,35 +6,40 @@
     width: 100%;
     height: 64px;
     padding: 0 28px;
+    gap: 20px; /* Gap between the 3 main sections (left, center, right) */
     box-sizing: border-box;
     background-color: #000000;
     border-bottom: 2px solid #ffffff;
+    white-space: nowrap; /* Prevents text wrapping across the header */
 }
 
 /* Left Slot */
-.header-left {
+.hdr-left {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    white-space: nowrap;
 }
 
-.main-title {
+.hdr-main-title {
     font-size: 1.2rem;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 2px;
     color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
 }
 
 /* Center Slot */
-.header-center {
+.hdr-center {
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
 }
 
-.scoreboard-badge {
+.hdr-scoreboard-badge {
     background-color: #ffffff;
     color: #000000;
     padding: 6px 24px;
@@ -42,23 +47,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
 }
 
-.scoreboard-badge span {
+.hdr-scoreboard-badge span {
     font-size: 1.15rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 2px;
+    white-space: nowrap;
 }
 
 /* Header Settings Box */
-.header-settings-container {
+.hdr-settings-container {
     display: flex;
-    align-items: stretch; /* Stretches both setting boxes to equal height */
+    align-items: stretch;
     gap: 12px;
+    white-space: nowrap;
 }
 
-.sharp-setting-box {
+.hdr-setting-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -69,16 +77,18 @@
     border: 2px solid #ffffff;
     border-radius: 0;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
-.sharp-setting-box label {
+.hdr-setting-box label {
     font-weight: bold;
     color: #ffffff;
     text-transform: uppercase;
     font-size: 0.92rem;
+    white-space: nowrap;
 }
 
-.sharp-select {
+.hdr-select {
     padding: 2px 6px;
     background-color: #000000;
     color: #ffffff;
@@ -91,37 +101,40 @@
     outline: none;
     height: 100%;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
-.sharp-select option {
+.hdr-select option {
     background-color: #000000;
     color: #ffffff;
 }
 
-.sharp-setting-box.disabled {
+.hdr-setting-box.disabled {
     opacity: 0.4;
     pointer-events: none;
     filter: grayscale(80%);
 }
 
-.hover-help {
+.hdr-hover-help {
     color: white;
     opacity: 0.6;
     font-size: 0.85rem;
     margin-left: auto;
     align-self: center;
     cursor: help;
+    white-space: nowrap;
 }
 
-.switch-help-container {
+.hdr-switch-help-container {
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     gap: 3px;
+    white-space: nowrap;
 }
 
-.sharp-btn-icon {
+.hdr-btn-icon {
     background-color: #000000;
     color: #ffffff;
     border: 1px solid #ffffff;
@@ -131,48 +144,28 @@
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    flex-shrink: 0;
     transition:
         background-color 0.2s ease,
         color 0.2s ease;
 }
 
-.sharp-btn-icon:hover {
+.hdr-btn-icon:hover {
     background-color: #ffffff;
     color: #000000;
 }
 
 /* Right Slot */
-.header-right {
+.hdr-right {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
+    white-space: nowrap;
 }
 
-.sharp-btn-header {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #000000;
-    color: #ffffff;
-    border: 2px solid #ffffff;
-    border-radius: 0;
-    padding: 8px 20px;
-    font-size: 0.95rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    cursor: pointer;
-    line-height: 1;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.sharp-btn-header:hover {
-    background-color: #ffffff;
-    color: #000000;
-}
-
-.sharp-btn-header {
+.hdr-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -188,15 +181,19 @@
     line-height: 1;
     box-sizing: border-box;
     height: 38px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
-.sharp-btn-header:hover {
+.hdr-btn:hover {
     background-color: #ffffff;
     color: #000000;
 }
 
-.sharp-btn-header.icon-btn {
+.hdr-btn.hdr-icon-btn {
     width: 38px;
     padding: 0;
     aspect-ratio: 1 / 1;

@@ -425,6 +425,7 @@ export const INITIAL_GAME_STATE = {
     undoPile: [],
     redoPile: [],
     aiQueue: [],
+    newcomer: true,
 
     speed: speedKeys.ONE,
 

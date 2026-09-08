@@ -293,7 +293,9 @@ button:disabled:hover {
     border: 2px solid #ffd700 !important;
     padding: 18px 45px !important;
     font-size: 1.4rem !important;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 225, 89, 0.3) !important;
+    box-shadow:
+        0 0 15px rgba(255, 215, 0, 0.6),
+        inset 0 0 10px rgba(255, 225, 89, 0.3) !important;
     font-weight: 900 !important;
     letter-spacing: 2px !important;
     text-transform: uppercase !important;
@@ -359,4 +361,36 @@ button:disabled:hover {
             0 0 28px rgba(255, 85, 0, 0.9),
             inset 0 0 16px rgba(255, 200, 0, 0.6);
     }
+}
+
+.action-panel-single-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.action-panel-single-button button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    padding: 14px 48px;
+    height: 52px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-panel-single-button button:hover {
+    background-color: #ffffff;
+    color: #000000;
 }

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import Backdrop from "./Backdrop";
 import "./Modal.css";
 
 function Modal({
@@ -10,7 +11,6 @@ function Modal({
     confirmAction = () => {},
     rejectAction = () => {},
 }) {
-    // Executes on mount
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
@@ -24,18 +24,25 @@ function Modal({
 
         window.addEventListener("keydown", handleKeyDown);
 
-        // the return function is only executed on unmount
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [isConfirmOnly, confirmAction, rejectAction]);
 
+    const handleBackdropClick = (e) => {
+        if (isConfirmOnly) {
+            confirmAction(e);
+        } else {
+            rejectAction(e);
+        }
+    };
+
     return (
-        <div className="modal-overlay">
-            <div className="modal-container">
+        <Backdrop onClick={handleBackdropClick} zIndex={9999}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-text-container">
                     <span className="modal-main-text">{mainText}</span>
-                    <span className="modal-sub-text">{subText}</span>
+                    {subText && <span className="modal-sub-text">{subText}</span>}
                 </div>
                 <div className="modal-button-container">
                     <button onClick={confirmAction} className="modal-confirm">
@@ -48,7 +55,7 @@ function Modal({
                     )}
                 </div>
             </div>
-        </div>
+        </Backdrop>
     );
 }
 

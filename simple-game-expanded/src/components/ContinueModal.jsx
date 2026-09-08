@@ -19,7 +19,7 @@ export default function ContinueModal() {
                 </span>
                 <div className="continue-modal-buttons">
                     <button
-                        className="sharp-btn"
+                        className="continue-modal-btn"
                         onClick={() => {
                             setUIElements((prev) => {
                                 return {
@@ -39,7 +39,7 @@ export default function ContinueModal() {
                         Continue
                     </button>
                     <button
-                        className="sharp-btn"
+                        className="continue-modal-btn"
                         onClick={() => {
                             setUIElements((prev) => {
                                 return {
@@ -67,7 +67,7 @@ export default function ContinueModal() {
                     Warning: This will clear all your progress and settings.
                 </span>
                 <button
-                    className="sharp-btn danger"
+                    className="continue-modal-btn danger"
                     onClick={() => {
                         setUIElements((prev) => {
                             return {

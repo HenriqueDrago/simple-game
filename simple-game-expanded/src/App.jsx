@@ -7,6 +7,7 @@ import Glossary from "./components/Glossary.jsx";
 import Modal from "./components/Modal.jsx";
 import ContinueModal from "./components/ContinueModal.jsx";
 import History from "./components/History.jsx";
+import Backdrop from "./components/Backdrop.jsx";
 
 import "./App.css";
 
@@ -18,6 +19,8 @@ import {
 } from "./utils/constants.js";
 import { speedKeys, turnStatus } from "./utils/enums.js";
 import { useEffect } from "react";
+import NewcomerModal from "./components/NewcomerModal.jsx";
+import InsertCode from "./components/InsertCode.jsx";
 
 // App Component
 function App() {
@@ -29,6 +32,9 @@ function App() {
         handleSpeedAbs,
         handleUndo,
         handleRedo,
+        handleStart,
+        handleRetry,
+        handleResetGame,
     } = useGame();
     const {
         UIElements,
@@ -36,68 +42,119 @@ function App() {
         tooltipStack,
         handleClearTooltip,
         setGlossarySpecs,
+        isAnyOverlayOpen,
     } = useUI();
 
     // Event Listeners
     useEffect(() => {
         function handleKeyDown(e) {
-            // Pause/Unpause
-            if (
-                (e.code === "Space" || e.key === " ") &&
-                game.status !== turnStatus.SETUP
-            ) {
-                e.preventDefault();
-                setGame((prev) => {
-                    return {
-                        ...prev,
-                        paused: !prev?.paused,
-                    };
-                });
+            // Disable shortcuts when typing inside input/textarea bars
+            const isInputFocused =
+                e.target.tagName === "INPUT" ||
+                e.target.tagName === "TEXTAREA" ||
+                e.target.isContentEditable;
+
+            if (isInputFocused) {
+                return;
             }
 
-            // Speed Controls
-            if (game.status !== turnStatus.SETUP) {
-                if (e.code === "KeyF" || e.key === "f" || e.key === "F") {
-                    handleSpeed(1);
-                } else if (
-                    e.key === "1" ||
-                    e.code === "Digit1" ||
-                    e.code === "Numpad1"
-                ) {
+            // Enable Game Shortcuts only when all overlays are disabled
+            if (!isAnyOverlayOpen()) {
+                // Pause / Unpause & Start
+                if (e.code === "Space" || e.key === " ") {
                     e.preventDefault();
-                    handleSpeedAbs(speedKeys.ONE);
-                } else if (
-                    e.key === "2" ||
-                    e.code === "Digit2" ||
-                    e.code === "Numpad2"
-                ) {
-                    e.preventDefault();
-                    handleSpeedAbs(speedKeys.TWO);
-                } else if (
-                    e.key === "3" ||
-                    e.code === "Digit3" ||
-                    e.code === "Numpad3"
-                ) {
-                    e.preventDefault();
-                    handleSpeedAbs(speedKeys.INF);
+                    if (game.status === turnStatus.SETUP) {
+                        handleStart();
+                    } else {
+                        setGame((prev) => {
+                            return {
+                                ...prev,
+                                paused: !prev?.paused,
+                            };
+                        });
+                    }
                 }
-            }
 
-            // Undo / Redo
-            if (game.status !== turnStatus.SETUP) {
-                if (e.code === "KeyZ" || e.key === "z" || e.key === "Z") {
-                    handleUndo();
-                } else if (
-                    e.code === "KeyX" ||
-                    e.key === "x" ||
-                    e.key === "X"
+                // Speed Controls
+                if (game.status !== turnStatus.SETUP) {
+                    if (e.code === "KeyF" || e.key === "f" || e.key === "F") {
+                        handleSpeed(1);
+                    } else if (
+                        e.key === "1" ||
+                        e.code === "Digit1" ||
+                        e.code === "Numpad1"
+                    ) {
+                        e.preventDefault();
+                        handleSpeedAbs(speedKeys.ONE);
+                    } else if (
+                        e.key === "2" ||
+                        e.code === "Digit2" ||
+                        e.code === "Numpad2"
+                    ) {
+                        e.preventDefault();
+                        handleSpeedAbs(speedKeys.TWO);
+                    } else if (
+                        e.key === "3" ||
+                        e.code === "Digit3" ||
+                        e.code === "Numpad3"
+                    ) {
+                        e.preventDefault();
+                        handleSpeedAbs(speedKeys.INF);
+                    }
+                }
+
+                // Undo / Redo
+                if (game.status !== turnStatus.SETUP) {
+                    if (e.code === "KeyZ" || e.key === "z" || e.key === "Z") {
+                        handleUndo();
+                    } else if (
+                        e.code === "KeyX" ||
+                        e.key === "x" ||
+                        e.key === "X"
+                    ) {
+                        handleRedo();
+                    }
+                }
+
+                // Reset / Retry
+                if (
+                    (e.code === "KeyR" || e.key === "r" || e.key === "R") &&
+                    game.status !== turnStatus.SETUP
                 ) {
-                    handleRedo();
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        handleRetry();
+                    } else if (e.altKey) {
+                        e.preventDefault();
+                        handleResetGame();
+                    }
+                }
+
+                // Simulate Turn End/Starfall
+                if (e.key === "Shift") {
+                    if (e.repeat) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    setGame((prev) => {
+                        return {
+                            ...prev,
+                            simSpecs: {
+                                ...prev.simSpecs,
+                                commit: true,
+                                starfall: true,
+                            },
+                        };
+                    });
                 }
             }
 
             // History
-            if (game.status !== turnStatus.SETUP) {
+            if (
+                game.status !== turnStatus.SETUP &&
+                !isAnyOverlayOpen(["history"])
+            ) {
                 if (e.code === "KeyH" || e.key === "h" || e.key === "H") {
                     setUIElements((prev) => ({
                         ...prev,
@@ -107,7 +164,10 @@ function App() {
             }
 
             // Glossary
-            if (e.code === "KeyG" || e.key === "g" || e.key === "G") {
+            if (
+                (e.code === "KeyG" || e.key === "g" || e.key === "G") &&
+                !isAnyOverlayOpen(["history", "glossary"])
+            ) {
                 setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
                 setUIElements((prev) => ({
                     ...prev,
@@ -115,23 +175,15 @@ function App() {
                 }));
             }
 
-            // Simulate Turn End/Starfall
-            if (e.key === "Shift") {
-                if (e.repeat) {
-                    return;
-                }
-
-                e.preventDefault();
-                setGame((prev) => {
-                    return {
-                        ...prev,
-                        simSpecs: {
-                            ...prev.simSpecs,
-                            commit: true,
-                            starfall: true,
-                        },
-                    };
-                });
+            // Code
+            if (
+                (e.code === "KeyC" || e.key === "c" || e.key === "C") &&
+                !isAnyOverlayOpen(["history", "insertCode"])
+            ) {
+                setUIElements((prev) => ({
+                    ...prev,
+                    insertCode: !prev.insertCode,
+                }));
             }
         }
 
@@ -173,83 +225,53 @@ function App() {
             window.removeEventListener("keyup", handleKeyUp);
             window.removeEventListener("blur", handleBlur);
         };
-    }, [game.status, game.speed, setGame, setUIElements]);
+    }, [game.status, game.speed, setGame, setUIElements, isAnyOverlayOpen]);
 
     // Early Return
     if (UIElements.continueModal) {
         return <ContinueModal />;
     }
 
+    if (UIElements.newcomerModal) {
+        return <NewcomerModal />;
+    }
+
     return (
         <div className="app-container">
-            {tooltipStack.length > 0 && (
-                <div
-                    className="backdrop"
-                    onClick={handleClearTooltip}
-                    onContextMenu={(e) => {
-                        e.preventDefault();
-                        handleClearTooltip();
-                    }}
-                />
+            {tooltipStack?.length > 0 && (
+                <Backdrop onClick={handleClearTooltip} />
             )}
-            {UIElements.glossary && (
-                <div
-                    className="backdrop"
-                    onClick={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                glossary: false,
-                            };
-                        });
-                    }}
-                    onContextMenu={(e) => {
-                        e.preventDefault();
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                glossary: false,
-                            };
-                        });
-                    }}
-                />
-            )}
-            {UIElements.resetModal && (
+
+            {UIElements?.resetModal && (
                 <Modal
                     mainText={"Do you wish to reset your progress?"}
                     subText={"*This action is irreversible."}
                     isConfirmOnly={false}
                     rejectAction={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                resetModal: false,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            resetModal: false,
+                        }));
                     }}
                     confirmAction={() => {
-                        setGame((prev) => {
-                            return {
-                                ...prev,
-                                progressStatus: {
-                                    ...INITIAL_GAME_STATE.progressStatus,
-                                },
-                            };
-                        });
+                        setGame((prev) => ({
+                            ...prev,
+                            progressStatus: {
+                                ...INITIAL_GAME_STATE.progressStatus,
+                            },
+                        }));
 
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                resetModal: false,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            resetModal: false,
+                        }));
                     }}
                     confirmText="Continue"
                     rejectText={"Cancel"}
                 />
             )}
 
-            {UIElements.hardResetModal && (
+            {UIElements?.hardResetModal && (
                 <Modal
                     mainText={"Are you sure you wish to proceed?"}
                     subText={
@@ -257,22 +279,18 @@ function App() {
                     }
                     isConfirmOnly={false}
                     rejectAction={() => {
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                hardResetModal: false,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            hardResetModal: false,
+                        }));
                     }}
                     confirmAction={() => {
                         handleHardResetGame();
 
-                        setUIElements((prev) => {
-                            return {
-                                ...prev,
-                                hardResetModal: false,
-                            };
-                        });
+                        setUIElements((prev) => ({
+                            ...prev,
+                            hardResetModal: false,
+                        }));
                     }}
                     confirmText="Continue"
                     rejectText={"Cancel"}
@@ -280,6 +298,7 @@ function App() {
             )}
 
             <Glossary />
+            <InsertCode />
             <TooltipDisplay />
 
             <Header />

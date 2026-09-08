@@ -105,6 +105,97 @@ function loadProgress() {
     return INITIAL_GAME_STATE.progressStatus;
 }
 
+function setupProgression(prev) {
+    return {
+        ...prev,
+        progressMode: true,
+        whoStarts: whoStartsKeys.PLAYER_TWO,
+        entities: {
+            ...prev.entities,
+            [entityKeys.PLAYER_ONE]: {
+                ...prev.entities[entityKeys.PLAYER_ONE],
+                controller: aiKeys.HUMAN,
+                statDistributionMode:
+                    prev.entities[entityKeys.PLAYER_ONE]
+                        .statDistributionMode === sdmKeys.BEST
+                        ? sdmKeys.CUSTOM
+                        : prev.entities[entityKeys.PLAYER_ONE]
+                              .statDistributionMode,
+            },
+            [entityKeys.PLAYER_TWO]: {
+                ...distributePoints(
+                    createBaseEntity(),
+                    sdmKeys.BEST,
+                    presetAi[aiKeys.WARLOCK].best,
+                ),
+                controller: aiKeys.WARLOCK,
+                statDistributionMode: sdmKeys.BEST,
+            },
+        },
+    };
+}
+
+function startGame(prev) {
+    const startingPlayer =
+        prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
+        (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
+            ? entityKeys.PLAYER_ONE
+            : entityKeys.PLAYER_TWO;
+
+    return buildHistory(
+        {
+            ...prev,
+            paused: false,
+            status: turnStatus.ONGOING,
+            startingPlayer: startingPlayer,
+            undoPile: [],
+            redoPile: [],
+            aiQueue: [],
+        },
+        eventKeys.BATTLE_START,
+    );
+}
+
+function changeAI(prev, controllerKey, entityKey) {
+    const currentMode = prev.entities[entityKey].statDistributionMode;
+
+    let updatedEntity = {
+        ...prev.entities[entityKey],
+        controller: controllerKey,
+    };
+
+    if (currentMode === sdmKeys.BEST) {
+        if (controllerKey === aiKeys.HUMAN) {
+            updatedEntity = {
+                ...updatedEntity,
+                ...distributePoints(
+                    updatedEntity,
+                    sdmKeys.CUSTOM,
+                    presetAi[controllerKey].best,
+                ),
+                statDistributionMode: sdmKeys.CUSTOM,
+            };
+        } else {
+            updatedEntity = {
+                ...updatedEntity,
+                ...distributePoints(
+                    updatedEntity,
+                    currentMode,
+                    presetAi[controllerKey].best,
+                ),
+            };
+        }
+    }
+
+    return {
+        ...prev,
+        entities: {
+            ...prev.entities,
+            [entityKey]: updatedEntity,
+        },
+    };
+}
+
 export default function GameProvider({ children }) {
     // Declare Game State
     const [game, setGame] = useState(() => {
@@ -267,43 +358,7 @@ export default function GameProvider({ children }) {
 
     const handleAiChange = (controllerKey, entityKey) => {
         setGame((prev) => {
-            const currentMode = prev.entities[entityKey].statDistributionMode;
-
-            let updatedEntity = {
-                ...prev.entities[entityKey],
-                controller: controllerKey,
-            };
-
-            if (currentMode === sdmKeys.BEST) {
-                if (controllerKey === aiKeys.HUMAN) {
-                    updatedEntity = {
-                        ...updatedEntity,
-                        ...distributePoints(
-                            updatedEntity,
-                            sdmKeys.CUSTOM,
-                            presetAi[controllerKey].best,
-                        ),
-                        statDistributionMode: sdmKeys.CUSTOM,
-                    };
-                } else {
-                    updatedEntity = {
-                        ...updatedEntity,
-                        ...distributePoints(
-                            updatedEntity,
-                            currentMode,
-                            presetAi[controllerKey].best,
-                        ),
-                    };
-                }
-            }
-
-            return {
-                ...prev,
-                entities: {
-                    ...prev.entities,
-                    [entityKey]: updatedEntity,
-                },
-            };
+            return changeAI(prev, controllerKey, entityKey);
         });
     };
 
@@ -321,24 +376,32 @@ export default function GameProvider({ children }) {
 
     function handleStart() {
         setGame((prev) => {
-            const startingPlayer =
-                prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
-                (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
-                    ? entityKeys.PLAYER_ONE
-                    : entityKeys.PLAYER_TWO;
+            return startGame(prev);
+        });
+    }
 
-            return buildHistory(
-                {
-                    ...prev,
-                    paused: false,
-                    status: turnStatus.ONGOING,
-                    startingPlayer: startingPlayer,
-                    undoPile: [],
-                    redoPile: [],
-                    aiQueue: [],
-                },
-                eventKeys.BATTLE_START,
-            );
+    function handleRetry() {
+        setGame((prev) => {
+            const post = resetGameState(prev);
+
+            return startGame(post);
+        });
+    }
+
+    function handleContinue(entityKey) {
+        setGame((prev) => {
+            const post = resetGameState(prev);
+
+            const oldController = extractEntity(prev, entityKey).controller;
+
+            const keys = Object.keys(presetAi);
+
+            const index = keys.indexOf(oldController);
+            const newIndex = Math.min(index + 1, keys.length - 1);
+
+            console.log(`${keys}, ${index}, ${newIndex}`);
+
+            return changeAI(post, keys[newIndex], entityKey);
         });
     }
 
@@ -391,34 +454,17 @@ export default function GameProvider({ children }) {
                     progressMode: false,
                 };
             } else {
-                return {
-                    ...prev,
-                    progressMode: true,
-                    whoStarts: whoStartsKeys.PLAYER_TWO,
-                    entities: {
-                        ...prev.entities,
-                        [entityKeys.PLAYER_ONE]: {
-                            ...prev.entities[entityKeys.PLAYER_ONE],
-                            controller: aiKeys.HUMAN,
-                            statDistributionMode:
-                                prev.entities[entityKeys.PLAYER_ONE]
-                                    .statDistributionMode === sdmKeys.BEST
-                                    ? sdmKeys.CUSTOM
-                                    : prev.entities[entityKeys.PLAYER_ONE]
-                                          .statDistributionMode,
-                        },
-                        [entityKeys.PLAYER_TWO]: {
-                            ...distributePoints(
-                                createBaseEntity(),
-                                sdmKeys.BEST,
-                                presetAi[aiKeys.WARLOCK].best,
-                            ),
-                            controller: aiKeys.WARLOCK,
-                            statDistributionMode: sdmKeys.BEST,
-                        },
-                    },
-                };
+                return setupProgression(prev);
             }
+        });
+    }
+
+    function handleSetupProgression() {
+        setGame((prev) => {
+            return {
+                ...setupProgression(prev),
+                newcomer: false,
+            };
         });
     }
 
@@ -982,7 +1028,11 @@ export default function GameProvider({ children }) {
             };
 
             const timer = setTimeout(() => {
-                setGame(nextState);
+                setGame((prev) => ({
+                    ...nextState,
+                    speed: prev.speed,
+                    paused: prev.paused,
+                }));
             }, delayAmount);
 
             return () => {
@@ -1001,11 +1051,9 @@ export default function GameProvider({ children }) {
 
     // AI Controller
     useEffect(() => {
-        
         if (game.paused || !getCurrActivePlayer(game)) {
             return;
         }
-
 
         const targetKey = getCurrActivePlayer(game);
         const nonTargetKey = getOtherEntity(targetKey);
@@ -1037,7 +1085,6 @@ export default function GameProvider({ children }) {
             }
 
             const aiTimer = setTimeout(async () => {
-                
                 // Await the async result first so setGame receives clean state object, not a Promise
                 const updatedGame = await centralAIManagement(
                     game,
@@ -1238,6 +1285,9 @@ export default function GameProvider({ children }) {
             handleCelestialStars,
             handleBlasphemy,
             handleEdict,
+            handleSetupProgression,
+            handleRetry,
+            handleContinue,
         }),
         [game, simGame],
     );

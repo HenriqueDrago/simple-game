@@ -1,31 +1,9 @@
-/* Full-screen overlay to grey out the rest of the site */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    
-    /* Using semi-transparent black to create a stark dimming effect */
-    background-color: rgba(0, 0, 0, 0.75); 
-    
-    /* Center the modal box inside this overlay wrapper */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
-    z-index: 9999; /* Higher than everything else */
-}
-
-/* Updated Modal Box Container */
 .modal-container {
-    /* Position fixed/top/left/transform removed because .modal-overlay handles alignment now */
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     gap: 20px;
-    
     padding: 20px 40px;
     background-color: #000000;
     border: 2px solid #ffffff;
@@ -33,7 +11,6 @@
     min-width: 400px;
 }
 
-/* Typography Layout */
 .modal-text-container {
     display: flex;
     justify-content: center;
@@ -44,7 +21,6 @@
     text-align: center;
 }
 
-/* Main Heading Text */
 .modal-text-container span:first-child {
     margin: 0;
     color: #ffffff;
@@ -54,7 +30,6 @@
     font-weight: bold;
 }
 
-/* Subtext / Description Block */
 .modal-text-container span:last-child {
     margin: 0;
     font-weight: bold;
@@ -65,7 +40,6 @@
     font-size: 0.9rem;
 }
 
-/* Button Layout Wrapper */
 .modal-button-container {
     display: flex;
     justify-content: center;
@@ -76,7 +50,6 @@
     width: 100%;
 }
 
-/* Shared Button Logic */
 .modal-button-container button {
     background-color: #000000;
     color: #ffffff;

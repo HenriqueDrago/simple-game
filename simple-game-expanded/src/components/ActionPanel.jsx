@@ -1,6 +1,6 @@
 import "./ActionPanel.css";
 
-import { turnStatus, aiKeys, effectKeys, roundPhases } from "../utils/enums";
+import { turnStatus, aiKeys, effectKeys, roundPhases, entityKeys } from "../utils/enums";
 import { actionMap, FREE_ACTIONS } from "../utils/constants";
 import {
     getActions,
@@ -15,10 +15,47 @@ import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
 function ActionPanel() {
-    const { game, handleAction, setGame } = useGame();
+    const { game, handleAction, setGame, handleContinue, handleRetry } =
+        useGame();
     const { handleClearTooltip, handleSetTooltip } = useUI();
 
     const battleState = game.status;
+    if (battleState !== turnStatus.ONGOING) {
+        if (game?.progressMode) {
+            if (battleState === turnStatus.VICTORY) {
+                return (
+                    <div className="action-panel-single-button">
+                        <button
+                            onClick={() => {
+                                handleContinue(entityKeys.PLAYER_TWO);
+                            }}
+                        >
+                            Continue
+                        </button>
+                    </div>
+                );
+            }
+
+            if (
+                battleState === turnStatus.DRAW ||
+                battleState === turnStatus.DEFEAT
+            ) {
+                return (
+                    <div className="action-panel-single-button">
+                        <button
+                            onClick={() => {
+                                handleRetry();
+                            }}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                );
+            }
+        }
+
+        return null;
+    }
 
     const currPhase =
         game.roundQueue && game.roundQueue.length > 0

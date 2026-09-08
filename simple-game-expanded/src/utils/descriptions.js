@@ -21,7 +21,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SIMPLE GAME",
         type: entryTypes.MECHANIC,
         description:
-            "A simple turn-based combat game. Every ROUND of a MATCH, both players are granted a TURN on which they may choose at least one of a series of ACTIONS to execute. A MATCH ends when either player's HEALTH or MAX HEALTH reaches 0, granting victory to the surviving player, or ending on a draw. During SETUP, players may select whose TURN comes first on every round, distribute BASE ATTRIBUTES points and select each player's CONTROLLER. Press START to end SETUP and begin a MATCH.",
+            "A higly complex turn-based combat game. Every ROUND of a MATCH, both players are granted a TURN on which they may choose at least one of a series of ACTIONS to execute. A MATCH ends when either player's HEALTH or MAX HEALTH reaches 0, granting victory to the surviving player, or ending on a draw. During SETUP, players may select whose TURN comes first on every round, distribute BASE ATTRIBUTES points and select each player's CONTROLLER. Press START to end SETUP and begin a MATCH.",
     },
 
     [effectKeys.PROGRESSION_MODE]: {
@@ -32,10 +32,10 @@ export const GENERAL_DESCRIPTIONS = {
     },
 
     [effectKeys.SHORTCUTS]: {
-        name: "PROGRESSION MODE",
+        name: "SHORTCUTS",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to Pause/Unpause a MATCH, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf. Press Z/X to undo/redo your previous action on the current turn.",
+            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to start a MATCH. While inside a MATCH, press SPACE to pause/unpause the MATCH instead, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate COMMIT (turn end) and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf. Press Z/X to undo/redo your previous action on the current turn. Press G/H/C to open/close GLOSSARY / HISTORY / CODE INSERT. Press R while holding SHIFT to restart a MATCH. Press R while holding ALT to reset a MATCH and return to SETUP screen.",
     },
 
     [turnStatus.SETUP]: {
@@ -444,7 +444,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.LIMITED_RESOURCE,
         description:
-            "Capped by MAX HEALTH. Cannot be replenished. Clogs the HEALTH bar, preventing further healing. Raises STRENGTH by BLOOD SACRIFICE on self. When using a DEFENSIVE ACTION, converts half the BLOOD SACRIFICE on self into HEALTH.",
+            "Capped by MAX HEALTH. Cannot be replenished. Clogs the HEALTH bar, preventing further healing. Raises STRENGTH by BLOOD SACRIFICE on self. Raises DAMAGE REDUCTION by half the percentage of MAX HEALTH filled by BLOOD SACRIFICE. When using a DEFENSIVE ACTION, converts half the BLOOD SACRIFICE on self into HEALTH.",
     },
 };
 

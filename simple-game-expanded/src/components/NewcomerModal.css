@@ -1,0 +1,182 @@
+/* Modal Overlay Background */
+.newcomer-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Main Container */
+.newcomer-modal-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 36px 40px;
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    max-width: 640px;
+    width: 90%;
+    box-sizing: border-box;
+    text-align: center;
+    color: #ffffff;
+}
+
+/* Header Typography */
+.newcomer-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.newcomer-subtitle {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.7;
+}
+
+.newcomer-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin: 0;
+    line-height: 1;
+}
+
+/* Divider Line */
+.newcomer-divider {
+    width: 100%;
+    height: 2px;
+    background-color: #ffffff;
+    opacity: 0.3;
+}
+
+/* Introduction Text */
+.newcomer-introduction {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+/* Modes Container Grid */
+.newcomer-modes-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+    .newcomer-modes-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Individual Mode Cards */
+.newcomer-mode-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    padding: 24px 18px 18px 18px;
+    gap: 14px;
+    box-sizing: border-box;
+}
+
+.newcomer-mode-card.newcomer-recommended {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.newcomer-mode-badge {
+    position: absolute;
+    top: -12px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 2px 10px;
+    border: 1px solid #ffffff;
+}
+
+.newcomer-mode-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 6px 0 0 0;
+}
+
+.newcomer-mode-description {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* Sharp Button Base Style */
+.newcomer-sharp-btn {
+    width: 100%;
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 0;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.newcomer-sharp-btn:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Primary Button Highlighting */
+.newcomer-sharp-btn.newcomer-primary-btn {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.newcomer-sharp-btn.newcomer-primary-btn:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Footer Section */
+.newcomer-footer {
+    margin-top: 2px;
+}
+
+.newcomer-fun {
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.5;
+}

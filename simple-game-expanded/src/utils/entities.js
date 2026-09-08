@@ -2739,7 +2739,8 @@ export function getEntityDR(prev, entityKey) {
                       0,
                       1 -
                           (entity[effectKeys.BLOOD_SACRIFICE] /
-                              getEntityMaxHealth(entity)) * 0.5,
+                              getEntityMaxHealth(entity)) *
+                              0.5,
                   )
                 : 1;
     }
@@ -2887,39 +2888,43 @@ function processProgUnlock(prev) {
     if (prev.status === turnStatus.VICTORY && prev.progressMode) {
         const currController = prev.entities[entityKeys.PLAYER_TWO].controller;
 
-        const keys = Object.keys(presetAi);
-        const currIndex = keys.indexOf(currController);
-
-        // If index is not found or human
-        if (currIndex === -1 || currController === aiKeys.HUMAN) {
-            return prev;
-        }
-
-        const nextKey = keys?.[currIndex + 1];
-
-        if (!nextKey) {
-            return prev;
-        }
-
-        // If next enemy is already defeated or is always open
-        if (
-            prev.progressStatus[nextKey] === progKeys.DEFEATED ||
-            prev.progressStatus[nextKey] === progKeys.ALWAYS_OPEN
-        ) {
-            return prev;
-        }
-
-        return {
-            ...prev,
-            progressStatus: {
-                ...prev.progressStatus,
-                [currController]: progKeys.DEFEATED,
-                [nextKey]: progKeys.OPEN_UNDEFEATED,
-            },
-        };
+        return applyProgressUnlock(prev, currController);
     }
 
     return prev;
+}
+
+export function applyProgressUnlock(prev, currController) {
+    const keys = Object.keys(presetAi);
+    const currIndex = keys.indexOf(currController);
+
+    // If index is not found or human
+    if (currIndex === -1 || currController === aiKeys.HUMAN) {
+        return prev;
+    }
+
+    const nextKey = keys?.[currIndex + 1];
+
+    if (!nextKey) {
+        return prev;
+    }
+
+    // If next enemy is already defeated or is always open
+    if (
+        prev.progressStatus[nextKey] === progKeys.DEFEATED ||
+        prev.progressStatus[nextKey] === progKeys.ALWAYS_OPEN
+    ) {
+        return prev;
+    }
+
+    return {
+        ...prev,
+        progressStatus: {
+            ...prev.progressStatus,
+            [currController]: progKeys.DEFEATED,
+            [nextKey]: progKeys.OPEN_UNDEFEATED,
+        },
+    };
 }
 
 export function loseMaxHealth(entity, amount) {

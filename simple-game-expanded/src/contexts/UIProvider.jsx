@@ -24,12 +24,28 @@ function hasOngoingSavedGame() {
     }
 }
 
+function isNewcomer() {
+    try {
+        const savedData = localStorage.getItem("gameCheckpoint");
+        if (!savedData) {
+            return true;
+        }
+
+        const parsed = JSON.parse(savedData);
+        return parsed?.newcomer ?? true;
+    } catch {
+        return true;
+    }
+}
+
 export default function UIProvider({ children }) {
     // === States ===
     const [UIElements, setUIElements] = useState({
         continueModal: hasOngoingSavedGame(),
         resetModal: false,
         hardResetModal: false,
+        newcomerModal: isNewcomer(),
+        insertCode: false,
 
         glossary: false,
         history: false,
@@ -109,6 +125,21 @@ export default function UIProvider({ children }) {
         }
     }
 
+    // Auxiliary Functions
+    function isAnyOverlayOpen(exceptions = null) {
+        if (tooltipStack?.length > 0) {
+            return true;
+        }
+
+        for (let k of Object.keys(UIElements)) {
+            if (UIElements[k] && !exceptions?.includes(k)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     return (
         <UIContext.Provider
             value={{
@@ -123,6 +154,8 @@ export default function UIProvider({ children }) {
 
                 glossarySpecs,
                 setGlossarySpecs,
+
+                isAnyOverlayOpen,
             }}
         >
             {children}

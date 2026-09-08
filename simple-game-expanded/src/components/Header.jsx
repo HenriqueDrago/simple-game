@@ -36,18 +36,16 @@ function Header() {
     }
 
     return (
-        <header className="header-scoreboard-bar">
-            {/* Left Section: Subdued Title */}
-            <div className="header-left">
-                <span className="main-title">Simple Game</span>
+        <header className="hdr-scoreboard-bar">
+            <div className="hdr-left">
+                <span className="hdr-main-title">Simple Game</span>
             </div>
 
-            {/* Center Section: Config Options during Setup, Scoreboard Badge during Battle */}
-            <div className="header-center">
+            <div className="hdr-center">
                 {isSetup ? (
-                    <div className="header-settings-container">
+                    <div className="hdr-settings-container">
                         <div
-                            className={`sharp-setting-box ${
+                            className={`hdr-setting-box ${
                                 game.progressMode ? "disabled" : ""
                             }`}
                         >
@@ -56,7 +54,7 @@ function Header() {
                             </label>
                             <select
                                 id="who-starts-select"
-                                className="sharp-select"
+                                className="hdr-select"
                                 value={game.whoStarts}
                                 onChange={(e) =>
                                     handleWhoStartsChange(e.target.value)
@@ -75,7 +73,7 @@ function Header() {
                         </div>
 
                         <div
-                            className="sharp-setting-box"
+                            className="hdr-setting-box"
                             onMouseDown={(e) => {
                                 handleSpawnTooltip(
                                     e,
@@ -84,14 +82,14 @@ function Header() {
                             }}
                         >
                             <label>Progression Mode:</label>
-                            <div className="switch-help-container">
+                            <div className="hdr-switch-help-container">
                                 <Switch
                                     checked={game.progressMode}
                                     handleToggle={handleProgressToggle}
                                     disabled={game.status !== turnStatus.SETUP}
                                 />
                                 <span
-                                    className="hover-help"
+                                    className="hdr-hover-help"
                                     title={
                                         DESCRIPTIONS[
                                             effectKeys.PROGRESSION_MODE
@@ -102,7 +100,7 @@ function Header() {
                                 </span>
                             </div>
                             <button
-                                className="sharp-btn-icon"
+                                className="hdr-btn-icon"
                                 onClick={() => {
                                     setUIElements((prev) => {
                                         return {
@@ -119,18 +117,17 @@ function Header() {
                     </div>
                 ) : (
                     announcement && (
-                        <div className="scoreboard-badge">
+                        <div className="hdr-scoreboard-badge">
                             <span>{announcement}</span>
                         </div>
                     )
                 )}
             </div>
 
-            {/* Right Section: Utility Controls */}
-            <div className="header-right">
+            <div className="hdr-right">
                 {!isSetup && (
                     <button
-                        className="sharp-btn-header icon-btn"
+                        className="hdr-btn hdr-icon-btn"
                         onClick={handlePause}
                     >
                         {game?.paused ? (
@@ -143,7 +140,7 @@ function Header() {
 
                 {!isSetup && (
                     <button
-                        className="sharp-btn-header icon-btn"
+                        className="hdr-btn hdr-icon-btn"
                         onClick={() => {
                             handleSpeed(1);
                         }}
@@ -154,7 +151,7 @@ function Header() {
 
                 {!isSetup && (
                     <button
-                        className="sharp-btn-header icon-btn"
+                        className="hdr-btn hdr-icon-btn"
                         onClick={() => {
                             handleUndo();
                         }}
@@ -166,7 +163,7 @@ function Header() {
 
                 {!isSetup && (
                     <button
-                        className="sharp-btn-header icon-btn"
+                        className="hdr-btn hdr-icon-btn"
                         onClick={() => {
                             handleRedo();
                         }}
@@ -177,12 +174,12 @@ function Header() {
                 )}
 
                 {isSetup ? (
-                    <button className="sharp-btn-header" onClick={handleStart}>
+                    <button className="hdr-btn" onClick={handleStart}>
                         Start
                     </button>
                 ) : (
                     <button
-                        className="sharp-btn-header"
+                        className="hdr-btn"
                         onClick={() => {
                             setUIElements((prev) => ({
                                 ...prev,
@@ -197,7 +194,7 @@ function Header() {
                 )}
 
                 <button
-                    className="sharp-btn-header"
+                    className="hdr-btn"
                     onClick={() => {
                         setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
                         setUIElements((prev) => ({
@@ -211,7 +208,7 @@ function Header() {
 
                 {!isSetup && (
                     <button
-                        className="sharp-btn-header"
+                        className="hdr-btn"
                         onClick={() => {
                             setUIElements((prev) => ({
                                 ...prev,
@@ -223,8 +220,22 @@ function Header() {
                     </button>
                 )}
 
+                {isSetup && (
+                    <button
+                        className="hdr-btn"
+                        onClick={() => {
+                            setUIElements((prev) => ({
+                                ...prev,
+                                insertCode: !prev.insertCode,
+                            }));
+                        }}
+                    >
+                        Code
+                    </button>
+                )}
+
                 <button
-                    className="sharp-btn-header"
+                    className="hdr-btn"
                     onClick={() => {
                         setUIElements((prev) => ({
                             ...prev,

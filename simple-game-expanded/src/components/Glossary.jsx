@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import {
@@ -10,6 +10,7 @@ import {
 } from "../utils/constants";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { aiKeys, progKeys } from "../utils/enums";
+import Backdrop from "./Backdrop";
 import "./Glossary.css";
 
 function escapeRegExp(string) {
@@ -20,6 +21,35 @@ function Glossary() {
     const { game } = useGame();
     const { UIElements, setUIElements, glossarySpecs, setGlossarySpecs } =
         useUI();
+
+    const handleClose = () => {
+        setUIElements((prev) => ({
+            ...prev,
+            glossary: false,
+        }));
+        setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
+    };
+
+    // Close on Escape key
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (e.key === "Escape") {
+                setUIElements((prev) => ({
+                    ...prev,
+                    glossary: false,
+                }));
+                setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
+            }
+        }
+
+        if (UIElements.glossary) {
+            window.addEventListener("keydown", handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [UIElements.glossary, setGlossarySpecs, setUIElements]);
 
     const availableCategories = useMemo(() => {
         return Object.entries(presetAi).filter(([aiKey, aiObj]) => {
@@ -98,188 +128,185 @@ function Glossary() {
     }
 
     return (
-        <div className="glossary-container">
-            <div className="glossary-header-container">
-                <span>Glossary</span>
-                <button
-                    className="glossary-close-button"
-                    onClick={() => {
-                        setUIElements((prev) => ({
-                            ...prev,
-                            glossary: false,
-                        }));
-                        setGlossarySpecs(INITIAL_GLOSSARY_SPECS);
-                    }}
-                >
-                    &times;
-                </button>
-            </div>
-
-            <div className="glossary-main-layout">
-                {/* Navigation Sidebar */}
-                <nav className="glossary-sidebar">
+        <Backdrop onClick={handleClose}>
+            <div
+                className="glossary-container"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="glossary-header-container">
+                    <span>Glossary</span>
                     <button
-                        className={`glossary-nav-item ${
-                            activeCategoryKey === ALL_CATEGORY_KEY
-                                ? "active"
-                                : ""
-                        }`}
-                        onClick={() =>
-                            setGlossarySpecs((prev) => {
-                                return {
+                        className="glossary-close-button"
+                        onClick={handleClose}
+                    >
+                        &times;
+                    </button>
+                </div>
+
+                <div className="glossary-main-layout">
+                    {/* Navigation Sidebar */}
+                    <nav className="glossary-sidebar">
+                        <button
+                            className={`glossary-nav-item ${
+                                activeCategoryKey === ALL_CATEGORY_KEY
+                                    ? "active"
+                                    : ""
+                            }`}
+                            onClick={() =>
+                                setGlossarySpecs((prev) => ({
                                     ...prev,
                                     selectedCategory: ALL_CATEGORY_KEY,
-                                };
-                            })
-                        }
-                    >
-                        <span>All</span>
-                    </button>
+                                }))
+                            }
+                        >
+                            <span>All</span>
+                        </button>
 
-                    {availableCategories.map(([aiKey, aiObj]) => {
-                        const name =
-                            aiKey === aiKeys.HUMAN ? "General" : aiObj.name;
-                        const isSelected = aiKey === activeCategoryKey;
+                        {availableCategories.map(([aiKey, aiObj]) => {
+                            const name =
+                                aiKey === aiKeys.HUMAN ? "General" : aiObj.name;
+                            const isSelected = aiKey === activeCategoryKey;
 
-                        return (
-                            <button
-                                key={aiKey}
-                                className={`glossary-nav-item ${
-                                    isSelected ? "active" : ""
-                                }`}
-                                onClick={() =>
-                                    setGlossarySpecs((prev) => {
-                                        return {
+                            return (
+                                <button
+                                    key={aiKey}
+                                    className={`glossary-nav-item ${
+                                        isSelected ? "active" : ""
+                                    }`}
+                                    onClick={() =>
+                                        setGlossarySpecs((prev) => ({
                                             ...prev,
                                             selectedCategory: aiKey,
-                                        };
-                                    })
-                                }
-                            >
-                                <span>{name}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
+                                        }))
+                                    }
+                                >
+                                    <span>{name}</span>
+                                </button>
+                            );
+                        })}
+                    </nav>
 
-                {/* Detail Content Area */}
-                <div className="glossary-detail-view">
-                    <div className="glossary-detail-header">
-                        <h2>{activeCategoryName}</h2>
-                        <div className="glossary-search-container">
-                            <div className="glossary-search-input-wrapper">
-                                <input
-                                    type="text"
-                                    className="glossary-search-input"
-                                    placeholder="Search entries..."
-                                    value={glossarySpecs?.searchQuery ?? ""}
-                                    onChange={(e) =>
-                                        setGlossarySpecs((prev) => {
-                                            return {
+                    {/* Detail Content Area */}
+                    <div className="glossary-detail-view">
+                        <div className="glossary-detail-header">
+                            <h2>{activeCategoryName}</h2>
+                            <div className="glossary-search-container">
+                                <div className="glossary-search-input-wrapper">
+                                    <input
+                                        type="text"
+                                        className="glossary-search-input"
+                                        placeholder="Search entries..."
+                                        value={glossarySpecs?.searchQuery ?? ""}
+                                        onChange={(e) =>
+                                            setGlossarySpecs((prev) => ({
                                                 ...prev,
                                                 searchQuery: e.target.value,
-                                            };
-                                        })
-                                    }
-                                />
-                                {glossarySpecs?.searchQuery && (
-                                    <button
-                                        className="glossary-search-clear"
-                                        onClick={() =>
-                                            setGlossarySpecs((prev) => {
-                                                return {
+                                            }))
+                                        }
+                                    />
+                                    {glossarySpecs?.searchQuery && (
+                                        <button
+                                            className="glossary-search-clear"
+                                            onClick={() =>
+                                                setGlossarySpecs((prev) => ({
                                                     ...prev,
                                                     searchQuery: "",
-                                                };
-                                            })
-                                        }
-                                    >
-                                        &times;
-                                    </button>
-                                )}
-                            </div>
+                                                }))
+                                            }
+                                        >
+                                            &times;
+                                        </button>
+                                    )}
+                                </div>
 
-                            <div className="glossary-search-toggles">
-                                <button
-                                    type="button"
-                                    className={`glossary-search-toggle-btn ${
-                                        glossarySpecs?.matchCase ? "active" : ""
-                                    }`}
-                                    onClick={() =>
-                                        setGlossarySpecs((prev) => {
-                                            return {
+                                <div className="glossary-search-toggles">
+                                    <button
+                                        type="button"
+                                        className={`glossary-search-toggle-btn ${
+                                            glossarySpecs?.matchCase
+                                                ? "active"
+                                                : ""
+                                        }`}
+                                        onClick={() =>
+                                            setGlossarySpecs((prev) => ({
                                                 ...prev,
                                                 matchCase: !prev?.matchCase,
-                                            };
-                                        })
-                                    }
-                                    title="Match Case"
-                                >
-                                    Aa
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`glossary-search-toggle-btn ${
-                                        glossarySpecs?.matchWholeWord
-                                            ? "active"
-                                            : ""
-                                    }`}
-                                    onClick={() =>
-                                        setGlossarySpecs((prev) => {
-                                            return {
+                                            }))
+                                        }
+                                        title="Match Case"
+                                    >
+                                        Aa
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`glossary-search-toggle-btn ${
+                                            glossarySpecs?.matchWholeWord
+                                                ? "active"
+                                                : ""
+                                        }`}
+                                        onClick={() =>
+                                            setGlossarySpecs((prev) => ({
                                                 ...prev,
                                                 matchWholeWord:
                                                     !prev?.matchWholeWord,
-                                            };
-                                        })
-                                    }
-                                    title="Match Whole Word"
-                                >
-                                    "W"
-                                </button>
+                                            }))
+                                        }
+                                        title="Match Whole Word"
+                                    >
+                                        "W"
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="glossary-detail-items">
-                        {filteredItems.length === 0 ? (
-                            <div className="glossary-no-results">
-                                No matching entries found.
-                            </div>
-                        ) : (
-                            filteredItems.map((item) => {
-                                const descData = DESCRIPTIONS[item];
+                        <div className="glossary-detail-items">
+                            {filteredItems.length === 0 ? (
+                                <div className="glossary-no-results">
+                                    No matching entries found.
+                                </div>
+                            ) : (
+                                filteredItems.map((item) => {
+                                    const descData = DESCRIPTIONS[item];
 
-                                if (!descData) {
-                                    return null;
-                                }
+                                    if (!descData) {
+                                        return null;
+                                    }
 
-                                const typeClass =
-                                    entryTypeClassMap?.[descData.type] || "";
+                                    const typeClass =
+                                        entryTypeClassMap?.[descData.type] ||
+                                        "";
 
-                                return (
-                                    <div className="glossary-item" key={item}>
-                                        <div className="glossary-item-header">
-                                            <span className="glossary-item-title">
-                                                {descData.name}
-                                            </span>
-                                            <span
-                                                className={`glossary-item-type ${typeClass}`}
-                                            >
-                                                {entryTypesMap[descData.type]}
-                                            </span>
+                                    return (
+                                        <div
+                                            className="glossary-item"
+                                            key={item}
+                                        >
+                                            <div className="glossary-item-header">
+                                                <span className="glossary-item-title">
+                                                    {descData.name}
+                                                </span>
+                                                <span
+                                                    className={`glossary-item-type ${typeClass}`}
+                                                >
+                                                    {
+                                                        entryTypesMap[
+                                                            descData.type
+                                                        ]
+                                                    }
+                                                </span>
+                                            </div>
+                                            <div className="glossary-item-body">
+                                                {descData.description}
+                                            </div>
                                         </div>
-                                        <div className="glossary-item-body">
-                                            {descData.description}
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
+                                    );
+                                })
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Backdrop>
     );
 }
 
