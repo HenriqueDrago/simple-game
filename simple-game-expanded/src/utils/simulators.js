@@ -31,6 +31,8 @@ import {
     getMaxMana,
     getMissingHealth,
     gainSin,
+    getMissingMana,
+    processExitWeaponsDeployed,
 } from "./entities.js";
 import {
     actionKeys,
@@ -100,28 +102,31 @@ export const simulators = {
 };
 
 function simulateGuard({ prev, agent, agentKey }) {
-    const newMana = Math.min(
-        getMaxMana(agent),
-        Math.floor(
-            agent[effectKeys.MANA] +
-                getMaxMana(agent) * constants.GUARD_MANA_REGEN,
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.GUARDING_STATE]: true,
+        },
+    };
+
+    draftAgent = gainMana(
+        draftAgent,
+        Math.min(
+            getMissingMana(draftAgent),
+            getMaxMana(agent) * constants.GUARD_MANA_REGEN,
         ),
     );
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                [effectKeys.MANA]: newMana,
-                states: {
-                    ...agent.states,
-                    [effectKeys.GUARDING_STATE]: true,
-                },
-            },
-        },
-    };
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
@@ -194,10 +199,11 @@ function simulateAttack({ prev, agent, agentKey, nonAgentKey }) {
 
     post = newDealDmg(
         post,
-        getEntityStr(agent) + radiance,
+        getEntityStr(agent),
         nonAgentKey,
         dmgTypes.PHYSICAL,
         agentKey,
+        radiance,
     );
 
     return post;
@@ -549,10 +555,6 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
 }
 
 function simulateDeploy({ prev, agent, agentKey }) {
-    if (agent.states.venting) {
-        return prev;
-    }
-
     return {
         ...prev,
         entities: {
@@ -599,7 +601,6 @@ function simulateLaser({ prev, agent, agentKey, nonAgentKey }) {
             ...draftAgent.states,
             [effectKeys.THERMAL_OVERLOAD]:
                 newOverheat >= constants.MAX_OVERHEAT,
-            [effectKeys.WEAPONS_DEPLOYED]: newOverheat < constants.MAX_OVERHEAT,
         },
     };
 
@@ -615,41 +616,49 @@ function simulateLaser({ prev, agent, agentKey, nonAgentKey }) {
 }
 
 function simulateMeltdown({ prev, agent, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
     const baseDmg = Math.floor(
         (agent[effectKeys.ENERGY_LEVEL] +
             Math.floor(agent[effectKeys.DYNAMO] / 10)) *
-            (agent[effectKeys.OVERHEAT] / 100),
+            (agent[effectKeys.OVERHEAT] / constants.MAX_OVERHEAT),
     );
-
-    const post = newDealDmg(
-        prev,
-        baseDmg,
-        [agentKey, nonAgentKey],
-        dmgTypes.PHYSICAL,
-        null,
-    );
-
-    let draftAgent = {
-        ...post.entities[agentKey],
-    };
 
     draftAgent = {
         ...draftAgent,
         [effectKeys.DYNAMO]: 0,
+        [effectKeys.OVERHEAT]: 0,
+    };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    post = newDealDmg(
+        post,
+        baseDmg,
+        [agentKey, nonAgentKey],
+        dmgTypes.PHYSICAL,
+        [agentKey],
+    );
+
+    draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = {
+        ...draftAgent,
         states: {
             ...draftAgent.states,
             [effectKeys.THERMAL_OVERLOAD]: false,
-            [effectKeys.VENTING]: true,
         },
     };
 
-    return {
-        ...post,
-        entities: {
-            ...post.entities,
-            [agentKey]: draftAgent,
-        },
-    };
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    post = processExitWeaponsDeployed(post, agentKey);
+
+    return post;
 }
 
 function simulateChart({ prev, agent, agentKey }) {

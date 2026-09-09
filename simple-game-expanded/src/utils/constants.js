@@ -135,7 +135,6 @@ export const constants = Object.freeze({
     SAC_HP_CONSUMPTION: 0.5,
     SHADOW_PACT_BURN: 5,
     RADIANT_DEF_EFFECT_MULTIPLIER: 0,
-    VENTING_OVERHEAT_LOSS: 50,
     CHART_STAR_GAIN: 3,
     STARDUST_RATE_CONVERSION: 3,
     MAX_DIVINE_SPARK: 100,
@@ -166,8 +165,8 @@ export const MITIGATION_RESOURCES = [
 
 export const FREE_RESOURCES = [
     effectKeys.SHADOWFLAME,
-    effectKeys.UNRELENTING_SHADOWS,
     effectKeys.CINDERS,
+    effectKeys.UNRELENTING_SHADOWS,
     effectKeys.DISSONANCE,
     effectKeys.PRECOGNITION,
     effectKeys.PROPHECY_OF_DOOM,
@@ -205,7 +204,7 @@ export const presetAi = {
     [aiKeys.BLOODKNIGHT]: {
         name: "Bloodknight",
         best: {
-            str: 0,
+            str: 10,
             def: 0,
         },
         caller: bloodknightAI,
@@ -289,6 +288,9 @@ const offensiveActions = [
     actionKeys.ATTACK,
     actionKeys.SPECIAL_ATTACK,
     actionKeys.SACRIFICE,
+
+    actionKeys.BLACK_MAYHEM,
+
     actionKeys.LASER,
     actionKeys.MELTDOWN,
 
@@ -305,12 +307,14 @@ const defensiveActions = [
     actionKeys.GUARD,
     actionKeys.AEGIS,
 
+    actionKeys.SHADOW_MANTLE,
+    actionKeys.RITUAL_OF_ASH,
+
     actionKeys.LUNAR_GROWTH,
     actionKeys.LUNAR_SHROUD,
     actionKeys.LUNAR_TIDE,
 
     actionKeys.SUPPLICATE,
-    actionKeys.ATONE,
 ];
 
 const transformativeActions = [
@@ -322,9 +326,6 @@ const transformativeActions = [
     actionKeys.BABEL,
 
     actionKeys.SHADOW_PACT,
-    actionKeys.BLACK_MAYHEM,
-    actionKeys.SHADOW_MANTLE,
-    actionKeys.RITUAL_OF_ASH,
     actionKeys.DARK_PROMISE,
 
     actionKeys.CHART,
@@ -336,6 +337,8 @@ const transformativeActions = [
     actionKeys.ASCEND,
     actionKeys.JUDGEMENT,
     actionKeys.DISCERN,
+
+    actionKeys.ATONE,
 ];
 
 export const actionsClass = {

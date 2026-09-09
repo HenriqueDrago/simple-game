@@ -150,11 +150,10 @@ export const effectKeys = Object.freeze({
     HALO: "halo",
     CEREMONIAL: "ceremonial",
 
-    DEPLOYMENT: "deployment",
+    ARMORED_DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
     OVERHEAT: "currOverheat",
     THERMAL_OVERLOAD: "thermalOverload",
-    VENTING: "venting",
     BLEAK_DECEPTION: "bleakDeception",
     HEALTH: "currHp",
     MANA: "currMana",
@@ -297,6 +296,11 @@ export const effectKeys = Object.freeze({
     MOTES_OF_CREATION: "moteCreation",
     PIOUS: "pietous",
     PENITENCE: "penitence",
+
+    // other
+    TURN_START: "turnStart",
+    ACTIVE_PHASE: "activePhase",
+    TURN_END: "turnEnd",
 });
 
 export const runeKeys = Object.freeze({

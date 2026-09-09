@@ -6,10 +6,9 @@ import "./StateBadges.css";
 const STATE_MAPPINGS = [
     { key: effectKeys.UMBRAL_CORE, label: "Umbral Core" },
     { key: effectKeys.RESONANT, label: "Resonant" },
-    { key: effectKeys.DEPLOYMENT, label: "Deployment" },
+    { key: effectKeys.ARMORED_DEPLOYMENT, label: "Armored Deployment" },
     { key: effectKeys.WEAPONS_DEPLOYED, label: "Weapons Deployed" },
     { key: effectKeys.THERMAL_OVERLOAD, label: "Thermal Overload" },
-    { key: effectKeys.VENTING, label: "Venting" },
     { key: effectKeys.GUARDING_STATE, label: "Guarding" },
     { key: effectKeys.CEREMONIAL, label: "CEREMONIAL" },
     { key: effectKeys.RADIANT, label: "Radiant" },

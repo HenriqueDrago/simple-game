@@ -310,10 +310,9 @@ export function createBaseEntity() {
             [effectKeys.BLEAK_DECEPTION]: false,
 
             // Deploy
-            [effectKeys.DEPLOYMENT]: false,
+            [effectKeys.ARMORED_DEPLOYMENT]: false,
             [effectKeys.WEAPONS_DEPLOYED]: false,
             [effectKeys.THERMAL_OVERLOAD]: false,
-            [effectKeys.VENTING]: false,
 
             // Aegis
             [effectKeys.RADIANT]: false,
@@ -694,6 +693,13 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
     }
     if (originalStates[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         newGameState = processExitAscendence(
+            newGameState,
+            targetKey,
+            nonTargetKey,
+        );
+    }
+    if (originalStates[effectKeys.WEAPONS_DEPLOYED]) {
+        newGameState = processExitWeaponsDeployed(
             newGameState,
             targetKey,
             nonTargetKey,
@@ -1909,13 +1915,7 @@ export function canUseAction(prev, entityKey, action) {
         return !isProgLocked(aiKeys.MAESTRO);
     }
 
-    // Cyborg Mechanics & Venting Lockouts
-    if (
-        states[effectKeys.VENTING] &&
-        [actionKeys.DEPLOY, actionKeys.LASER].includes(action)
-    ) {
-        return false;
-    }
+    // Cyborg Mechanics
     if (action === actionKeys.LASER) {
         return states[effectKeys.WEAPONS_DEPLOYED];
     }
@@ -2349,12 +2349,13 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
         }
         case runeKeys.SKULD: {
             // Restore Mana
-            draftTarget = {
-                ...gainMana(
-                    draftTarget,
+            draftTarget = gainMana(
+                draftTarget,
+                Math.min(
+                    getMissingMana(draftTarget),
                     getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
                 ),
-            };
+            );
 
             break;
         }
@@ -2603,7 +2604,8 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
         const disgraceMult = getDisgrace(prev, entityKey);
 
         // Flat Reduction
-        const flatDR = Math.max(0, getEntityDef(draftTaker) - breach);
+        let flatDR = getEntityDef(draftTaker);
+        flatDR = Math.max(0, flatDR - breach);
 
         // Fortitude
         const fort = Math.max(
@@ -2756,7 +2758,7 @@ export function getEntityDR(prev, entityKey) {
     if (entity.states[effectKeys.DARK_EMBRACE]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
-    if (entity.states[effectKeys.DEPLOYMENT]) {
+    if (entity.states[effectKeys.ARMORED_DEPLOYMENT]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
 
@@ -2766,14 +2768,6 @@ export function getEntityDR(prev, entityKey) {
 
     if (entity[effectKeys.SONORITY] < 0) {
         drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
-    }
-
-    if (entity.states[effectKeys.VENTING]) {
-        const missingOverheat = Math.max(
-            0,
-            entity[effectKeys.OVERHEAT] - constants.MAX_OVERHEAT,
-        );
-        drMult *= Math.max(0, 1 - missingOverheat / constants.MAX_OVERHEAT);
     }
 
     if (entity.states[effectKeys.VISIONARY]) {
@@ -3838,4 +3832,29 @@ export function getMissingHealth(entity) {
             getEntityTotalHealth(entity) -
             entity[effectKeys.BLOOD_SACRIFICE],
     );
+}
+
+export function getMissingMana(entity) {
+    return Math.max(0, getMaxMana(entity) - getEntityTotalMana(entity));
+}
+
+export function processExitWeaponsDeployed(prev, targetKey) {
+    let post = {
+        ...prev,
+    };
+
+    let draftTarget = extractEntity(post, targetKey);
+
+    draftTarget = {
+        ...draftTarget,
+        [effectKeys.ENERGY_LEVEL]: 1,
+        [effectKeys.DYNAMO]: 1,
+        [effectKeys.OVERHEAT]: 1,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.WEAPONS_DEPLOYED]: false,
+        },
+    };
+
+    return replaceEntity(post, draftTarget, targetKey);
 }

@@ -11,11 +11,7 @@ export default function CyborgTracker({ entityKey }) {
 
     const entity = game?.entities?.[entityKey];
 
-    const isCyborgActive =
-        entity?.states?.[effectKeys.DEPLOYMENT] ||
-        entity?.states?.[effectKeys.WEAPONS_DEPLOYED] ||
-        entity?.states?.[effectKeys.THERMAL_OVERLOAD] ||
-        entity?.states?.[effectKeys.VENTING];
+    const isCyborgActive = entity?.states?.[effectKeys.WEAPONS_DEPLOYED];
 
     if (!entity || !isCyborgActive) {
         return null;
@@ -23,10 +19,16 @@ export default function CyborgTracker({ entityKey }) {
 
     return (
         <div className="cyborg-tracker-container">
-            <div onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.ENERGY_LEVEL)}>
+            <div
+                onMouseDown={(e) =>
+                    handleSpawnTooltip(e, effectKeys.ENERGY_LEVEL)
+                }
+            >
                 <div className="energy-line-row">
                     <span className="energy-line-label">ENERGY LEVEL</span>
-                    <span className="energy-line-value">{entity.energyLevel}</span>
+                    <span className="energy-line-value">
+                        {entity.energyLevel}
+                    </span>
                 </div>
             </div>
 

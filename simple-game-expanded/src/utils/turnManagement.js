@@ -629,32 +629,6 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
-    // Venting
-    if (draftCurrActor.states[effectKeys.VENTING]) {
-        const overheatConsumed = Math.min(
-            constants.VENTING_OVERHEAT_LOSS,
-            draftCurrActor[effectKeys.OVERHEAT],
-        );
-
-        const newOverheat =
-            draftCurrActor[effectKeys.OVERHEAT] - overheatConsumed;
-        const newDynamo = Math.min(
-            constants.MAX_DYNAMO,
-            draftCurrActor[effectKeys.DYNAMO] + overheatConsumed,
-        );
-
-        draftCurrActor = {
-            ...draftCurrActor,
-            [effectKeys.OVERHEAT]: newOverheat,
-            [effectKeys.DYNAMO]: newDynamo,
-            states: {
-                ...draftCurrActor.states,
-                [effectKeys.VENTING]: newOverheat > 0,
-                [effectKeys.WEAPONS_DEPLOYED]: newOverheat <= 0,
-            },
-        };
-    }
-
     // Bad Omen
     if (draftCurrActor[effectKeys.BAD_OMEN] > 0) {
         const pdGained = Math.floor(

@@ -1663,12 +1663,7 @@ export function bloodknightAI(context) {
     }
 
     // Use defense if needed
-    const hpThreshold =
-        nonAgent.states[effectKeys.DEPLOYMENT] ||
-        nonAgent.states[effectKeys.WEAPONS_DEPLOYED] ||
-        nonAgent.states[effectKeys.VENTING]
-            ? 5
-            : 2;
+    const hpThreshold = nonAgent.states[effectKeys.WEAPONS_DEPLOYED] ? 5 : 4;
 
     const postCommitAgent = extractEntity(
         commitTurn(prev, agentKey, nonAgentKey),
@@ -1911,6 +1906,7 @@ export function shadowSorcererAI(context) {
 
 export function cyborgAI(context) {
     const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
+
     const simulate = createSimulator(context);
 
     // Helper for selecting end of turn action
@@ -1976,19 +1972,8 @@ export function cyborgAI(context) {
     }
 
     // Not on the Cyborg states -> Deploy
-    const inAnyStance =
-        agent.states[effectKeys.VENTING] ||
-        agent.states[effectKeys.WEAPONS_DEPLOYED] ||
-        agent.states[effectKeys.THERMAL_OVERLOAD] ||
-        agent.states[effectKeys.DEPLOYMENT];
-
-    if (!inAnyStance) {
+    if (!agent.states[effectKeys.WEAPONS_DEPLOYED]) {
         return actionKeys.DEPLOY;
-    }
-
-    // On Venting, use defensive
-    if (agent.states[effectKeys.VENTING]) {
-        return selectDefense();
     }
 
     // Generate baseline simulation for next steps
@@ -2043,18 +2028,22 @@ export function cyborgAI(context) {
 }
 
 export function maestroAI(context) {
-    const { agent, hasManaForSpecial, nonAgentKey, agentKey } = context;
+    const { agent, nonAgentKey, nonAgent, agentKey } = context;
 
-    // If on thermal, use the only action available
-    if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    // On thermal, use Meltdown
+    if (
+        agent.states[effectKeys.THERMAL_OVERLOAD] &&
+        isActionAvailable(actionKeys.MELTDOWN)
+    ) {
         return actionKeys.MELTDOWN;
     }
 
-    const simulate = createSimulator(context);
-
     // Simulate Special Attack
     // If it kills, use it
-    if (hasManaForSpecial) {
+    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
         const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
         if (
             willEntityEffectivelyDieByNextUpkeep(
@@ -2076,47 +2065,69 @@ export function maestroAI(context) {
         return actionKeys.ATTACK;
     }
 
-    // if not on resonant, attune
-    if (!agent.states[effectKeys.RESONANT]) {
+    // If not on Resonant, use Attune
+    if (
+        !agent.states[effectKeys.RESONANT] &&
+        isActionAvailable(actionKeys.ATTUNE)
+    ) {
         return actionKeys.ATTUNE;
     }
 
-    // if not on any of the laser states, deploy
-    if (
-        !agent.states[effectKeys.DEPLOYMENT] &&
-        !agent.states[effectKeys.WEAPONS_DEPLOYED] &&
-        !agent.states[effectKeys.VENTING] &&
-        !agent.states[effectKeys.THERMAL_OVERLOAD]
-    ) {
-        return actionKeys.DEPLOY;
-    }
+    // === Sonority ===
 
-    // if positive on sonority, babel
-    if (agent[effectKeys.SONORITY] > 0) {
+    // If absolute positive on sonority...
+    if (agent[effectKeys.SONORITY] >= constants.SONORITY_HIGHER_LIMIT) {
+        // If target is enligtened, use SpAtk
+        if (
+            isActionAvailable(actionKeys.SPECIAL_ATTACK) &&
+            nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+
+        // else, use Babel
         return actionKeys.BABEL;
     }
 
-    // if absolute negative on sonority, check safety
+    // If absolute negative on sonority, use silence
     if (agent[effectKeys.SONORITY] <= constants.SONORITY_LOWER_LIMIT) {
         return actionKeys.SOUND_OF_SILENCE;
     }
 
-    // If on venting
-    if (agent.states[effectKeys.VENTING]) {
-        if (agent[effectKeys.SONORITY] < 0) {
-            return actionKeys.SOUND_OF_SILENCE;
-        }
-
-        if (agent[effectKeys.SONORITY] > 0) {
-            return actionKeys.BABEL;
-        }
+    // On high def, if sonority is 0 or higher, use aegis
+    if (
+        agent[effectKeys.SONORITY] >= 0 &&
+        getEntityDef(agent) >= 5 &&
+        isActionAvailable(actionKeys.AEGIS)
+    ) {
+        return actionKeys.AEGIS;
     }
 
-    // if available, use laser
-    if (agent.states[effectKeys.WEAPONS_DEPLOYED]) {
+    // If Sonority is higher than 0, use Babel
+    if (agent[effectKeys.SONORITY] > 0 && isActionAvailable(actionKeys.BABEL)) {
+        return actionKeys.BABEL;
+    }
+
+    // Otherwise play laser if available
+    // If available, use Laser
+    if (
+        agent.states[effectKeys.WEAPONS_DEPLOYED] &&
+        isActionAvailable(actionKeys.LASER)
+    ) {
         return actionKeys.LASER;
     }
 
+    // Otherwise, try deploy
+    if (isActionAvailable(actionKeys.DEPLOY)) {
+        return actionKeys.DEPLOY;
+    }
+
+    // If Sonority is lower than 0, use Silence
+    if (agent[effectKeys.SONORITY] < 0 && isActionAvailable(actionKeys.SOUND_OF_SILENCE)) {
+        return actionKeys.SOUND_OF_SILENCE;
+    }
+
+    // safeguard: play guard
     return actionKeys.GUARD;
 }
 
