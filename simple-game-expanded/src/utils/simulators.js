@@ -1089,29 +1089,17 @@ function simulateCondemn({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = extractEntity(post, agentKey);
 
-    if (draftAgent.states[effectKeys.PIOUS]) {
-        // Gains Penitence
-        draftAgent = {
-            ...draftAgent,
-            resources: {
-                ...draftAgent.resources,
-                [effectKeys.PENITENCE]:
-                    draftAgent.resources[effectKeys.PENITENCE] +
-                    Math.floor(
-                        getRevelation(post, agentKey) * constants.PIOUS_MULT,
-                    ),
-            },
-        };
-    } else {
-        // Enters Pious
-        draftAgent = {
-            ...draftAgent,
-            states: {
-                ...draftAgent.states,
-                [effectKeys.PIOUS]: true,
-            },
-        };
-    }
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.PENITENCE]:
+                draftAgent.resources[effectKeys.PENITENCE] +
+                Math.floor(
+                    getRevelation(post, agentKey) * constants.PIOUS_MULT,
+                ),
+        },
+    };
 
     post = replaceEntity(post, draftAgent, agentKey);
 

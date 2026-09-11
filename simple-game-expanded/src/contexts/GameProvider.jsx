@@ -53,6 +53,7 @@ import {
     processStarfallTurn,
     processUpkeep,
     processAnointment,
+    processReckoning,
 } from "../utils/turnManagement";
 import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
@@ -79,6 +80,7 @@ function resetGameState(prev) {
         undoPile: [],
         redoPile: [],
         aiQueue: [],
+        ivn: INITIAL_GAME_STATE?.ivn,
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -205,9 +207,10 @@ export default function GameProvider({ children }) {
         try {
             const savedData = localStorage.getItem("gameCheckpoint");
             if (savedData) {
+                const parsed = JSON.parse(savedData);
                 let savedGame = {
                     ...INITIAL_GAME_STATE,
-                    ...JSON.parse(savedData),
+                    ...parsed,
                     progressStatus: playerProgress,
                 };
 
@@ -218,7 +221,7 @@ export default function GameProvider({ children }) {
                 ];
 
                 // Reset game if it's finished
-                if (toBeResetStatus.includes(savedGame.status)) {
+                if (toBeResetStatus.includes(savedGame.status) || parsed?.ivn !== INITIAL_GAME_STATE?.ivn) {
                     savedGame = resetGameState(savedGame);
                 } else {
                     savedGame = {
@@ -881,6 +884,13 @@ export default function GameProvider({ children }) {
                     break;
                 }
 
+                case roundPhases.RECKONING: {
+                    nextState = processReckoning(gameState);
+                    delayAmount = 800 * gameSpeeds[game.speed].mod;
+                    historyKey = eventKeys.RECKONING;
+                    break;
+                }
+
                 case roundPhases.P1_STARS_TURN: {
                     targetKey = entityKeys.PLAYER_ONE;
                     nonTargetKey = entityKeys.PLAYER_TWO;
@@ -1013,7 +1023,7 @@ export default function GameProvider({ children }) {
 
             // Fallback
             if (!nextState) {
-                nextState = game;
+                return;
             }
 
             // History
@@ -1082,6 +1092,11 @@ export default function GameProvider({ children }) {
                 }
                 default:
                     break;
+            }
+
+            // Judgement Override
+            if(activePlayer?.states?.[effectKeys.ANOINTED_PROXY]) {
+                delay = 1600;
             }
 
             const aiTimer = setTimeout(async () => {

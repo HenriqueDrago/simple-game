@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { UIContext } from "./UIContext";
 import { turnStatus } from "../utils/enums";
-import { INITIAL_GLOSSARY_SPECS } from "../utils/constants";
+import { INITIAL_GAME_STATE, INITIAL_GLOSSARY_SPECS } from "../utils/constants";
 
 function hasOngoingSavedGame() {
     try {
@@ -18,7 +18,7 @@ function hasOngoingSavedGame() {
             turnStatus.DEFEAT,
             turnStatus.SETUP,
         ];
-        return !finishedStatuses.includes(parsed.status);
+        return !finishedStatuses.includes(parsed.status) && parsed?.ivn === INITIAL_GAME_STATE?.ivn;
     } catch {
         return false;
     }

@@ -1,5 +1,9 @@
 import { useGame } from "../contexts/GameContext";
-import { canUseCombatInteractions, isEntityDead } from "../utils/entities";
+import {
+    canUseCombatInteractions,
+    isChoirActive,
+    isEntityDead,
+} from "../utils/entities";
 
 import StateBadges from "./StateBadges";
 import "./AngelPanel.css";
@@ -10,6 +14,7 @@ import ChoirTracker from "./ChoirTracker";
 import HallowedEchoesBar from "./HallowedEchoesBar";
 import CodexOfBlasphemy from "./CodexOfBlasphemy";
 import CelestialStars from "./CelestialStars";
+import { choirKeys } from "../utils/enums";
 
 export default function AngelPanel({ entityKey }) {
     const { game } = useGame();
@@ -30,11 +35,13 @@ export default function AngelPanel({ entityKey }) {
 
             <AngelAttr entityKey={entityKey} />
 
-            <div className="stars-codex-container">
-                <CodexOfBlasphemy entityKey={entityKey} />
+            {isChoirActive(entity, choirKeys.SEVENTH) && (
+                <div className="stars-codex-container">
+                    <CodexOfBlasphemy entityKey={entityKey} />
 
-                <CelestialStars entityKey={entityKey} />
-            </div>
+                    <CelestialStars entityKey={entityKey} />
+                </div>
+            )}
 
             <HallowedEchoesBar entityKey={entityKey} />
 

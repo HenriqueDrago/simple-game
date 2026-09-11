@@ -482,7 +482,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.PRISMATIC]: false,
             [effectKeys.EVENT_HORIZON]: false,
             [effectKeys.IMMACULATE]: false,
-            [effectKeys.PIOUS]: false,
             [effectKeys.CEREMONIAL]: false,
         },
     };
@@ -843,6 +842,15 @@ export function buildRoundQueue(prev) {
     // Round Start
     if (!newQueue.includes(roundPhases.ROUND_START)) {
         newQueue.push(roundPhases.ROUND_START);
+    }
+
+    // Reckoning
+    if (
+        prev?.btt?.[effectKeys.EYE_OF_HEAVENS] !== eyeKeys.DORMANT &&
+        !newQueue.includes(roundPhases.RECKONING) &&
+        !newQueue.includes(roundPhases.PLAYER_ONE_TURN) && !newQueue.includes(roundPhases.PLAYER_TWO_TURN)
+    ) {
+        newQueue.push(roundPhases.RECKONING);
     }
 
     // Anointment

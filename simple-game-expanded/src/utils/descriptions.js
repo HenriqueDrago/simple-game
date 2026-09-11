@@ -96,7 +96,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "TURN START",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A TURN subphase where the certain effects are applied. In this subphase, combat effects are applied in the following other: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, STARDUST, MOON DEW, HARMONY, UNRELENTING SHADOWS, CONJECTURE, SHADOWFLAME, LINGERING EMBER, UMBRAL CORE, SHATTERED, ARMORED_DEPLOYMENT, DYNAMO, REFRACTED DIVINITY, LUNACY, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE, PIOUS and CEREMONIAL clearance.",
+            "A TURN subphase where the certain effects are applied. In this subphase, combat effects are applied in the following other: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, STARDUST, MOON DEW, HARMONY, UNRELENTING SHADOWS, CONJECTURE, SHADOWFLAME, LINGERING EMBER, UMBRAL CORE, SHATTERED, ARMORED_DEPLOYMENT, DYNAMO, REFRACTED DIVINITY, LUNACY, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE and CEREMONIAL clearance.",
     },
 
     [effectKeys.ACTIVE_PHASE]: {
@@ -825,7 +825,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "VOYAGER",
         type: entryTypes.CONTROLLER,
         description:
-            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR for healing; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS or VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects or OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action and the LUNATIC enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The eighth challenge. Focuses on the use of CHART, alongside ORANGE STAR, INDIGO STAR and VIOLET STAR for maximizing STARS generation and the use of GREEN STAR and BLUE STAR for defensive utility; upon acquiring enough STARS, attempts to kill the opponent using RED STARS, ORANGE STARS, YELLOW STARS or VIOLET STARS alongside DEFENSIVE ACTIONS to mitigate the STARS effects or OFFENSIVE ACTIONS to maximize damage dealt. In PROGRESSION MODE, defeat this enemy to unlock the CHART action and the LUNATIC enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.CHART]: {
@@ -951,7 +951,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "SINGULARITY",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "Added to ROUND QUEUE after the corresponding player's STARFALL. Allows the use of ACTIONS and other combat interactions. Cannot assign STARS on this phase.",
+            "Counts as an EXTRA TURN. Added to ROUND QUEUE after the corresponding player's STARFALL. Cannot assign STARS on this phase.",
     },
 
     [effectKeys.ACCRETION]: {
@@ -972,21 +972,21 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises ATTRIBUTES equal to CONSTELLATION rank. During the ACTION PHASE of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION. At TURN END, lose all CONSTELLATION.",
+            "Raises ATTRIBUTES equal to CONSTELLATION rank. During ACTION PHASE, can be interacted with to become AZURE CONSTELLATION or CRIMSON CONSTELLATION. At TURN END, lose all CONSTELLATION.",
     },
 
     [effectKeys.AZURE_CONSTELLATION]: {
         name: "AZURE CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises DEFENSE equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During the ACTION PHASE subphase of a player's TURN, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At TURN END, lose all AZURE CONSTELLATION.",
+            "Raises DEFENSE equal to AZURE CONSTELLATION rank. When raising CONSTELLATION rank, raises AZURE CONSTELLATION rank instead. During ACTION PHASE, can be interacted with to become CONSTELLATION or CRIMSON CONSTELLATION. At TURN END, lose all AZURE CONSTELLATION.",
     },
 
     [effectKeys.CRIMSON_CONSTELLATION]: {
         name: "CRIMSON CONSTELLATION",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises STRENGTH equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During the ACTION PHASE subphase of a player's TURN, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At TURN END, lose all CRIMSON CONSTELLATION.",
+            "Raises STRENGTH equal to CRIMSON CONSTELLATION rank. When raising CONSTELLATION rank, raises CRIMSON CONSTELLATION rank instead. During ACTION PHASE, can be interacted with to become AZURE CONSTELLATION or CONSTELLATION. At TURN END, lose all CRIMSON CONSTELLATION.",
     },
 
     [effectKeys.GREEN_STAR]: {
@@ -1014,14 +1014,21 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "FAULTY FIRMAMENT",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FAULTY FIRMAMENT to reduce the damage taken. At TURN START, loses all FAULTY FIRMAMENT and raises IRRADIATION by 5% per FAULTY FIRMAMENT lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FAULTY FIRMAMENT to reduce the damage taken. At TURN START, loses all FAULTY FIRMAMENT and raises IRRADIATION by 10% per FAULTY FIRMAMENT lost.",
     },
 
     [effectKeys.IRRADIATION]: {
         name: "IRRADIATION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 5% excess. At TURN START, loses all IRRADIATION.",
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 10% excess. At TURN START, loses all IRRADIATION.",
+    },
+
+    [effectKeys.INDIGO_STAR]: {
+        name: "INDIGO STAR",
+        type: entryTypes.STAR,
+        description:
+            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to normal INDIGO STAR converted. Gains GRAY STAR equal to augmented INDIGO STAR converted.",
     },
 
     [effectKeys.STARDUST]: {
@@ -1031,12 +1038,6 @@ export const VOYAGER_DESCRIPTIONS = {
             "At TURN START, for every 3 STARDUST on self, loses 3 STARDUST and gains 1 WHITE STAR.",
     },
 
-    [effectKeys.INDIGO_STAR]: {
-        name: "INDIGO STAR",
-        type: entryTypes.STAR,
-        description:
-            "At INDIGO STARFALL, converts all INDIGO STAR into WHITE STAR. Gains STARDUST equal to normal INDIGO STAR converted. Gains GRAY STAR equal to augmented INDIGO STAR converted.",
-    },
 
     [effectKeys.VIOLET_STAR]: {
         name: "VIOLET STAR",
@@ -1421,7 +1422,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS, PIOUS and IMMACULATE, loses all REVELATION and FORTITUDE and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1524,14 +1525,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "CONDEMN",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Inflicts PHYSICAL TARNISHMENT equal to the user's REVELATION. Then, enters PIOUS state.",
-    },
-
-    [effectKeys.PIOUS]: {
-        name: "PIOUS",
-        type: entryTypes.STATE,
-        description:
-            "When using CONDEMN, gains PENITENCE equal to half the user's REVELATION. At TURN START, exits this state.",
+            "Inflicts PHYSICAL TARNISHMENT equal to the user's REVELATION. Then, gains PENITENCE equal to half the user's REVELATION.",
     },
 
     [effectKeys.PENITENCE]: {

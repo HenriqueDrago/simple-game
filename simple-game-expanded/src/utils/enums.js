@@ -294,7 +294,6 @@ export const effectKeys = Object.freeze({
 
     MOTES_OF_RUIN: "moteRuin",
     MOTES_OF_CREATION: "moteCreation",
-    PIOUS: "pietous",
     PENITENCE: "penitence",
 
     // other

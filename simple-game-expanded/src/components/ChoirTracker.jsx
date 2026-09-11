@@ -4,6 +4,11 @@ import { choirKeys, entryTypes } from "../utils/enums";
 import "./ChoirTracker.css";
 
 const choirMap = {
+    [choirKeys.NONE]: {
+        name: "Fallen",
+        color: "#5d4108",
+        glow: "rgba(100, 72, 12, 0.3)",
+    },
     [choirKeys.FIRST]: {
         name: "First",
         color: "#6e5210",

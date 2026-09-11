@@ -1,6 +1,12 @@
 import "./ActionPanel.css";
 
-import { turnStatus, aiKeys, effectKeys, roundPhases, entityKeys } from "../utils/enums";
+import {
+    turnStatus,
+    aiKeys,
+    effectKeys,
+    roundPhases,
+    entityKeys,
+} from "../utils/enums";
 import { actionMap, FREE_ACTIONS } from "../utils/constants";
 import {
     getActions,
@@ -20,41 +26,37 @@ function ActionPanel() {
     const { handleClearTooltip, handleSetTooltip } = useUI();
 
     const battleState = game.status;
-    if (battleState !== turnStatus.ONGOING) {
-        if (game?.progressMode) {
-            if (battleState === turnStatus.VICTORY) {
-                return (
-                    <div className="action-panel-single-button">
-                        <button
-                            onClick={() => {
-                                handleContinue(entityKeys.PLAYER_TWO);
-                            }}
-                        >
-                            Continue
-                        </button>
-                    </div>
-                );
-            }
-
-            if (
-                battleState === turnStatus.DRAW ||
-                battleState === turnStatus.DEFEAT
-            ) {
-                return (
-                    <div className="action-panel-single-button">
-                        <button
-                            onClick={() => {
-                                handleRetry();
-                            }}
-                        >
-                            Retry
-                        </button>
-                    </div>
-                );
-            }
+    if (battleState !== turnStatus.ONGOING && game?.progressMode) {
+        if (battleState === turnStatus.VICTORY) {
+            return (
+                <div className="action-panel-single-button">
+                    <button
+                        onClick={() => {
+                            handleContinue(entityKeys.PLAYER_TWO);
+                        }}
+                    >
+                        Continue
+                    </button>
+                </div>
+            );
         }
 
-        return null;
+        if (
+            battleState === turnStatus.DRAW ||
+            battleState === turnStatus.DEFEAT
+        ) {
+            return (
+                <div className="action-panel-single-button">
+                    <button
+                        onClick={() => {
+                            handleRetry();
+                        }}
+                    >
+                        Retry
+                    </button>
+                </div>
+            );
+        }
     }
 
     const currPhase =

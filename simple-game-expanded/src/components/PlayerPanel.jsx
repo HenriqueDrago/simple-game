@@ -15,7 +15,6 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
     const { game } = useGame();
 
     const entity = game.entities[entityKey];
-    const simEntity = game?.simGame?.entities?.[entityKey];
     const states = entity.states;
 
     const isStargazer = states?.[effectKeys.STARGAZER];
@@ -51,8 +50,7 @@ export default function PlayerPanel({ entityKey, reversed = false }) {
     const statesClass = activeStates.join(" ");
 
     const showAngel =
-        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
-        (simEntity && simEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]);
+        entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]
 
     return (
         <div className="player-panel-super-container">

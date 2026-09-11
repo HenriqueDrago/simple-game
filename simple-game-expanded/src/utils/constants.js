@@ -6,9 +6,10 @@ import {
     shadowSorcererAI,
     cyborgAI,
     maestroAI,
-    starfarerAI,
     lunaticAI,
     augurAI,
+    voyagerAI,
+    seraphAI,
 } from "./aiControllers.js";
 import {
     AUGUR_DESCRIPTIONS,
@@ -77,9 +78,9 @@ export const constants = Object.freeze({
     BLAS_TARNISH: 0.3,
     PROV_EXCESS_RATE: 0.5 / 2.5,
 
-    IRRAD_DMG_EXCESS: 5,
+    IRRAD_DMG_EXCESS: 10,
     MAX_IRRADIATION: 100,
-    IRRADIATION_GAIN_RATE: 5,
+    IRRADIATION_GAIN_RATE: 10,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
     SPARK_RESTORE_RATE: 2,
@@ -261,7 +262,7 @@ export const presetAi = {
             str: 0,
             def: 10,
         },
-        caller: starfarerAI,
+        caller: voyagerAI,
         desc: [...Object.keys(VOYAGER_DESCRIPTIONS)],
     },
     [aiKeys.LUNATIC]: {
@@ -279,7 +280,7 @@ export const presetAi = {
             str: 0,
             def: 10,
         },
-        caller: simpleAI,
+        caller: seraphAI,
         desc: [...Object.keys(SERAPH_DESCRIPTIONS)],
     },
 };
@@ -429,6 +430,7 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
+    ivn: 1,
 
     speed: speedKeys.ONE,
 

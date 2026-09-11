@@ -59,7 +59,7 @@ function App() {
             }
 
             // Enable Game Shortcuts only when all overlays are disabled
-            if (!isAnyOverlayOpen()) {
+            if (!isAnyOverlayOpen(["history"])) {
                 // Pause / Unpause & Start
                 if (e.code === "Space" || e.key === " ") {
                     e.preventDefault();

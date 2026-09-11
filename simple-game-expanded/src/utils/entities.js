@@ -324,7 +324,6 @@ export function createBaseEntity() {
             [effectKeys.ZENITH_OF_MORTALITY]: false,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
             [effectKeys.IMMACULATE]: false,
-            [effectKeys.PIOUS]: false,
         },
         stars: {
             [effectKeys.WHITE_STAR]: 0,
@@ -3630,7 +3629,6 @@ export function processExitAscendence(prev, entityKey) {
         states: {
             ...draftEntity.states,
             [effectKeys.ASCENDENCE_OF_SPIRIT]: false,
-            [effectKeys.PIOUS]: false,
             [effectKeys.IMMACULATE]: false,
         },
     };
@@ -3683,6 +3681,7 @@ export function exitChoirs(prev, entityKey) {
             edicts: {
                 ...createBaseEntity().edicts,
             },
+            [entryTypes.HEAVENLY_CHOIR]: choirKeys.NONE,
         },
         entityKey,
     );

@@ -93,7 +93,7 @@ export default function FieldTracker() {
                         isProvChanged ? "is-preview" : ""
                     }`}
                 >
-                    {displayProv} / {constants.MAX_PROVIDENCE}
+                    {displayProv}%
                 </span>
             </div>
 
