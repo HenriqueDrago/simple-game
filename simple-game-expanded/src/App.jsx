@@ -14,13 +14,14 @@ import "./App.css";
 import { useGame } from "./contexts/GameContext.js";
 import { useUI } from "./contexts/UIContext.js";
 import {
-    INITIAL_GAME_STATE,
     INITIAL_GLOSSARY_SPECS,
 } from "./utils/constants.js";
 import { speedKeys, turnStatus } from "./utils/enums.js";
 import { useEffect } from "react";
 import NewcomerModal from "./components/NewcomerModal.jsx";
 import InsertCode from "./components/InsertCode.jsx";
+import Footer from "./components/Footer.jsx";
+import CompletionModal from "./components/CompletionModal.jsx";
 
 // App Component
 function App() {
@@ -35,6 +36,8 @@ function App() {
         handleStart,
         handleRetry,
         handleResetGame,
+        handleWhoStartsToggle,
+        handleResetProgression,
     } = useGame();
     const {
         UIElements,
@@ -72,6 +75,14 @@ function App() {
                                 paused: !prev?.paused,
                             };
                         });
+                    }
+                }
+
+                // Toggle Who Starts
+                if (e.code === "KeyP" || e.key === "p" || e.key === "P") {
+                    e.preventDefault();
+                    if (game.status === turnStatus.SETUP) {
+                        handleWhoStartsToggle(1);
                     }
                 }
 
@@ -236,6 +247,10 @@ function App() {
         return <NewcomerModal />;
     }
 
+    if (UIElements.completionModal) {
+        return <CompletionModal />;
+    }
+
     return (
         <div className="app-container">
             {tooltipStack?.length > 0 && (
@@ -254,12 +269,7 @@ function App() {
                         }));
                     }}
                     confirmAction={() => {
-                        setGame((prev) => ({
-                            ...prev,
-                            progressStatus: {
-                                ...INITIAL_GAME_STATE.progressStatus,
-                            },
-                        }));
+                        handleResetProgression();
 
                         setUIElements((prev) => ({
                             ...prev,
@@ -306,6 +316,7 @@ function App() {
                 <div className="game-panels-container">
                     <GamePanel />
                     <ActionPanel />
+                    <Footer />
                 </div>
                 <History />
             </div>

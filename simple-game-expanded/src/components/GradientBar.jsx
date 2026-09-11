@@ -32,7 +32,7 @@ function GradientBar({
     const isNumberChanged = simEntity && simAmount !== realAmount;
     const displayResource = simEntity ? simAmount : realAmount;
 
-    const willDissapear = !isAlwaysActive && realAmount > 0 && simAmount <= 0
+    const willDissapear = !isAlwaysActive && realAmount > 0 && simAmount <= 0;
 
     const gradientPercentage = Math.max(
         0,
@@ -44,7 +44,9 @@ function GradientBar({
     return (
         <div
             className={`gradient-bar-container ${
-                (isNewResource && !isAlwaysActive) || willDissapear ? "is-new-preview" : ""
+                (isNewResource && !isAlwaysActive) || willDissapear
+                    ? "is-new-preview"
+                    : ""
             }`}
             onMouseDown={(e) => {
                 if (targetTooltip) {
@@ -56,7 +58,11 @@ function GradientBar({
                 <span>{label}</span>
                 <span
                     className={`${
-                        isNumberChanged && (!isNewResource || isAlwaysActive) && !willDissapear ? "is-preview" : ""
+                        isNumberChanged &&
+                        (!isNewResource || isAlwaysActive) &&
+                        !willDissapear
+                            ? "is-preview"
+                            : ""
                     }`}
                 >
                     {showPercent

@@ -16,6 +16,7 @@
 .type-default,
 .type-category { color: #94a3b8; }
 
+.type-action { color: #f97316; }
 .type-offensive-action { color: #ff4d4d; }
 .type-defensive-action { color: #38bdf8; }
 .type-transformative-action { color: #c084fc; }
@@ -26,12 +27,14 @@
 .type-damage-type { color: #ff2a6d; }
 .type-damage-modifiers { color: #ff758f; }
 
+.type-resource { color: #38bdf8; }
 .type-mitigation-resource { color: #00f5d4; }
 .type-free-resource { color: #22d3ee; }
 .type-limited-resource { color: #818cf8; }
 .type-fixed-resource { color: #fb923c; }
 .type-ranked-resource { color: #e879f9; }
 .type-overflown-resource { color: #f1f5f9; }
+.type-global-resource { color: #14b8a6; }
 
 .type-stat { color: #94a3b8; }
 .type-base-stats { color: #cbd5e1; }
@@ -41,7 +44,15 @@
 .type-mechanic { color: #4ade80; }
 
 .type-star { color: #fde047; }
+.type-celestial-star { color: #fef08a; }
 .type-runes { color: #00e676; }
+
+.type-controller { color: #a3e635; }
+.type-tarnishment-type { color: #e11d48; }
+.type-spiritual-ordinance { color: #6366f1; }
+.type-blasphemy { color: #dc2626; }
+.type-edict { color: #fbbf24; }
+.type-heavenly-choir { color: #e0e7ff; }
 
 .keyword-text.locked {
     text-decoration: none;

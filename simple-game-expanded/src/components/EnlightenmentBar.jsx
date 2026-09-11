@@ -133,6 +133,9 @@ function EnlightenmentBar({ entity, simEntity }) {
                     style={{
                         width: `${insightPercentage}%`,
                     }}
+                    onMouseDown={(e) =>
+                        handleSpawnTooltip(e, effectKeys.INSIGHT)
+                    }
                 >
                     {insightLossRatio > 0 && (
                         <div

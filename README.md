@@ -2,7 +2,7 @@
 
 A turn-based combat and resource-management game built with React and Vite. Both players take turns executing actions, managing resource pools, and countering their opponent. A match ends when either player's health or max health reaches 0, ending in victory, defeat, or a draw.
 
-[Image: Game Setup Screen]
+![Setup Print](readme-assets/simple-game-setup.png)
 
 Simple Game Expanded can be played at: https://simple-game-hd.vercel.app/
 
@@ -38,14 +38,16 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 * **Mitigation Resources:** Temporary defensive pools that absorb incoming physical and piercing damage before health is lost.
 * **Free Resources:** Uncapped pools used to scale damage, fuel actions, or trigger mechanical effects.
 * **Limited Resources:** Primary capacity pools (health and mana) with non-fixed caps that route overflow recovery into secondary pools.
+* **Overflown Resources:** Secondary pools gained when restoring limited resources above their cap, consumed before primary resources.
 * **Fixed Resources:** Percentage-based meters with strict limits that track mechanic progress, trigger state transformations, or modify damage parameters.
 * **Ranked Resources:** Tier-based counters that scale the strength of specific effects.
+* **Global Resources:** Shared battleground pools that affect both players.
 
 ## Progression Mode
 
 - **Mundane:** A tutorial enemy utilizing basic Attack, Guard, and Heal actions.
 - **Warlock:** Focuses on Special Attack damage scaling based on mana imbalance.
-- **Bloodknight:** Uses Sacrifice and Mana Bleed to convert health into physical damage and delayed healing.
+- **Bloodknight:** Uses Sacrifice and Blood Sacrifice to convert health into physical damage and delayed healing.
 - **Paladin:** Generates mitigation shields and builds divine energy to scale attributes and restore resources.
 - **Shadow Sorcerer:** Enters Umbral Core to manage self-damaging burn loops and restoration triggers.
 - **Cyborg:** Fires laser attacks while managing heat buildup and dynamo charge.
@@ -53,13 +55,20 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 - **Augur:** Sockets runes into an array through actions and detonates them with Curse.
 - **Voyager:** Assigns colored stars to resolve Starfall effects.
 - **Lunatic:** Configures elemental crystal combinations and adapts actions according to the mirrored moon phase.
+- **Seraph:** Ascend through the Heavenly Choirs, managing Edicts and Tarnishment to deliver the final Judgement.
 
 ## Controls & Shortcuts
 
+* **Spacebar:** Starts a match, or pauses/resumes automatic turn progression timers during a match.
 * **Middle Mouse Click (Wheel):** Click on any term or UI element to open a tooltip; clicking highlighted terms inside opens nested tooltips.
-* **Hover Over Actions:** Simulates the immediate outcome of an action.
-* **Shift (Hold):** Simulates end-of-turn commit effects and upcoming starfall resolutions.
-* **Spacebar:** Pauses or resumes automatic turn progression timers.
+* **Hover Over Actions:** Simulates the immediate outcome of an action (can be combined with Shift).
+* **Shift (Hold):** Simulates turn-end effects and upcoming Starfall resolutions.
+* **F / 1 / 2 / 3:** Cycle through game speed settings (1x, 2x, or Inf).
+* **Z / X:** Undo or redo the previous action on the current turn.
+* **G / H / C:** Toggle the Glossary, History, or Code Insert panels.
+* **Shift + R:** Restart the current match.
+* **Alt + R:** Reset the match and return to the setup screen.
+* **P:** Toggle which player starts a match.
 
 ## Getting Started
 
@@ -74,15 +83,3 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 ```bash
 git clone <repository-url>
 cd <project-folder>
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-
-3. Start the local development server:
-```bash
-npm run dev
-```

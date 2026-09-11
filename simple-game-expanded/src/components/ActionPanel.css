@@ -363,15 +363,17 @@ button:disabled:hover {
     }
 }
 
-.action-panel-single-button {
+.action-panel-end-match-buttons {
     display: flex;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     width: 100%;
     padding: 20px 0;
+    gap: 20px;
 }
 
-.action-panel-single-button button {
+.action-panel-end-match-buttons button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -390,7 +392,7 @@ button:disabled:hover {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.action-panel-single-button button:hover {
+.action-panel-end-match-buttons button:hover {
     background-color: #ffffff;
     color: #000000;
 }

@@ -27,6 +27,7 @@ import {
     entityKeys,
     eventKeys,
     playerTurnPhases,
+    progKeys,
     roundPhases,
     sdmKeys,
     speedKeys,
@@ -108,6 +109,10 @@ function loadProgress() {
 }
 
 function setupProgression(prev) {
+    const p2Controller = extractEntity(prev, entityKeys.PLAYER_TWO).controller;
+    const isControllerUnlocked =
+        prev?.progressStatus?.[p2Controller] &&
+        prev?.progressStatus?.[p2Controller] !== progKeys.LOCKED;
     return {
         ...prev,
         progressMode: true,
@@ -130,7 +135,9 @@ function setupProgression(prev) {
                     sdmKeys.BEST,
                     presetAi[aiKeys.WARLOCK].best,
                 ),
-                controller: aiKeys.WARLOCK,
+                controller: isControllerUnlocked
+                    ? p2Controller
+                    : aiKeys.WARLOCK,
                 statDistributionMode: sdmKeys.BEST,
             },
         },
@@ -221,7 +228,10 @@ export default function GameProvider({ children }) {
                 ];
 
                 // Reset game if it's finished
-                if (toBeResetStatus.includes(savedGame.status) || parsed?.ivn !== INITIAL_GAME_STATE?.ivn) {
+                if (
+                    toBeResetStatus.includes(savedGame.status) ||
+                    parsed?.ivn !== INITIAL_GAME_STATE?.ivn
+                ) {
                     savedGame = resetGameState(savedGame);
                 } else {
                     savedGame = {
@@ -246,7 +256,6 @@ export default function GameProvider({ children }) {
 
     // === Handles ===
     function handleAction(action, agentKey, nonAgentKey) {
-        console.log(`${agentKey} Used: ${action}`);
         setGame((prev) => {
             const currPhase =
                 prev.roundQueue && prev.roundQueue[prev.roundIndex];
@@ -282,6 +291,27 @@ export default function GameProvider({ children }) {
                 ...post,
                 paused: false,
             };
+        });
+    }
+
+    function handleResetProgression() {
+        setGame((prev) => {
+            let post = {
+                ...prev,
+                progressStatus: {
+                    ...INITIAL_GAME_STATE.progressStatus,
+                },
+            };
+
+            let p2 = extractEntity(post, entityKeys.PLAYER_TWO);
+            p2 = {
+                ...p2,
+                controller: prev.progressMode ? aiKeys.WARLOCK : p2.controller,
+            };
+
+            post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+
+            return post;
         });
     }
 
@@ -402,8 +432,6 @@ export default function GameProvider({ children }) {
             const index = keys.indexOf(oldController);
             const newIndex = Math.min(index + 1, keys.length - 1);
 
-            console.log(`${keys}, ${index}, ${newIndex}`);
-
             return changeAI(post, keys[newIndex], entityKey);
         });
     }
@@ -413,6 +441,33 @@ export default function GameProvider({ children }) {
             ...prev,
             whoStarts: value,
         }));
+    }
+
+    function handleWhoStartsToggle(value) {
+        setGame((prev) => {
+            const currStarts = prev?.whoStarts;
+            const values = Object.values(whoStartsKeys);
+            const index = values.indexOf(currStarts);
+
+            // Fallback
+            if (index === -1) {
+                return {
+                    ...prev,
+                    whoStarts: values[0],
+                };
+            }
+
+            let nextIndex = (index + value) % values.length;
+
+            if (nextIndex < 0) {
+                nextIndex += values.length;
+            }
+
+            return {
+                ...prev,
+                whoStarts: values[nextIndex],
+            };
+        });
     }
 
     function handleStarChange(targetKey, starKey, value) {
@@ -1095,7 +1150,7 @@ export default function GameProvider({ children }) {
             }
 
             // Judgement Override
-            if(activePlayer?.states?.[effectKeys.ANOINTED_PROXY]) {
+            if (activePlayer?.states?.[effectKeys.ANOINTED_PROXY]) {
                 delay = 1600;
             }
 
@@ -1303,6 +1358,8 @@ export default function GameProvider({ children }) {
             handleSetupProgression,
             handleRetry,
             handleContinue,
+            handleWhoStartsToggle,
+            handleResetProgression,
         }),
         [game, simGame],
     );

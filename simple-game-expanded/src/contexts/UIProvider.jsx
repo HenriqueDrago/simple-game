@@ -46,6 +46,7 @@ export default function UIProvider({ children }) {
         hardResetModal: false,
         newcomerModal: isNewcomer(),
         insertCode: false,
+        completionModal: false,
 
         glossary: false,
         history: false,

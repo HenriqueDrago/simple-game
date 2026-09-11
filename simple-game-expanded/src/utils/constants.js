@@ -241,8 +241,8 @@ export const presetAi = {
     [aiKeys.MAESTRO]: {
         name: "Maestro",
         best: {
-            str: 0,
-            def: 10,
+            str: 10,
+            def: 0,
         },
         caller: maestroAI,
         desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
@@ -277,8 +277,8 @@ export const presetAi = {
     [aiKeys.SERAPH]: {
         name: "Seraph",
         best: {
-            str: 0,
-            def: 10,
+            str: 10,
+            def: 0,
         },
         caller: seraphAI,
         desc: [...Object.keys(SERAPH_DESCRIPTIONS)],
@@ -430,7 +430,7 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
-    ivn: 1,
+    ivn: 2,
 
     speed: speedKeys.ONE,
 

@@ -7,7 +7,7 @@ import {
     roundPhases,
     entityKeys,
 } from "../utils/enums";
-import { actionMap, FREE_ACTIONS } from "../utils/constants";
+import { actionMap, FREE_ACTIONS, presetAi } from "../utils/constants";
 import {
     getActions,
     canUseAction,
@@ -15,48 +15,96 @@ import {
     getEntityLabel,
     getCurrActivePlayer,
     getOtherEntity,
+    extractEntity,
 } from "../utils/entities";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 
 function ActionPanel() {
-    const { game, handleAction, setGame, handleContinue, handleRetry } =
-        useGame();
-    const { handleClearTooltip, handleSetTooltip } = useUI();
+    const {
+        game,
+        handleAction,
+        setGame,
+        handleContinue,
+        handleRetry,
+        handleResetGame,
+    } = useGame();
+    const { handleClearTooltip, handleSetTooltip, setUIElements } = useUI();
 
     const battleState = game.status;
-    if (battleState !== turnStatus.ONGOING && game?.progressMode) {
-        if (battleState === turnStatus.VICTORY) {
-            return (
-                <div className="action-panel-single-button">
-                    <button
-                        onClick={() => {
-                            handleContinue(entityKeys.PLAYER_TWO);
-                        }}
-                    >
-                        Continue
-                    </button>
-                </div>
-            );
-        }
 
-        if (
-            battleState === turnStatus.DRAW ||
-            battleState === turnStatus.DEFEAT
-        ) {
-            return (
-                <div className="action-panel-single-button">
-                    <button
-                        onClick={() => {
-                            handleRetry();
-                        }}
-                    >
-                        Retry
-                    </button>
-                </div>
-            );
-        }
+    if (
+        [turnStatus.VICTORY, turnStatus.DEFEAT, turnStatus.DRAW].includes(
+            battleState,
+        )
+    ) {
+        return (
+            <div className="action-panel-end-match-buttons">
+                <button
+                    onClick={() => {
+                        setUIElements((prev) => ({
+                            ...prev,
+                            history: false,
+                            continueModal: false,
+                        }));
+                        handleResetGame();
+                    }}
+                >
+                    Reset
+                </button>
+                {game?.progressMode &&
+                    [turnStatus.DEFEAT, turnStatus.DRAW].includes(
+                        battleState,
+                    ) && (
+                        <button
+                            onClick={() => {
+                                setUIElements((prev) => ({
+                                    ...prev,
+                                    continueModal: false,
+                                }));
+                                handleRetry();
+                            }}
+                        >
+                            Retry
+                        </button>
+                    )}
+                {game?.progressMode &&
+                    [turnStatus.VICTORY].includes(battleState) && (
+                        <button
+                            onClick={() => {
+                                const oldController = extractEntity(
+                                    game,
+                                    entityKeys.PLAYER_TWO,
+                                ).controller;
+                                const keys = Object.keys(presetAi);
+                                const index = keys.indexOf(oldController);
+
+                                console.log(keys.length - 1)
+
+                                if (index >= keys.length - 1) {
+                                    setUIElements((prev) => ({
+                                        ...prev,
+                                        history: false,
+                                        continueModal: false,
+                                        completionModal: true,
+                                    }));
+                                    handleResetGame();
+                                } else {
+                                    setUIElements((prev) => ({
+                                        ...prev,
+                                        history: false,
+                                        continueModal: false,
+                                    }));
+                                    handleContinue(entityKeys.PLAYER_TWO);
+                                }
+                            }}
+                        >
+                            Continue
+                        </button>
+                    )}
+            </div>
+        );
     }
 
     const currPhase =

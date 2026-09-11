@@ -28,28 +28,28 @@ export const GENERAL_DESCRIPTIONS = {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to CHALLENGE. Additionally, most base ACTIONS are blocked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI, it's GLOSSARY entry and related tooltips can only be unlocked upon defeating the preceding enemy.",
+            "In this mode, faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to CHALLENGE. Additionally, most base ACTIONS are locked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL and SPECIAL ATTACK. Lastly, a new enemy AI, it's GLOSSARY entry and related tooltips can only be unlocked upon defeating the preceding enemy.",
     },
 
     [effectKeys.SHORTCUTS]: {
         name: "SHORTCUTS",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press SPACE to start a MATCH. While inside a MATCH, press SPACE to pause/unpause the MATCH instead, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate TURN END and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf. Press Z/X to undo/redo your previous action on the current turn. Press G/H/C to open/close GLOSSARY / HISTORY / CODE INSERT. Press R while holding SHIFT to restart a MATCH. Press R while holding ALT to reset a MATCH and return to SETUP screen.",
+            "SIMPLE GAME comes equipped with a few shortcuts for improved game experience. Press P while on SETUP to switch WHO STARTS the MATCH. Press SPACE to start a MATCH. While inside a MATCH, press SPACE to pause/unpause the MATCH instead, which puts automatic phases on a hold. Click using MOUSE-WHEEL on nearly anything to spawn a TOOLTIP containing it's description. Hover over any ACTIONS to simulate its effects. Hold SHIFT to simulate TURN END and STARFALL effects, which can be combined with on hover simulations. Press F during a MATCH to cycle through the game speed settings, increasing the speed of animations and transitions. Press 1/2/3 to directly set the speed settings to 1x/2x/Inf. Press Z/X to undo/redo your previous action on the current turn. Press G/H/C to open/close GLOSSARY / HISTORY / CODE INSERT. Press R while holding SHIFT to restart a MATCH. Press R while holding ALT to reset a MATCH and return to SETUP screen.",
     },
 
     [turnStatus.SETUP]: {
         name: "SETUP",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A pre-battle phase where player's can distribute their ATTRIBUTES and adjust a game settings.",
+            "A pre-battle phase where player's can distribute their BASE ATTRIBUTES and adjust settings.",
     },
 
     [effectKeys.CONTROLLER]: {
         name: "CONTROLLER",
         type: entryTypes.MECHANIC,
         description:
-            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, MUNDANE, WARLOCK, BLOODKNIGHT, PALADIN, CYBORG, MAESTRO, AUGUR, SHADOW SORCERER, VOYAGER, SELENIAN and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves the control at the hands of an AI.",
+            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, WARLOCK, BLOODKNIGHT, PALADIN, CYBORG, MAESTRO, AUGUR, SHADOW SORCERER, VOYAGER, SELENIAN and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves the control at the hands of an AI.",
     },
 
     [aiKeys.HUMAN]: {
@@ -295,7 +295,7 @@ export const GENERAL_DESCRIPTIONS = {
     },
 
     [entryTypes.BATTLE_PHASE]: {
-        name: "BATTLE PHASE",
+        name: "BATTLE PHASES",
         type: entryTypes.CATEGORY,
         description: "A subsection of a battle.",
     },
@@ -443,7 +443,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
         name: "BLOOD SACRIFICE",
         type: entryTypes.LIMITED_RESOURCE,
         description:
-            "Capped by MAX HEALTH. Cannot be replenished. Clogs the HEALTH bar, preventing further healing. Raises STRENGTH by BLOOD SACRIFICE on self. Raises DAMAGE REDUCTION by half the percentage of MAX HEALTH filled by BLOOD SACRIFICE. When using a DEFENSIVE ACTION, converts half the BLOOD SACRIFICE on self into HEALTH.",
+            "Capped by MAX HEALTH. Cannot be replenished. Clogs the HEALTH bar, preventing further healing. Raises STRENGTH by BLOOD SACRIFICE on self. Raises DAMAGE REDUCTION by half the percentage of MAX HEALTH filled by BLOOD SACRIFICE. When using DEFENSIVE ACTIONS, converts half the BLOOD SACRIFICE on self into HEALTH.",
     },
 };
 
@@ -951,7 +951,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "SINGULARITY",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "Counts as an EXTRA TURN. Added to ROUND QUEUE after the corresponding player's STARFALL. Cannot assign STARS on this phase.",
+            "Counts as an EXTRA TURN. Added to ROUND after the corresponding player's STARFALL. Cannot assign STARS on this phase.",
     },
 
     [effectKeys.ACCRETION]: {
@@ -1058,14 +1058,14 @@ export const LUNATIC_DESCRIPTIONS = {
     [actionKeys.REFRACT]: {
         name: "REFRACT",
         type: entryTypes.TRANSFORMATIVE_ACTION,
-        description: "Enters SELENIAN.",
+        description: "Enters SELENIAN state.",
     },
 
     [effectKeys.SELENIAN]: {
         name: "SELENIAN",
         type: entryTypes.STATE,
         description:
-            "Enables ELEMENTAL CRYSTALS, MIRRORED MOON and MOON PHASE. Replaces REFRACT with MIRROR. Upon exiting this state, takes LUNIC DAMAGE equal to MOONLIGHT on self, then loses all MOONLIGHT, LUNACY and MOONLIT TEARS, also sets MIRRORED MOON to HIDDEN, ELEMENTAL CRYSTALS to DULLED and disables them. When MAX HEALTH falls below current HEALTH, converts excess HEALTH into SILVER BLOOD. When MAX HEALTH rises past current HEALTH, consumes SILVER BLOOD to replenish missing HEALTH. When MAX HEALTH is decreased below 0, lose MOONLIGHT instead.",
+            "Enables the ELEMENTAL CRYSTALS, MIRRORED MOON and MOON PHASE. Replaces REFRACT with MIRROR. Upon exiting this state, takes LUNIC DAMAGE equal to MOONLIGHT on self, then loses all MOONLIGHT, LUNACY and MOONLIT TEARS, also sets MIRRORED MOON to HIDDEN, ELEMENTAL CRYSTALS to DULLED and disables them. When MAX HEALTH falls below current HEALTH, converts excess HEALTH into SILVER BLOOD. When MAX HEALTH rises past current HEALTH, consumes SILVER BLOOD to replenish missing HEALTH. When MAX HEALTH is decreased below 0, lose MOONLIGHT instead.",
     },
 
     [actionKeys.MIRROR]: {
@@ -1077,7 +1077,7 @@ export const LUNATIC_DESCRIPTIONS = {
     [effectKeys.MOONLIGHT]: {
         name: "MOONLIGHT",
         type: entryTypes.SPECIAL_ATTRIBUTES,
-        description: "Used by some actions and effects.",
+        description: "Scales certain actions and effects.",
     },
 
     [effectKeys.MIRRORED_MOON]: {
@@ -1121,7 +1121,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "MOON PHASE",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "Happens at ROUND END. If MIRRORED MOON is HIDDEN, WANING or CORONAL, sets it to WAXING. If MIRRORED MOON is WAXING or BLOODSTAINED, sets it to WANING.",
+            "Added to ROUND before ROUND END. If MIRRORED MOON is HIDDEN, WANING or CORONAL, sets it to WAXING. If MIRRORED MOON is WAXING or BLOODSTAINED, sets it to WANING.",
     },
 
     [effectKeys.ELEMENTAL_CRYSTALS]: {
@@ -1148,7 +1148,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNAR SHROUD",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Gains REFRACTED DIVINITY equal to the user's DEFENSE, then enters PRISMATIC state.",
+            "Gains REFRACTED DIVINITY equal to the user's DEFENSE. Enters PRISMATIC state.",
     },
 
     [effectKeys.PRISMATIC]: {
@@ -1422,7 +1422,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE and consumes all LIMITED RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the LIMITED RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1476,7 +1476,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "DEFILEMENT",
         type: entryTypes.MECHANIC,
         description:
-            "When inflicting PHYSICAL TARNISHMENT, ignores a portion of the target's FORTITUDE equal to the battlefield's DEFILEMENT. Raises the battlefield's DEFILEMENT by the sum of all entities DEFENSE PENETRATION.",
+            "When inflicting PHYSICAL TARNISHMENT, ignores a portion of the target's FORTITUDE equal to the battlefield's DEFILEMENT. Raises the battlefield's DEFILEMENT by the sum of all entities BREACH.",
     },
 
     [entryTypes.SPIRITUAL_ORDINANCE]: {
@@ -1558,7 +1558,7 @@ export const SERAPH_DESCRIPTIONS = {
 
     [effectKeys.INSPIRATION]: {
         name: "INSPIRATION",
-        type: entryTypes.TRANSFORMATIVE_ACTION,
+        type: entryTypes.FREE_RESOURCE,
         description:
             "Raises REVELATION by the user's INSPIRATION. At TURN END, lose all INSPIRATION, then raises the battlefield's PROVIDENCE by 2.5% per INSPIRATION lost.",
     },
@@ -1816,7 +1816,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "RECKONING",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "Added to ROUND QUEUE after ROUND START. At RECKONING, if there's no entity on the battlefield on HEAVENLY CHOIR: THE NINTH, returns the EYE OF HEAVENS to dormancy.",
+            "Added to ROUND after ROUND START. At RECKONING, if there's no entity on the battlefield on HEAVENLY CHOIR: THE NINTH, returns the EYE OF HEAVENS to dormancy.",
     },
 
     [eyeKeys.CLOSED]: {

@@ -3622,6 +3622,10 @@ export function processExitAscendence(prev, entityKey) {
 
     post = exitChoirs(post, entityKey);
 
+    const raisedStats = Math.floor(
+        (getRevelation(post, entityKey) + getFortitude(post, entityKey)) / 2,
+    );
+
     let draftEntity = extractEntity(post, entityKey);
 
     draftEntity = {
@@ -3633,17 +3637,13 @@ export function processExitAscendence(prev, entityKey) {
         },
     };
 
-    const raisedStats = Math.floor(
-        (getRevelation(post, entityKey) + getFortitude(post, entityKey)) / 2,
-    );
-
     draftEntity = {
         ...draftEntity,
         [effectKeys.REVELATION]: 0,
         [effectKeys.FORTITUDE]: 0,
     };
 
-    const result = consumeLimitedResources(draftEntity, Infinity);
+    const result = consumeResources(draftEntity, Infinity);
 
     draftEntity = result.draftEntity;
 
@@ -3655,7 +3655,7 @@ export function processExitAscendence(prev, entityKey) {
 
     draftEntity = restoreResources(
         draftEntity,
-        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+        result.resourcesConsumed.totalConsumption,
     );
 
     draftEntity = raiseStats(draftEntity, raisedStats);

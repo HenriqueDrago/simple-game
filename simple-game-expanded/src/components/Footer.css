@@ -1,0 +1,25 @@
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 12px 24px;
+    margin-top: auto;
+    align-self: flex-start;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.footer-github-link {
+    color: #777777;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-github-link:hover {
+    color: #ffffff;
+}

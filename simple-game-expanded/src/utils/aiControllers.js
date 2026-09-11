@@ -401,8 +401,6 @@ export async function centralAIManagement(
         aiQueue: newQueue,
     };
 
-    console.log(post.aiQueue);
-
     return processDeathCheck(post);
 }
 
@@ -1735,13 +1733,13 @@ export function bloodknightAI(context) {
 
     if (
         spAtkDmgDealt > atkDmgDealt &&
-        spAtkDmgDealt >= dmgThreshold &&
+        spAtkDmgDealt > dmgThreshold &&
         isActionAvailable(actionKeys.SPECIAL_ATTACK)
     ) {
         return actionKeys.SPECIAL_ATTACK;
     }
 
-    if (atkDmgDealt >= dmgThreshold) {
+    if (atkDmgDealt > dmgThreshold) {
         return actionKeys.ATTACK;
     }
 
@@ -1881,9 +1879,6 @@ export function shadowSorcererAI(context) {
             agentKey,
             actionKeys.SPECIAL_ATTACK,
         );
-
-        console.log(simUpkeepPromise);
-        console.log(simSpAtkPromise);
 
         // if enemy dies by their next commit after they use an sp atk and we don't, use it
         if (
@@ -3234,8 +3229,6 @@ export async function seraphAI(context) {
                 if (nodeTracker.count % 40 === 0) {
                     await new Promise((resolve) => setTimeout(resolve, 10));
                 }
-
-                // console.log("path");
 
                 // Bypass state creation if target edicts match current state
                 const edictSim =

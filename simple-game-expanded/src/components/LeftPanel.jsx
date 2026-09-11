@@ -353,12 +353,13 @@ export default function LeftPanel({ entityKey }) {
                         const isNewResource = curr <= 0 && sim > 0;
                         const isNumberChanged = simEntity && sim !== curr;
                         const displayAmount = simEntity ? sim : curr;
+                        const willDissapear = curr > 0 && sim <= 0
 
                         return (
                             <div
                                 key={key}
                                 className={`counter-item ${
-                                    isNewResource ? "is-new-preview" : ""
+                                    isNewResource || willDissapear ? "is-new-preview" : ""
                                 }`}
                                 style={counter.style}
                                 onMouseDown={(e) => handleSpawnTooltip(e, key)}
@@ -366,7 +367,7 @@ export default function LeftPanel({ entityKey }) {
                                 {counter.label}
                                 <span
                                     className={`counter-amount ${
-                                        isNumberChanged && !isNewResource
+                                        isNumberChanged && !isNewResource && !willDissapear
                                             ? "is-preview"
                                             : ""
                                     }`}

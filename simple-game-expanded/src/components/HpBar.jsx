@@ -53,7 +53,10 @@ function HpBar({ entity, simEntity }) {
         maxHealth > 0 ? Math.min(100, (baseHp / maxHealth) * 100) : 0;
     const baseBsPercentage =
         maxHealth > 0
-            ? Math.min(Math.max(0, 100 - baseBsLeft), (baseBs / maxHealth) * 100)
+            ? Math.min(
+                  Math.max(0, 100 - baseBsLeft),
+                  (baseBs / maxHealth) * 100,
+              )
             : 0;
 
     const simBsLeft =
@@ -74,7 +77,10 @@ function HpBar({ entity, simEntity }) {
         isHpSimulating && maxHealth > 0 ? (simTotal / maxHealth) * 100 : 0;
 
     const gainWidth =
-        isHpSimulating && maxHealth > 0 && simBs > baseBs && simTotal > baseTotal
+        isHpSimulating &&
+        maxHealth > 0 &&
+        simBs > baseBs &&
+        simTotal > baseTotal
             ? ((simTotal - baseTotal) / maxHealth) * 100
             : 0;
     const gainLeft =
@@ -122,7 +128,15 @@ function HpBar({ entity, simEntity }) {
                             <span>{displayHp}</span>
                         )}
                         {displayHasBs && (
-                            <span className="blood-sacrifice-hp">
+                            <span
+                                className="blood-sacrifice-hp"
+                                onMouseDown={(e) =>
+                                    handleSpawnTooltip(
+                                        e,
+                                        effectKeys.BLOOD_SACRIFICE,
+                                    )
+                                }
+                            >
                                 {` (+${displayBs})`}
                             </span>
                         )}
@@ -171,6 +185,9 @@ function HpBar({ entity, simEntity }) {
                             left: `${baseBsLeft}%`,
                             width: `${baseBsPercentage}%`,
                         }}
+                        onMouseDown={(e) =>
+                            handleSpawnTooltip(e, effectKeys.BLOOD_SACRIFICE)
+                        }
                     />
                 )}
 
@@ -209,6 +226,9 @@ function HpBar({ entity, simEntity }) {
                     style={{
                         width: `${silverPercentage}%`,
                     }}
+                    onMouseDown={(e) =>
+                        handleSpawnTooltip(e, effectKeys.SILVER_BLOOD)
+                    }
                 >
                     {silverLossRatio > 0 && (
                         <div

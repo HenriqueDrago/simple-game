@@ -29,13 +29,14 @@ export default function RankedCounter({
     const isNewResource = realAmount <= 0 && simAmount > 0;
     const isNumberChanged = simEntity && simAmount !== realAmount;
     const displayAmount = simEntity ? simAmount : realAmount;
+    const willDissapear = realAmount > 0 && simAmount <= 0
 
     const targetTooltip = tooltip || resourceKey;
 
     return (
         <div
             className={`ranked-counter-container ${
-                isNewResource ? "is-new-preview" : ""
+                isNewResource || willDissapear ? "is-new-preview" : ""
             }`}
             style={style}
             onMouseDown={(e) => {
@@ -48,7 +49,7 @@ export default function RankedCounter({
                 {`${label}: `}
                 <span
                     className={`counter-amount ${
-                        isNumberChanged && !isNewResource ? "is-preview" : ""
+                        isNumberChanged && !isNewResource && !willDissapear ? "is-preview" : ""
                     }`}
                 >
                     {roman ? toRoman(displayAmount) : displayAmount}

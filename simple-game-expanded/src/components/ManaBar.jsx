@@ -111,6 +111,9 @@ function ManaBar({ entity, simEntity }) {
                 <div
                     className="mana-overflow-fill"
                     style={{ width: `${overflowPercentage}%` }}
+                    onMouseDown={(e) =>
+                        handleSpawnTooltip(e, effectKeys.MANA_OVERFLOW)
+                    }
                 >
                     {overflowLossRatio > 0 && (
                         <div
