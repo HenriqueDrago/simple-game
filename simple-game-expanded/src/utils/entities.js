@@ -3847,8 +3847,8 @@ export function processExitWeaponsDeployed(prev, targetKey) {
     draftTarget = {
         ...draftTarget,
         [effectKeys.ENERGY_LEVEL]: 1,
-        [effectKeys.DYNAMO]: 1,
-        [effectKeys.OVERHEAT]: 1,
+        [effectKeys.DYNAMO]: 0,
+        [effectKeys.OVERHEAT]: 0,
         states: {
             ...draftTarget.states,
             [effectKeys.WEAPONS_DEPLOYED]: false,

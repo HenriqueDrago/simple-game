@@ -432,7 +432,7 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
-    ivn: 3,
+    ivn: 4,
 
     speed: speedKeys.ONE,
 

@@ -1,5 +1,6 @@
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
+import { roundNumber } from "../utils/general";
 import "./GradientBar.css";
 
 function GradientBar({
@@ -66,7 +67,7 @@ function GradientBar({
                     }`}
                 >
                     {showPercent
-                        ? `${Math.round(gradientPercentage * 100) / 100}%`
+                        ? `${roundNumber(gradientPercentage, 0)}%`
                         : `${displayResource} / ${maxResource}`}
                 </span>
             </div>
