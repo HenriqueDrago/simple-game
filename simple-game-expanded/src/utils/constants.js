@@ -134,7 +134,6 @@ export const constants = Object.freeze({
     GUARD_MANA_REGEN: 0.3,
     HALO_GEN_MULT: 2,
     SAC_HP_CONSUMPTION: 0.5,
-    SHADOW_PACT_BURN: 5,
     RADIANT_DEF_EFFECT_MULTIPLIER: 0,
     CHART_STAR_GAIN: 3,
     STARDUST_RATE_CONVERSION: 3,
@@ -175,7 +174,7 @@ export const FREE_RESOURCES = [
     effectKeys.MOONSHINE,
     effectKeys.RADIANCE,
     effectKeys.SACRILEGE,
-    effectKeys.MARTHYR,
+    effectKeys.MARTYR,
     effectKeys.PENITENCE,
     effectKeys.INSPIRATION,
     effectKeys.MOTES_OF_RUIN,
@@ -329,6 +328,9 @@ const transformativeActions = [
     actionKeys.SHADOW_PACT,
     actionKeys.DARK_PROMISE,
 
+    actionKeys.CARVE,
+    actionKeys.CURSE,
+
     actionKeys.CHART,
     actionKeys.REFRACT,
     actionKeys.MIRROR,
@@ -430,7 +432,7 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
-    ivn: 2,
+    ivn: 3,
 
     speed: speedKeys.ONE,
 

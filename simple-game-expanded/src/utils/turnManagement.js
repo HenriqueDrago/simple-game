@@ -544,20 +544,20 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         draftCurrActor = extractEntity(post, currActorKey);
     }
 
-    // Marthyr
-    if (draftCurrActor.resources[effectKeys.MARTHYR] > 0) {
+    // Martyr
+    if (draftCurrActor.resources[effectKeys.MARTYR] > 0) {
         const sinGained =
-            draftCurrActor.resources[effectKeys.MARTHYR] *
+            draftCurrActor.resources[effectKeys.MARTYR] *
             constants.BASE_SIN_GAIN;
         const provGained =
-            draftCurrActor.resources[effectKeys.MARTHYR] *
+            draftCurrActor.resources[effectKeys.MARTYR] *
             constants.BASE_PROV_GAIN;
 
         draftCurrActor = {
             ...draftCurrActor,
             resources: {
                 ...draftCurrActor.resources,
-                [effectKeys.MARTHYR]: 0,
+                [effectKeys.MARTYR]: 0,
             },
         };
 
@@ -848,7 +848,8 @@ export function buildRoundQueue(prev) {
     if (
         prev?.btt?.[effectKeys.EYE_OF_HEAVENS] !== eyeKeys.DORMANT &&
         !newQueue.includes(roundPhases.RECKONING) &&
-        !newQueue.includes(roundPhases.PLAYER_ONE_TURN) && !newQueue.includes(roundPhases.PLAYER_TWO_TURN)
+        !newQueue.includes(roundPhases.PLAYER_ONE_TURN) &&
+        !newQueue.includes(roundPhases.PLAYER_TWO_TURN)
     ) {
         newQueue.push(roundPhases.RECKONING);
     }

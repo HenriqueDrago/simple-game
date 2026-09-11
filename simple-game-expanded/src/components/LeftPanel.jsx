@@ -88,8 +88,8 @@ const RANKED_COUNTERS_CONFIG = {
 };
 
 const FREE_STACKS_CONFIG = {
-    [effectKeys.MARTHYR]: {
-        label: "Marthyr",
+    [effectKeys.MARTYR]: {
+        label: "Martyr",
         style: {
             color: "#f48fb1",
             borderColor: "#ad1457",
@@ -353,13 +353,15 @@ export default function LeftPanel({ entityKey }) {
                         const isNewResource = curr <= 0 && sim > 0;
                         const isNumberChanged = simEntity && sim !== curr;
                         const displayAmount = simEntity ? sim : curr;
-                        const willDissapear = curr > 0 && sim <= 0
+                        const willDissapear = curr > 0 && sim <= 0;
 
                         return (
                             <div
                                 key={key}
                                 className={`counter-item ${
-                                    isNewResource || willDissapear ? "is-new-preview" : ""
+                                    isNewResource || willDissapear
+                                        ? "is-new-preview"
+                                        : ""
                                 }`}
                                 style={counter.style}
                                 onMouseDown={(e) => handleSpawnTooltip(e, key)}
@@ -367,7 +369,9 @@ export default function LeftPanel({ entityKey }) {
                                 {counter.label}
                                 <span
                                     className={`counter-amount ${
-                                        isNumberChanged && !isNewResource && !willDissapear
+                                        isNumberChanged &&
+                                        !isNewResource &&
+                                        !willDissapear
                                             ? "is-preview"
                                             : ""
                                     }`}

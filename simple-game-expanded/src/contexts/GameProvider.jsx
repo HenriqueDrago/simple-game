@@ -1061,7 +1061,7 @@ export default function GameProvider({ children }) {
                                     0 ||
                                 currEntity.resources[effectKeys.SACRILEGE] >
                                     0 ||
-                                currEntity.resources[effectKeys.MARTHYR] > 0 ||
+                                currEntity.resources[effectKeys.MARTYR] > 0 ||
                                 currEntity[effectKeys.BAD_OMEN] > 0);
 
                         nextState = commitTurn(

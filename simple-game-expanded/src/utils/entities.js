@@ -271,7 +271,7 @@ export function createBaseEntity() {
             [effectKeys.DISSONANCE]: 0,
             [effectKeys.PRECOGNITION]: 0,
             [effectKeys.PROPHECY_OF_DOOM]: 0,
-            [effectKeys.MARTHYR]: 0,
+            [effectKeys.MARTYR]: 0,
             [effectKeys.SACRILEGE]: 0,
             [effectKeys.SACRED_FLAMES]: 0,
             [effectKeys.INSPIRATION]: 0,
@@ -3112,14 +3112,14 @@ export function loseEnlit(entity, amount) {
             draftEntity[effectKeys.ENLIGHTENMENT] - enlitLost,
     };
 
-    // Gain Marthyr
+    // Gain Martyr
     if (isEdictActive(draftEntity, edictKeys.ARCHANGELS)) {
         draftEntity = {
             ...draftEntity,
             resources: {
                 ...draftEntity.resources,
-                [effectKeys.MARTHYR]:
-                    draftEntity.resources[effectKeys.MARTHYR] +
+                [effectKeys.MARTYR]:
+                    draftEntity.resources[effectKeys.MARTYR] +
                     insightLost +
                     enlitLost,
             },

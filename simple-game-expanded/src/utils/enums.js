@@ -288,7 +288,7 @@ export const effectKeys = Object.freeze({
     STARS_OF_APOCALYPSE: "starsOfApocalypse",
     STARS_OF_GENESIS: "starsOfGenesis",
     BURDEN_OF_STIGMA: "burdenOfStigma",
-    MARTHYR: "marthyr",
+    MARTYR: "martyr",
     TRIAL: "trial",
     INSPIRATION: "inspiration",
 
