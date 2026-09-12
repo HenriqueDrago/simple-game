@@ -300,6 +300,7 @@ export const effectKeys = Object.freeze({
     TURN_START: "turnStart",
     ACTIVE_PHASE: "activePhase",
     TURN_END: "turnEnd",
+    FREE_ACTION: "freeAction"
 });
 
 export const runeKeys = Object.freeze({

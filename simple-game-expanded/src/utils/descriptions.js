@@ -374,6 +374,13 @@ export const GENERAL_DESCRIPTIONS = {
         description:
             "Allows the player to utilize ACTIONS and other combat interactions. Does not trigger TURN START and TURN END effects. Ends when using any ACTIONS that are not a FREE ACTION.",
     },
+
+    [effectKeys.FREE_ACTION]: {
+        name: "FREE ACTION",
+        type: entryTypes.MECHANIC,
+        description:
+            "A special category of ACTIONS that does not end a player's ACTION PHASE.",
+    },
 };
 
 export const WARLOCK_DESCRIPTIONS = {
