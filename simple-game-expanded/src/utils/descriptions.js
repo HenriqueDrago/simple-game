@@ -1421,7 +1421,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and DEFENSE PENETRATION with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and BREACH with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1473,7 +1473,7 @@ export const SERAPH_DESCRIPTIONS = {
 
     [effectKeys.DEFILEMENT]: {
         name: "DEFILEMENT",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.GLOBAL_RESOURCE,
         description:
             "When inflicting PHYSICAL TARNISHMENT, ignores a portion of the target's FORTITUDE equal to the battlefield's DEFILEMENT. Raises the battlefield's DEFILEMENT by the sum of all entities' BREACH.",
     },
