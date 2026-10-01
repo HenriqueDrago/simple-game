@@ -432,7 +432,7 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
-    ivn: 4,
+    ivn: 5,
 
     speed: speedKeys.ONE,
 
@@ -757,3 +757,5 @@ export const edictChoirMap = Object.freeze({
     [edictKeys.CHERUBIM]: choirKeys.EIGHTH,
     [edictKeys.SERAPHIM]: choirKeys.NINTH,
 });
+
+export const MAX_UNDO_DEPTH = 20;

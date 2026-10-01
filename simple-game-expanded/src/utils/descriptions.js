@@ -35,7 +35,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SHORTCUTS",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTION simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings, increasing the speed of animations and transitions. Pressing 1/2/3 directly sets speed settings to 1x/2x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
+            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTION simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings, increasing the speed of animations and transitions. Pressing 1/2/3 directly sets speed settings to 1x/2x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn; with a max of 20 undoable actions or combat interactions. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
     },
 
     [turnStatus.SETUP]: {
@@ -346,7 +346,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based and displayed as Roman numerals. Includes MANA BLEED, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, MOONLIT TEARS, and STIGMATA.",
+            "A subset of RESOURCES that are rank-based and displayed as Roman numerals. Includes STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, MOONLIT TEARS, and STIGMATA.",
     },
 
     [entryTypes.GLOBAL_RESOURCE]: {
@@ -566,6 +566,12 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
             "Gains UNRELENTING SHADOWS equal to the user's SHADOWFLAME. Enters DARK EMBRACE.",
     },
 
+    [effectKeys.DARK_EMBRACE]: {
+        name: "DARK EMBRACE",
+        type: entryTypes.STATE,
+        description: "Raises DAMAGE REDUCTION by 50%. At TURN START, disables SHADOWFLAME effects, then exits this state.",
+    },
+
     [actionKeys.RITUAL_OF_ASH]: {
         name: "RITUAL OF ASH",
         type: entryTypes.DEFENSIVE_ACTION,
@@ -584,7 +590,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "DIMMING DARKNESS",
         type: entryTypes.STATE,
         description:
-            "Disables MANA OVERFLOW TURN END effects. At TURN START, exits this state.",
+            "At TURN END, disables MANA OVERFLOW effects. At TURN START, exits this state.",
     },
 };
 
@@ -1340,7 +1346,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises TARNISHED SIN by 0.5% for every other RESOURCE consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises TARNISHED SIN by 0.5% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the total DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
@@ -1421,7 +1427,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and BREACH with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and BREACH with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 2.5% per point replenished. Raises DISGRACE by TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the ENLIGHTENMENT consumed, gains SACRED FLAMES equal to the other RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1795,7 +1801,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "STARS OF GENESIS",
         type: entryTypes.CELESTIAL_STAR,
         description:
-            "Raises BENEDICTION by 2.5% for every STARS OF GENESIS on self. Click to enact a star and restore 1 RESOURCE to all entities. Left-click to enact in batches of 10.",
+            "Raises BENEDICTION by 2.5% for every STARS OF GENESIS on self. Click to enact a star and restore 1 RESOURCES to all entities. Left-click to enact in batches of 10.",
     },
 
     [choirKeys.NINTH]: {

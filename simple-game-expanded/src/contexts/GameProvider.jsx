@@ -40,6 +40,7 @@ import {
     CHECKPOINT_STATES,
     gameSpeeds,
     INITIAL_GAME_STATE,
+    MAX_UNDO_DEPTH,
     playerMap,
     presetAi,
 } from "../utils/constants";
@@ -205,6 +206,30 @@ function changeAI(prev, controllerKey, entityKey) {
     };
 }
 
+function addToUndoPile(prev, post) {
+    return {
+        ...post,
+        undoPile: [
+            ...(post?.undoPile ?? []),
+            {
+                ...prev,
+                undoPile: [],
+                redoPile: [],
+                simGame: null,
+            },
+        ].slice(-MAX_UNDO_DEPTH), // Max actions saved
+        redoPile: [],
+    };
+}
+
+function resetUndoRedoPile(post) {
+    return {
+        ...post,
+        undoPile: [],
+        redoPile: [],
+    };
+}
+
 export default function GameProvider({ children }) {
     // Declare Game State
     const [game, setGame] = useState(() => {
@@ -270,22 +295,10 @@ export default function GameProvider({ children }) {
                 ? processExtraTurn(post, agentKey, action)
                 : processPlan(post, agentKey, action);
 
-            if (canUseCombatInteractions(post, agentKey)) {
-                post = {
-                    ...post,
-                    undoPile: [
-                        ...post.undoPile,
-                        { ...prev, undoPile: [], redoPile: [], simGame: null },
-                    ].slice(-10), // Max of 10 actions saved
-                    redoPile: [],
-                };
-            } else {
-                post = {
-                    ...post,
-                    undoPile: [],
-                    redoPile: [],
-                };
-            }
+            // Add gamestate to the pile
+            post = canUseCombatInteractions(post, agentKey)
+                ? addToUndoPile(prev, post)
+                : resetUndoRedoPile(post);
 
             return {
                 ...post,
@@ -579,7 +592,7 @@ export default function GameProvider({ children }) {
                 [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
             });
 
-            return buildHistory(
+            let post = buildHistory(
                 {
                     ...prev,
                     entities: {
@@ -592,6 +605,14 @@ export default function GameProvider({ children }) {
                 eventKeys.SET_ELEMENT,
                 { player: entityKey },
             );
+
+            post =
+                canUseCombatInteractions(post, entityKey) &&
+                (!prev.undoPile || prev.undoPile.length <= 0)
+                    ? addToUndoPile(prev, post)
+                    : post;
+
+            return post;
         });
     }
 
@@ -707,7 +728,7 @@ export default function GameProvider({ children }) {
                 }
             }
 
-            return {
+            let post = {
                 ...prev,
                 entities: {
                     ...prev.entities,
@@ -716,6 +737,14 @@ export default function GameProvider({ children }) {
                     },
                 },
             };
+
+            post =
+                canUseCombatInteractions(post, entityKey) &&
+                (!prev.undoPile || prev.undoPile.length <= 0)
+                    ? addToUndoPile(prev, post)
+                    : post;
+
+            return post;
         });
     }
 
@@ -818,7 +847,30 @@ export default function GameProvider({ children }) {
                 return post;
             }
 
-            return processDeathCheck(post);
+            post = processDeathCheck(post);
+
+            // Undo/Redo logic
+
+            // Reset on death
+            if (!canUseCombatInteractions(post, entityKey)) {
+                post = resetUndoRedoPile(post);
+            }
+            // add to pile if empty
+            else if (!prev.undoPile || prev.undoPile.length <= 0) {
+                post = addToUndoPile(prev, post);
+            }
+            // add to pile if last action wasn't star use
+            else if (
+                prev?.undoPile[prev.undoPile.length - 1] &&
+                extractEntity(
+                    prev?.undoPile[prev.undoPile.length - 1],
+                    entityKey,
+                )?.[starKey] === extractEntity(prev, entityKey)?.[starKey]
+            ) {
+                post = addToUndoPile(prev, post);
+            }
+
+            return post;
         });
     }
 
@@ -854,7 +906,7 @@ export default function GameProvider({ children }) {
             post = replaceEntity(post, draftEntity, agentKey);
             post = expungeBlas(post, agentKey, nonAgentKey, blas);
 
-            return {
+            post = {
                 ...post,
                 simSpecs: post.simSpecs
                     ? {
@@ -864,6 +916,12 @@ export default function GameProvider({ children }) {
                       }
                     : null,
             };
+
+            post = canUseCombatInteractions(post, agentKey)
+                ? addToUndoPile(prev, post)
+                : resetUndoRedoPile(post);
+
+            return post;
         });
     }
 
@@ -883,7 +941,15 @@ export default function GameProvider({ children }) {
                 },
             };
 
-            return replaceEntity(prev, draftAgent, agentKey);
+            let post = replaceEntity(prev, draftAgent, agentKey);
+
+            post =
+                canUseCombatInteractions(post, agentKey) &&
+                (!prev.undoPile || prev.undoPile.length <= 0)
+                    ? addToUndoPile(prev, post)
+                    : post;
+
+            return post;
         });
     }
 

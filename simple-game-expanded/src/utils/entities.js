@@ -3653,10 +3653,20 @@ export function processExitAscendence(prev, entityKey) {
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
     };
 
-    draftEntity = restoreResources(
-        draftEntity,
-        result.resourcesConsumed.totalConsumption,
-    );
+    const enlitConsumed =
+        result?.resourcesConsumed?.[effectKeys.ENLIGHTENMENT] ?? 0;
+    draftEntity = restoreResources(draftEntity, enlitConsumed);
+
+    draftEntity = {
+        ...draftEntity,
+        resources: {
+            ...draftEntity.resources,
+            [effectKeys.SACRED_FLAMES]:
+                draftEntity.resources[effectKeys.SACRED_FLAMES] +
+                result.resourcesConsumed.totalConsumption -
+                enlitConsumed,
+        },
+    };
 
     draftEntity = raiseStats(draftEntity, raisedStats);
 
