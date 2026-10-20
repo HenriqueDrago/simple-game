@@ -58,15 +58,6 @@ const FIXED_BARS_CONFIG = {
 };
 
 const RANKED_COUNTERS_CONFIG = {
-    [effectKeys.MOONLIT_TEARS]: {
-        label: "MOONLIT TEARS",
-        style: {
-            color: "#6ec6ff",
-            borderColor: "#80d8ff",
-            backgroundColor: "rgba(110, 198, 255, 0.2)",
-            boxShadow: "inset 0 0 8px rgba(128, 216, 255, 0.3)",
-        },
-    },
     [effectKeys.STARBLIGHT]: {
         label: "STARBLIGHT",
         style: {
@@ -134,14 +125,6 @@ const FREE_STACKS_CONFIG = {
             color: "#d500f9",
             borderColor: "#d500f9",
             backgroundColor: "rgba(213, 0, 249, 0.2)",
-        },
-    },
-    [effectKeys.UNRELENTING_SHADOWS]: {
-        label: "Unrelenting Shadows",
-        style: {
-            color: "#651fff",
-            borderColor: "#651fff",
-            backgroundColor: "rgba(101, 31, 255, 0.2)",
         },
     },
     [effectKeys.LINGERING_EMBER]: {

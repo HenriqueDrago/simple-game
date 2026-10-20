@@ -220,7 +220,6 @@ export function createBaseEntity() {
         [effectKeys.TARNISHED_SIN]: 0,
 
         // ranked resources
-        [effectKeys.MOONLIT_TEARS]: 0,
         [effectKeys.CONSTELLATION]: 0,
         [effectKeys.AZURE_CONSTELLATION]: 0,
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
@@ -265,7 +264,6 @@ export function createBaseEntity() {
             [effectKeys.RADIANCE]: 0,
             [effectKeys.SHADOWFLAME]: 0,
             [effectKeys.CINDERS]: 0,
-            [effectKeys.UNRELENTING_SHADOWS]: 0,
             [effectKeys.STARDUST]: 0,
             [effectKeys.MOONSHINE]: 0,
             [effectKeys.DISSONANCE]: 0,
@@ -290,6 +288,7 @@ export function createBaseEntity() {
             [effectKeys.HARMONY]: 0,
             [effectKeys.CONJECTURE]: 0,
             [effectKeys.SANCTUARY]: 0,
+            [effectKeys.WISDOM]: 0,
         },
         states: {
             // standalones
@@ -302,6 +301,8 @@ export function createBaseEntity() {
             [effectKeys.MOON_DEW]: false,
             [effectKeys.VISIONARY]: false,
             [effectKeys.EVENT_HORIZON]: false,
+            [effectKeys.GIBBOUS]: false,
+            [effectKeys.TUTORIAL]: false,
 
             // Shadowflame
             [effectKeys.DARK_EMBRACE]: false,
@@ -466,6 +467,20 @@ export function loseHp(entity, amount) {
         };
     }
 
+    // Ash Passive
+    if (isElementActive(draftEntity, elementalKeys.ASH)) {
+        draftEntity = {
+            ...draftEntity,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.FUNERARY_URN]:
+                    draftEntity.resources[effectKeys.FUNERARY_URN] +
+                    silverBloodConsumed +
+                    hpConsumed,
+            },
+        };
+    }
+
     return {
         ...draftEntity,
     };
@@ -524,6 +539,20 @@ export function loseMana(entity, amount) {
                 overflowConsumed,
         },
     };
+
+    // Ash Passive
+    if (isElementActive(draftEntity, elementalKeys.ASH)) {
+        draftEntity = {
+            ...draftEntity,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.FUNERARY_URN]:
+                    draftEntity.resources[effectKeys.FUNERARY_URN] +
+                    overflowConsumed +
+                    manaConsumed,
+            },
+        };
+    }
 
     return draftEntity;
 }
@@ -591,7 +620,6 @@ export function processExitSelenian(prev, targetKey) {
         [effectKeys.ELEMENTAL_CRYSTALS]: [],
         [effectKeys.MIRRORED_MOON]: moonKeys.HIDDEN,
         [effectKeys.LUNACY]: 0,
-        [effectKeys.MOONLIT_TEARS]: 0,
         states: {
             ...draftEntity.states,
             [effectKeys.SELENIAN]: false,
@@ -645,7 +673,7 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
     };
 
     // Clear all states
-    let newGameState = {
+    let post = {
         ...prev,
         entities: {
             ...prev.entities,
@@ -660,52 +688,45 @@ export function exitAllStates(prev, targetKey, nonTargetKey) {
 
     // Process special removals
     if (originalStates[effectKeys.VISIONARY]) {
-        newGameState = processExitVisionary(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitVisionary(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.STARGAZER]) {
-        newGameState = processExitStargazer(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitStargazer(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.RESONANT]) {
-        newGameState = processExitResonant(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitResonant(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.SELENIAN]) {
-        newGameState = processExitSelenian(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitSelenian(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.UMBRAL_CORE]) {
-        newGameState = processExitUmbral(newGameState, targetKey, nonTargetKey);
+        post = processExitUmbral(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        newGameState = processExitAscendence(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitAscendence(post, targetKey, nonTargetKey);
     }
     if (originalStates[effectKeys.WEAPONS_DEPLOYED]) {
-        newGameState = processExitWeaponsDeployed(
-            newGameState,
-            targetKey,
-            nonTargetKey,
-        );
+        post = processExitWeaponsDeployed(post, targetKey, nonTargetKey);
     }
 
-    return newGameState;
+    // Process states that cannot be exited
+    let draftTarget = extractEntity(post, targetKey);
+    draftTarget = {
+        ...draftTarget,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.CUTOFF_WINGS]:
+                originalStates[effectKeys.CUTOFF_WINGS] ||
+                draftTarget.states[effectKeys.CUTOFF_WINGS],
+            [effectKeys.BLEAK_DECEPTION]:
+                originalStates[effectKeys.BLEAK_DECEPTION] ||
+                draftTarget.states[effectKeys.BLEAK_DECEPTION],
+        },
+    };
+
+    post = replaceEntity(post, draftTarget, targetKey);
+
+    return post;
 }
 
 export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
@@ -736,7 +757,8 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
         // Overheat
         if (draftAgent[effectKeys.OVERHEAT] > 0) {
             const overheatLost = Math.min(
-                constants.NATURAL_OVERHEAT_LOSS,
+                constants.OVERHEAT_DEF_LOSS +
+                    getEntityStr(draftAgent) * constants.OVERHEAT_STR_LOSS,
                 draftAgent[effectKeys.OVERHEAT],
             );
 
@@ -759,21 +781,6 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                 [effectKeys.MIRRORED_MOON]: moonKeys.CORONAL,
             };
         }
-
-        // Blood Sacrifice
-        if (draftAgent[effectKeys.BLOOD_SACRIFICE] > 0) {
-            const bsLost = Math.floor(
-                draftAgent[effectKeys.BLOOD_SACRIFICE] / 2,
-            );
-
-            draftAgent = {
-                ...draftAgent,
-                [effectKeys.BLOOD_SACRIFICE]:
-                    draftAgent[effectKeys.BLOOD_SACRIFICE] - bsLost,
-            };
-
-            draftAgent = gainHp(draftAgent, bsLost);
-        }
     }
 
     if (isOffensive) {
@@ -795,34 +802,6 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             draftAgent = {
                 ...draftAgent,
                 [effectKeys.MIRRORED_MOON]: moonKeys.BLOODSTAINED,
-            };
-        }
-
-        // Ash
-        if (isElementActive(draftAgent, elementalKeys.ASH)) {
-            const toBeConsumed = Math.floor(
-                consumeLimitedResources(draftAgent, Infinity, elementalKeys.ASH)
-                    .limitedResourcesConsumed.totalLimitedResourcesConsumption /
-                    2,
-            );
-
-            const result = consumeLimitedResources(
-                draftAgent,
-                toBeConsumed,
-                elementalKeys.ASH,
-            );
-
-            draftAgent = result.draftEntity;
-
-            draftAgent = {
-                ...draftAgent,
-                resources: {
-                    ...draftAgent.resources,
-                    [effectKeys.FUNERARY_URN]:
-                        draftAgent.resources[effectKeys.FUNERARY_URN] +
-                        result.limitedResourcesConsumed
-                            .totalLimitedResourcesConsumption,
-                },
             };
         }
 
@@ -1180,31 +1159,58 @@ export function getEntityDef(entity) {
         ...entity,
     };
 
+    // Radiant Override
     if (draftEntity.states[effectKeys.RADIANT]) {
         return 0;
     }
 
-    let bonusDEF = 0;
-
+    // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
     }
 
+    if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
+        draftEntity = raiseStats(entity, entity[effectKeys.BLOOD_SACRIFICE]);
+    }
+
+    // === Def Bonus ===
+    let totalDef = draftEntity.attributes.def.value;
+
     if (draftEntity[effectKeys.AZURE_CONSTELLATION] > 0) {
-        bonusDEF += draftEntity[effectKeys.AZURE_CONSTELLATION];
+        totalDef += draftEntity[effectKeys.AZURE_CONSTELLATION];
     }
 
     if (isElementActive(draftEntity, elementalKeys.FROST)) {
-        bonusDEF += draftEntity[effectKeys.MOONLIGHT];
+        totalDef += draftEntity[effectKeys.MOONLIGHT];
     }
 
     if (draftEntity.states[effectKeys.VISIONARY]) {
-        bonusDEF -=
+        totalDef -=
             countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
             3;
     }
 
-    return Math.max(0, draftEntity.attributes.def.value + bonusDEF);
+    // === Percent Decreases ===
+    if (draftEntity[effectKeys.OVERHEAT] > 0) {
+        totalDef *= Math.max(0, 1 - draftEntity[effectKeys.OVERHEAT] / 100);
+    }
+
+    if (
+        draftEntity.states[effectKeys.VISIONARY] &&
+        countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0
+    ) {
+        totalDef *= Math.max(
+            0,
+            1 -
+                countRunes(
+                    draftEntity[effectKeys.RUNIC_ARRAY],
+                    runeKeys.VERDANDI,
+                ) *
+                    constants.VERDANDI_DEF_LOSS,
+        );
+    }
+
+    return Math.max(0, Math.floor(totalDef));
 }
 
 export function getEntityStr(entity) {
@@ -1212,43 +1218,53 @@ export function getEntityStr(entity) {
         ...entity,
     };
 
-    let bonusSTR = 0;
-
+    // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
     }
 
+    if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
+        draftEntity = raiseStats(entity, entity[effectKeys.BLOOD_SACRIFICE]);
+    }
+
+    // === Bonus STR ===
+    let totalStr = draftEntity.attributes.str.value;
+
     if (entity[effectKeys.DIVINE_SPARK] > 0) {
-        bonusSTR += Math.floor(
+        totalStr += Math.floor(
             entity[effectKeys.DIVINE_SPARK] /
                 constants.DIVINE_SPARK_STR_CONVERSION,
         );
     }
 
     if (entity[effectKeys.RECOLLECTION] > 0) {
-        bonusSTR += Math.floor(
+        totalStr += Math.floor(
             (getEntityDef(entity) * entity[effectKeys.RECOLLECTION]) / 100,
         );
     }
 
     if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
-        bonusSTR += draftEntity[effectKeys.CRIMSON_CONSTELLATION];
+        totalStr += draftEntity[effectKeys.CRIMSON_CONSTELLATION];
     }
 
     if (isElementActive(draftEntity, elementalKeys.SCORCH)) {
-        bonusSTR += draftEntity[effectKeys.MOONLIGHT];
+        totalStr += draftEntity[effectKeys.MOONLIGHT];
     }
 
-    if (draftEntity.states[effectKeys.VISIONARY]) {
-        bonusSTR -=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) * 3;
+    // === Percent Decreases ===
+    if (
+        draftEntity.states[effectKeys.VISIONARY] &&
+        countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0
+    ) {
+        totalStr *= Math.max(
+            0,
+            1 -
+                countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
+                    constants.URD_STR_LOSS,
+        );
     }
 
-    if (draftEntity[effectKeys.BLOOD_SACRIFICE] > 0) {
-        bonusSTR += draftEntity[effectKeys.BLOOD_SACRIFICE];
-    }
-
-    return Math.max(0, draftEntity.attributes.str.value + Math.floor(bonusSTR));
+    return Math.max(0, Math.floor(totalStr));
 }
 
 export function getEntityMaxHealth(entity) {
@@ -1262,6 +1278,31 @@ export function getEntityMaxHealth(entity) {
 
 export function getEntityTotalMana(entity) {
     return entity[effectKeys.MANA] + entity.resources[effectKeys.MANA_OVERFLOW];
+}
+
+export function raiseDivineSpark(entity, amount) {
+    let draftEntity = {
+        ...entity,
+    };
+
+    const missingSpark =
+        constants.MAX_DIVINE_SPARK - draftEntity[effectKeys.DIVINE_SPARK];
+
+    const newSpark =
+        draftEntity[effectKeys.DIVINE_SPARK] + Math.min(amount, missingSpark);
+
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.DIVINE_SPARK]: newSpark,
+    };
+
+    const toBeRestored = Math.max(
+        0,
+        Math.floor((amount - missingSpark) / constants.SPARK_RESTORE_RATE),
+    );
+    draftEntity = restoreResources(draftEntity, toBeRestored);
+
+    return draftEntity;
 }
 
 export function getEntityTotalHealth(entity) {
@@ -1298,7 +1339,11 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                 currResourceKey === effectKeys.LINGERING_EMBER
             ) &&
             !(isCauseDamage && currResourceKey === effectKeys.SANCTUARY) &&
-            !(isCauseTarnish && currResourceKey !== effectKeys.SANCTUARY)
+            !(
+                isCauseTarnish &&
+                currResourceKey !== effectKeys.SANCTUARY &&
+                currResourceKey !== effectKeys.WISDOM
+            )
         ) {
             const currAmount = draftEntity.resources[currResourceKey];
             const consumption = Math.min(currAmount, amount);
@@ -1668,7 +1713,15 @@ export function processHealth(entity) {
         }
     }
 
-    // Convert Silver Blood into Health
+    // Remove excess Enlightenment
+    if (draftEntity[effectKeys.ENLIGHTENMENT] > getMaxEnlit(draftEntity)) {
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.ENLIGHTENMENT]: Math.max(0, getMaxEnlit(entity)),
+        };
+    }
+
+    // Convert Insight into Enlightenment
     if (draftEntity.resources[effectKeys.SILVER_BLOOD] > 0) {
         const silverConsumed = Math.min(
             getMissingHealth(draftEntity),
@@ -1685,6 +1738,28 @@ export function processHealth(entity) {
             resources: {
                 ...draftEntity.resources,
                 [effectKeys.SILVER_BLOOD]: silverBlood,
+            },
+        };
+    }
+
+    // Convert Insight into Enlightenment
+    if (draftEntity.resources[effectKeys.INSIGHT] > 0) {
+        const insightConsumed = Math.min(
+            getMaxEnlit(draftEntity) - draftEntity[effectKeys.ENLIGHTENMENT],
+            draftEntity.resources[effectKeys.INSIGHT],
+        );
+
+        const newEnlit =
+            draftEntity[effectKeys.ENLIGHTENMENT] + insightConsumed;
+        const insight =
+            draftEntity.resources[effectKeys.INSIGHT] - insightConsumed;
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.ENLIGHTENMENT]: newEnlit,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.INSIGHT]: insight,
             },
         };
     }
@@ -1998,8 +2073,11 @@ export function canUseAction(prev, entityKey, action) {
             return false;
         }
         return (
-            getEntityTotalMana(entity) >=
-            constants.SP_ATTACK_COST * getMaxMana(entity)
+            getEntityTotalMana(entity) +
+                (entity.states[effectKeys.VISIONARY]
+                    ? entity.resources[effectKeys.PRECOGNITION]
+                    : 0) >=
+            getSpAtkCost(entity)
         );
     }
     if (action === actionKeys.SACRIFICE) {
@@ -2347,14 +2425,16 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
             break;
         }
         case runeKeys.SKULD: {
-            // Restore Mana
-            draftTarget = gainMana(
-                draftTarget,
-                Math.min(
-                    getMissingMana(draftTarget),
-                    getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
-                ),
-            );
+            // Gain Precog
+            draftTarget = {
+                ...draftTarget,
+                resources: {
+                    ...draftTarget.resources,
+                    [effectKeys.PRECOGNITION]:
+                        draftTarget.resources[effectKeys.PRECOGNITION] +
+                        getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
+                },
+            };
 
             break;
         }
@@ -2741,11 +2821,11 @@ export function getEntityDR(prev, entityKey) {
                       1 -
                           (entity[effectKeys.BLOOD_SACRIFICE] /
                               getEntityMaxHealth(entity)) *
-                              0.5,
+                              constants.BS_DR,
                   )
                 : 1;
     }
-    if (isElementActive(entity, elementalKeys.WITHER)) {
+    if (entity.states[effectKeys.GIBBOUS]) {
         drMult *=
             getEntityMaxHealth(entity) > 0
                 ? Math.max(
@@ -2761,12 +2841,25 @@ export function getEntityDR(prev, entityKey) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
 
-    if (entity.states[effectKeys.MOON_DEW]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
-    }
-
     if (entity[effectKeys.SONORITY] < 0) {
         drMult *= Math.max(0, 1 + entity[effectKeys.SONORITY] / 100);
+    }
+
+    if (entity[effectKeys.LUNACY] > 0 && entity.states[effectKeys.MOON_DEW]) {
+        drMult *= Math.max(
+            0,
+            1 - (entity[effectKeys.LUNACY] / 100) * constants.LUNACY_DEW_DR,
+        );
+    }
+
+    if (
+        entity.states[effectKeys.RADIANT] &&
+        entity[effectKeys.DIVINE_SPARK] > 0
+    ) {
+        drMult *= Math.max(
+            0,
+            1 - (entity[effectKeys.DIVINE_SPARK] / 100) * constants.DIVINE_DR,
+        );
     }
 
     if (entity.states[effectKeys.VISIONARY]) {
@@ -2776,7 +2869,11 @@ export function getEntityDR(prev, entityKey) {
                 constants.SKULD_WEAK;
     }
 
-    return drMult;
+    if (entity.states[effectKeys.TUTORIAL]) {
+        drMult = Math.min(1, drMult + constants.TUTORIAL_DR_REDUCTION);
+    }
+
+    return Math.min(1, Math.max(0, drMult));
 }
 
 export function getEntityDefPen(prev, entityKey) {
@@ -2789,7 +2886,7 @@ export function getEntityDefPen(prev, entityKey) {
         defPen += entity[effectKeys.STARBLIGHT];
     }
 
-    return defPen;
+    return Math.max(0, defPen);
 }
 
 export function getEntityDamageBonus(prev, entityKey) {
@@ -2815,7 +2912,7 @@ export function getEntityDamageBonus(prev, entityKey) {
         dmgBonus *= 1 + entity[effectKeys.RECOLLECTION] / 100;
     }
 
-    return dmgBonus;
+    return Math.max(0, dmgBonus);
 }
 
 export function getEntityFragility(prev, entityKey) {
@@ -2825,7 +2922,7 @@ export function getEntityFragility(prev, entityKey) {
 
     let frail = 1.0;
 
-    if (entity[effectKeys.LUNACY] > 0) {
+    if (entity[effectKeys.LUNACY] > 0 && !entity.states[effectKeys.MOON_DEW]) {
         frail *= 1 + entity[effectKeys.LUNACY] / 100;
     }
 
@@ -2845,7 +2942,7 @@ export function getEntityFragility(prev, entityKey) {
         frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
     }
 
-    return frail;
+    return Math.max(0, frail);
 }
 
 export function getEntityWeakness(prev, entityKey) {
@@ -2874,7 +2971,7 @@ export function getEntityWeakness(prev, entityKey) {
                 constants.SKULD_WEAK;
     }
 
-    return weak;
+    return Math.min(1, Math.max(0, weak));
 }
 
 function processProgUnlock(prev) {
@@ -2948,35 +3045,32 @@ export function loseMaxHealth(entity, amount) {
 }
 
 export function processExitUmbral(prev, targetKey) {
-    const entity = {
+    let draftTarget = {
         ...prev.entities[targetKey],
     };
 
     const newShadows = Math.floor(
-        entity.resources[effectKeys.SHADOWFLAME] +
-            entity.resources[effectKeys.LINGERING_EMBER] / 2,
+        draftTarget.resources[effectKeys.SHADOWFLAME] +
+            draftTarget.resources[effectKeys.LINGERING_EMBER] / 2,
     );
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [targetKey]: {
-                ...entity,
-                states: {
-                    ...entity.states,
-                    [effectKeys.UMBRAL_CORE]: false,
-                },
-                resources: {
-                    ...entity.resources,
-                    [effectKeys.SHADOWFLAME]: 0,
-                    [effectKeys.CINDERS]: 0,
-                    [effectKeys.LINGERING_EMBER]: 0,
-                    [effectKeys.UNRELENTING_SHADOWS]: newShadows,
-                },
-            },
+    draftTarget = restoreResources(draftTarget, newShadows);
+
+    draftTarget = {
+        ...draftTarget,
+        states: {
+            ...draftTarget.states,
+            [effectKeys.UMBRAL_CORE]: false,
+        },
+        resources: {
+            ...draftTarget.resources,
+            [effectKeys.SHADOWFLAME]: 0,
+            [effectKeys.CINDERS]: 0,
+            [effectKeys.LINGERING_EMBER]: 0,
         },
     };
+
+    return replaceEntity(prev, draftTarget, targetKey);
 }
 
 export function getCurrActivePlayer(prev) {
@@ -3112,6 +3206,20 @@ export function loseEnlit(entity, amount) {
             draftEntity[effectKeys.ENLIGHTENMENT] - enlitLost,
     };
 
+    // Ash Passive
+    if (isElementActive(draftEntity, elementalKeys.ASH)) {
+        draftEntity = {
+            ...draftEntity,
+            resources: {
+                ...draftEntity.resources,
+                [effectKeys.FUNERARY_URN]:
+                    draftEntity.resources[effectKeys.FUNERARY_URN] +
+                    insightLost +
+                    enlitLost,
+            },
+        };
+    }
+
     // Gain Martyr
     if (isEdictActive(draftEntity, edictKeys.ARCHANGELS)) {
         draftEntity = {
@@ -3233,7 +3341,7 @@ export function getBenediction(prev, entityKey) {
 
     // Hallowed Echoes
     if (entity[effectKeys.HALLOWED_ECHOES] > 0) {
-        bene *= 1 + entity[effectKeys.HALLOWED_ECHOES] / 100;
+        bene *= 1 - entity[effectKeys.HALLOWED_ECHOES] / 100;
     }
 
     return bene;
@@ -3347,7 +3455,10 @@ export function getDisgrace(prev, entityKey) {
         entity[effectKeys.TARNISHED_SIN] > 0 &&
         entity.states[effectKeys.ASCENDENCE_OF_SPIRIT]
     ) {
-        disgrace *= 1 + entity[effectKeys.TARNISHED_SIN] / 100;
+        disgrace *=
+            1 +
+            (entity[effectKeys.TARNISHED_SIN] * constants.TARNISH_DISGRACE) /
+                100;
     }
 
     // Hallowed Echoes
@@ -3362,12 +3473,6 @@ export function getFortitude(prev, entityKey) {
     const entity = extractEntity(prev, entityKey);
 
     let fort = entity[effectKeys.FORTITUDE];
-
-    if (isEdictActive(entity, edictKeys.PRINCIPALITIES)) {
-        fort += Math.floor(
-            (fort * prev.btt[effectKeys.PROVIDENCE]) / constants.MAX_PROVIDENCE,
-        );
-    }
 
     if (entity.states[effectKeys.IMMACULATE]) {
         const missingProv = Math.max(
@@ -3838,7 +3943,7 @@ export function getMissingHealth(entity) {
     return Math.max(
         0,
         getEntityMaxHealth(entity) -
-            getEntityTotalHealth(entity) -
+            entity[effectKeys.HEALTH] -
             entity[effectKeys.BLOOD_SACRIFICE],
     );
 }
@@ -3866,4 +3971,15 @@ export function processExitWeaponsDeployed(prev, targetKey) {
     };
 
     return replaceEntity(post, draftTarget, targetKey);
+}
+
+export function getSpAtkCost(entity) {
+    const totalMult =
+        constants.SP_ATTACK_COST +
+        countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
+            constants.URD_SP_ATK_EXTRA_COST;
+
+    return (entity?.[effectKeys.MAX_MANA] ?? 0) > 0
+        ? entity?.[effectKeys.MAX_MANA] * totalMult
+        : Infinity;
 }

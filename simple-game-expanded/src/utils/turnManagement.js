@@ -3,6 +3,7 @@ import {
     constants,
     elementsMap,
     FREE_ACTIONS,
+    playerMap,
 } from "./constants.js";
 import {
     advanceChoir,
@@ -21,6 +22,7 @@ import {
     newDealDmg,
     processActionTypeUsed,
     processDeathCheck,
+    raiseDivineSpark,
     raiseProvidence,
     replaceEntity,
     restoreResources,
@@ -40,6 +42,9 @@ import {
     choirKeys,
     eyeKeys,
     tarnishTypes,
+    whoStartsKeys,
+    aiKeys,
+    progKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
@@ -160,22 +165,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Moon Dew
-    if (draftTarget.states[effectKeys.MOON_DEW]) {
-        draftTarget = restoreResources(
-            draftTarget,
-            draftTarget[effectKeys.MOONLIGHT],
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                [effectKeys.MOON_DEW]: false,
-            },
-        };
-    }
-
     // Harmony
     if (draftTarget.resources[effectKeys.HARMONY] > 0) {
         draftTarget = restoreResources(
@@ -188,22 +177,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             resources: {
                 ...draftTarget.resources,
                 [effectKeys.HARMONY]: 0,
-            },
-        };
-    }
-
-    // Unrelenting Shadows
-    if (draftTarget.resources.unrelentingShadows > 0) {
-        draftTarget = restoreResources(
-            draftTarget,
-            draftTarget.resources.unrelentingShadows,
-        );
-
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                unrelentingShadows: 0,
             },
         };
     }
@@ -255,7 +228,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         const halvedLE = Math.ceil(draftTarget.resources.lingeringEmber / 2);
 
         const newLE = draftTarget.resources.lingeringEmber - halvedLE;
-        const newCinders = draftTarget.resources.cinders + halvedLE;
         const newSF = draftTarget.resources.shadowflame + halvedLE;
 
         draftTarget = {
@@ -263,7 +235,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             resources: {
                 ...draftTarget.resources,
                 lingeringEmber: newLE,
-                cinders: newCinders,
                 shadowflame: newSF,
             },
         };
@@ -330,7 +301,8 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
     // Refracted Divinity
     if (draftTarget.resources[effectKeys.REFRACTED_DIVINITY] > 0) {
         const newLunacy = Math.min(
-            draftTarget.resources[effectKeys.REFRACTED_DIVINITY] +
+            draftTarget.resources[effectKeys.REFRACTED_DIVINITY] *
+                constants.REFRACT_LUNACY_RATE +
                 draftTarget[effectKeys.LUNACY],
             constants.MAX_LUNACY,
         );
@@ -355,30 +327,18 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     // Halo
     if (draftTarget.resources[effectKeys.HALO] > 0) {
-        const missingSpark =
-            constants.MAX_DIVINE_SPARK - draftTarget[effectKeys.DIVINE_SPARK];
-        const sparkGained = draftTarget.resources[effectKeys.HALO];
-
-        const newSpark =
-            draftTarget[effectKeys.DIVINE_SPARK] +
-            Math.min(sparkGained, missingSpark);
+        const sparkGain =
+            draftTarget.resources[effectKeys.HALO] * constants.HALO_DIVINE_RATE;
 
         draftTarget = {
             ...draftTarget,
-            [effectKeys.DIVINE_SPARK]: newSpark,
             resources: {
                 ...draftTarget.resources,
                 [effectKeys.HALO]: 0,
             },
         };
 
-        const toBeRestored = Math.max(
-            0,
-            Math.floor(
-                (sparkGained - missingSpark) / constants.SPARK_RESTORE_RATE,
-            ),
-        );
-        draftTarget = restoreResources(draftTarget, toBeRestored);
+        draftTarget = raiseDivineSpark(draftTarget, sparkGain);
     }
 
     // Insight
@@ -483,6 +443,8 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
             [effectKeys.EVENT_HORIZON]: false,
             [effectKeys.IMMACULATE]: false,
             [effectKeys.CEREMONIAL]: false,
+            [effectKeys.MOON_DEW]: false,
+            [effectKeys.GIBBOUS]: false,
         },
     };
 
@@ -872,16 +834,16 @@ export function buildRoundQueue(prev) {
     // Trial
     if (
         p1.states[effectKeys.ANOINTED_PROXY] &&
-        !newQueue.includes(roundPhases.P1_TRIAL)
+        !newQueue.includes(roundPhases.P1_PROSECUTION)
     ) {
-        newQueue.push(roundPhases.P1_TRIAL);
+        newQueue.push(roundPhases.P1_PROSECUTION);
     }
 
     if (
         p2.states[effectKeys.ANOINTED_PROXY] &&
-        !newQueue.includes(roundPhases.P2_TRIAL)
+        !newQueue.includes(roundPhases.P2_PROSECUTION)
     ) {
-        newQueue.push(roundPhases.P2_TRIAL);
+        newQueue.push(roundPhases.P2_PROSECUTION);
     }
 
     // Player Logic Helper
@@ -1114,9 +1076,7 @@ export function processMoonPhase(prev) {
 
         // Moonlight gain
         if (moon === moonKeys.BLOODSTAINED || moon === moonKeys.CORONAL) {
-            newMoonlight +=
-                constants.BLOOD_CORONA_ML_GAIN +
-                draftEntity[effectKeys.MOONLIT_TEARS];
+            newMoonlight += constants.BLOOD_CORONA_ML_GAIN;
         }
         if (moon === moonKeys.HIDDEN) {
             newMoonlight += constants.HIDDEN_MOON_ML_GAIN;
@@ -1163,9 +1123,21 @@ export function processMoonPhase(prev) {
     });
 }
 
-export function processActionUse(prev, agentKey, nonAgentKey, action) {
+export function processActionUse(
+    prev,
+    agentKey,
+    nonAgentKey,
+    action,
+    log = false,
+) {
     // Cancel action if it cannot be used
     if (!canUseAction(prev, agentKey, action)) {
+        if (log) {
+            console.error(
+                `${agentKey} (${extractEntity(prev, agentKey)?.controller} failed to use ${actionMap?.[action]?.name} (str: ${extractEntity(prev, agentKey).attributes.str.value}, def: ${extractEntity(prev, agentKey).attributes.def.value}); enemy: ${extractEntity(prev, nonAgentKey)?.controller} (str: ${extractEntity(prev, nonAgentKey).attributes.str.value}, def: ${extractEntity(prev, nonAgentKey).attributes.def.value}))`,
+            );
+        }
+
         return buildHistory(prev, eventKeys.FAILED_ACTION, {
             player: agentKey,
             action: action,
@@ -1205,8 +1177,12 @@ export function processActionUse(prev, agentKey, nonAgentKey, action) {
 
 export function processExtraTurn(prev, agentKey, action) {
     let post = processDeathCheck(prev);
+    const currPhase = post?.roundQueue && post.roundQueue[post.roundIndex];
 
-    if (post.status !== turnStatus.ONGOING) {
+    if (
+        post.status !== turnStatus.ONGOING ||
+        playerMap?.[agentKey].extra.includes(currPhase)
+    ) {
         return buildHistory(buildRoundQueue(post), null);
     }
 
@@ -1254,7 +1230,11 @@ export function processExtraTurn(prev, agentKey, action) {
 export function processPlan(prev, agentKey, action) {
     let post = processDeathCheck(prev);
 
-    if (post.status !== turnStatus.ONGOING) {
+    if (
+        post.status !== turnStatus.ONGOING ||
+        !post?.playerQueue ||
+        post.playerQueue.length === 0
+    ) {
         return buildHistory(buildRoundQueue(post), null);
     }
 
@@ -1390,6 +1370,11 @@ export function buildHistory(prev, event, info = {}) {
             break;
         }
 
+        case eventKeys.PROSECUTION: {
+            string = `${playerName}'s Prosecution Start`;
+            break;
+        }
+
         case eventKeys.MOON_PHASE:
             string = "Moon Phase";
             break;
@@ -1505,4 +1490,50 @@ export function processAnointment(prev) {
             [effectKeys.EYE_OF_HEAVENS]: eyeKeys.OPEN,
         },
     });
+}
+
+export function startGame(prev) {
+    let post = {
+        ...prev,
+    };
+
+    const startingPlayer =
+        post.whoStarts === whoStartsKeys.PLAYER_ONE ||
+        (Math.random() < 0.5 && post.whoStarts === whoStartsKeys.RANDOM)
+            ? entityKeys.PLAYER_ONE
+            : entityKeys.PLAYER_TWO;
+
+    if (
+        post?.progressMode &&
+        extractEntity(post, entityKeys.PLAYER_TWO)?.controller ===
+            aiKeys.BLOODKNIGHT &&
+        post?.progressStatus?.[aiKeys.BLOODKNIGHT] === progKeys.OPEN_UNDEFEATED
+    ) {
+        const enemy = extractEntity(post, entityKeys.PLAYER_TWO);
+        post = replaceEntity(
+            post,
+            {
+                ...enemy,
+                states: {
+                    ...enemy.states,
+                    [effectKeys.TUTORIAL]: true,
+                },
+            },
+            entityKeys.PLAYER_TWO,
+        );
+    }
+
+    return buildHistory(
+        {
+            ...post,
+            paused: false,
+            status: turnStatus.ONGOING,
+            startingPlayer: startingPlayer,
+            undoPile: [],
+            redoPile: [],
+            aiQueue: [],
+            simSpecs: null,
+        },
+        eventKeys.BATTLE_START,
+    );
 }

@@ -19,37 +19,37 @@ export default function OrdinancesTracker({ entityKey }) {
 
     const realMale = roundNumber(
         (getMalediction(game, entityKey) - 1) * 100,
-        1,
+        2,
     );
     const simMale = simGame
-        ? roundNumber((getMalediction(simGame, entityKey) - 1) * 100, 1)
+        ? roundNumber((getMalediction(simGame, entityKey) - 1) * 100, 2)
         : realMale;
     const isMaleChanged = simGame && simMale !== realMale;
     const displayMale = simGame ? simMale : realMale;
 
     const realBene = roundNumber(
         (1 - getBenediction(game, entityKey)) * 100,
-        1,
+        2,
     );
     const simBene = simGame
-        ? roundNumber((1 - getBenediction(simGame, entityKey)) * 100, 1)
+        ? roundNumber((1 - getBenediction(simGame, entityKey)) * 100, 2)
         : realBene;
     const isBeneChanged = simGame && simBene !== realBene;
     const displayBene = simGame ? simBene : realBene;
 
-    const realGrace = roundNumber((1 - getGrace(game, entityKey)) * 100, 1);
+    const realGrace = roundNumber((1 - getGrace(game, entityKey)) * 100, 2);
     const simGrace = simGame
-        ? roundNumber((1 - getGrace(simGame, entityKey)) * 100, 1)
+        ? roundNumber((1 - getGrace(simGame, entityKey)) * 100, 2)
         : realGrace;
     const isGraceChanged = simGame && simGrace !== realGrace;
     const displayGrace = simGame ? simGrace : realGrace;
 
     const realDisgrace = roundNumber(
         (getDisgrace(game, entityKey) - 1) * 100,
-        1,
+        2,
     );
     const simDisgrace = simGame
-        ? roundNumber((getDisgrace(simGame, entityKey) - 1) * 100, 1)
+        ? roundNumber((getDisgrace(simGame, entityKey) - 1) * 100, 2)
         : realDisgrace;
     const isDisgraceChanged = simGame && simDisgrace !== realDisgrace;
     const displayDisgrace = simGame ? simDisgrace : realDisgrace;

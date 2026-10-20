@@ -49,12 +49,60 @@ import {
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
 export const constants = Object.freeze({
+    EMBRACE_RESTORE: 0.5,
+    TUTORIAL_DR_REDUCTION: 0.25,
+
+    // Lunatic
+    REFRACT_LUNACY_RATE: 1.25,
+    SHATTER_LUNACY_RATE: 10,
+    RESOURCES_CINDERS_MULT: 1,
+    ALBEDO_ML_GAIN: 1,
+    MIRROR_ML_GAIN: 3,
+    BLOOD_CORONA_ML_GAIN: 1,
+    LUNAR_GROWTH_MULT: 1,
+    HIDDEN_MOON_ML_GAIN: 3,
+    SMITE_MULT: 5,
+    WITHER_LUNACY_MULT: 2.5,
+    LUNAR_TIDE_MULT: 2,
+    MAX_LUNACY: 100,
+    GIBBOUS_TEARS_GAIN: 1,
+    MOONSHINE_LUNACY_GAIN: 2.5,
+    ASH_CONSUME: 0.5,
+    LUNACY_DEW_DR: 0.5,
+
+    // Paladin
+    HALO_DIVINE_RATE: 1,
+    STR_DIVINE_RATE: 1,
+    HALO_GEN_MULT: 2,
+    RADIANT_DEF_EFFECT_MULTIPLIER: 0,
+    MAX_DIVINE_SPARK: 100,
+    DIVINE_SPARK_STR_CONVERSION: 5,
+    SPARK_RESTORE_RATE: 2,
+    DIVINE_DR: 0.5,
+
+    // Cyborg
+    MAX_OVERHEAT: 100,
+    MAX_DYNAMO: 100,
+    STARTING_ENERGY: 1,
+
+    OVERHEAT_DEF_LOSS: 30,
+    OVERHEAT_STR_LOSS: 5,
+
+    // Bloodknight
+    BS_DR: 1,
+    DEFENSE_BS: 1,
+    SAC_HP_CONSUMPTION: 0.5,
+
     // Seraph
+    RISE_DEF_RATE: 2,
+    TARNISH_DISGRACE: 0.5,
+    WISDOM_PROV: 5,
+    WISDOM_STR_RATE: 2,
     TARNISH_SIN_CONVERSION: 0.5,
     MAX_SIN: 100,
     MAX_PROVIDENCE: 100,
     DISCERN_RATE: 1 / 10,
-    BASE_SIN_GAIN: 0.5,
+    BASE_SIN_GAIN: 0.25,
     BASE_PROV_GAIN: 2.5,
     POWERS_RATE: 1 / 10,
     BASE_VIRTUES_COST: 10,
@@ -68,14 +116,14 @@ export const constants = Object.freeze({
     HALLOW_SUPPLICATE: 10,
     MIN_HALLOW: -50,
     MAX_HALLOW: 50,
-    HIGH_SIN_GAIN: 2.5,
+    HIGH_SIN_GAIN: 1.25,
     YEST_SIN_RATE: 1 / 10,
     TOMOR_RATE: 1 / 10,
     ANGEL_LOSE: 0.5,
     STIGMA_RATE: 1 / 20,
     MOTE_CONVERSION: 4,
     PIOUS_MULT: 0.5,
-    BLAS_TARNISH: 0.3,
+    BLAS_TARNISH: 0.2,
     PROV_EXCESS_RATE: 0.5 / 2.5,
 
     IRRAD_DMG_EXCESS: 10,
@@ -83,7 +131,7 @@ export const constants = Object.freeze({
     IRRADIATION_GAIN_RATE: 10,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
-    SPARK_RESTORE_RATE: 2,
+    
     ACC_STARBLIGHT_CONVERSION: 5,
     CHALK_EXTRA_DMG: 10,
 
@@ -96,8 +144,10 @@ export const constants = Object.freeze({
     SONORITY_LOWER_LIMIT: -75,
     SONORITY_HIGHER_LIMIT: 75,
 
+    // === Augur ===
     // Verdandi
     VERDANDI_MANA_RESTORE: 0.6,
+    VERDANDI_DEF_LOSS: 0.3,
 
     // Skuld
     SKULD_MANA_REGEN: 0.3,
@@ -112,48 +162,36 @@ export const constants = Object.freeze({
     MAX_RECOLLECTION: 100,
     URD_HEALTH_REGEN: 0.15,
     RECOLLECTION_EXCESS_RATE: 10,
+    URD_SP_ATK_EXTRA_COST: 0,
+    URD_STR_LOSS: 0.3,
 
     CURSE_EMPTY_RUNE_DMG: 0.3,
-    DIVINE_SPARK_STR_CONVERSION: 5,
+    
     GRAVITATION_GAIN: 5,
     MAX_GRAVITATION: 100,
     MAX_ACCRETION: 100,
 
-    WITHER_LUNACY_MULT: 1,
-    LUNAR_TIDE_MULT: 2,
-    MAX_LUNACY: 100,
-    GIBBOUS_TEARS_GAIN: 1,
     LUNAR_VEIL_TEARS_GAIN: 1,
     INITIAL_POINTS_AVAILABLE: 10,
     SP_ATTACK_COST: 0.6,
     ARRAY_DURATION: 3,
     MANA_SHACKLE_TURN_GAIN: 5,
-    MAX_OVERHEAT: 100,
+
     STANDARD_DR_INCREASE: 0.5,
     STANDARD_DEF_EFFECT_INCREASE: 1.5,
     GUARD_MANA_REGEN: 0.3,
-    HALO_GEN_MULT: 2,
-    SAC_HP_CONSUMPTION: 0.5,
-    RADIANT_DEF_EFFECT_MULTIPLIER: 0,
+    
     CHART_STAR_GAIN: 3,
     STARDUST_RATE_CONVERSION: 3,
-    MAX_DIVINE_SPARK: 100,
-    NATURAL_OVERHEAT_LOSS: 30,
-    MAX_DYNAMO: 100,
-    STARTING_ENERGY: 1,
-    RESOURCES_CINDERS_MULT: 1,
-    ALBEDO_ML_GAIN: 2,
-    MIRROR_ML_GAIN: 3,
-    BLOOD_CORONA_ML_GAIN: 1,
-    LUNAR_GROWTH_MULT: 1,
-    HIDDEN_MOON_ML_GAIN: 3,
-    SMITE_MULT: 5,
+
+    
 });
 
 export const MITIGATION_RESOURCES = [
     effectKeys.SANCTUARY,
     effectKeys.FAULTY_FIRMAMENT,
     effectKeys.FRACTURED_DOME,
+    effectKeys.WISDOM,
     effectKeys.HALO,
     effectKeys.REFRACTED_DIVINITY,
     effectKeys.CONJECTURE,
@@ -166,7 +204,6 @@ export const MITIGATION_RESOURCES = [
 export const FREE_RESOURCES = [
     effectKeys.SHADOWFLAME,
     effectKeys.CINDERS,
-    effectKeys.UNRELENTING_SHADOWS,
     effectKeys.DISSONANCE,
     effectKeys.PRECOGNITION,
     effectKeys.PROPHECY_OF_DOOM,
@@ -213,8 +250,8 @@ export const presetAi = {
     [aiKeys.PALADIN]: {
         name: "Paladin",
         best: {
-            str: 5,
-            def: 5,
+            str: 0,
+            def: 10,
         },
         caller: paladinAI,
         desc: [...Object.keys(PALADIN_DESCRIPTIONS)],
@@ -222,8 +259,8 @@ export const presetAi = {
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
-            str: 3,
-            def: 7,
+            str: 4,
+            def: 6,
         },
         caller: shadowSorcererAI,
         desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
@@ -432,7 +469,8 @@ export const INITIAL_GAME_STATE = {
     redoPile: [],
     aiQueue: [],
     newcomer: true,
-    ivn: 5,
+    ivn: 6,
+    simSpecs: null,
 
     speed: speedKeys.ONE,
 
@@ -527,13 +565,13 @@ export const roundPhasesMap = {
         descKey: roundPhases.ANOINTMENT,
         name: "Anointment",
     },
-    [roundPhases.P1_TRIAL]: {
-        descKey: effectKeys.TRIAL,
-        name: "Player One Trial",
+    [roundPhases.P1_PROSECUTION]: {
+        descKey: effectKeys.PROSECUTION,
+        name: "Player One Prosecution",
     },
-    [roundPhases.P2_TRIAL]: {
-        descKey: effectKeys.TRIAL,
-        name: "Player Two Trial",
+    [roundPhases.P2_PROSECUTION]: {
+        descKey: effectKeys.PROSECUTION,
+        name: "Player Two Prosecution",
     },
     [roundPhases.ROUND_END]: {
         descKey: roundPhases.ROUND_END,
@@ -708,7 +746,6 @@ export const RANKED_RESOURCES = [
     effectKeys.CONSTELLATION,
     effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.AZURE_CONSTELLATION,
-    effectKeys.MOONLIT_TEARS,
     effectKeys.BURDEN_OF_STIGMA,
 ];
 
@@ -716,6 +753,8 @@ export const FREE_ACTIONS = [
     actionKeys.LASER,
     actionKeys.CURSE,
     actionKeys.ASCEND,
+    actionKeys.SHATTER,
+    actionKeys.ATTUNE,
 ];
 
 export const ALL_CATEGORY_KEY = "ALL";
@@ -732,17 +771,17 @@ export const playerMap = Object.freeze({
         turn: [
             roundPhases.PLAYER_ONE_TURN,
             roundPhases.P1_SINGULARITY,
-            roundPhases.P1_TRIAL,
+            roundPhases.P1_PROSECUTION,
         ],
-        extra: [roundPhases.P1_SINGULARITY, roundPhases.P1_TRIAL],
+        extra: [roundPhases.P1_SINGULARITY, roundPhases.P1_PROSECUTION],
     },
     [entityKeys.PLAYER_TWO]: {
         turn: [
             roundPhases.PLAYER_TWO_TURN,
             roundPhases.P2_SINGULARITY,
-            roundPhases.P2_TRIAL,
+            roundPhases.P2_PROSECUTION,
         ],
-        extra: [roundPhases.P2_SINGULARITY, roundPhases.P2_TRIAL],
+        extra: [roundPhases.P2_SINGULARITY, roundPhases.P2_PROSECUTION],
     },
 });
 
@@ -758,4 +797,4 @@ export const edictChoirMap = Object.freeze({
     [edictKeys.SERAPHIM]: choirKeys.NINTH,
 });
 
-export const MAX_UNDO_DEPTH = 20;
+export const MAX_UNDO_DEPTH = 30;

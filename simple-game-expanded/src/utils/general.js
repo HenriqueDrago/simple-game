@@ -33,8 +33,5 @@ export function toRoman(num) {
 export function roundNumber(num, houses) {
     const divider = Math.pow(10, Math.max(0, houses));
 
-    return divider > 0
-        ? Math.round(num)
-        : (num >= 0 ? Math.floor(num * divider) : Math.ceil(num * divider)) /
-              divider;
+    return divider > 0 ? Math.round(num * divider) / divider : Math.round(num);
 }

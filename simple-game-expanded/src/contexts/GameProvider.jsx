@@ -56,6 +56,7 @@ import {
     processUpkeep,
     processAnointment,
     processReckoning,
+    startGame,
 } from "../utils/turnManagement";
 import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
@@ -83,6 +84,7 @@ function resetGameState(prev) {
         redoPile: [],
         aiQueue: [],
         ivn: INITIAL_GAME_STATE?.ivn,
+        simSpecs: null,
 
         entities: {
             [entityKeys.PLAYER_ONE]: playerOne,
@@ -143,27 +145,6 @@ function setupProgression(prev) {
             },
         },
     };
-}
-
-function startGame(prev) {
-    const startingPlayer =
-        prev.whoStarts === whoStartsKeys.PLAYER_ONE ||
-        (Math.random() < 0.5 && prev.whoStarts === whoStartsKeys.RANDOM)
-            ? entityKeys.PLAYER_ONE
-            : entityKeys.PLAYER_TWO;
-
-    return buildHistory(
-        {
-            ...prev,
-            paused: false,
-            status: turnStatus.ONGOING,
-            startingPlayer: startingPlayer,
-            undoPile: [],
-            redoPile: [],
-            aiQueue: [],
-        },
-        eventKeys.BATTLE_START,
-    );
 }
 
 function changeAI(prev, controllerKey, entityKey) {
@@ -343,7 +324,7 @@ export default function GameProvider({ children }) {
                     ...prev.redoPile,
                     { ...prev, undoPile: [], redoPile: [], simGame: null },
                 ],
-                simSpecs: prev.simSpecs
+                simSpecs: prev?.simSpecs
                     ? {
                           ...prev.simSpecs,
                           action: null,
@@ -371,7 +352,7 @@ export default function GameProvider({ children }) {
                     ...prev.undoPile,
                     { ...prev, undoPile: [], redoPile: [], simGame: null },
                 ],
-                simSpecs: prev.simSpecs
+                simSpecs: prev?.simSpecs
                     ? {
                           ...prev.simSpecs,
                           action: null,
@@ -1054,6 +1035,20 @@ export default function GameProvider({ children }) {
                     break;
                 }
 
+                case roundPhases.P1_PROSECUTION: {
+                    targetKey = entityKeys.PLAYER_ONE;
+                    nonTargetKey = entityKeys.PLAYER_TWO;
+                    historyKey = eventKeys.PROSECUTION;
+                    break;
+                }
+
+                case roundPhases.P2_PROSECUTION: {
+                    targetKey = entityKeys.PLAYER_TWO;
+                    nonTargetKey = entityKeys.PLAYER_ONE;
+                    historyKey = eventKeys.PROSECUTION;
+                    break;
+                }
+
                 case roundPhases.ROUND_END: {
                     nextState = {
                         ...gameState,
@@ -1128,7 +1123,9 @@ export default function GameProvider({ children }) {
                                 currEntity.resources[effectKeys.SACRILEGE] >
                                     0 ||
                                 currEntity.resources[effectKeys.MARTYR] > 0 ||
-                                currEntity[effectKeys.BAD_OMEN] > 0);
+                                currEntity[effectKeys.BAD_OMEN] > 0 ||
+                                currEntity.resources[effectKeys.INSPIRATION] >
+                                    0);
 
                         nextState = commitTurn(
                             gameState,
@@ -1139,6 +1136,31 @@ export default function GameProvider({ children }) {
                             ? 800 * gameSpeeds[game.speed].mod
                             : 0;
                     }
+                }
+            }
+
+            // if a player is blocked
+            const actvPlayer = getCurrActivePlayer(gameState);
+            if (
+                !nextState &&
+                actvPlayer &&
+                !canUseCombatInteractions(gameState, actvPlayer, true, false)
+            ) {
+                // Turn
+                const currPlayerPhase = gameState?.playerQueue?.[0];
+                if (
+                    [
+                        roundPhases.PLAYER_ONE_TURN,
+                        roundPhases.PLAYER_TWO_TURN,
+                    ].includes(currPhase) &&
+                    currPlayerPhase === playerTurnPhases.PLAN
+                ) {
+                    nextState = processPlan(gameState, actvPlayer, null);
+                }
+
+                // Extra Turn
+                if (playerMap[actvPlayer].extra.includes(currPhase)) {
+                    nextState = processExtraTurn(gameState, actvPlayer, null);
                 }
             }
 
@@ -1310,7 +1332,13 @@ export default function GameProvider({ children }) {
             try {
                 localStorage.setItem(
                     "gameCheckpoint",
-                    JSON.stringify({ ...game, simGame: null }),
+                    JSON.stringify({
+                        ...game,
+                        simGame: null,
+                        simSpecs: null,
+                        undoPile: [],
+                        redoPile: [],
+                    }),
                 );
                 console.log("Game Saved!");
             } catch (error) {

@@ -17,6 +17,8 @@ import {
     getBenediction,
     getEntityDef,
     getEntityDefPen,
+    getEntityDR,
+    getEntityFragility,
     getEntityMaxHealth,
     getEntityStr,
     getEntityTotalHealth,
@@ -26,9 +28,10 @@ import {
     getMalediction,
     getMaxEnlit,
     getMaxMana,
-    getMissingHealth,
+    getOtherEntity,
     getProvForVirtues,
     getRevelation,
+    getSpAtkCost,
     getTotalEnlit,
     isEdictActive,
     isEdictUnlocked,
@@ -53,7 +56,6 @@ import {
     entityKeys,
     entryTypes,
     eyeKeys,
-    moonKeys,
     tarnishTypes,
 } from "./enums.js";
 import { simulateFullStarfall } from "./starfall.js";
@@ -106,7 +108,7 @@ export async function centralAIManagement(
 
             const action = command.field;
 
-            post = processActionUse(post, agentKey, nonAgentKey, action);
+            post = processActionUse(post, agentKey, nonAgentKey, action, true);
 
             post = isExtraTurn
                 ? processExtraTurn(post, agentKey, action)
@@ -156,7 +158,7 @@ export async function centralAIManagement(
         }
         case commandKeys.USE_CELESTIAL_STARS: {
             if (command.field === effectKeys.STARS_OF_APOCALYPSE) {
-                const draftAgent = extractEntity(post, agentKey);
+                let draftAgent = extractEntity(post, agentKey);
 
                 const starsUsed = Math.max(
                     0,
@@ -169,6 +171,14 @@ export async function centralAIManagement(
                 if (starsUsed <= 0) {
                     break;
                 }
+
+                draftAgent = {
+                    ...draftAgent,
+                    [effectKeys.STARS_OF_APOCALYPSE]:
+                        draftAgent[effectKeys.STARS_OF_APOCALYPSE] - starsUsed,
+                };
+
+                post = replaceEntity(post, draftAgent, agentKey);
 
                 post = newDealDmg(
                     post,
@@ -187,6 +197,12 @@ export async function centralAIManagement(
                 if (starsUsed <= 0) {
                     break;
                 }
+
+                draftAgent = {
+                    ...draftAgent,
+                    [effectKeys.STARS_OF_GENESIS]:
+                        draftAgent[effectKeys.STARS_OF_GENESIS] - starsUsed,
+                };
 
                 draftAgent = restoreResources(draftAgent, starsUsed);
                 draftNonAgent = restoreResources(draftNonAgent, starsUsed);
@@ -313,61 +329,14 @@ export async function centralAIManagement(
                 agentKey,
                 nonAgent,
                 nonAgentKey,
-                hasManaForSpecial:
-                    getEntityTotalMana(agent) >=
-                    constants.SP_ATTACK_COST * getMaxMana(agent),
                 isExtraTurn,
             };
 
             let caller = presetAi?.[agent?.controller]?.caller || simpleAI;
-            let newAgent = extractEntity(post, agentKey);
 
             switch (agent?.controller) {
-                case aiKeys.LUNATIC: {
-                    // Process Element
-                    const selectedElement = selectElementAI(context);
-
-                    if (selectedElement) {
-                        newQueue = [
-                            ...newQueue,
-                            {
-                                type: commandKeys.SET_ELEMENT,
-                                field: selectedElement,
-                            },
-                        ];
-                    }
-
-                    if (selectedElement) {
-                        newAgent = {
-                            ...newAgent,
-                            [effectKeys.ELEMENTAL_CRYSTALS]:
-                                translateElementIntoCrystals(selectedElement),
-                        };
-                    }
-
-                    context = {
-                        ...context,
-                        selectedElement:
-                            selectedElement ?? elementalKeys.DULLED,
-                        agent: newAgent,
-                        prev: replaceEntity(post, newAgent, agentKey),
-                    };
-
-                    // Calculate action
-                    let action = caller(context);
-
-                    if (action) {
-                        newQueue = [
-                            ...newQueue,
-                            {
-                                type: commandKeys.USE_ACTION,
-                                field: action,
-                            },
-                        ];
-                    }
-
-                    break;
-                }
+                case aiKeys.AUGUR:
+                case aiKeys.LUNATIC:
                 case aiKeys.VOYAGER:
                 case aiKeys.SERAPH: {
                     const aiResults = await caller(context);
@@ -375,6 +344,8 @@ export async function centralAIManagement(
                     newQueue = Array.isArray(aiResults)
                         ? aiResults
                         : [aiResults];
+
+                    // console.log(aiResults);
 
                     break;
                 }
@@ -419,14 +390,19 @@ function createSimulator({ agentKey, nonAgentKey, prev }) {
     };
 }
 
-function getEffectiveHealth(entity) {
+function getEffectiveHealth(entity, log = false) {
     const mit = consumeMitigationResources(entity, Infinity)
         .mitigationResourcesConsumed.totalMitigationResourcesConsumption;
-    return getTotalEnlit(entity) + getEntityTotalHealth(entity) + mit;
-}
 
-function getEffectiveMaxHealth(entity) {
-    return getMaxEnlit(entity) + getEntityMaxHealth(entity);
+    if (log) {
+        console.log(`enlit: ${getTotalEnlit(entity)}`);
+        console.log(`hp: ${getEntityTotalHealth(entity)}`);
+        console.log(`mit: ${mit}`);
+    }
+
+    return getTotalEnlit(entity) + getEntityTotalHealth(entity) > 1
+        ? getTotalEnlit(entity) + getEntityTotalHealth(entity) + mit
+        : 0;
 }
 
 function getEdictPermutations(edictNum) {
@@ -485,17 +461,6 @@ function willEntityEffectivelyDie(entity) {
     return isEntityDead(entity);
 }
 
-function willEntityImmediatelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
-    const currTargetEntity = sim.entities[queriedKey];
-    const futureTargetEntity = processUpkeep(sim, queriedKey, nonQueriedKey)
-        .entities[queriedKey];
-
-    return (
-        willEntityDieImmediately(currTargetEntity) ||
-        willEntityDieImmediately(futureTargetEntity)
-    );
-}
-
 function willEntityEffectivelyDieByNextUpkeep(sim, queriedKey, nonQueriedKey) {
     const currTargetEntity = sim.entities[queriedKey];
     const futureTargetEntity = processUpkeep(sim, queriedKey, nonQueriedKey)
@@ -515,6 +480,17 @@ function willEntityEffectivelyDieByNextCommit(sim, queriedKey, nonQueriedKey) {
     return (
         willEntityEffectivelyDie(currTargetEntity) ||
         willEntityEffectivelyDie(futureTargetEntity)
+    );
+}
+
+function willEntityImmediatelyDieByNextCommit(sim, queriedKey, nonQueriedKey) {
+    const currTargetEntity = sim.entities[queriedKey];
+    const futureTargetEntity = commitTurn(sim, queriedKey, nonQueriedKey)
+        .entities[queriedKey];
+
+    return (
+        willEntityDieImmediately(currTargetEntity) ||
+        willEntityDieImmediately(futureTargetEntity)
     );
 }
 
@@ -570,11 +546,1150 @@ export function setConstellation(entity, constellation) {
     };
 }
 
+// AIs
+
+/* 1. Mundane AI
+- Use Attack when possible
+- Heal at low health
+- Guard to recover Mana
+*/
+export function simpleAI(context) {
+    const { agent } = context;
+
+    // Low health
+    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
+        // If high enough mana, heal
+        // otherwise, guard to recover it
+        if (getEntityTotalMana(agent) >= 4) {
+            return actionKeys.HEAL;
+        } else {
+            return actionKeys.GUARD;
+        }
+    }
+
+    // standard attack
+    return actionKeys.ATTACK;
+}
+
+/* 2. Warlock AI
+- Use Attack or Special Attack if it can finish the enemy
+- Use Guard to recover mana
+- Use Special Attack when at full mana
+- Heal if at low health
+*/
+export function warlockAI(context) {
+    const { agent, agentKey, nonAgentKey } = context;
+
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    // Simulate Special Attack
+    // If it kills, use it
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simAttack,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.ATTACK)
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Low health
+    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
+        // If high enough mana, heal
+        // otherwise, guard to recover it
+        if (getEntityTotalMana(agent) >= 4) {
+            return actionKeys.HEAL;
+        } else {
+            return actionKeys.GUARD;
+        }
+    }
+
+    // Prioritize restoring Mana
+    if (
+        getEntityTotalMana(agent) <=
+        getMaxMana(agent) - getMaxMana(agent) * constants.GUARD_MANA_REGEN
+    ) {
+        return actionKeys.GUARD;
+    }
+
+    // Use Sp Atk if available
+    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // else, default to attack
+    return actionKeys.ATTACK;
+}
+
+function selectRadianceAction(sim, agentKey, nonAgentKey) {
+    const simulate = createSimulator({ prev: sim, agentKey, nonAgentKey });
+
+    const simAttack = simulate(actionKeys.ATTACK);
+    const simGuard = simulate(actionKeys.GUARD);
+    const simHeal = simulate(actionKeys.HEAL);
+    const simAegis = simulate(actionKeys.AEGIS);
+
+    const isActionUsable = createAvailabilityChecker({ prev: sim, agentKey });
+
+    // Use attack if it kills
+    if (
+        (!willEntityImmediatelyDieByNextCommit(
+            simAttack,
+            agentKey,
+            nonAgentKey,
+        ) &&
+            willEntityEffectivelyDieByNextUpkeep(
+                simAttack,
+                nonAgentKey,
+                agentKey,
+            )) ||
+        (!willEntityDieImmediately(extractEntity(simAttack, agentKey)) &&
+            willEntityDieImmediately(extractEntity(simAttack, nonAgentKey)))
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Choose the most benefitial one
+    const postCommitGuardAgent = extractEntity(
+        commitTurn(simGuard, agentKey, nonAgentKey),
+        agentKey,
+    );
+    const postCommitHealAgent = extractEntity(
+        commitTurn(simHeal, agentKey, nonAgentKey),
+        agentKey,
+    );
+    const postCommitAegisAgent = extractEntity(
+        commitTurn(simAegis, agentKey, nonAgentKey),
+        agentKey,
+    );
+    const postCommitGuardHp = getEntityTotalHealth(postCommitGuardAgent);
+    const postCommitHealHp = getEntityTotalHealth(postCommitHealAgent);
+    const postCommitAegisHp = getEntityTotalHealth(postCommitAegisAgent);
+
+    if (
+        postCommitAegisHp >= postCommitHealHp &&
+        postCommitAegisHp >= postCommitGuardHp &&
+        postCommitAegisHp > 0 &&
+        isActionUsable(actionKeys.AEGIS)
+    ) {
+        return actionKeys.AEGIS;
+    }
+
+    if (
+        postCommitGuardHp >= postCommitHealHp &&
+        postCommitGuardHp >= postCommitAegisHp &&
+        postCommitGuardHp > 0 &&
+        isActionUsable(actionKeys.GUARD)
+    ) {
+        return actionKeys.GUARD;
+    }
+
+    if (
+        postCommitHealHp >= postCommitGuardHp &&
+        postCommitHealHp >= postCommitAegisHp &&
+        postCommitHealHp > 0 &&
+        isActionUsable(actionKeys.HEAL)
+    ) {
+        return actionKeys.HEAL;
+    }
+
+    return actionKeys.ATTACK;
+}
+
+// Helper for getting Effective Health
+function getTrueEffectiveHealth(sim, agentKey, log = false) {
+    if (log) {
+        console.log(
+            `effectHp: ${getEffectiveHealth(extractEntity(sim, agentKey), true)}`,
+        );
+        console.log(`frail: ${getEntityFragility(sim, agentKey)}`);
+        console.log(`dr: ${getEntityDR(sim, agentKey)}`);
+    }
+
+    const nonAgentKey = getOtherEntity(agentKey);
+    if (
+        (extractEntity(sim, nonAgentKey).states[
+            effectKeys.ARMORED_DEPLOYMENT
+        ] ||
+            extractEntity(sim, nonAgentKey).states[
+                effectKeys.WEAPONS_DEPLOYED
+            ]) &&
+        getEffectiveHealth(extractEntity(sim, agentKey)) <= 5
+    ) {
+        return 0;
+    }
+
+    return (
+        getEffectiveHealth(extractEntity(sim, agentKey)) /
+        getEntityFragility(sim, agentKey) /
+        getEntityDR(sim, agentKey)
+    );
+}
+
+export function bloodknightAI(context) {
+    const { prev, agentKey, nonAgent, nonAgentKey } = context;
+
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    // Sims
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+    const simAttack = simulate(actionKeys.ATTACK);
+    const simSac = simulate(actionKeys.SACRIFICE);
+    const simHeal = simulate(actionKeys.HEAL);
+
+    // Use Special Attack if it kills
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK) &&
+        !willEntityDieImmediately(extractEntity(simSpecial, agentKey))
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // Use Attack if it kills
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simAttack,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.ATTACK) &&
+        !willEntityDieImmediately(extractEntity(simAttack, agentKey))
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Turn end death prevention (Radiance, dissonance)
+    if (willEntityEffectivelyDieByNextCommit(prev, agentKey)) {
+        if (!willEntityEffectivelyDieByNextCommit(simHeal, agentKey)) {
+            return actionKeys.HEAL;
+        }
+
+        return actionKeys.ATTACK;
+    }
+
+    // Sacrifice logic (boost attr)
+    if (
+        getTrueEffectiveHealth(
+            commitTurn(simSac, agentKey, nonAgentKey),
+            agentKey,
+        ) >= 15
+    ) {
+        return actionKeys.SACRIFICE;
+    }
+
+    if (canUseAction(prev, agentKey, actionKeys.AEGIS)) {
+        return actionKeys.AEGIS;
+    }
+
+    // Use Attack or SpAtk (whichever is stronger) if it deals considerable dmg
+    const spAtkDmgDealt =
+        getEffectiveHealth(nonAgent) -
+        getEffectiveHealth(extractEntity(simSpecial, nonAgentKey));
+    const atkDmgDealt =
+        getEffectiveHealth(nonAgent) -
+        getEffectiveHealth(extractEntity(simAttack, nonAgentKey));
+
+    const dmgThreshold = nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ? getEffectiveHealth(nonAgent)
+        : getEffectiveHealth(nonAgent) * 0.5;
+
+    if (
+        spAtkDmgDealt > atkDmgDealt &&
+        spAtkDmgDealt > dmgThreshold &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    return actionKeys.ATTACK;
+}
+
+export function paladinAI(context) {
+    const { prev, agent, agentKey, nonAgentKey } = context;
+
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    const simAtk = simulate(actionKeys.ATTACK);
+    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+    const simSac = simulate(actionKeys.SACRIFICE);
+    const simHeal = simulate(actionKeys.HEAL);
+
+    // Use Attack if it kills
+    if (willEntityEffectivelyDieByNextUpkeep(simAtk, nonAgentKey, agentKey)) {
+        return actionKeys.ATTACK;
+    }
+
+    // Use Special Attack if it kills
+    if (
+        willEntityEffectivelyDieByNextUpkeep(
+            simSpecial,
+            nonAgentKey,
+            agentKey,
+        ) &&
+        isActionAvailable(actionKeys.SPECIAL_ATTACK)
+    ) {
+        return actionKeys.SPECIAL_ATTACK;
+    }
+
+    // Turn end death prevention (Radiance, dissonance)
+    if (willEntityEffectivelyDieByNextCommit(prev, agentKey)) {
+        if (!willEntityEffectivelyDieByNextCommit(simAtk, agentKey)) {
+            return actionKeys.ATTACK;
+        }
+
+        if (!willEntityEffectivelyDieByNextCommit(simHeal, agentKey)) {
+            return actionKeys.HEAL;
+        }
+
+        if (isActionAvailable(actionKeys.AEGIS)) {
+            return actionKeys.AEGIS;
+        }
+
+        return actionKeys.ATTACK;
+    }
+
+    // Sacrifice logic (boost attr)
+    if (
+        agent[effectKeys.BLOOD_SACRIFICE] < 10 &&
+        getTrueEffectiveHealth(
+            commitTurn(simSac, agentKey, nonAgentKey),
+            agentKey,
+        ) >= 15
+    ) {
+        return actionKeys.SACRIFICE;
+    }
+
+    // Logic when divine spark is full
+    if (agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK) {
+        if (
+            getTrueEffectiveHealth(
+                commitTurn(simSac, agentKey, nonAgentKey),
+                agentKey,
+            ) >= 20
+        ) {
+            return actionKeys.SACRIFICE;
+        }
+
+        if (
+            agent.resources[effectKeys.MANA_OVERFLOW] <= 0 &&
+            isActionAvailable(actionKeys.AEGIS)
+        ) {
+            return actionKeys.AEGIS;
+        }
+
+        if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Use Aegis if possible
+    if (isActionAvailable(actionKeys.AEGIS)) {
+        return actionKeys.AEGIS;
+    }
+
+    // default: Attack
+    return actionKeys.ATTACK;
+}
+
+export function shadowSorcererAI(context) {
+    const { prev, agent, agentKey, nonAgentKey, nonAgent } = context;
+
+    const simulate = createSimulator(context);
+
+    // === Inside Umbral ===
+    if (agent.states[effectKeys.UMBRAL_CORE]) {
+        const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
+        const simMantle = simulate(actionKeys.SHADOW_MANTLE);
+        const simPromise = simulate(actionKeys.DARK_PROMISE);
+
+        // === Lethal Checks (Black Mayhem) ===
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simMayhem,
+                nonAgentKey,
+                agentKey,
+            ) &&
+            !willEntityEffectivelyDie(extractEntity(simMayhem, agentKey))
+        ) {
+            return actionKeys.BLACK_MAYHEM;
+        }
+
+        // === Turn End Death ===
+        const simCommit = commitTurn(prev, agentKey, nonAgentKey);
+        const simPostCommitMayhem = commitTurn(
+            simMayhem,
+            agentKey,
+            nonAgentKey,
+        );
+
+        if (willEntityEffectivelyDie(extractEntity(simCommit, agentKey))) {
+            // Prioritize Black Mayhem
+            if (
+                !willEntityEffectivelyDie(
+                    extractEntity(simPostCommitMayhem, agentKey),
+                )
+            ) {
+                return actionKeys.BLACK_MAYHEM;
+            }
+
+            // Else, Dark Promise
+            return actionKeys.DARK_PROMISE;
+        }
+
+        // === Dark Promise ===
+        const ENEMY_ACTIONS = [
+            actionKeys.SPECIAL_ATTACK,
+            actionKeys.HEAL,
+            actionKeys.BLACK_MAYHEM,
+        ]; // actions that consume mana
+
+        // Ignore Selenians, they have an easy way out
+        if (!nonAgent.states[effectKeys.SELENIAN]) {
+            // baseline simulations
+            const simPostCommitPromise = commitTurn(
+                simPromise,
+                agentKey,
+                nonAgentKey,
+            );
+            const simPostUpkeepPromise = processUpkeep(
+                simPostCommitPromise,
+                nonAgentKey,
+                agentKey,
+            );
+
+            // Helper for simulating enemy actions
+            const reverseSimulate = createSimulator({
+                agentKey: nonAgentKey,
+                nonAgentKey: agentKey,
+                prev: simPostUpkeepPromise,
+            });
+
+            let willWeDie = false;
+            let willTheyDie = true;
+
+            // Check for safety & kill
+            for (let action of ENEMY_ACTIONS) {
+                if (!canUseAction(simPostUpkeepPromise, nonAgentKey, action)) {
+                    continue;
+                }
+
+                const simEnemyAction = reverseSimulate(action);
+                const simPostEnemyCommit = commitTurn(
+                    simEnemyAction,
+                    nonAgentKey,
+                    agentKey,
+                );
+
+                if (
+                    !willEntityEffectivelyDie(
+                        extractEntity(simPostEnemyCommit, nonAgentKey),
+                    )
+                ) {
+                    willTheyDie = false;
+                }
+
+                if (
+                    willEntityEffectivelyDie(
+                        extractEntity(simPostEnemyCommit, agentKey),
+                    )
+                ) {
+                    willWeDie = true;
+                }
+            }
+
+            if (willTheyDie && !willWeDie) {
+                return actionKeys.DARK_PROMISE;
+            }
+        }
+
+        // === Burn Protection ===
+        const simPostUpkeepMayhem = processUpkeep(
+            commitTurn(simMayhem, agentKey, nonAgentKey),
+            agentKey,
+            nonAgentKey,
+        );
+
+        const isUmbralSafe = (sim) => {
+            return getTrueEffectiveHealth(sim, agentKey) >= 20;
+        };
+
+        if (
+            isUmbralSafe(simMayhem) &&
+            !willEntityEffectivelyDie(
+                extractEntity(simPostUpkeepMayhem, agentKey),
+            )
+        ) {
+            return actionKeys.BLACK_MAYHEM;
+        }
+
+        // === Umbral Defense ===
+        const simPostCommitMantle = commitTurn(
+            simMantle,
+            agentKey,
+            nonAgentKey,
+        );
+        const postCommitMantleAgent = extractEntity(
+            simPostCommitMantle,
+            agentKey,
+        );
+        const mantleManaGain =
+            postCommitMantleAgent[effectKeys.MANA] - agent[effectKeys.MANA];
+        const mantleHPGain =
+            postCommitMantleAgent[effectKeys.HEALTH] - agent[effectKeys.HEALTH];
+
+        if (
+            mantleHPGain + mantleManaGain >= 10 &&
+            isUmbralSafe(simPostCommitMantle)
+        ) {
+            return actionKeys.SHADOW_MANTLE;
+        }
+
+        // default: ash
+        return actionKeys.RITUAL_OF_ASH;
+    }
+
+    // === Outside Umbral ===
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (canUseAction(prev, agentKey, actionKeys.SPECIAL_ATTACK)) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Bleak redirect
+    if (agent.states[effectKeys.BLEAK_DECEPTION]) {
+        return paladinAI(context);
+    }
+
+    // Umbral Entry
+    return actionKeys.SHADOW_PACT;
+}
+
+export function cyborgAI(context) {
+    const { prev, agent, agentKey, nonAgentKey } = context;
+
+    const simulate = createSimulator(context);
+
+    // Thermal Overload -> Meltdown
+    if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
+        return actionKeys.MELTDOWN;
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (canUseAction(prev, agentKey, actionKeys.SPECIAL_ATTACK)) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Not on the Cyborg states -> Deploy
+    if (!agent.states[effectKeys.WEAPONS_DEPLOYED]) {
+        return actionKeys.DEPLOY;
+    }
+
+    // Check for a kill sequence
+    const relevantActions = [
+        actionKeys.LASER,
+        actionKeys.ATTACK,
+        actionKeys.SPECIAL_ATTACK,
+        actionKeys.MELTDOWN,
+    ];
+
+    const evalKill = (sim) => {
+        for (let relAct of relevantActions) {
+            if (canUseAction(sim, agentKey, relAct)) {
+                const simAction = simulate(relAct, { prev: sim });
+
+                if (
+                    !willEntityDieImmediately(
+                        extractEntity(simAction, agentKey),
+                    ) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        simAction,
+                        nonAgentKey,
+                        agentKey,
+                    )
+                ) {
+                    return true;
+                }
+
+                if (FREE_ACTIONS.includes(relAct) && evalKill(simAction)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    if (evalKill(prev)) {
+        return actionKeys.LASER;
+    }
+
+    // Overheat management & Laser
+    const simLaser = simulate(actionKeys.LASER);
+    const selectedDefense = selectRadianceAction(prev, agentKey, nonAgentKey);
+
+    // Check for Meltdown
+    if (
+        extractEntity(simLaser, agentKey)[effectKeys.OVERHEAT] >=
+        constants.MAX_OVERHEAT
+    ) {
+        return selectedDefense;
+    }
+
+    // Check for safety
+    if (isEntityDead(extractEntity(simLaser, agentKey))) {
+        return selectedDefense;
+    }
+
+    const maxOverheat =
+        constants.OVERHEAT_DEF_LOSS +
+        constants.OVERHEAT_STR_LOSS * getEntityStr(agent);
+
+    // Check Overheat Limit
+    if (agent[effectKeys.OVERHEAT] >= maxOverheat) {
+        return selectedDefense;
+    }
+
+    // use laser if can
+    if (canUseAction(prev, agentKey, actionKeys.LASER)) {
+        return actionKeys.LASER;
+    }
+
+    // defense fallback
+    return selectedDefense;
+}
+
+export function maestroAI(context) {
+    const { prev, agent, nonAgentKey, agentKey, nonAgent } = context;
+
+    const simulate = createSimulator(context);
+    const isActionAvailable = createAvailabilityChecker(context);
+
+    // On thermal, use Meltdown
+    if (
+        agent.states[effectKeys.THERMAL_OVERLOAD] &&
+        isActionAvailable(actionKeys.MELTDOWN)
+    ) {
+        return actionKeys.MELTDOWN;
+    }
+
+    // Simulate Special Attack
+    // If it kills, use it
+    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
+        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
+        if (
+            willEntityEffectivelyDieByNextUpkeep(
+                simSpecial,
+                nonAgentKey,
+                agentKey,
+            )
+        ) {
+            return actionKeys.SPECIAL_ATTACK;
+        }
+    }
+
+    // Simulate Attack
+    // If it kills, use it
+    const simAttack = simulate(actionKeys.ATTACK);
+    if (
+        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
+    ) {
+        return actionKeys.ATTACK;
+    }
+
+    // Radiance logic
+    if (agent.resources[effectKeys.RADIANCE] >= getEntityTotalHealth(agent)) {
+        return selectRadianceAction(prev, agentKey, nonAgentKey);
+    }
+
+    // If not on Resonant, use Attune
+    if (
+        !agent.states[effectKeys.RESONANT] &&
+        isActionAvailable(actionKeys.ATTUNE)
+    ) {
+        return actionKeys.ATTUNE;
+    }
+
+    // === Sonority ===
+
+    // If absolute positive on sonority...
+    if (agent[effectKeys.SONORITY] >= constants.SONORITY_HIGHER_LIMIT) {
+        // if enemy ascended, use Aegis when suitable
+        if (
+            (nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT] ||
+                nonAgent.states[effectKeys.ZENITH_OF_MORTALITY]) &&
+            agent.resources[effectKeys.BLOOD_SACRIFICE] <= 0 &&
+            getEntityDef(agent) >= 5 &&
+            canUseAction(prev, agentKey, actionKeys.AEGIS)
+        ) {
+            return actionKeys.AEGIS;
+        }
+
+        // else, use Babel
+        return actionKeys.BABEL;
+    }
+
+    // If absolute negative on sonority...
+    if (agent[effectKeys.SONORITY] <= constants.SONORITY_LOWER_LIMIT) {
+        // if str and hp is high, use sacrifice
+        if (
+            getEntityTotalHealth(agent) > 10 &&
+            prev.roundCount > 4 &&
+            !nonAgent.states[effectKeys.STARGAZER] &&
+            !nonAgent.states[effectKeys.ZENITH_OF_MORTALITY] &&
+            !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ) {
+            return actionKeys.SACRIFICE;
+        }
+
+        // otherwise, play silence
+        return actionKeys.SOUND_OF_SILENCE;
+    }
+
+    // Use Aegis on positive but not full sonority
+    if (
+        agent[effectKeys.SONORITY] > 0 &&
+        agent[effectKeys.SONORITY] <
+            (getEntityDef(agent) * constants.SONORITY_HIGHER_LIMIT) / 10 &&
+        isActionAvailable(actionKeys.AEGIS)
+    ) {
+        return actionKeys.AEGIS;
+    }
+
+    // If Sonority is higher than 0, use Babel
+    if (agent[effectKeys.SONORITY] > 0 && isActionAvailable(actionKeys.BABEL)) {
+        return actionKeys.BABEL;
+    }
+
+    // If available, use Laser
+    if (
+        agent.states[effectKeys.WEAPONS_DEPLOYED] &&
+        isActionAvailable(actionKeys.LASER)
+    ) {
+        return actionKeys.LASER;
+    }
+
+    // Otherwise, try deploy
+    if (isActionAvailable(actionKeys.DEPLOY)) {
+        return actionKeys.DEPLOY;
+    }
+
+    // If Sonority is lower than 0...
+    if (
+        agent[effectKeys.SONORITY] < 0 &&
+        isActionAvailable(actionKeys.SOUND_OF_SILENCE)
+    ) {
+        // if str and hp is high, use sacrifice
+        if (
+            getEntityTotalHealth(agent) > 10 &&
+            getEntityStr(agent) - agent[effectKeys.BLOOD_SACRIFICE] >=
+                7 - prev.roundCount &&
+            !nonAgent.states[effectKeys.STARGAZER] &&
+            !nonAgent.states[effectKeys.ZENITH_OF_MORTALITY] &&
+            !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ) {
+            return actionKeys.SACRIFICE;
+        }
+
+        return actionKeys.SOUND_OF_SILENCE;
+    }
+
+    // safeguard: play guard
+    return actionKeys.GUARD;
+}
+
+export function augurAI(context) {
+    const { agent, agentKey, nonAgentKey, nonAgent, prev } = context;
+
+    const simulate = createSimulator(context);
+
+    // Helper for building action
+    const buildAction = (action, command = commandKeys.USE_ACTION) => {
+        return {
+            type: command,
+            field: action,
+        };
+    };
+
+    // Helper for build an array of actions
+    const buildSucessiveActions = (array) => {
+        let commands = [];
+        for (let action of array) {
+            commands = [...commands, buildAction(action)];
+        }
+
+        return commands;
+    };
+
+    // === Lethal Checks ===
+
+    const relevantKillActions = [
+        actionKeys.ATTACK,
+        actionKeys.SPECIAL_ATTACK,
+        actionKeys.CURSE,
+    ];
+
+    const evalKill = (sim, history, depth) => {
+        if (depth > 3) {
+            console.log(`max depth reached: ${depth}`);
+            return null;
+        }
+
+        for (let relAct of relevantKillActions) {
+            // Skip unavailable actions
+            if (!canUseAction(sim, agentKey, relAct)) {
+                continue;
+            }
+
+            const simAction = simulate(relAct);
+
+            if (
+                !willEntityDieImmediately(extractEntity(simAction, agentKey)) &&
+                willEntityEffectivelyDieByNextUpkeep(
+                    simAction,
+                    nonAgentKey,
+                    agentKey,
+                )
+            ) {
+                return [...history, buildAction(relAct)];
+            }
+
+            if (FREE_ACTIONS.includes(relAct)) {
+                const freeResult = evalKill(
+                    simAction,
+                    [buildAction(relAct)],
+                    depth + 1,
+                );
+
+                if (freeResult) {
+                    return freeResult;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    const foundDeath = evalKill(prev, [], 0);
+    if (foundDeath && foundDeath.length > 0) {
+        return foundDeath;
+    }
+
+    // === Enter Visionary ===
+    if (!agent.states[effectKeys.VISIONARY]) {
+        return buildAction(actionKeys.CARVE);
+    }
+
+    // === Engine ===
+    const evalSpAtk = () => {
+        const simSpAtk = simulate(actionKeys.SPECIAL_ATTACK);
+        const simCurse = simulate(actionKeys.CURSE);
+        const simCurseSpAtk = simulate(actionKeys.SPECIAL_ATTACK, {
+            prev: simCurse,
+        });
+
+        const spAtkDmg =
+            getEffectiveHealth(nonAgent) -
+            getEffectiveHealth(extractEntity(simSpAtk, nonAgentKey));
+        const curseDmg =
+            getEffectiveHealth(nonAgent) -
+            getEffectiveHealth(extractEntity(simCurseSpAtk, nonAgentKey));
+
+        if (
+            spAtkDmg >= curseDmg &&
+            getAugurMana(extractEntity(simSpAtk, agentKey)) >=
+                getAugurMana(extractEntity(simCurseSpAtk, agentKey)) &&
+            canUseAction(prev, agentKey, actionKeys.SPECIAL_ATTACK)
+        ) {
+            return [actionKeys.SPECIAL_ATTACK];
+        }
+
+        if (
+            canUseAction(prev, agentKey, actionKeys.CURSE) &&
+            canUseAction(simCurse, agentKey, actionKeys.SPECIAL_ATTACK)
+        ) {
+            return [actionKeys.CURSE, actionKeys.SPECIAL_ATTACK];
+        }
+
+        return null;
+    };
+
+    const getAugurMana = (entity) => {
+        return (
+            entity.resources[effectKeys.PRECOGNITION] +
+            getEntityTotalMana(entity)
+        );
+    };
+
+    const evalManaRegen = () => {
+        const relevantRegenActions = [
+            actionKeys.GUARD,
+            actionKeys.HEAL,
+            actionKeys.AEGIS,
+            actionKeys.SPECIAL_ATTACK,
+            actionKeys.CURSE,
+        ];
+
+        const evalRegen = (sim, history, depth, oldBest) => {
+            let best = {
+                ...oldBest,
+            };
+
+            if (depth > 3) {
+                console.log(`max depth reached: ${depth}`);
+                return null;
+            }
+
+            for (let relAct of relevantRegenActions) {
+                // Skip unavailable actions
+                if (!canUseAction(sim, agentKey, relAct)) {
+                    continue;
+                }
+
+                const simAction = simulate(relAct);
+                const realMana = getAugurMana(
+                    extractEntity(simAction, agentKey),
+                );
+
+                if (FREE_ACTIONS.includes(relAct)) {
+                    const freeResult = evalRegen(
+                        simAction,
+                        [...history, relAct],
+                        depth + 1,
+                        best,
+                    );
+
+                    if (freeResult.score >= best.score) {
+                        best = freeResult;
+                    }
+                } else if (realMana >= best.score) {
+                    best = {
+                        history: [...history, relAct],
+                        score: realMana,
+                    };
+                }
+            }
+
+            return best;
+        };
+
+        return (
+            evalRegen(prev, [], 0, { history: [], score: -Infinity })
+                ?.history ?? []
+        );
+    };
+
+    const willSurvive = (sim) => {
+        const simCommit = commitTurn(sim, agentKey, nonAgentKey);
+        return getTrueEffectiveHealth(simCommit, agentKey) >= 15;
+    };
+
+    const selectBuff = () => {
+        if (
+            agent[effectKeys.BLOOD_SACRIFICE] <= 0 &&
+            agent[effectKeys.RECOLLECTION] < constants.MAX_RECOLLECTION
+        ) {
+            return [actionKeys.GUARD];
+        }
+
+        if (
+            agent[effectKeys.BLOOD_SACRIFICE] <= 0 &&
+            agent[effectKeys.DIVINE_SPARK] < constants.MAX_DIVINE_SPARK &&
+            getEntityDef(agent) >= 5
+        ) {
+            return [actionKeys.AEGIS];
+        }
+
+        if (evalSpAtk()) {
+            return evalSpAtk();
+        }
+
+        return evalManaRegen();
+    };
+
+    const buffsSelected = selectBuff();
+    let simBuff = prev;
+    for (let action of buffsSelected) {
+        simBuff = simulate(action, { prev: simBuff });
+    }
+
+    if (willSurvive(simBuff)) {
+        const buffCommands = buildSucessiveActions(buffsSelected);
+
+        if (buffCommands && buffCommands.length > 0) {
+            return buffCommands;
+        }
+    }
+
+    // === Survival ===
+    const selectDefense = () => {
+        const relevantDefenseActions = [
+            actionKeys.GUARD,
+            actionKeys.HEAL,
+            actionKeys.AEGIS,
+            actionKeys.ATTACK,
+        ];
+
+        const evalDefense = (sim, history, depth, oldBest) => {
+            let best = {
+                ...oldBest,
+            };
+
+            if (depth > 3) {
+                console.log(`max depth reached: ${depth}`);
+                return null;
+            }
+
+            for (let relAct of relevantDefenseActions) {
+                // Skip unavailable actions
+                if (!canUseAction(sim, agentKey, relAct)) {
+                    continue;
+                }
+
+                const simAction = simulate(relAct);
+                const simCommit = commitTurn(simAction, agentKey, nonAgentKey);
+                const simUpkeep = processUpkeep(
+                    simCommit,
+                    agentKey,
+                    nonAgentKey,
+                );
+
+                const scores = {
+                    commitScore: getTrueEffectiveHealth(simCommit, agentKey),
+                    upkeepScore:
+                        getTrueEffectiveHealth(simCommit, agentKey) > 0
+                            ? getTrueEffectiveHealth(simUpkeep, agentKey)
+                            : 0,
+                };
+
+                // console.log(relAct);
+                // console.log(scores)
+                // console.log(best)
+
+                if (FREE_ACTIONS.includes(relAct)) {
+                    const freeResult = evalDefense(
+                        simAction,
+                        [...history, relAct],
+                        depth + 1,
+                        best,
+                    );
+
+                    if (freeResult.upkeepScore > best.upkeepScore) {
+                        best = freeResult;
+                    } else if (
+                        freeResult.upkeepScore === best.upkeepScore &&
+                        freeResult.commitScore > best.commitScore
+                    ) {
+                        best = freeResult;
+                    }
+                } else if (scores.upkeepScore > best.upkeepScore) {
+                    best = {
+                        history: [...history, relAct],
+                        upkeepScore: scores.upkeepScore,
+                        commitScore: scores.commitScore,
+                    };
+                } else if (
+                    scores.upkeepScore === best.upkeepScore &&
+                    scores.commitScore > best.commitScore
+                ) {
+                    best = {
+                        history: [...history, relAct],
+                        upkeepScore: scores.upkeepScore,
+                        commitScore: scores.commitScore,
+                    };
+                }
+            }
+
+            return best;
+        };
+
+        return buildSucessiveActions(
+            evalDefense(prev, [], 0, {
+                action: null,
+                commitScore: -Infinity,
+                upkeepScore: -Infinity,
+            })?.history ?? [],
+        );
+    };
+
+    const selectedDefense = selectDefense();
+
+    if (selectedDefense && selectedDefense.length > 0) {
+        return selectedDefense;
+    }
+
+    // Fallback to guard
+    console.error("augur fallback");
+    return buildAction(actionKeys.GUARD);
+}
+
 // Voyager AI
 export async function voyagerAI(context) {
     const { prev, agentKey, nonAgentKey, agent } = context;
 
-    const MAX_STARS = 100;
+    const MAX_STARS = 200;
 
     // Tracker and helper to prevent UI freezing during heavy calculations
     const nodeTracker = { count: 0 };
@@ -606,11 +1721,6 @@ export async function voyagerAI(context) {
 
     let remainingWhite = getEntityUsableStars(agent);
 
-    // Early return if no stars or not in Stargazer
-    if (remainingWhite <= 0 || !agent.states[effectKeys.STARGAZER]) {
-        return buildAction(actionKeys.CHART);
-    }
-
     const relevantActions = [
         actionKeys.ATTACK,
         actionKeys.SPECIAL_ATTACK,
@@ -619,6 +1729,7 @@ export async function voyagerAI(context) {
         actionKeys.GUARD,
         actionKeys.HEAL,
         actionKeys.CHART,
+        actionKeys.ATTUNE,
     ];
 
     let simulations = {};
@@ -807,6 +1918,16 @@ export async function voyagerAI(context) {
                 };
             },
 
+            // Variant D: Singularity + Full Mana
+            () => {
+                const normalYellow = Math.min(starsForMaxGrav, remainingWhite);
+                const greenStars = remainingWhite - normalYellow;
+                return {
+                    [effectKeys.YELLOW_STAR]: normalYellow,
+                    [effectKeys.GREEN_STAR]: greenStars,
+                };
+            },
+
             // Variant A + Mana: Raw Green for SP ATK + Max Accretion then Constellation
             (actionSim) => {
                 const agentEnt = actionSim.entities[agentKey];
@@ -814,7 +1935,7 @@ export async function voyagerAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
+                const spCost = getSpAtkCost(agentEnt);
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -844,7 +1965,7 @@ export async function voyagerAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
+                const spCost = getSpAtkCost(agentEnt);
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -874,7 +1995,7 @@ export async function voyagerAI(context) {
                     0,
                     getEntityMaxHealth(agentEnt) - agentEnt[effectKeys.HEALTH],
                 );
-                const spCost = getMaxMana(agentEnt) * constants.SP_ATTACK_COST;
+                const spCost = getSpAtkCost(agentEnt);
                 const missingMana = Math.max(
                     0,
                     Math.ceil(spCost - getEntityTotalMana(agentEnt)),
@@ -1022,6 +2143,8 @@ export async function voyagerAI(context) {
         actionKeys.MELTDOWN,
         actionKeys.LUNAR_STRIKE,
         actionKeys.LUNAR_SMITE,
+        actionKeys.SHATTER,
+        actionKeys.ATTUNE,
     ];
 
     // Helper for evaluating threats (Async to yield during deep evaluation trees)
@@ -1191,6 +2314,8 @@ export async function voyagerAI(context) {
         actionKeys.GUARD,
         actionKeys.ATTACK,
         actionKeys.HEAL,
+        actionKeys.ATTUNE,
+        actionKeys.DA_CAPO,
     ];
 
     const simulate = createSimulator(context);
@@ -1385,26 +2510,43 @@ export async function voyagerAI(context) {
     ];
 }
 
-// Element AI
-export function selectElementAI(context) {
-    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
+export function lunaticAI(context) {
+    const { prev, agent, agentKey, nonAgentKey } = context;
+    // Helper for building action
+    const buildAction = (action, command = commandKeys.USE_ACTION) => {
+        return {
+            type: command,
+            field: action,
+        };
+    };
 
-    // If not on Selenian, cancel
-    if (!agent.states[effectKeys.SELENIAN]) {
-        return null;
-    }
+    // Helper for building element
+    const buildElement = (element, command = commandKeys.SET_ELEMENT) => {
+        return {
+            type: command,
+            field: element,
+        };
+    };
 
-    // If shattered, return shattered
-    if (isElementActive(agent, elementalKeys.SHATTERED)) {
-        return elementalKeys.SHATTERED;
-    }
+    const isActionElementAvailable = (sim, action, element) => {
+        if (!isElementValid(extractEntity(sim, agentKey), element)) {
+            return false;
+        }
 
-    const maxHealthNature = getEntityMaxHealth({
-        ...agent,
-        [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
-            elementalKeys.NATURE,
-        ),
-    });
+        return canUseAction(
+            replaceEntity(
+                sim,
+                {
+                    ...extractEntity(sim, agentKey),
+                    [effectKeys.ELEMENTAL_CRYSTALS]:
+                        translateElementIntoCrystals(element),
+                },
+                agentKey,
+            ),
+            agentKey,
+            action,
+        );
+    };
 
     // Helper function for using the simulations with the correct element
     const simWithElement = (element, actionKey) => {
@@ -1427,1078 +2569,236 @@ export function selectElementAI(context) {
         })(actionKey);
     };
 
-    // Simulate lethal attacks with Scorch
-    const strikeSim = simWithElement(
-        elementalKeys.SCORCH,
+    // Helper for checking if an element is valid
+    const isElementValid = (entity, element) => {
+        if (!entity.states[effectKeys.SELENIAN]) {
+            if (element === elementalKeys.DULLED) {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (isElementActive(entity, elementalKeys.SHATTERED)) {
+            if (element === elementalKeys.SHATTERED) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return true;
+    };
+
+    // === Lethal Checks ===
+
+    const relevantKillActions = [
+        actionKeys.ATTACK,
+        actionKeys.SPECIAL_ATTACK,
         actionKeys.LUNAR_STRIKE,
-    );
-    const attackSim = simWithElement(elementalKeys.SCORCH, actionKeys.ATTACK);
+        actionKeys.LUNAR_SMITE,
+        actionKeys.CHALK,
+        actionKeys.SHATTER,
+    ];
 
-    if (
-        willEntityEffectivelyDieByNextUpkeep(
-            strikeSim,
-            nonAgentKey,
-            agentKey,
-        ) ||
-        willEntityEffectivelyDieByNextUpkeep(
-            attackSim,
-            nonAgentKey,
-            agentKey,
-        ) ||
-        agent.resources[effectKeys.MOONSHINE] >=
-            getEntityTotalHealth(agent) * 0.7
-    ) {
-        return elementalKeys.SCORCH;
-    }
+    const relevantElements = Object.values(elementalKeys);
 
-    // Simulate lethal attacks with Ash
-    const smiteSim = simWithElement(elementalKeys.ASH, actionKeys.LUNAR_SMITE);
-
-    if (willEntityEffectivelyDieByNextUpkeep(smiteSim, nonAgentKey, agentKey)) {
-        return elementalKeys.ASH;
-    }
-
-    const tideSim = simWithElement(elementalKeys.OCEAN, actionKeys.LUNAR_TIDE);
-    const hasBadResources =
-        agent.resources[effectKeys.MANA_OVERFLOW] > 0 ||
-        agent.resources[effectKeys.DISSONANCE] > 0;
-
-    if (hasBadResources) {
-        return elementalKeys.OCEAN;
-    }
-
-    // If low on health, compare our options
-    if (agent[effectKeys.HEALTH] <= maxHealthNature * 0.5) {
-        const growthSim = simWithElement(
-            elementalKeys.NATURE,
-            actionKeys.LUNAR_GROWTH,
-        );
-
-        const moon = growthSim.entities[agentKey][effectKeys.MIRRORED_MOON];
-        const extraMoonlight = moon === moonKeys.CORONAL ? 1 : 0;
-
-        const hpTide = getEntityTotalHealth(tideSim.entities[agentKey]);
-        const hpGrowth = getEntityTotalHealth(
-            restoreResources(
-                growthSim.entities[agentKey],
-                growthSim.entities[agentKey][effectKeys.MOONLIGHT] +
-                    extraMoonlight,
-            ),
-        );
-
-        let bestElement = elementalKeys.NATURE;
-        let maxHp = hpGrowth;
-
-        const simSpAtkOcean = processDeathCheck(
-            processActionUse(
-                processDeathCheck(commitTurn(tideSim, agentKey, nonAgentKey)),
-                nonAgentKey,
-                agentKey,
-                actionKeys.SPECIAL_ATTACK,
-            ),
-        );
-
-        if (
-            hpTide >= maxHp &&
-            !willEntityEffectivelyDieByNextUpkeep(
-                simSpAtkOcean,
-                agentKey,
-                nonAgentKey,
-            )
-        ) {
-            // maxHp = hpTide;
-            bestElement = elementalKeys.OCEAN;
-        }
-        return bestElement;
-    }
-
-    // Simulate chalk
-    // If our Chalk is strong enough, proceed to enter shattered
-    const chalkSim = simWithElement(elementalKeys.SHATTERED, actionKeys.CHALK);
-    const chalkDamage =
-        getEffectiveMaxHealth(nonAgent) -
-        getEffectiveMaxHealth(chalkSim.entities[nonAgentKey]);
-
-    if (chalkDamage >= getEffectiveMaxHealth(nonAgent) * 0.5) {
-        const tempAgent = {
-            ...agent,
-            [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
-                elementalKeys.DULLED,
-            ),
-        };
-
-        // Heal before Chalk
-        if (getEntityTotalHealth(agent) <= getEntityMaxHealth(tempAgent)) {
-            return elementalKeys.NATURE;
-        }
-        return elementalKeys.ALBEDO;
-    }
-
-    // Default elements
-    const moon = agent[effectKeys.MIRRORED_MOON];
-    const isWaxing = moon === moonKeys.WAXING;
-
-    // If Waxing, use scorch if we have moonshine
-    // else, Wither when it won't leave us too low
-    // otherwise frost
-    if (isWaxing) {
-        if (agent.resources[effectKeys.MOONSHINE] > 0) {
-            return effectKeys.SCORCH;
+    const evalKill = (sim, history, depth) => {
+        if (depth > 3) {
+            console.log(`max depth reached: ${depth}`);
+            return null;
         }
 
-        const simWither = simWithElement(
-            elementalKeys.WITHER,
-            actionKeys.LUNAR_SHED,
-        );
+        for (let relAct of relevantKillActions) {
+            for (let element of relevantElements) {
+                // Skip invalid elements
+                if (!isElementValid(agent, element)) {
+                    continue;
+                }
 
-        if (getEntityTotalHealth(simWither.entities[agentKey]) > 0) {
-            return elementalKeys.WITHER;
-        } else {
-            return elementalKeys.FROST;
-        }
-    }
+                // Skip unavailable actions
+                if (!isActionElementAvailable(sim, relAct, element)) {
+                    continue;
+                }
 
-    // If on Waning, use Frost
-    return elementalKeys.FROST;
-}
+                const simAction = simWithElement(element, relAct);
 
-// AIs
+                if (
+                    !willEntityDieImmediately(
+                        extractEntity(simAction, agentKey),
+                    ) &&
+                    willEntityEffectivelyDieByNextUpkeep(
+                        simAction,
+                        nonAgentKey,
+                        agentKey,
+                    )
+                ) {
+                    return [
+                        ...history,
+                        buildElement(element),
+                        buildAction(relAct),
+                    ];
+                }
 
-/* 1. Mundane AI
-- Use Attack when possible
-- Heal at low health
-- Guard to recover Mana
-*/
-export function simpleAI(context) {
-    const { agent } = context;
+                if (FREE_ACTIONS.includes(relAct)) {
+                    const freeResult = evalKill(
+                        simAction,
+                        [buildElement(element), buildAction(relAct)],
+                        depth + 1,
+                    );
 
-    // Low health
-    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
-        // If high enough mana, heal
-        // otherwise, guard to recover it
-        if (getEntityTotalMana(agent) >= 4) {
-            return actionKeys.HEAL;
-        } else {
-            return actionKeys.GUARD;
-        }
-    }
-
-    // standard attack
-    return actionKeys.ATTACK;
-}
-
-/* 2. Warlock AI
-- Use Attack or Special Attack if it can finish the enemy
-- Use Guard to recover mana
-- Use Special Attack when at full mana
-- Heal if at low health
-*/
-export function warlockAI(context) {
-    const { agent, agentKey, nonAgentKey } = context;
-
-    const simulate = createSimulator(context);
-    const isActionAvailable = createAvailabilityChecker(context);
-
-    // Simulate Special Attack
-    // If it kills, use it
-    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(
-            simSpecial,
-            nonAgentKey,
-            agentKey,
-        ) &&
-        isActionAvailable(actionKeys.SPECIAL_ATTACK)
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(
-            simAttack,
-            nonAgentKey,
-            agentKey,
-        ) &&
-        isActionAvailable(actionKeys.ATTACK)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Low health
-    if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
-        // If high enough mana, heal
-        // otherwise, guard to recover it
-        if (getEntityTotalMana(agent) >= 4) {
-            return actionKeys.HEAL;
-        } else {
-            return actionKeys.GUARD;
-        }
-    }
-
-    // Prioritize restoring Mana
-    if (
-        getEntityTotalMana(agent) <=
-        getMaxMana(agent) - getMaxMana(agent) * constants.GUARD_MANA_REGEN
-    ) {
-        return actionKeys.GUARD;
-    }
-
-    // Use Sp Atk if available
-    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // else, default to attack
-    return actionKeys.ATTACK;
-}
-
-export function bloodknightAI(context) {
-    const { prev, agent, agentKey, nonAgent, nonAgentKey } = context;
-
-    const simulate = createSimulator(context);
-    const isActionAvailable = createAvailabilityChecker(context);
-
-    // Simulate Special Attack
-    // If it kills, use it
-    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(
-            simSpecial,
-            nonAgentKey,
-            agentKey,
-        ) &&
-        isActionAvailable(actionKeys.SPECIAL_ATTACK)
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(
-            simAttack,
-            nonAgentKey,
-            agentKey,
-        ) &&
-        isActionAvailable(actionKeys.ATTACK)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Use Sacrifice at high health
-    if (
-        getEntityTotalHealth(agent) > getEntityMaxHealth(agent) * 0.5 &&
-        isActionAvailable(actionKeys.SACRIFICE)
-    ) {
-        return actionKeys.SACRIFICE;
-    }
-
-    // Use defense if needed
-    const hpThreshold = nonAgent.states[effectKeys.WEAPONS_DEPLOYED] ? 5 : 4;
-
-    const postCommitAgent = extractEntity(
-        commitTurn(prev, agentKey, nonAgentKey),
-        agentKey,
-    );
-    if (getEntityTotalHealth(postCommitAgent) <= hpThreshold) {
-        if (getEntityDef(agent) >= 5 && isActionAvailable(actionKeys.AEGIS)) {
-            return actionKeys.AEGIS;
-        }
-
-        if (
-            Math.min(getMissingHealth(agent), getEntityTotalHealth(agent)) >=
-            getEntityTotalHealth(postCommitAgent, agentKey) - hpThreshold
-        ) {
-            return actionKeys.HEAL;
-        }
-
-        return actionKeys.GUARD;
-    }
-
-    // Use Attack or SpAtk (whichever is stronger) if it deals considerable dmg
-    const spAtkDmgDealt =
-        getEffectiveHealth(nonAgent) -
-        getEffectiveHealth(extractEntity(simSpecial, nonAgentKey));
-    const atkDmgDealt =
-        getEffectiveHealth(nonAgent) -
-        getEffectiveHealth(extractEntity(simAttack, nonAgentKey));
-
-    const dmgThreshold = nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
-        ? getEffectiveHealth(nonAgent)
-        : getEffectiveHealth(nonAgent) * 0.5;
-
-    if (
-        spAtkDmgDealt > atkDmgDealt &&
-        spAtkDmgDealt > dmgThreshold &&
-        isActionAvailable(actionKeys.SPECIAL_ATTACK)
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    if (atkDmgDealt > dmgThreshold) {
-        return actionKeys.ATTACK;
-    }
-
-    const sacSim = simulate(actionKeys.SACRIFICE);
-    if (getEntityTotalHealth(extractEntity(sacSim, agentKey)) > hpThreshold) {
-        return actionKeys.SACRIFICE;
-    }
-
-    return actionKeys.ATTACK;
-}
-
-export function paladinAI(context) {
-    const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
-
-    const simulate = createSimulator(context);
-    const simAtk = simulate(actionKeys.ATTACK);
-
-    // Use Attack if it kills
-    if (willEntityEffectivelyDieByNextUpkeep(simAtk, nonAgentKey, agentKey)) {
-        return actionKeys.ATTACK;
-    }
-
-    const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-
-    // Use Special Attack if it kills
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simSpecial, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    if (
-        agent.resources[effectKeys.RADIANCE] >=
-        getEntityTotalHealth(agent) * 0.5
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Logic when divine spark is  near full
-    if (
-        agent[effectKeys.DIVINE_SPARK] > constants.MAX_DIVINE_SPARK * 0.9 &&
-        hasManaForSpecial
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // If cannot use Aegis, use Warlock AI
-    if (!canUseAction(prev, agentKey, actionKeys.AEGIS)) {
-        return warlockAI(context);
-    }
-
-    // default: Aegis
-    return actionKeys.AEGIS;
-}
-
-export function shadowSorcererAI(context) {
-    const { prev, agent, agentKey, nonAgentKey, nonAgent, hasManaForSpecial } =
-        context;
-
-    const simulate = createSimulator(context);
-
-    // === Outside Umbral ===
-    if (!agent.states[effectKeys.UMBRAL_CORE]) {
-        // Simulate Special Attack
-        // If it kills, use it
-        if (hasManaForSpecial) {
-            const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-            if (
-                willEntityEffectivelyDieByNextUpkeep(
-                    simSpecial,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.SPECIAL_ATTACK;
+                    if (freeResult) {
+                        return freeResult;
+                    }
+                }
             }
         }
 
-        // Simulate Attack
-        // If it kills, use it
-        const simAttack = simulate(actionKeys.ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simAttack,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.ATTACK;
-        }
-
-        // Bleak redirect
-        if (agent.states[effectKeys.BLEAK_DECEPTION]) {
-            return bloodknightAI(context);
-        }
-
-        // Umbral Entry
-        return actionKeys.SHADOW_PACT;
-    }
-
-    // === Inside Umbral ===
-    else {
-        // Simulate Black Mayhem
-        // use if it kills immediatelly either now or on the enemy's next upkeep
-        // don't use likely since it might kill us first
-        const simMayhem = simulate(actionKeys.BLACK_MAYHEM);
-        if (
-            willEntityImmediatelyDieByNextUpkeep(
-                simMayhem,
-                nonAgentKey,
-                agentKey,
-            ) &&
-            !willEntityEffectivelyDie(extractEntity(simMayhem, agentKey))
-        ) {
-            return actionKeys.BLACK_MAYHEM;
-        }
-
-        // If we are dying on turn end, exit UMBRAL CORE
-        if (willEntityEffectivelyDieByNextCommit(prev, agentKey, nonAgentKey)) {
-            return actionKeys.DARK_PROMISE;
-        }
-
-        // verify DARK PROMISE lethality
-        const simPromise = commitTurn(
-            simulate(actionKeys.DARK_PROMISE),
-            agentKey,
-            nonAgentKey,
-        );
-        const simUpkeepPromise = processUpkeep(
-            simPromise,
-            nonAgentKey,
-            agentKey,
-        );
-        const simSpAtkPromise = processActionUse(
-            simUpkeepPromise,
-            nonAgentKey,
-            agentKey,
-            actionKeys.SPECIAL_ATTACK,
-        );
-
-        // if enemy dies by their next commit after they use an sp atk and we don't, use it
-        if (
-            willEntityEffectivelyDieByNextCommit(
-                simSpAtkPromise,
-                nonAgentKey,
-                agentKey,
-            ) &&
-            willEntityEffectivelyDieByNextCommit(
-                simUpkeepPromise,
-                nonAgentKey,
-                agentKey,
-            ) &&
-            !willEntityDieImmediately(simSpAtkPromise.entities[agentKey]) &&
-            !willEntityDieImmediately(simPromise.entities[agentKey]) &&
-            !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
-        ) {
-            return actionKeys.DARK_PROMISE;
-        }
-
-        // Burn Management
-
-        // If low hp, check how beneficial is SM
-        if (getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5) {
-            const simMantle = simulate(actionKeys.SHADOW_MANTLE);
-            const simPostUpkeep = processUpkeep(
-                simMantle,
-                agentKey,
-                nonAgentKey,
-            );
-            const simPostCommit = commitTurn(
-                simPostUpkeep,
-                agentKey,
-                nonAgentKey,
-            );
-
-            const netHpGain =
-                getEntityTotalHealth(simPostCommit.entities[agentKey]) -
-                getEntityTotalHealth(agent);
-
-            if (netHpGain > 0) {
-                return actionKeys.SHADOW_MANTLE;
-            } else {
-                return actionKeys.RITUAL_OF_ASH;
-            }
-        }
-
-        // Avoid lethal burn
-        if (willEntityEffectivelyDieByNextUpkeep(prev, agentKey, nonAgentKey)) {
-            return actionKeys.RITUAL_OF_ASH;
-        }
-
-        // use black mayhem
-        return actionKeys.BLACK_MAYHEM;
-    }
-}
-
-export function cyborgAI(context) {
-    const { prev, agent, agentKey, nonAgentKey, hasManaForSpecial } = context;
-
-    const simulate = createSimulator(context);
-
-    // Helper for selecting end of turn action
-    function selectDefense() {
-        const healWorth =
-            agent[effectKeys.MANA] >= 5 &&
-            getEntityTotalHealth(agent) <= getEntityMaxHealth(agent) * 0.5;
-
-        if (
-            agent.resources[effectKeys.RADIANCE] >
-            0.5 * getEntityTotalHealth(agent)
-        ) {
-            return actionKeys.ATTACK;
-        }
-
-        if (healWorth) {
-            return actionKeys.HEAL;
-        }
-
-        if (
-            getEntityTotalMana(agent) +
-                constants.GUARD_MANA_REGEN * getMaxMana(agent) <=
-                getMaxMana(agent) &&
-            canUseAction(prev, nonAgentKey, actionKeys.SPECIAL_ATTACK)
-        ) {
-            return actionKeys.GUARD;
-        }
-
-        if (getEntityDef(agent) > 5) {
-            return actionKeys.AEGIS;
-        }
-
-        return actionKeys.GUARD;
-    }
-
-    // Thermal Overload -> Meltdown
-    if (agent.states[effectKeys.THERMAL_OVERLOAD]) {
-        return actionKeys.MELTDOWN;
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Simulate Special Attack
-    // If it kills, use it
-    if (hasManaForSpecial) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Not on the Cyborg states -> Deploy
-    if (!agent.states[effectKeys.WEAPONS_DEPLOYED]) {
-        return actionKeys.DEPLOY;
-    }
-
-    // Generate baseline simulation for next steps
-    const simLaser = simulate(actionKeys.LASER);
-
-    // laser kills -> laser
-    if (willEntityEffectivelyDieByNextUpkeep(simLaser, nonAgentKey, agentKey)) {
-        return actionKeys.LASER;
-    }
-
-    // Check if laser sets us to >= 100 overheat (100% or above threshold)
-    if (simLaser.entities[agentKey][effectKeys.OVERHEAT] >= 100) {
-        // Check if meltdown kills the opponent -> laser
-        // Passes post-laser simulation states into the meltdown simulator
-        const simMeltdown = simulate(actionKeys.MELTDOWN, {
-            prev: simLaser,
-        });
-
-        // Check if the enemy die with the upcoming MELTDOWN
-        // if yes, use LASER to advance to the MELTDOWN state
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simMeltdown,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.LASER;
-        } else {
-            // Else, use defensive
-            return selectDefense();
-        }
-    }
-
-    // 6. overheat > 30 and dynamo >= 70 and dynamo < 100 then
-    if (
-        agent[effectKeys.OVERHEAT] >= 30 &&
-        agent[effectKeys.DYNAMO] >= 70 &&
-        agent[effectKeys.DYNAMO] < 100
-    ) {
-        // use defense
-        return selectDefense();
-    }
-
-    // 7. laser if can
-    if (canUseAction(prev, agentKey, actionKeys.LASER)) {
-        return actionKeys.LASER;
-    }
-
-    // defense fallback
-    return selectDefense();
-}
-
-export function maestroAI(context) {
-    const { agent, nonAgentKey, nonAgent, agentKey } = context;
-
-    const simulate = createSimulator(context);
-    const isActionAvailable = createAvailabilityChecker(context);
-
-    // On thermal, use Meltdown
-    if (
-        agent.states[effectKeys.THERMAL_OVERLOAD] &&
-        isActionAvailable(actionKeys.MELTDOWN)
-    ) {
-        return actionKeys.MELTDOWN;
-    }
-
-    // Simulate Special Attack
-    // If it kills, use it
-    if (isActionAvailable(actionKeys.SPECIAL_ATTACK)) {
-        const simSpecial = simulate(actionKeys.SPECIAL_ATTACK);
-        if (
-            willEntityEffectivelyDieByNextUpkeep(
-                simSpecial,
-                nonAgentKey,
-                agentKey,
-            )
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Simulate Attack
-    // If it kills, use it
-    const simAttack = simulate(actionKeys.ATTACK);
-    if (
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // If not on Resonant, use Attune
-    if (
-        !agent.states[effectKeys.RESONANT] &&
-        isActionAvailable(actionKeys.ATTUNE)
-    ) {
-        return actionKeys.ATTUNE;
-    }
-
-    // === Sonority ===
-
-    // If absolute positive on sonority...
-    if (agent[effectKeys.SONORITY] >= constants.SONORITY_HIGHER_LIMIT) {
-        // If target is enligtened, use SpAtk
-        if (
-            isActionAvailable(actionKeys.SPECIAL_ATTACK) &&
-            nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-
-        // else, use Babel
-        return actionKeys.BABEL;
-    }
-
-    // If absolute negative on sonority, use silence
-    if (agent[effectKeys.SONORITY] <= constants.SONORITY_LOWER_LIMIT) {
-        return actionKeys.SOUND_OF_SILENCE;
-    }
-
-    // On high def, if sonority is 0 or higher, use aegis
-    if (
-        agent[effectKeys.SONORITY] >= 0 &&
-        getEntityDef(agent) >= 5 &&
-        isActionAvailable(actionKeys.AEGIS)
-    ) {
-        return actionKeys.AEGIS;
-    }
-
-    // If Sonority is higher than 0, use Babel
-    if (agent[effectKeys.SONORITY] > 0 && isActionAvailable(actionKeys.BABEL)) {
-        return actionKeys.BABEL;
-    }
-
-    // Otherwise play laser if available
-    // If available, use Laser
-    if (
-        agent.states[effectKeys.WEAPONS_DEPLOYED] &&
-        isActionAvailable(actionKeys.LASER)
-    ) {
-        return actionKeys.LASER;
-    }
-
-    // Otherwise, try deploy
-    if (isActionAvailable(actionKeys.DEPLOY)) {
-        return actionKeys.DEPLOY;
-    }
-
-    // If Sonority is lower than 0, use Silence
-    if (
-        agent[effectKeys.SONORITY] < 0 &&
-        isActionAvailable(actionKeys.SOUND_OF_SILENCE)
-    ) {
-        return actionKeys.SOUND_OF_SILENCE;
-    }
-
-    // safeguard: play guard
-    return actionKeys.GUARD;
-}
-
-/* Lunatic AI
-- Enter Selenian if not already
-- decides which action to use according to the element received
-*/
-export function lunaticAI(context) {
-    const { agent, agentKey, nonAgentKey, selectedElement } = context;
-
-    // Enter Selenian if not already on it
-    if (!agent.states[effectKeys.SELENIAN]) {
-        return actionKeys.REFRACT;
-    }
-
-    const simulate = createSimulator(context);
-
-    switch (selectedElement) {
-        case elementalKeys.FROST: {
-            if (getEntityDef(agent) >= 15 && agent[effectKeys.MOONLIGHT] > 5) {
-                return actionKeys.LUNAR_SHROUD;
-            }
-
-            return actionKeys.MIRROR;
-        }
-        case elementalKeys.NATURE: {
-            return actionKeys.LUNAR_GROWTH;
-        }
-        case elementalKeys.SCORCH: {
-            const simStrike = simulate(actionKeys.LUNAR_STRIKE);
-            const simAttack = simulate(actionKeys.ATTACK);
-
-            const enemyHpStrike = getEffectiveHealth(
-                simStrike.entities[nonAgentKey],
-            );
-            const enemyHpAttack = getEffectiveHealth(
-                simAttack.entities[nonAgentKey],
-            );
-
-            if (
-                (enemyHpStrike >= enemyHpAttack ||
-                    (agent.resources[effectKeys.MOONSHINE] > 0 &&
-                        enemyHpAttack > 0)) &&
-                !willEntityEffectivelyDieByNextUpkeep(
-                    simAttack,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.LUNAR_STRIKE;
-            } else {
-                return actionKeys.ATTACK;
-            }
-        }
-        case elementalKeys.OCEAN: {
-            return actionKeys.LUNAR_TIDE;
-        }
-        case elementalKeys.WITHER: {
-            return actionKeys.LUNAR_SHED;
-        }
-        case elementalKeys.ASH: {
-            return actionKeys.LUNAR_SMITE;
-        }
-        case elementalKeys.ALBEDO: {
-            return actionKeys.SHATTER;
-        }
-        case elementalKeys.SHATTERED: {
-            // Simulate lethal attacks
-            const chalkSim = simulate(actionKeys.CHALK);
-            if (
-                willEntityEffectivelyDieByNextUpkeep(
-                    chalkSim,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.CHALK;
-            }
-
-            const strikeSim = simulate(actionKeys.LUNAR_STRIKE);
-            if (
-                willEntityEffectivelyDieByNextUpkeep(
-                    strikeSim,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.LUNAR_STRIKE;
-            }
-
-            const smiteSim = simulate(actionKeys.LUNAR_SMITE);
-            if (
-                willEntityEffectivelyDieByNextUpkeep(
-                    smiteSim,
-                    nonAgentKey,
-                    agentKey,
-                )
-            ) {
-                return actionKeys.LUNAR_SMITE;
-            }
-
-            return actionKeys.CHALK;
-        }
-        case elementalKeys.DULLED:
-        default: {
-            return actionKeys.MIRROR;
-        }
-    }
-}
-
-export function augurAI(context) {
-    const { agent, agentKey, nonAgentKey, nonAgent } = context;
-
-    // === SIMULATIONS ===
-    const simulate = createSimulator(context);
-    const simAttack = simulate(actionKeys.ATTACK);
-    const simSpAtk = simulate(actionKeys.SPECIAL_ATTACK);
-    const simGuard = simulate(actionKeys.GUARD);
-    const simHeal = simulate(actionKeys.HEAL);
-
-    const simCurse = simulate(actionKeys.CURSE);
-    const simCurseAttack = simulate(actionKeys.ATTACK, { prev: simCurse });
-    const simCurseSpAtk = simulate(actionKeys.SPECIAL_ATTACK, {
-        prev: simCurse,
-    });
-    // const simCurseGuard = simulate(actionKeys.GUARD, { prev: simCurse });
-    const simCurseHeal = simulate(actionKeys.HEAL, { prev: simCurse });
-
-    // === DEATH CHECKS ===
-    const isAvailable = createAvailabilityChecker(context);
-    const survivesCurse = !willEntityDieImmediately(
-        simCurse.entities[agentKey],
-    );
-
-    // Special Attack
-    if (
-        isAvailable(actionKeys.SPECIAL_ATTACK) &&
-        willEntityEffectivelyDieByNextUpkeep(simSpAtk, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.SPECIAL_ATTACK;
-    }
-
-    // Attack
-    if (
-        isAvailable(actionKeys.ATTACK) &&
-        willEntityEffectivelyDieByNextUpkeep(simAttack, nonAgentKey, agentKey)
-    ) {
-        return actionKeys.ATTACK;
-    }
-
-    // Curse + Special Attack
-    if (
-        isAvailable(actionKeys.CURSE) &&
-        isAvailable(actionKeys.SPECIAL_ATTACK, { prev: simCurse }) &&
-        survivesCurse &&
-        willEntityEffectivelyDieByNextUpkeep(
-            simCurseSpAtk,
-            nonAgentKey,
-            agentKey,
-        )
-    ) {
-        return actionKeys.CURSE;
-    }
-
-    // Curse + Attack
-    if (
-        isAvailable(actionKeys.CURSE) &&
-        isAvailable(actionKeys.ATTACK, { prev: simCurse }) &&
-        survivesCurse &&
-        willEntityEffectivelyDieByNextUpkeep(
-            simCurseAttack,
-            nonAgentKey,
-            agentKey,
-        )
-    ) {
-        return actionKeys.CURSE;
+        return [];
+    };
+
+    const foundDeath = evalKill(prev, [], 0);
+    if (foundDeath && foundDeath.length > 0) {
+        return foundDeath;
     }
 
     // === General Logic ===
 
-    // Enter Visionary
-    if (isAvailable(actionKeys.CARVE) && !agent.states[effectKeys.VISIONARY]) {
-        return actionKeys.CARVE;
+    // If not on selenian, enter
+    if (!agent.states[effectKeys.SELENIAN]) {
+        return buildAction(actionKeys.REFRACT);
     }
 
-    // Survivability
-    const getEffectiveHeal = (sim) => {
-        const entity = sim.entities[agentKey];
-        return (
-            getEntityTotalHealth(entity) +
-            entity.resources[effectKeys.CONJECTURE]
-        );
+    // === Engine & Survival ===
+
+    const relevantEngineSurvivalActions = [
+        actionKeys.LUNAR_GROWTH,
+        actionKeys.LUNAR_TIDE,
+        actionKeys.LUNAR_SHED,
+        actionKeys.LUNAR_SHROUD,
+        actionKeys.HEAL,
+        actionKeys.GUARD,
+        actionKeys.AEGIS,
+    ];
+
+    const relevantSurvivalEngineElements = [
+        elementalKeys.DULLED,
+        elementalKeys.SCORCH,
+        elementalKeys.FROST,
+        elementalKeys.NATURE,
+        elementalKeys.ASH,
+        elementalKeys.WITHER,
+        elementalKeys.OCEAN,
+        elementalKeys.ALBEDO,
+    ];
+
+    // Helper for evaluation
+    const evaluateCombination = (element, action, print = false) => {
+        const simAction = simWithElement(element, action);
+        const simCommit = commitTurn(simAction, agentKey, nonAgentKey);
+        const simMoon = processMoonPhase(simCommit);
+        const simUpkeep = processUpkeep(simMoon, agentKey, nonAgentKey);
+
+        const simUsed = prev.startingPlayer === agentKey ? simCommit : simMoon;
+
+        if (
+            willEntityEffectivelyDie(extractEntity(simAction, agentKey)) ||
+            willEntityEffectivelyDie(extractEntity(simCommit, agentKey)) ||
+            willEntityEffectivelyDie(extractEntity(simMoon, agentKey)) ||
+            willEntityEffectivelyDie(extractEntity(simUpkeep, agentKey))
+        ) {
+            return -Infinity;
+        }
+
+        // Survival Multiplier
+        const trueHp = getTrueEffectiveHealth(simUsed);
+        const upkeepHp = getTrueEffectiveHealth(simUpkeep);
+        const maxLimiar = 15 + prev.roundCount;
+
+        const diff = maxLimiar - Math.min(maxLimiar, trueHp);
+        const missMult = diff / maxLimiar;
+
+        const extraVal = (upkeepHp - maxLimiar) / maxLimiar;
+
+        const survivalScore = diff * missMult * -10 + extraVal * 10;
+
+        // Engine Base
+        let engineScore = 0;
+        const upkeepAgent = extractEntity(simUpkeep, agentKey);
+        const baseAgent = extractEntity(prev, agentKey);
+
+        // Lunacy
+        engineScore +=
+            upkeepAgent[effectKeys.LUNACY] - baseAgent[effectKeys.LUNACY];
+
+        // Moonlight
+        engineScore +=
+            (upkeepAgent[effectKeys.MOONLIGHT] -
+                baseAgent[effectKeys.MOONLIGHT]) *
+            10;
+
+        // Divine Spark
+        engineScore +=
+            ((upkeepAgent[effectKeys.DIVINE_SPARK] -
+                baseAgent[effectKeys.MOONLIGHT]) /
+                constants.DIVINE_SPARK_STR_CONVERSION) *
+            (10 /
+                getEntityStr({
+                    ...upkeepAgent,
+                    [effectKeys.ELEMENTAL_CRYSTALS]:
+                        translateElementIntoCrystals(elementalKeys.SCORCH),
+                }));
+
+        if (print) {
+            console.log(
+                `engineScore: ${engineScore}, survivalMult: ${survivalScore}`,
+            );
+        }
+
+        return engineScore + survivalScore;
     };
 
-    if (getEntityTotalHealth(agent) < getEntityMaxHealth(agent) * 0.5) {
-        const healEffect = getEffectiveHeal(simHeal);
-        const curseHealEffect = getEffectiveHeal(simCurseHeal);
+    // Helper for evaluating survivability
+    const evalSurvivalEngine = (oldBest) => {
+        let best = oldBest;
 
-        if (
-            curseHealEffect > healEffect &&
-            curseHealEffect >= 5 &&
-            isAvailable(actionKeys.CURSE) &&
-            isAvailable(actionKeys.HEAL, { prev: simCurse }) &&
-            survivesCurse
-        ) {
-            return actionKeys.CURSE;
-        } else if (healEffect >= 5 && isAvailable(actionKeys.HEAL)) {
-            return actionKeys.HEAL;
-        } else if (isAvailable(actionKeys.GUARD)) {
-            return actionKeys.GUARD;
-        }
-    }
+        for (let relAct of relevantEngineSurvivalActions) {
+            for (let element of relevantSurvivalEngineElements) {
+                // Skip invalid elements
+                if (!isElementValid(agent, element)) {
+                    continue;
+                }
 
-    // Ascended Logic
-    if (nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        // Build Sin with SPATK
-        if (
-            isAvailable(actionKeys.SPECIAL_ATTACK) &&
-            getEntityTotalMana(agent) >= 8
-        ) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-    // Non Ascended Logic
-    else {
-        // Offensive Pressure
-        const dealtGoodDmg = (sim) => {
-            const enemyTrueHealth = getEffectiveHealth(nonAgent);
-            const simEnemy = sim.entities[nonAgentKey];
-            const enemyTrueHealthPostSim = getEffectiveHealth(simEnemy);
+                // Skip unavailable actions
+                if (!isActionElementAvailable(prev, relAct, element)) {
+                    continue;
+                }
 
-            const dmgDealt = enemyTrueHealth - enemyTrueHealthPostSim;
+                const score = evaluateCombination(element, relAct);
 
-            return (
-                dmgDealt >= enemyTrueHealth * 0.5 ||
-                extractEntity(sim, agentKey)[effectKeys.RECOLLECTION] >=
-                    constants.MAX_RECOLLECTION
-            );
-        };
-
-        const getDmgDealt = (sim) => {
-            const enemyTrueHealth = getEffectiveHealth(nonAgent);
-            const simEnemy = sim.entities[nonAgentKey];
-            const enemyTrueHealthPostSim = getEffectiveHealth(simEnemy);
-
-            return enemyTrueHealth - enemyTrueHealthPostSim;
-        };
-
-        const willTriggerHeal = (sim) => {
-            return (
-                getEntityTotalHealth(sim.entities[agentKey]) <
-                getEntityMaxHealth(sim.entities[agentKey]) * 0.5
-            );
-        };
-
-        const spAtkDmgDealt = getDmgDealt(simSpAtk);
-        const curseSpAtkDmgDealt = getDmgDealt(simCurseSpAtk);
-
-        // Curse + Sp Atk
-        if (
-            dealtGoodDmg(simCurseSpAtk) &&
-            survivesCurse &&
-            isAvailable(actionKeys.CURSE) &&
-            isAvailable(actionKeys.SPECIAL_ATTACK, { prev: simCurse }) &&
-            curseSpAtkDmgDealt > spAtkDmgDealt &&
-            !willTriggerHeal(simCurse)
-        ) {
-            return actionKeys.CURSE;
+                if (score >= best.score) {
+                    best = { element: element, action: relAct, score: score };
+                }
+            }
         }
 
-        // Sp Atk
-        if (dealtGoodDmg(simSpAtk) && isAvailable(actionKeys.SPECIAL_ATTACK)) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-
-        // Self Buff
-        // Worth using if current DEF >= STR and RECOLLECTION isn't full
-        if (
-            agent[effectKeys.RECOLLECTION] < constants.MAX_RECOLLECTION &&
-            getEntityDef(agent) >= getEntityStr(agent) &&
-            isAvailable(actionKeys.GUARD)
-        ) {
-            return actionKeys.GUARD;
-        }
-
-        // Damage Pressure
-        if (
-            curseSpAtkDmgDealt > spAtkDmgDealt &&
-            survivesCurse &&
-            isAvailable(actionKeys.CURSE) &&
-            isAvailable(actionKeys.SPECIAL_ATTACK, { prev: simCurse }) &&
-            !willTriggerHeal(simCurse)
-        ) {
-            return actionKeys.CURSE;
-        }
-
-        if (isAvailable(actionKeys.SPECIAL_ATTACK)) {
-            return actionKeys.SPECIAL_ATTACK;
-        }
-    }
-
-    // Mana Economy
-    const getEffectiveRestore = (sim) => {
-        const entity = sim.entities[agentKey];
-        const currMana =
-            getEntityTotalMana(agent) +
-            agent.resources[effectKeys.CONJECTURE] +
-            agent.resources[effectKeys.PRECOGNITION];
-        return (
-            getEntityTotalMana(entity) +
-            entity.resources[effectKeys.CONJECTURE] +
-            entity.resources[effectKeys.PRECOGNITION] -
-            currMana
-        );
+        return best;
     };
 
-    const guardRestore = getEffectiveRestore(simGuard);
-    const healRestore = getEffectiveRestore(simHeal);
-    const curseHealRestore = getEffectiveRestore(simCurseHeal);
+    const result = evalSurvivalEngine({
+        action: null,
+        element: null,
+        score: -Infinity,
+    });
 
-    if (
-        curseHealRestore > healRestore &&
-        curseHealRestore > guardRestore &&
-        survivesCurse &&
-        isAvailable(actionKeys.CURSE) &&
-        isAvailable(actionKeys.HEAL, { prev: simCurse })
-    ) {
-        return actionKeys.CURSE;
-    } else if (healRestore > guardRestore && isAvailable(actionKeys.HEAL)) {
-        return actionKeys.HEAL;
-    } else if (isAvailable(actionKeys.GUARD)) {
-        return actionKeys.GUARD;
+    if (result.score === -Infinity) {
+        console.log("lunatic fallback");
+        return buildAction(actionKeys.ATTACK);
     }
 
-    // Fallback: Guard
-    return actionKeys.GUARD;
+    evaluateCombination(result.element, result.action, true);
+
+    return [buildElement(result.element), buildAction(result.action)];
 }
 
 export async function seraphAI(context) {
@@ -2548,7 +2848,7 @@ export async function seraphAI(context) {
     }
 
     // On Cutoff Wings, play shadow sorcerer
-    if (agent?.states[effectKeys.CUTOFF_WINGS]) {
+    if (agent.states[effectKeys.CUTOFF_WINGS]) {
         return buildAction(shadowSorcererAI(context));
     }
 
@@ -2569,11 +2869,9 @@ export async function seraphAI(context) {
 
         // Use Ascend if high enough on Spark
         const threshold = Math.min(
-            getEntityDef(agent) *
-                (13 - prev.roundCount - agent.attributes.str.points),
+            getEntityDef(agent) * (13 - prev.roundCount),
             constants.MAX_DIVINE_SPARK,
         );
-
         if (
             agent[effectKeys.DIVINE_SPARK] >= threshold &&
             actionAvailable(actionKeys.ASCEND)
@@ -2581,17 +2879,37 @@ export async function seraphAI(context) {
             return buildAction(actionKeys.ASCEND);
         }
 
-        // Use Ascend if gonna die from Radiance or Dissonance (and can use Ascend, else Attack)
-        if (
-            agent.resources[effectKeys.RADIANCE] +
-                agent.resources[effectKeys.DISSONANCE] >=
-            getEntityTotalHealth(agent)
-        ) {
+        // Use Ascend if gonna die at turn end
+        if (willEntityEffectivelyDieByNextCommit(prev, agentKey, nonAgentKey)) {
             if (actionAvailable(actionKeys.ASCEND)) {
                 return buildAction(actionKeys.ASCEND);
             }
 
+            const simHeal = simulate(actionKeys.HEAL);
+            if (
+                !willEntityEffectivelyDieByNextCommit(
+                    simHeal,
+                    agentKey,
+                    nonAgentKey,
+                )
+            ) {
+                return buildAction(actionKeys.HEAL);
+            }
+
+            // default: attack
             return buildAction(actionKeys.ATTACK);
+        }
+
+        // Sacrifice logic (boost attr)
+        const simSac = simulate(actionKeys.SACRIFICE);
+        if (
+            getEntityDef(agent) <= 5 &&
+            getTrueEffectiveHealth(
+                commitTurn(simSac, agentKey, nonAgentKey),
+                agentKey,
+            ) >= 15
+        ) {
+            return buildAction(actionKeys.SACRIFICE);
         }
 
         // default: Aegis
@@ -2679,6 +2997,19 @@ export async function seraphAI(context) {
         return score;
     };
 
+    const getTrueSin = (sim) => {
+        let simPostCommit = commitTurn(sim, agentKey, nonAgentKey);
+        let postSim = processUpkeep(simPostCommit, agentKey, nonAgentKey);
+
+        const commitAgent = extractEntity(simPostCommit, agentKey);
+        const upkeepAgent = extractEntity(postSim, agentKey);
+
+        return Math.max(
+            commitAgent[effectKeys.TARNISHED_SIN],
+            upkeepAgent[effectKeys.TARNISHED_SIN],
+        );
+    };
+
     // Helper for checking edict/command combination relevancy
     const isRelevantCombination = (sim, edicts, command) => {
         if (!command) {
@@ -2745,13 +3076,13 @@ export async function seraphAI(context) {
 
         // === Angels ===
 
-        // Always on with Condemn, unless at low health
+        // Always on with Condemn if Virtues is unlocked, unless at low health
         if (
             !edicts[edictKeys.ANGELS] &&
             isEdictUnlocked(draftAgent, edictKeys.ANGELS) &&
+            isEdictUnlocked(draftAgent, edictKeys.VIRTUES) &&
             command.field === actionKeys.CONDEMN &&
-            getTotalEnlit(draftAgent) >=
-                Math.ceil(getMaxEnlit(draftAgent) * 0.3)
+            getTotalEnlit(draftAgent) > 1
         ) {
             return false;
         }
@@ -2761,21 +3092,36 @@ export async function seraphAI(context) {
             return false;
         }
 
+        // Always off at low health
+        if (edicts[edictKeys.ANGELS] && getTotalEnlit(draftAgent) <= 1) {
+            return false;
+        }
+
         // === Archangels ===
 
-        // Always on
+        // Always on, unless high true sin
         if (
             !edicts[edictKeys.ARCHANGELS] &&
-            isEdictUnlocked(draftAgent, edictKeys.ARCHANGELS)
+            isEdictUnlocked(draftAgent, edictKeys.ARCHANGELS) &&
+            getTrueSin(sim) < 70
+        ) {
+            return false;
+        }
+
+        // On high true sin, always off
+        if (
+            edicts[edictKeys.ARCHANGELS] &&
+            isEdictUnlocked(draftAgent, edictKeys.ARCHANGELS) &&
+            getTrueSin(sim) >= 70
         ) {
             return false;
         }
 
         // === Principalities ===
 
-        // Always on, unless we're using Supplicate
+        // Always off, unless we're using Supplicate
         if (
-            !edicts[edictKeys.PRINCIPALITIES] &&
+            edicts[edictKeys.PRINCIPALITIES] &&
             isEdictUnlocked(draftAgent, edictKeys.PRINCIPALITIES) &&
             command.field !== actionKeys.SUPPLICATE
         ) {
@@ -3107,7 +3453,7 @@ export async function seraphAI(context) {
                     if (sim.btt[effectKeys.PROVIDENCE] >= 40) {
                         const index = currentAgent?.[
                             effectKeys.CODEX_OF_BLASPHEMY
-                        ].indexOf(blasphemyKeys.TOMORROW);
+                        ].indexOf(blasphemyKeys.TODAY);
 
                         if (index !== -1) {
                             sim = await centralAIManagement(

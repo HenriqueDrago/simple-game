@@ -22,8 +22,8 @@ export const roundPhases = Object.freeze({
 
     RECKONING: "reckoning",
     ANOINTMENT: "anointment",
-    P1_TRIAL: "p1Trial",
-    P2_TRIAL: "p2Trial",
+    P1_PROSECUTION: "p1Trial",
+    P2_PROSECUTION: "p2Trial",
 
     ROUND_END: "roundEnd",
 });
@@ -132,6 +132,7 @@ export const actionKeys = Object.freeze({
 });
 
 export const effectKeys = Object.freeze({
+    TUTORIAL: "tutorial",
     GUARDING_STATE: "guarding",
     MANA_OVERFLOW: "manaOverflow",
     RADIANCE: "radiance",
@@ -144,11 +145,12 @@ export const effectKeys = Object.freeze({
     CINDERS: "cinders",
     RADIANT: "radiant",
     BLOOD_SACRIFICE: "bloodSacrifice",
-    UNRELENTING_SHADOWS: "unrelentingShadows",
     SONORITY: "sonority",
     RESONANT: "resonant",
     HALO: "halo",
     CEREMONIAL: "ceremonial",
+
+    GIBBOUS: "gibbous",
 
     ARMORED_DEPLOYMENT: "deployment",
     WEAPONS_DEPLOYED: "weaponsDeployed",
@@ -196,7 +198,6 @@ export const effectKeys = Object.freeze({
     PRISMATIC: "prismatic",
     MYCELIUM: "mycelium",
     MOONSHINE: "moonshine",
-    MOONLIT_TEARS: "moonlitTears",
     SILVER_BLOOD: "silverBlood",
     MOON_DEW: "moonDew",
     TURN: "turn",
@@ -289,7 +290,7 @@ export const effectKeys = Object.freeze({
     STARS_OF_GENESIS: "starsOfGenesis",
     BURDEN_OF_STIGMA: "burdenOfStigma",
     MARTYR: "martyr",
-    TRIAL: "trial",
+    PROSECUTION: "trial",
     INSPIRATION: "inspiration",
 
     MOTES_OF_RUIN: "moteRuin",
@@ -300,7 +301,9 @@ export const effectKeys = Object.freeze({
     TURN_START: "turnStart",
     ACTIVE_PHASE: "activePhase",
     TURN_END: "turnEnd",
-    FREE_ACTION: "freeAction"
+    FREE_ACTION: "freeAction",
+
+    WISDOM: "wisdom",
 });
 
 export const runeKeys = Object.freeze({
@@ -394,6 +397,7 @@ export const eventKeys = Object.freeze({
     TOOK_DMG: "tookDmg",
     STARFALL_SUBPHASE: "starfallSub",
     SINGULARITY: "singularity",
+    PROSECUTION: "prosecution",
 });
 
 export const speedKeys = Object.freeze({

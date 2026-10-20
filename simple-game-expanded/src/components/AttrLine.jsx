@@ -81,6 +81,9 @@ function getStatColors(attr, entity) {
     }
 
     if (attr === "def") {
+        if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
+            colors.push(EFFECT_COLORS.BLOOD_SACRIFICE);
+        }
         if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0) {
             colors.push(EFFECT_COLORS.VERDANDI);
         }

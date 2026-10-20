@@ -30,17 +30,23 @@ function SelenianTracker({ entityKey }) {
     const { handleSpawnTooltip } = useUI();
 
     const entity = game?.entities?.[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
 
-    if(!entity || !entity.states[effectKeys.SELENIAN]) {
+    if (!entity || !entity.states[effectKeys.SELENIAN]) {
         return null;
     }
 
-    // Mirrored Moon mapping
-    const phase = entity[effectKeys.MIRRORED_MOON];
-    const moonlight = entity[effectKeys.MOONLIGHT];
-    const moonLabel = moonMap[phase];
+    // Mirrored Moon Phase
+    const realPhase = entity[effectKeys.MIRRORED_MOON];
+    const simPhase = simEntity
+        ? (simEntity?.[effectKeys.MIRRORED_MOON] ?? realPhase)
+        : realPhase;
 
-    const moonClass = moonClassMap[phase];
+    const isPhaseChanged = simEntity && simPhase !== realPhase;
+    const displayPhase = simEntity ? simPhase : realPhase;
+
+    const moonLabel = moonMap[displayPhase];
+    const moonClass = moonClassMap[displayPhase];
 
     // Elemental Crystals Mapping
     const currElement = getEntityElement(entity);
@@ -66,6 +72,16 @@ function SelenianTracker({ entityKey }) {
         return `${isActive} ${isLocked} ${shatteredState}`.trim();
     };
 
+    // Moonlight
+    const realAmount = entity?.[effectKeys.MOONLIGHT] ?? 0;
+
+    const simAmount = simEntity
+        ? (simEntity?.[effectKeys.MOONLIGHT] ?? realAmount)
+        : realAmount;
+
+    const isNumberChanged = simEntity && simAmount !== realAmount;
+    const displayAmount = simEntity ? simAmount : realAmount;
+
     return (
         <div className="selenian-grid-container">
             <div
@@ -74,19 +90,27 @@ function SelenianTracker({ entityKey }) {
                     handleSpawnTooltip(e, effectKeys.MIRRORED_MOON)
                 }
             >
-                <div className={`moon-sphere ${moonClass}`} />
+                <div
+                    className={`moon-sphere ${moonClass} ${
+                        isPhaseChanged ? "is-preview" : ""
+                    }`}
+                />
             </div>
             <span
-                className="panel-text-label label-default"
-                onMouseDown={(e) => handleSpawnTooltip(e, phase)}
+                className={`panel-text-label label-default ${
+                    isPhaseChanged ? "is-preview" : ""
+                }`}
+                onMouseDown={(e) => handleSpawnTooltip(e, displayPhase)}
             >
                 {moonLabel}
             </span>
             <span
-                className="moonlight-panel-value"
+                className={`moonlight-panel-value ${
+                    isNumberChanged ? "is-preview" : ""
+                }`}
                 onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.MOONLIGHT)}
             >
-                {moonlight}
+                {displayAmount}
             </span>
 
             <div

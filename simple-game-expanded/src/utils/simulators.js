@@ -33,6 +33,8 @@ import {
     gainSin,
     getMissingMana,
     processExitWeaponsDeployed,
+    consumeLimitedResources,
+    getSpAtkCost,
 } from "./entities.js";
 import {
     actionKeys,
@@ -108,6 +110,7 @@ function simulateGuard({ prev, agent, agentKey }) {
 
     let draftAgent = extractEntity(post, agentKey);
 
+    // Guard
     draftAgent = {
         ...draftAgent,
         states: {
@@ -116,6 +119,7 @@ function simulateGuard({ prev, agent, agentKey }) {
         },
     };
 
+    // Replenish missing mana
     draftAgent = gainMana(
         draftAgent,
         Math.min(
@@ -129,29 +133,29 @@ function simulateGuard({ prev, agent, agentKey }) {
     return post;
 }
 
-function simulateAegis({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const newHalo =
-        agent.resources.halo +
-        Math.ceil(getEntityDef(agent) * constants.HALO_GEN_MULT);
-
-    return {
+function simulateAegis({ prev, agent, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: { ...nonAgent },
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    halo: newHalo,
-                },
-                states: {
-                    ...agent.states,
-                    radiant: true,
-                },
-            },
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+    const haloGain = Math.ceil(getEntityDef(agent) * constants.HALO_GEN_MULT);
+
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.HALO]: draftAgent.resources[effectKeys.HALO] + haloGain,
+        },
+        states: {
+            ...draftAgent.states,
+            [effectKeys.RADIANT]: true,
         },
     };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateSacrifice({ prev, agentKey }) {
@@ -215,10 +219,9 @@ function simulateSpecialAttack({ prev, agentKey, nonAgentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
-    draftAgent = loseMana(
-        draftAgent,
-        getMaxMana(draftAgent) * constants.SP_ATTACK_COST,
-    );
+
+    const cost = getSpAtkCost(draftAgent);
+    draftAgent = loseMana(draftAgent, cost);
 
     post = replaceEntity(post, draftAgent, agentKey);
 
@@ -257,9 +260,24 @@ function simulateHeal({ prev, agent, agentKey }) {
         ...agent,
     };
 
+    // Blood Sacrifice
+    if (draftAgent[effectKeys.BLOOD_SACRIFICE] > 0) {
+        const bsLost = Math.floor(
+            draftAgent[effectKeys.BLOOD_SACRIFICE] * constants.DEFENSE_BS,
+        );
+
+        draftAgent = {
+            ...draftAgent,
+            [effectKeys.BLOOD_SACRIFICE]:
+                draftAgent[effectKeys.BLOOD_SACRIFICE] - bsLost,
+        };
+
+        draftAgent = gainHp(draftAgent, bsLost);
+    }
+
     const base_heal = Math.min(
-        getMissingHealth(agent),
-        getEntityTotalMana(agent),
+        getMissingHealth(draftAgent),
+        getEntityTotalMana(draftAgent),
     );
 
     draftAgent = loseMana(draftAgent, base_heal);
@@ -281,37 +299,18 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
 
     let draftAgent = extractEntity(post, agentKey);
 
-    const str = getEntityStr(draftAgent);
-    const def = getEntityDef(draftAgent);
-
-    if (str > 0) {
-        const result = consumeResources(
-            draftAgent,
-            str,
-            actionKeys.SHADOW_PACT,
-        );
-
-        draftAgent = {
-            ...result.draftEntity,
-            resources: {
-                ...result.draftEntity.resources,
-                [effectKeys.SHADOWFLAME]:
-                    result.draftEntity.resources[effectKeys.SHADOWFLAME] +
-                    result.resourcesConsumed.totalConsumption,
-            },
-        };
-    }
-
-    if (def > 0) {
-        draftAgent = {
-            ...draftAgent,
-            resources: {
-                ...draftAgent.resources,
-                [effectKeys.LINGERING_EMBER]:
-                    draftAgent.resources[effectKeys.LINGERING_EMBER] + def,
-            },
-        };
-    }
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.LINGERING_EMBER]:
+                draftAgent.resources[effectKeys.LINGERING_EMBER] +
+                getEntityDef(draftAgent),
+            [effectKeys.SHADOWFLAME]:
+                draftAgent.resources[effectKeys.SHADOWFLAME] +
+                getEntityStr(draftAgent),
+        },
+    };
 
     draftAgent = {
         ...draftAgent,
@@ -326,53 +325,51 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
     return post;
 }
 
-function simulateShadowMantle({
-    prev,
-    agent,
-    agentKey,
-    nonAgent,
-    nonAgentKey,
-}) {
-    const unrelentingShadows = agent.resources.shadowflame;
-    return {
+function simulateShadowMantle({ prev, agent, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: { ...nonAgent },
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    unrelentingShadows: unrelentingShadows,
-                },
-                states: {
-                    ...agent.states,
-                    darkEmbrace: true,
-                },
-            },
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = restoreResources(
+        draftAgent,
+        agent.resources[effectKeys.SHADOWFLAME] * constants.EMBRACE_RESTORE,
+    );
+
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.DARK_EMBRACE]: true,
         },
     };
+
+    return replaceEntity(post, draftAgent, agentKey);
 }
 
-function simulateRitualOfAsh({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
-    const newLE =
-        Math.floor(agent.resources[effectKeys.SHADOWFLAME] / 2) +
-        agent.resources[effectKeys.LINGERING_EMBER];
-    return {
+function simulateRitualOfAsh({ prev, agent, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [nonAgentKey]: { ...nonAgent },
-            [agentKey]: {
-                ...agent,
-                resources: {
-                    ...agent.resources,
-                    shadowflame: 0,
-                    lingeringEmber: newLE,
-                },
-            },
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = {
+        ...draftAgent,
+        resources: {
+            ...agent.resources,
+            [effectKeys.LINGERING_EMBER]:
+                agent.resources[effectKeys.LINGERING_EMBER] +
+                agent.resources[effectKeys.SHADOWFLAME],
+            [effectKeys.CINDERS]:
+                agent.resources[effectKeys.CINDERS] +
+                agent.resources[effectKeys.SHADOWFLAME],
+            [effectKeys.SHADOWFLAME]: 0,
         },
     };
+
+    return replaceEntity(post, draftAgent, agentKey);
 }
 
 function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
@@ -703,43 +700,63 @@ function simulateRefract({ prev, agent, agentKey }) {
     };
 }
 
-function simulateMirror({ prev, agent, agentKey }) {
-    return {
+function simulateMirror({ prev, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                [effectKeys.MOONLIGHT]:
-                    agent[effectKeys.MOONLIGHT] + constants.MIRROR_ML_GAIN,
-            },
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.MOONLIGHT]:
+            draftAgent[effectKeys.MOONLIGHT] + constants.MIRROR_ML_GAIN,
+        [effectKeys.LUNACY]: Math.min(
+            constants.MAX_LUNACY,
+            draftAgent[effectKeys.LUNACY] +
+                draftAgent.resources[effectKeys.MOONSHINE] *
+                    constants.MOONSHINE_LUNACY_GAIN,
+        ),
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.MOONSHINE]: 0,
         },
     };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
-function simulateShatter({ prev, agent, agentKey }) {
-    return {
+function simulateShatter({ prev, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
-                    elementalKeys.SHATTERED,
-                ),
-            },
-        },
     };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    const mlGain = Math.floor(
+        draftAgent[effectKeys.LUNACY] / constants.SHATTER_LUNACY_RATE,
+    );
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
+            elementalKeys.SHATTERED,
+        ),
+        [effectKeys.MOONLIGHT]: draftAgent[effectKeys.MOONLIGHT] + mlGain,
+        [effectKeys.LUNACY]: 0,
+    };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateChalk({ prev, agent, agentKey, nonAgentKey }) {
-    const extraDmg = Math.floor(
-        agent[effectKeys.LUNACY] / constants.CHALK_EXTRA_DMG,
-    );
-
     const post = newDealDmg(
         prev,
-        agent[effectKeys.MOONLIGHT] + extraDmg,
+        agent[effectKeys.MOONLIGHT],
         nonAgentKey,
         dmgTypes.LUNIC,
         agentKey,
@@ -771,20 +788,34 @@ function simulateLunarTide({ prev, agent, agentKey }) {
     };
 }
 
-function simulateLunarGrowth({ prev, agent, agentKey }) {
-    return {
+function simulateLunarGrowth({ prev, agentKey }) {
+    let post = {
         ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...agent,
-                states: {
-                    ...agent.states,
-                    [effectKeys.MOON_DEW]: true,
-                },
-            },
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    draftAgent = restoreResources(
+        draftAgent,
+        draftAgent[effectKeys.MOONLIGHT] +
+            draftAgent.resources[effectKeys.MOONSHINE],
+    );
+
+    draftAgent = {
+        ...draftAgent,
+        states: {
+            ...draftAgent.states,
+            [effectKeys.MOON_DEW]: true,
+        },
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.MOONSHINE]: 0,
         },
     };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
@@ -813,21 +844,38 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
 }
 
 function simulateLunarSmite({ prev, agent, agentKey, nonAgentKey }) {
-    const extraDmg =
-        getMissingHealth(agent) + (getMaxMana(agent) - agent[effectKeys.MANA]);
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    const toBeConsumed = Math.floor(
+        consumeLimitedResources(draftAgent, Infinity, elementalKeys.ASH)
+            .limitedResourcesConsumed.totalLimitedResourcesConsumption *
+            constants.ASH_CONSUME,
+    );
+
+    const result = consumeLimitedResources(
+        draftAgent,
+        toBeConsumed,
+        elementalKeys.ASH,
+    );
+
+    draftAgent = result.draftEntity;
+
+    post = replaceEntity(post, draftAgent, agentKey);
 
     const baseDmg = Math.floor(
         agent[effectKeys.MOONLIGHT] *
-            (1 + (extraDmg * constants.SMITE_MULT) / 100),
+            (1 +
+                (result.limitedResourcesConsumed
+                    .totalLimitedResourcesConsumption *
+                    constants.SMITE_MULT) /
+                    100),
     );
 
-    const post = newDealDmg(
-        prev,
-        baseDmg,
-        nonAgentKey,
-        dmgTypes.PIERCING,
-        agentKey,
-    );
+    post = newDealDmg(post, baseDmg, nonAgentKey, dmgTypes.PHYSICAL, agentKey);
 
     return {
         ...post,
@@ -859,33 +907,32 @@ function simulateLunarShroud({ prev, agent, agentKey }) {
 }
 
 function simulateLunarShed({ prev, agent, agentKey }) {
-    const ml = agent[effectKeys.MOONLIGHT];
+    let post = newDealDmg(
+        prev,
+        agent[effectKeys.MOONLIGHT],
+        agentKey,
+        dmgTypes.TRUE,
+    );
 
-    const post = newDealDmg(prev, ml, agentKey, dmgTypes.TRUE, null);
-
-    let draftAgent = {
-        ...post.entities[agentKey],
-    };
+    let draftAgent = extractEntity(post, agentKey);
 
     draftAgent = {
         ...draftAgent,
-        [effectKeys.MOONLIT_TEARS]:
-            draftAgent[effectKeys.MOONLIT_TEARS] + constants.GIBBOUS_TEARS_GAIN,
         resources: {
             ...draftAgent.resources,
-            [effectKeys.MYCELIUM]: ml,
+            [effectKeys.MYCELIUM]:
+                draftAgent.resources[effectKeys.MYCELIUM] +
+                agent[effectKeys.MOONLIGHT],
+        },
+        states: {
+            ...draftAgent.states,
+            [effectKeys.GIBBOUS]: true,
         },
     };
 
-    return {
-        ...post,
-        entities: {
-            ...post.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-        },
-    };
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    return post;
 }
 
 function simulateCarve({ prev, agent, agentKey }) {
@@ -899,17 +946,15 @@ function simulateCarve({ prev, agent, agentKey }) {
             ...draftAgent.states,
             [effectKeys.VISIONARY]: true,
         },
+        // resources: {
+        //     ...draftAgent.resources,
+        //     [effectKeys.CONJECTURE]:
+        //         draftAgent.resources[effectKeys.CONJECTURE] +
+        //         getEntityStr(draftAgent),
+        // },
     };
 
-    return {
-        ...prev,
-        entities: {
-            ...prev.entities,
-            [agentKey]: {
-                ...draftAgent,
-            },
-        },
-    };
+    return replaceEntity(prev, draftAgent, agentKey);
 }
 
 function simulateCurse({ prev, agent, agentKey, nonAgentKey }) {
@@ -950,12 +995,19 @@ function simulateRise({ prev, agentKey, nonAgentKey }) {
             def: {
                 ...draftAgent.attributes.def,
                 value:
-                    draftAgent.attributes.def.value + getEntityStr(draftAgent),
+                    draftAgent.attributes.def.value +
+                    getEntityStr(draftAgent) * constants.RISE_DEF_RATE,
             },
         },
         states: {
             ...draftAgent.states,
             [effectKeys.ZENITH_OF_MORTALITY]: true,
+        },
+        resources: {
+            ...draftAgent.resources,
+            [effectKeys.WISDOM]:
+                draftAgent.resources[effectKeys.WISDOM] +
+                getEntityStr(draftAgent) * constants.WISDOM_STR_RATE,
         },
     };
 
@@ -992,8 +1044,11 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = gainSin(
         draftAgent,
-        result.resourcesConsumed.totalConsumption -
-            result.resourcesConsumed.totalLimitedResourcesConsumption,
+        (result.resourcesConsumed.totalConsumption -
+            result.resourcesConsumed.totalLimitedResourcesConsumption -
+            (result.resourcesConsumed?.[effectKeys.WISDOM] ?? 0) -
+            (result.resourcesConsumed?.[effectKeys.RADIANCE] ?? 0)) *
+            constants.BASE_SIN_GAIN,
     );
 
     draftAgent = {
@@ -1004,7 +1059,17 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = resetAttr(draftAgent);
 
-    const newProv = draftAgent[effectKeys.DIVINE_SPARK];
+    const choirsSkipped = Math.floor(
+        draftAgent[effectKeys.DIVINE_SPARK] / constants.ASCEND_SKIP_RATE,
+    );
+    const provGain =
+        (result.resourcesConsumed?.[effectKeys.WISDOM] ?? 0) *
+            constants.WISDOM_PROV +
+        (result.resourcesConsumed?.[effectKeys.RADIANCE] ?? 0) *
+            constants.WISDOM_PROV +
+        (draftAgent[effectKeys.DIVINE_SPARK] -
+            constants.ASCEND_SKIP_RATE * choirsSkipped);
+
     post = {
         ...post,
         entities: {
@@ -1015,8 +1080,6 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
             },
         },
     };
-
-    post = raiseProvidence(post, newProv);
 
     post = {
         ...post,
@@ -1033,13 +1096,11 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
         },
     };
 
-    for (
-        let remainingProv = newProv;
-        remainingProv >= constants.ASCEND_SKIP_RATE;
-        remainingProv -= constants.ASCEND_SKIP_RATE
-    ) {
+    for (let i = 0; i < choirsSkipped; i++) {
         post = advanceChoir(post, agentKey);
     }
+
+    post = raiseProvidence(post, provGain);
 
     return post;
 }
@@ -1195,16 +1256,9 @@ function simulateAtone({ prev, agentKey }) {
     draftAgent = {
         ...draftAgent,
         [effectKeys.BURDEN_OF_STIGMA]: Math.floor(
-            post.btt[effectKeys.PROVIDENCE] * constants.STIGMA_RATE,
+            draftAgent[effectKeys.TARNISHED_SIN] * constants.STIGMA_RATE,
         ),
-    };
-
-    post = {
-        ...post,
-        btt: {
-            ...post.btt,
-            [effectKeys.PROVIDENCE]: 0,
-        },
+        [effectKeys.TARNISHED_SIN]: 0,
     };
 
     post = replaceEntity(post, draftAgent, agentKey);

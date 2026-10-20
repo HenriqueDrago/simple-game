@@ -67,7 +67,7 @@ function GradientBar({
                     }`}
                 >
                     {showPercent
-                        ? `${roundNumber(gradientPercentage, 0)}%`
+                        ? `${roundNumber(gradientPercentage, 2)}%`
                         : `${displayResource} / ${maxResource}`}
                 </span>
             </div>

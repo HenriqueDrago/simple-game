@@ -1,5 +1,6 @@
 import {
     Amphora,
+    BookOpenText,
     ChartNoAxesCombined,
     Church,
     Flame,
@@ -20,6 +21,11 @@ const mitigators = {
         icon: <Sun className="svg-icon" strokeWidth={2.5} />,
         color: "#fff59d",
         borderColor: "rgba(255, 245, 157, 0.25)",
+    },
+    [effectKeys.WISDOM]: {
+        icon: <BookOpenText className="svg-icon" strokeWidth={2.5} />,
+        color: "#ffffd8",
+        borderColor: "rgba(255, 255, 216, 0.25)",
     },
     [effectKeys.REFRACTED_DIVINITY]: {
         icon: <Pyramid className="svg-icon" strokeWidth={2.5} />,
