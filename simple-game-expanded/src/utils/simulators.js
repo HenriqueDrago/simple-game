@@ -35,6 +35,7 @@ import {
     processExitWeaponsDeployed,
     consumeLimitedResources,
     getSpAtkCost,
+    getEntityTotalHealth,
 } from "./entities.js";
 import {
     actionKeys,
@@ -305,10 +306,10 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
             ...draftAgent.resources,
             [effectKeys.LINGERING_EMBER]:
                 draftAgent.resources[effectKeys.LINGERING_EMBER] +
-                getEntityDef(draftAgent),
+                Math.floor(getEntityDef(draftAgent)),
             [effectKeys.SHADOWFLAME]:
                 draftAgent.resources[effectKeys.SHADOWFLAME] +
-                getEntityStr(draftAgent),
+                Math.floor(getEntityStr(draftAgent)),
         },
     };
 
@@ -334,7 +335,9 @@ function simulateShadowMantle({ prev, agent, agentKey }) {
 
     draftAgent = restoreResources(
         draftAgent,
-        agent.resources[effectKeys.SHADOWFLAME] * constants.EMBRACE_RESTORE,
+        Math.floor(
+            agent.resources[effectKeys.SHADOWFLAME] * constants.EMBRACE_RESTORE,
+        ),
     );
 
     draftAgent = {
@@ -735,17 +738,11 @@ function simulateShatter({ prev, agentKey }) {
 
     let draftAgent = extractEntity(post, agentKey);
 
-    const mlGain = Math.floor(
-        draftAgent[effectKeys.LUNACY] / constants.SHATTER_LUNACY_RATE,
-    );
-
     draftAgent = {
         ...draftAgent,
         [effectKeys.ELEMENTAL_CRYSTALS]: translateElementIntoCrystals(
             elementalKeys.SHATTERED,
         ),
-        [effectKeys.MOONLIGHT]: draftAgent[effectKeys.MOONLIGHT] + mlGain,
-        [effectKeys.LUNACY]: 0,
     };
 
     post = replaceEntity(post, draftAgent, agentKey);
@@ -753,14 +750,25 @@ function simulateShatter({ prev, agentKey }) {
     return post;
 }
 
-function simulateChalk({ prev, agent, agentKey, nonAgentKey }) {
-    const post = newDealDmg(
-        prev,
-        agent[effectKeys.MOONLIGHT],
-        nonAgentKey,
-        dmgTypes.LUNIC,
-        agentKey,
+function simulateChalk({ prev, agentKey, nonAgentKey }) {
+    let post = {
+        ...prev,
+    };
+
+    let draftAgent = extractEntity(post, agentKey);
+
+    const dmgDealt = Math.floor(
+        draftAgent[effectKeys.LUNACY] / constants.LUNACY_CHALK,
     );
+
+    draftAgent = {
+        ...draftAgent,
+        [effectKeys.LUNACY]: 0,
+    };
+
+    post = replaceEntity(post, draftAgent, agentKey);
+
+    post = newDealDmg(post, dmgDealt, [nonAgentKey], dmgTypes.LUNIC, agentKey);
 
     return post;
 }
@@ -824,7 +832,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
         Math.floor(getEntityStr(agent) / 2) +
             agent.resources[effectKeys.MOONSHINE],
         nonAgentKey,
-        dmgTypes.PIERCING,
+        dmgTypes.TRUE,
         agentKey,
     );
 
@@ -843,7 +851,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
     };
 }
 
-function simulateLunarSmite({ prev, agent, agentKey, nonAgentKey }) {
+function simulateLunarSmite({ prev, agentKey, nonAgentKey }) {
     let post = {
         ...prev,
     };
@@ -866,16 +874,13 @@ function simulateLunarSmite({ prev, agent, agentKey, nonAgentKey }) {
 
     post = replaceEntity(post, draftAgent, agentKey);
 
-    const baseDmg = Math.floor(
-        agent[effectKeys.MOONLIGHT] *
-            (1 +
-                (result.limitedResourcesConsumed
-                    .totalLimitedResourcesConsumption *
-                    constants.SMITE_MULT) /
-                    100),
+    post = newDealDmg(
+        post,
+        result.limitedResourcesConsumed.totalLimitedResourcesConsumption,
+        nonAgentKey,
+        dmgTypes.PIERCING,
+        agentKey,
     );
-
-    post = newDealDmg(post, baseDmg, nonAgentKey, dmgTypes.PHYSICAL, agentKey);
 
     return {
         ...post,
@@ -906,23 +911,24 @@ function simulateLunarShroud({ prev, agent, agentKey }) {
     };
 }
 
-function simulateLunarShed({ prev, agent, agentKey }) {
-    let post = newDealDmg(
-        prev,
-        agent[effectKeys.MOONLIGHT],
-        agentKey,
-        dmgTypes.TRUE,
+function simulateLunarShed({ prev, agentKey }) {
+    let post = {
+        ...prev,
+    };
+    let draftAgent = extractEntity(post, agentKey);
+
+    const hpLost = Math.ceil(
+        getEntityTotalHealth(draftAgent) * constants.SHED_LOSS,
     );
 
-    let draftAgent = extractEntity(post, agentKey);
+    draftAgent = loseHp(draftAgent, hpLost);
 
     draftAgent = {
         ...draftAgent,
         resources: {
             ...draftAgent.resources,
             [effectKeys.MYCELIUM]:
-                draftAgent.resources[effectKeys.MYCELIUM] +
-                agent[effectKeys.MOONLIGHT],
+                draftAgent.resources[effectKeys.MYCELIUM] + hpLost,
         },
         states: {
             ...draftAgent.states,
@@ -1067,8 +1073,7 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
             constants.WISDOM_PROV +
         (result.resourcesConsumed?.[effectKeys.RADIANCE] ?? 0) *
             constants.WISDOM_PROV +
-        (draftAgent[effectKeys.DIVINE_SPARK] -
-            constants.ASCEND_SKIP_RATE * choirsSkipped);
+        draftAgent[effectKeys.DIVINE_SPARK];
 
     post = {
         ...post,

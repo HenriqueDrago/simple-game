@@ -763,10 +763,8 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
             );
 
             const newOverheat = draftAgent[effectKeys.OVERHEAT] - overheatLost;
-            const newDynamo = Math.min(
-                draftAgent[effectKeys.DYNAMO] + overheatLost,
-                constants.MAX_DYNAMO,
-            );
+            const newDynamo = draftAgent[effectKeys.DYNAMO] + overheatLost;
+
             draftAgent = {
                 ...draftAgent,
                 [effectKeys.OVERHEAT]: newOverheat,
@@ -1051,6 +1049,41 @@ export function processEntityDeathStates(prev, entityKey) {
         };
     }
 
+    // Umbral Core
+    if (
+        draftEntity.states.umbralCore &&
+        draftEntity.resources.lingeringEmber <= 0 &&
+        draftEntity.resources.shadowflame <= 0
+    ) {
+        post = replaceEntity(post, draftEntity, entityKey);
+        post = processExitUmbral(post, entityKey);
+        draftEntity = extractEntity(post, entityKey);
+
+        draftEntity = {
+            ...draftEntity,
+            states: {
+                ...draftEntity.states,
+                bleakDeception: true,
+            },
+        };
+    }
+
+    // Dynamo
+    if (draftEntity[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
+        const energyGain = Math.floor(
+            draftEntity[effectKeys.DYNAMO] / constants.MAX_DYNAMO,
+        );
+
+        draftEntity = {
+            ...draftEntity,
+            [effectKeys.DYNAMO]:
+                draftEntity[effectKeys.DYNAMO] -
+                constants.MAX_DYNAMO * energyGain,
+            [effectKeys.ENERGY_LEVEL]:
+                draftEntity[effectKeys.ENERGY_LEVEL] + energyGain,
+        };
+    }
+
     // Ascendence
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
         if (getTotalEnlit(draftEntity) <= 0 || getMaxEnlit(draftEntity) <= 0) {
@@ -1237,18 +1270,18 @@ export function getEntityStr(entity) {
         );
     }
 
-    if (entity[effectKeys.RECOLLECTION] > 0) {
-        totalStr += Math.floor(
-            (getEntityDef(entity) * entity[effectKeys.RECOLLECTION]) / 100,
-        );
-    }
-
     if (draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0) {
         totalStr += draftEntity[effectKeys.CRIMSON_CONSTELLATION];
     }
 
     if (isElementActive(draftEntity, elementalKeys.SCORCH)) {
         totalStr += draftEntity[effectKeys.MOONLIGHT];
+    }
+
+    if (entity[effectKeys.RECOLLECTION] > 0) {
+        totalStr += Math.floor(
+            (getEntityDef(entity) * entity[effectKeys.RECOLLECTION]) / 100,
+        );
     }
 
     // === Percent Decreases ===
@@ -1667,15 +1700,36 @@ export function processHealth(entity) {
     ) {
         // On Selenian, converts excess Health into Silver Blood
         if (draftEntity.states[effectKeys.SELENIAN]) {
+            // Blood Sacrifice first
+            const newBs = Math.max(
+                0,
+                Math.min(
+                    draftEntity[effectKeys.BLOOD_SACRIFICE],
+                    getEntityMaxHealth(draftEntity),
+                ),
+            );
+
+            draftEntity = {
+                ...draftEntity,
+                [effectKeys.BLOOD_SACRIFICE]: newBs,
+            };
+
             const excessHealth = Math.max(
                 0,
                 draftEntity[effectKeys.HEALTH] -
-                    getEntityMaxHealth(draftEntity),
+                    (getEntityMaxHealth(draftEntity) -
+                        draftEntity[effectKeys.BLOOD_SACRIFICE]),
             );
-            const newHp = Math.min(
-                draftEntity[effectKeys.HEALTH],
-                getEntityMaxHealth(draftEntity),
+
+            const newHp = Math.max(
+                0,
+                Math.min(
+                    draftEntity[effectKeys.HEALTH],
+                    getEntityMaxHealth(draftEntity) -
+                        draftEntity[effectKeys.BLOOD_SACRIFICE],
+                ),
             );
+
             const silverBlood =
                 draftEntity.resources[effectKeys.SILVER_BLOOD] + excessHealth;
 
@@ -2849,16 +2903,6 @@ export function getEntityDR(prev, entityKey) {
         drMult *= Math.max(
             0,
             1 - (entity[effectKeys.LUNACY] / 100) * constants.LUNACY_DEW_DR,
-        );
-    }
-
-    if (
-        entity.states[effectKeys.RADIANT] &&
-        entity[effectKeys.DIVINE_SPARK] > 0
-    ) {
-        drMult *= Math.max(
-            0,
-            1 - (entity[effectKeys.DIVINE_SPARK] / 100) * constants.DIVINE_DR,
         );
     }
 

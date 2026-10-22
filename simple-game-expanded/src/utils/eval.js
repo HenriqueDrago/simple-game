@@ -58,7 +58,7 @@ const AI_LIST = [
     aiKeys.MAESTRO,
     aiKeys.AUGUR,
     aiKeys.VOYAGER,
-    // aiKeys.LUNATIC,
+    aiKeys.LUNATIC,
     aiKeys.SERAPH,
 ];
 

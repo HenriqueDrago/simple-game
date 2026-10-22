@@ -51,6 +51,7 @@ export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 export const constants = Object.freeze({
     EMBRACE_RESTORE: 0.5,
     TUTORIAL_DR_REDUCTION: 0.25,
+    RITUAL_SHADOW_ASH: 0.5,
 
     // Lunatic
     REFRACT_LUNACY_RATE: 1.25,
@@ -68,7 +69,10 @@ export const constants = Object.freeze({
     GIBBOUS_TEARS_GAIN: 1,
     MOONSHINE_LUNACY_GAIN: 2.5,
     ASH_CONSUME: 0.5,
-    LUNACY_DEW_DR: 0.5,
+    LUNACY_DEW_DR: 0,
+    LUNACY_LUNIC: 10,
+    LUNACY_CHALK: 5,
+    SHED_LOSS: 0.5,
 
     // Paladin
     HALO_DIVINE_RATE: 1,
@@ -126,9 +130,9 @@ export const constants = Object.freeze({
     BLAS_TARNISH: 0.2,
     PROV_EXCESS_RATE: 0.5 / 2.5,
 
-    IRRAD_DMG_EXCESS: 10,
+    IRRAD_DMG_EXCESS: 5,
     MAX_IRRADIATION: 100,
-    IRRADIATION_GAIN_RATE: 10,
+    IRRADIATION_GAIN_RATE: 5,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
     

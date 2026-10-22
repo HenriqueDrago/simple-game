@@ -181,6 +181,22 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
+    // Unrelenting Shadows
+    if (draftTarget.resources.unrelentingShadows > 0) {
+        draftTarget = restoreResources(
+            draftTarget,
+            draftTarget.resources.unrelentingShadows,
+        );
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                unrelentingShadows: 0,
+            },
+        };
+    }
+
     // Conjecture
     if (draftTarget.resources[effectKeys.CONJECTURE] > 0) {
         draftTarget = {
@@ -240,43 +256,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         };
     }
 
-    // Umbral Core
-    if (
-        draftTarget.states.umbralCore &&
-        draftTarget.resources.lingeringEmber <= 0 &&
-        draftTarget.resources.shadowflame <= 0
-    ) {
-        draftTarget = {
-            ...draftTarget,
-            states: {
-                ...draftTarget.states,
-                umbralCore: false,
-                bleakDeception: true,
-            },
-        };
-    }
-
-    // Shattered
-    if (isElementActive(draftTarget, elementalKeys.SHATTERED)) {
-        post = {
-            ...post,
-            entities: {
-                ...post.entities,
-                [targetKey]: draftTarget,
-            },
-        };
-
-        post = newDealDmg(
-            post,
-            draftTarget[effectKeys.MOONLIGHT],
-            targetKey,
-            dmgTypes.LUNIC,
-            null,
-        );
-
-        draftTarget = { ...post.entities[targetKey] };
-    }
-
     // Deployment
     if (draftTarget.states.deployment) {
         draftTarget = {
@@ -286,15 +265,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 deployment: false,
                 weaponsDeployed: true,
             },
-        };
-    }
-
-    // Dynamo
-    if (draftTarget[effectKeys.DYNAMO] >= constants.MAX_DYNAMO) {
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.DYNAMO]: 0,
-            [effectKeys.ENERGY_LEVEL]: draftTarget[effectKeys.ENERGY_LEVEL] + 1,
         };
     }
 
@@ -314,14 +284,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 ...draftTarget.resources,
                 [effectKeys.REFRACTED_DIVINITY]: 0,
             },
-        };
-    }
-
-    // Lunacy
-    if (draftTarget[effectKeys.LUNACY] >= constants.MAX_LUNACY) {
-        draftTarget = {
-            ...draftTarget,
-            [effectKeys.ELEMENTAL_CRYSTALS]: [elementalKeys.SHATTERED],
         };
     }
 
@@ -606,6 +568,21 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
                     pdGained,
             },
         };
+    }
+
+    // Shattered
+    if (isElementActive(draftCurrActor, elementalKeys.SHATTERED)) {
+        post = replaceEntity(post, draftCurrActor, currActorKey);
+
+        post = newDealDmg(
+            post,
+            draftCurrActor[effectKeys.MOONLIGHT],
+            currActorKey,
+            dmgTypes.LUNIC,
+            null,
+        );
+
+        draftCurrActor = extractEntity(post, currActorKey);
     }
 
     // Mana Overflow

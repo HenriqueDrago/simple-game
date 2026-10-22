@@ -21,14 +21,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SIMPLE GAME",
         type: entryTypes.MECHANIC,
         description:
-            "A highly complex turn-based combat game. In every ROUND of a MATCH, both players are granted a TURN on which they may choose at least one of a series of ACTIONS to execute. A MATCH ends when either player's HEALTH or MAX HEALTH reaches 0, granting victory to the surviving player, or ending in a draw. During SETUP, players may select whose TURN comes first on every round, distribute BASE ATTRIBUTE points, and select each player's CONTROLLER. Pressing START ends SETUP and begins a MATCH.",
+            "A highly complex turn-based combat game. In every ROUND of a MATCH, both players are granted a TURN on which they may choose at least one of a series of ACTIONS to execute. A MATCH ends when either player's HEALTH or MAX HEALTH reaches 0, granting victory to the surviving player, or ending in a draw. During SETUP, players may select whose TURN comes first on every round, distribute BASE ATTRIBUTES points, and select each player's CONTROLLER. Pressing START ends SETUP and begins a MATCH.",
     },
 
     [effectKeys.PROGRESSION_MODE]: {
         name: "PROGRESSION MODE",
         type: entryTypes.MECHANIC,
         description:
-            "In this mode, the player faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTE distribution mode set to CHALLENGE. Additionally, most base ACTIONS are locked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL, and SPECIAL ATTACK. Lastly, a new enemy AI, its GLOSSARY entry, and related tooltips can only be unlocked upon defeating the preceding enemy.",
+            "In this mode, the player faces a series of battles against SIMPLE GAME's autonomous AIs. While enabled, PLAYER ONE is forced into HUMAN (manual) control, while PLAYER TWO is blocked from utilizing a non-AI CONTROLLER. Furthermore, PLAYER TWO always starts and always has its ATTRIBUTES distribution mode set to CHALLENGE. Additionally, most base ACTIONS are locked until defeating the corresponding enemy, save for ATTACK, GUARD, HEAL, and SPECIAL ATTACK. Lastly, a new enemy AI, its GLOSSARY entry, and related tooltips can only be unlocked upon defeating the preceding enemy.",
     },
 
     [effectKeys.SHORTCUTS]: {
@@ -96,7 +96,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "TURN START",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, STARDUST, MOON DEW, HARMONY, CONJECTURE, SHADOWFLAME, LINGERING EMBER, UMBRAL CORE, SHATTERED, ARMORED DEPLOYMENT, DYNAMO, REFRACTED DIVINITY, LUNACY, RADIANT, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE, and CEREMONIAL clearance.",
+            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, STARDUST, MOON DEW, HARMONY, CONJECTURE, SHADOWFLAME, LINGERING EMBER, UMBRAL CORE, SHATTERED, ARMORED DEPLOYMENT, DYNAMO, REFRACTED DIVINITY, RADIANT, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE, and CEREMONIAL clearance.",
     },
 
     [effectKeys.ACTIVE_PHASE]: {
@@ -193,14 +193,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "STRENGTH",
         type: entryTypes.BASE_ATTRIBUTES,
         description:
-            "The main offensive BASE ATTRIBUTE. Increases the damage dealt by certain ACTIONS.",
+            "The main offensive BASE ATTRIBUTES. Increases the damage dealt by certain ACTIONS.",
     },
 
     [effectKeys.DEF]: {
         name: "DEFENSE",
         type: entryTypes.BASE_ATTRIBUTES,
         description:
-            "The main defensive BASE ATTRIBUTE. Decreases the PHYSICAL DAMAGE taken.",
+            "The main defensive BASE ATTRIBUTES. Decreases the PHYSICAL DAMAGE taken.",
     },
 
     [entryTypes.SPECIAL_ATTRIBUTES]: {
@@ -479,8 +479,7 @@ export const PALADIN_DESCRIPTIONS = {
     [effectKeys.RADIANT]: {
         name: "RADIANT",
         type: entryTypes.STATE,
-        description:
-            "Nullifies all DEFENSE. Raises DAMAGE REDUCTION equal to half the DIVINE SPARK on self. At TURN START, exits this state.",
+        description: "Nullifies all DEFENSE. At TURN START, exits this state.",
     },
 
     [effectKeys.HALO]: {
@@ -524,7 +523,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
         description:
-            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, and CINDERS on self. Then, restores RESOURCES equal to the SHADOWFLAME consumed plus half the LINGERING EMBER consumed. At TURN START, if possessing no SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
+            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, and CINDERS on self. Then, restores RESOURCES equal to the SHADOWFLAME consumed plus half the LINGERING EMBER consumed. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -578,7 +577,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "RITUAL OF ASH",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME on self. Gains LINGERING EMBER and CINDERS equal to half the amount extinguished.",
+            "Extinguishes all SHADOWFLAME on self. Gains both LINGERING EMBER and CINDERS equal to the amount extinguished.",
     },
 
     [actionKeys.DARK_PROMISE]: {
@@ -641,7 +640,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "DYNAMO",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. At TURN START, if at 100%, resets to 0% and increases ENERGY LEVEL by 1.",
+            "Capped at 100%. Can be raised above the cap. At 100% DYNAMO or more, consumes 100% DYNAMO and increases ENERGY LEVEL by 1.",
     },
 
     [effectKeys.OVERHEAT]: {
@@ -1023,14 +1022,14 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "FAULTY FIRMAMENT",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FAULTY FIRMAMENT to reduce the damage taken. At TURN START, loses all FAULTY FIRMAMENT and raises IRRADIATION by 10% per FAULTY FIRMAMENT lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes FAULTY FIRMAMENT to reduce the damage taken. At TURN START, loses all FAULTY FIRMAMENT and raises IRRADIATION by 5% per FAULTY FIRMAMENT lost.",
     },
 
     [effectKeys.IRRADIATION]: {
         name: "IRRADIATION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 10% excess. At TURN START, loses all IRRADIATION.",
+            "Capped at 100%. Raises WEAKNESS and FRAGILITY equal to IRRADIATION on self. When raising IRRADIATION above 100%, takes TRUE DAMAGE for every 5% excess. At TURN START, loses all IRRADIATION.",
     },
 
     [effectKeys.INDIGO_STAR]: {
@@ -1211,7 +1210,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "MOON DEW",
         type: entryTypes.STATE,
         description:
-            "Does not raise FRAGILITY by LUNACY on self. Instead, raises DAMAGE REDUCTION by half the LUNACY on self. At TURN START, exits this state.",
+            "Disables LUNACY's FRAGILITY. At TURN START, exits this state.",
     },
 
     [elementalKeys.SCORCH]: {
@@ -1224,7 +1223,7 @@ export const LUNATIC_DESCRIPTIONS = {
     [actionKeys.LUNAR_STRIKE]: {
         name: "LUNAR STRIKE",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Deals PIERCING DAMAGE equal to half the user's STRENGTH.",
+        description: "Deals TRUE DAMAGE equal to half the user's STRENGTH.",
     },
 
     [elementalKeys.OCEAN]: {
@@ -1252,7 +1251,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNAR SHED",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Enters GIBBOUS state. Takes TRUE DAMAGE and gains MYCELIUM equal to the user's MOONLIGHT.",
+            "Enters GIBBOUS state. Halves the user's current total HEALTH. Gains MYCELIUM equal to the amount lost.",
     },
 
     [effectKeys.GIBBOUS]: {
@@ -1287,7 +1286,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "LUNAR SMITE",
         type: entryTypes.OFFENSIVE_ACTION,
         description:
-            "Consumes the user's LIMITED RESOURCES equal to half the sum of all LIMITED RESOURCES on self. Deals PHYSICAL DAMAGE equal to the user's MOONLIGHT. Increases the damage dealt by 5% for every LIMITED RESOURCES consumed.",
+            "Consumes the user's LIMITED RESOURCES equal to half the sum of all LIMITED RESOURCES on self. Deals PIERCING DAMAGE equal to the amount consumed.",
     },
 
     [elementalKeys.ALBEDO]: {
@@ -1301,20 +1300,20 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "SHATTER",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Sets ELEMENTAL CRYSTALS to SHATTERED. Consumes all LUNACY on self. Raises MOONLIGHT for every 10% LUNACY consumed. This is a FREE ACTION.",
+            "Sets ELEMENTAL CRYSTALS to SHATTERED. This is a FREE ACTION.",
     },
 
     [elementalKeys.SHATTERED]: {
         name: "SHATTERED",
         type: entryTypes.MECHANIC,
         description:
-            "Cannot change elements. At TURN START, takes LUNIC DAMAGE equal to the user's MOONLIGHT. Enables the effects of FROST, NATURE, SCORCH, OCEAN, WITHER, ASH, and ALBEDO. Replaces MIRROR with CHALK instead of SHATTER.",
+            "Cannot change elements. At TURN END, takes LUNIC DAMAGE equal to the user's MOONLIGHT. Enables the effects of FROST, NATURE, SCORCH, OCEAN, WITHER, ASH, and ALBEDO. Replaces SHATTER with CHALK.",
     },
 
     [actionKeys.CHALK]: {
         name: "CHALK",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Deals LUNIC DAMAGE equal to the user's MOONLIGHT.",
+        description: "Consumes all LUNACY on self. Deals LUNIC DAMAGE for every 5% LUNACY consumed.",
     },
 
     [dmgTypes.LUNIC]: {
@@ -1357,7 +1356,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 0.25% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the remaining DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 0.25% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
@@ -1444,7 +1443,8 @@ export const SERAPH_DESCRIPTIONS = {
     [effectKeys.CUTOFF_WINGS]: {
         name: "CUTOFF WINGS",
         type: entryTypes.STATE,
-        description: "Cannot use AEGIS, RISE, or ASCEND. Cannot exit this state.",
+        description:
+            "Cannot use AEGIS, RISE, or ASCEND. Cannot exit this state.",
     },
 
     [entryTypes.TARNISHMENT_TYPE]: {
