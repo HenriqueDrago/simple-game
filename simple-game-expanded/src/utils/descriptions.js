@@ -318,7 +318,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "LIMITED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that have a variable upper cap. Includes HEALTH, BLOOD SACRIFICE, MANA, and ENLIGHTENMENT. When LIMITED RESOURCES are restored, they are restored in this order. When LIMITED RESOURCES are consumed, they are consumed in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise, continues to the following RESOURCES on the list. When LIMITED RESOURCES are capped at 0, does not restore them; instead, continues to the following RESOURCES on the list.",
+            "A subset of RESOURCES that have a variable upper cap. Includes HEALTH, BLOOD SACRIFICE, UNRELENTING SHADOWS, MANA, and ENLIGHTENMENT. When LIMITED RESOURCES are restored, they are restored in this order. When LIMITED RESOURCES are consumed, they are consumed in reverse order. When consuming LIMITED RESOURCES, consumes their corresponding OVERFLOWN RESOURCES first. When restoring LIMITED RESOURCES above the limit, if they have an overflow rule, follows that rule; otherwise, continues to the following RESOURCES on the list. When LIMITED RESOURCES are capped at 0, does not restore them; instead, continues to the following RESOURCES on the list.",
     },
 
     [entryTypes.OVERFLOWN_RESOURCE]: {
@@ -339,7 +339,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, MYCELIUM, and HARMONY. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes HARMONY, SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, and MYCELIUM. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
@@ -516,14 +516,14 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW PACT",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all STATES. Enters UMBRAL CORE. Gains SHADOWFLAME equal to the user's STRENGTH. Gains LINGERING EMBER equal to the user's DEFENSE.",
+            "Exits all STATES. Enters UMBRAL CORE. Gains SHADOWFLAME equal to the user's STRENGTH. Gains LINGERING EMBER equal to twice the user's DEFENSE. Sets MAX UNRELENTING SHADOWS to 15.",
     },
 
     [effectKeys.UMBRAL_CORE]: {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
         description:
-            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, and CINDERS on self. Then, restores RESOURCES equal to the SHADOWFLAME consumed plus half the LINGERING EMBER consumed. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
+            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS and CINDERS on self and sets MAX UNRELENTING SHADOWS to 0. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -552,6 +552,19 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         description: "No effect.",
     },
 
+    [effectKeys.UNRELENTING_SHADOWS]: {
+        name: "UNRELENTING SHADOWS",
+        type: entryTypes.LIMITED_RESOURCE,
+        description: "Capped at MAX UNRELENTING SHADOWS. Starts at 0.",
+    },
+
+    [effectKeys.MAX_UNRELENTING_SHADOWS]: {
+        name: "MAX UNRELENTING SHADOWS",
+        type: entryTypes.MECHANIC,
+        description:
+            "Starts at 0. Limits how much UNRELENTING SHADOWS a player can hold.",
+    },
+
     [actionKeys.BLACK_MAYHEM]: {
         name: "BLACK MAYHEM",
         type: entryTypes.OFFENSIVE_ACTION,
@@ -563,28 +576,28 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW MANTLE",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Restores RESOURCES on self equal to half the user's SHADOWFLAME. Enters DARK EMBRACE.",
+            "Restores RESOURCES on self equal to the user's SHADOWFLAME. Enters DARK EMBRACE.",
     },
 
     [effectKeys.DARK_EMBRACE]: {
         name: "DARK EMBRACE",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by 50%. At TURN START, disables SHADOWFLAME effects, then exits this state.",
+            "Raises DAMAGE REDUCTION by half the user's missing UNRELENTING SHADOWS percentage. At TURN START, disables SHADOWFLAME effects, then exits this state.",
     },
 
     [actionKeys.RITUAL_OF_ASH]: {
         name: "RITUAL OF ASH",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME on self. Gains both LINGERING EMBER and CINDERS equal to the amount extinguished.",
+            "Extinguishes all SHADOWFLAME on self. Gains LINGERING EMBER equal to half the amount extinguished.",
     },
 
     [actionKeys.DARK_PROMISE]: {
         name: "DARK PROMISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME, LINGERING EMBER, and CINDERS on self. Restores RESOURCES to all entities equal to half the SHADOWFLAME extinguished. Then, exits UMBRAL CORE and enters DIMMING DARKNESS.",
+            "Extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS, and CINDERS on self. Restores RESOURCES to all entities equal to half the SHADOWFLAME extinguished. Then, exits UMBRAL CORE and enters DIMMING DARKNESS.",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
@@ -710,7 +723,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "HARMONY",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HARMONY to reduce the damage taken. At TURN START, loses all HARMONY and restores RESOURCES equal to the amount lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HARMONY to reduce the damage taken, then restores RESOURCES equal to the amount lost.",
     },
 
     [actionKeys.BABEL]: {
@@ -739,15 +752,14 @@ export const AUGUR_DESCRIPTIONS = {
     [actionKeys.CARVE]: {
         name: "CARVE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
-        description:
-            "Enters VISIONARY state. Gains CONJECTURE equal to the user's STRENGTH.",
+        description: "Enters VISIONARY state.",
     },
 
     [effectKeys.VISIONARY]: {
         name: "VISIONARY",
         type: entryTypes.STATE,
         description:
-            "Enables RUNIC ARRAY. When using GUARD, HEAL, or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI, or RUNE OF SKULD to the RUNIC ARRAY, respectively. Upon exiting this state, detonates all RUNES, starting from the oldest.",
+            "Enables RUNIC ARRAY. When using GUARD, HEAL, or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI, or RUNE OF SKULD to the RUNIC ARRAY, respectively. When using SPECIAL ATTACK or HEAL, consume PRECOGNITION first before MANA. When using GUARD, gain PRECOGNITION instead of replenishing missing MANA. Upon exiting this state, detonates all RUNES, starting from the oldest.",
     },
 
     [effectKeys.RUNIC_ARRAY]: {
@@ -1175,7 +1187,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "MOONSHINE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using LUNAR STRIKE, consumes MOONSHINE to increase the base damage dealt. When using LUNAR GROWTH, consumes MOONSHINE to restore RESOURCES on self. When using MIRROR, consumes all MOONSHINE, then raises LUNACY by 2.5% per MOONSHINE consumed. At TURN END, loses all MOONSHINE and takes TRUE DAMAGE equal to the amount lost.",
+            "When using LUNAR STRIKE, consumes MOONSHINE to increase the base damage dealt. When using MIRROR, consumes all MOONSHINE, then raises LUNACY by 2.5% per MOONSHINE consumed. At TURN END, loses all MOONSHINE and takes TRUE DAMAGE equal to the amount lost.",
     },
 
     [effectKeys.LUNACY]: {
@@ -1265,7 +1277,7 @@ export const LUNATIC_DESCRIPTIONS = {
         name: "MYCELIUM",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes MYCELIUM to reduce the damage taken. At MOON PHASE, loses all MYCELIUM. Then, restores RESOURCES equal to the amount lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes MYCELIUM to reduce the damage taken. At TURN START, loses all MYCELIUM, then restores RESOURCES equal to the amount lost.",
     },
 
     [elementalKeys.ASH]: {
@@ -1313,7 +1325,8 @@ export const LUNATIC_DESCRIPTIONS = {
     [actionKeys.CHALK]: {
         name: "CHALK",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Consumes all LUNACY on self. Deals LUNIC DAMAGE for every 5% LUNACY consumed.",
+        description:
+            "Consumes all LUNACY on self. Deals LUNIC DAMAGE for every 5% LUNACY consumed.",
     },
 
     [dmgTypes.LUNIC]: {

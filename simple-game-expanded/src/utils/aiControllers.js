@@ -69,6 +69,8 @@ import {
     processUpkeep,
 } from "./turnManagement.js";
 
+const WAIT_TIME = 0;
+
 const EDICT_LIST = Object.values(edictKeys);
 const EDICT_PERMUTATION_CACHE = {};
 
@@ -681,6 +683,11 @@ function getTrueEffectiveHealth(sim, agentKey, log = false) {
             : 0;
     }
 
+    // Lunatic Override
+    if (nonAgent.states[effectKeys.SELENIAN]) {
+        return getEntityTotalHealth(agent) + getTotalEnlit(agent);
+    }
+
     return (
         getEffectiveHealth(extractEntity(sim, agentKey)) /
         getEntityFragility(sim, agentKey) /
@@ -1289,7 +1296,7 @@ export function cyborgAI(context) {
 }
 
 export function maestroAI(context) {
-    const { prev, agent, nonAgentKey, agentKey } = context;
+    const { prev, agent, nonAgentKey, agentKey, nonAgent } = context;
 
     const simulate = createSimulator(context);
     const isActionAvailable = createAvailabilityChecker(context);
@@ -1334,60 +1341,99 @@ export function maestroAI(context) {
         return actionKeys.ATTUNE;
     }
 
-    // === Sonority ===
-    // Anti-dissonance enemies logic
-    // if (dissImmune) {
+    // // === DEF ===
+    // if (agent.attributes.def.value >= 5) {
     //     // Sacrifice
-    //     const simSac = simulate(actionKeys.SACRIFICE);
     //     if (
-    //         getTrueEffectiveHealth(
-    //             commitTurn(simSac, agentKey, nonAgentKey),
+    //         !nonAgent.states[effectKeys.SELENIAN] &&
+    //         agent[effectKeys.HEALTH] >= 15 &&
+    //         !willEntityEffectivelyDieByNextCommit(
+    //             simulate(actionKeys.SACRIFICE),
     //             agentKey,
-    //         ) >= 15 &&
-    //         getEntityTotalHealth(agent) >= 8
+    //             nonAgentKey,
+    //         )
     //     ) {
     //         return actionKeys.SACRIFICE;
     //     }
 
-    //     // Sp Atk Use
-    //     const simSpAtk = simulate(actionKeys.SPECIAL_ATTACK);
-    //     if (
-    //         agent[effectKeys.SONORITY] >= constants.SONORITY_HIGHER_LIMIT &&
-    //         agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK &&
-    //         canUseAction(prev, agentKey, actionKeys.SPECIAL_ATTACK) &&
-    //         getTrueEffectiveHealth(
-    //             commitTurn(simSpAtk, agentKey, nonAgentKey),
-    //             agentKey,
-    //         ) > 0
-    //     ) {
-    //         return actionKeys.SPECIAL_ATTACK;
+    //     // Low Negative -> Silence
+    //     if (agent[effectKeys.SONORITY] <= -45) {
+    //         return actionKeys.SOUND_OF_SILENCE;
     //     }
 
-    //     // Turn end death prevention (Radiance, dissonance, overflow)
-    //     if (willEntityEffectivelyDieByNextCommit(prev, agentKey)) {
-    //         return commitDeathPrevention(prev, agentKey);
+    //     // Else, Negative -> Attack
+    //     if (agent[effectKeys.SONORITY] <= 0) {
+    //         return actionKeys.ATTACK;
+    //     }
+
+    //     // Babel if it might kill
+    //     const simBabel = simulate(actionKeys.BABEL);
+    //     const simBabelNextTurn = processUpkeep(
+    //         commitTurn(simBabel, agentKey, nonAgentKey),
+    //         nonAgentKey,
+    //         agentKey,
+    //     );
+    //     const enemyNextBabelTurn = extractEntity(simBabelNextTurn, nonAgentKey);
+
+    //     if (
+    //         agent[effectKeys.SONORITY] > 0 &&
+    //         enemyNextBabelTurn.resources[effectKeys.DISSONANCE] >=
+    //             getEntityTotalHealth(enemyNextBabelTurn)
+    //     ) {
+    //         return actionKeys.BABEL;
+    //     }
+
+    //     // Babel if full on spark
+    //     if (
+    //         agent[effectKeys.SONORITY] > 0 &&
+    //         agent[effectKeys.DIVINE_SPARK] >= constants.MAX_DIVINE_SPARK
+    //     ) {
+    //         return actionKeys.BABEL;
     //     }
 
     //     // Aegis
     //     const simAegis = simulate(actionKeys.AEGIS);
+    //     const simCommitAegis = commitTurn(simAegis, agentKey, nonAgentKey);
+    //     const simNextTurnAegis = processUpkeep(
+    //         simCommitAegis,
+    //         agentKey,
+    //         nonAgentKey,
+    //     );
     //     if (
-    //         getTrueEffectiveHealth(simAegis, agentKey) >= 15 &&
-    //         canUseAction(prev, agentKey, actionKeys.AEGIS)
+    //         canUseAction(prev, agentKey, actionKeys.AEGIS) &&
+    //         getTrueEffectiveHealth(simCommitAegis, agentKey) >=
+    //             Math.min(20, 15 + prev.roundCount) &&
+    //         !willEntityEffectivelyDieByNextCommit(
+    //             simNextTurnAegis,
+    //             agentKey,
+    //             nonAgentKey,
+    //         )
     //     ) {
     //         return actionKeys.AEGIS;
     //     }
+
+    //     if (agent[effectKeys.SONORITY] > 0) {
+    //         return actionKeys.BABEL;
+    //     } else if (agent[effectKeys.SONORITY] < 0) {
+    //         return actionKeys.SOUND_OF_SILENCE;
+    //     }
+
+    //     return actionKeys.DA_CAPO;
     // }
+
+    // === STR ===
 
     // Turn end death prevention (Radiance, dissonance, overflow)
     if (willEntityEffectivelyDieByNextCommit(prev, agentKey)) {
         const SURVIVAL_ACTIONS = [
             actionKeys.HEAL,
+            actionKeys.AEGIS,
             actionKeys.SPECIAL_ATTACK,
             actionKeys.ATTACK,
             actionKeys.GUARD,
-            actionKeys.DA_CAPO,
             actionKeys.BABEL,
             actionKeys.SOUND_OF_SILENCE,
+            actionKeys.DA_CAPO,
         ];
 
         for (let action of SURVIVAL_ACTIONS) {
@@ -1407,6 +1453,15 @@ export function maestroAI(context) {
         }
     }
 
+    if (
+        agent[effectKeys.SONORITY] > 0 &&
+        canUseAction(prev, agentKey, actionKeys.AEGIS) &&
+        getTrueEffectiveHealth(simulate(actionKeys.AEGIS), agentKey) >=
+            Math.min(30, 16 + prev.roundCount * 2)
+    ) {
+        return actionKeys.AEGIS;
+    }
+
     if (agent[effectKeys.SONORITY] > 0) {
         return actionKeys.BABEL;
     }
@@ -1424,6 +1479,21 @@ export function maestroAI(context) {
         agent[effectKeys.SONORITY] > constants.SONORITY_LOWER_LIMIT
     ) {
         return actionKeys.DEPLOY;
+    }
+
+    if (
+        agent[effectKeys.SONORITY] < 0 &&
+        !nonAgent.states[effectKeys.SELENIAN] &&
+        !nonAgent.states[effectKeys.ARMORED_DEPLOYMENT] &&
+        !nonAgent.states[effectKeys.WEAPONS_DEPLOYED] &&
+        agent[effectKeys.HEALTH] >= 15 &&
+        !willEntityEffectivelyDieByNextCommit(
+            simulate(actionKeys.SACRIFICE),
+            agentKey,
+            nonAgentKey,
+        )
+    ) {
+        return actionKeys.SACRIFICE;
     }
 
     if (agent[effectKeys.SONORITY] < 0) {
@@ -1625,12 +1695,16 @@ export function augurAI(context) {
         if (
             willSurvive(simSac) &&
             getEntityTotalHealth(agent) >= 15 &&
-            agent[effectKeys.RECOLLECTION] <= 0
+            agent[effectKeys.RECOLLECTION] <= 0 &&
+            !nonAgent.states[effectKeys.SELENIAN]
         ) {
             return [actionKeys.SACRIFICE];
         }
 
-        if (agent[effectKeys.RECOLLECTION] < constants.MAX_RECOLLECTION) {
+        if (
+            agent[effectKeys.RECOLLECTION] < constants.MAX_RECOLLECTION &&
+            getEntityDef(agent) >= 5
+        ) {
             return [actionKeys.GUARD];
         }
 
@@ -1666,13 +1740,18 @@ export function augurAI(context) {
     const selectDefense = () => {
         const relevantDefenseActions = [
             actionKeys.GUARD,
-            actionKeys.HEAL,
             actionKeys.AEGIS,
             actionKeys.ATTACK,
             actionKeys.SPECIAL_ATTACK,
         ];
 
-        const evalDefense = (sim, history, depth, oldBest) => {
+        const evalDefense = (
+            sim,
+            relevantDefenseActions,
+            history,
+            depth,
+            oldBest,
+        ) => {
             let best = {
                 ...oldBest,
             };
@@ -1703,10 +1782,6 @@ export function augurAI(context) {
                             ? getTrueEffectiveHealth(simUpkeep, agentKey)
                             : 0,
                 };
-
-                // console.log(relAct);
-                // console.log(scores)
-                // console.log(best)
 
                 if (FREE_ACTIONS.includes(relAct)) {
                     const freeResult = evalDefense(
@@ -1745,12 +1820,30 @@ export function augurAI(context) {
             return best;
         };
 
+        const evalResult = evalDefense(prev, relevantDefenseActions, [], 0, {
+            action: null,
+            commitScore: -Infinity,
+            upkeepScore: -Infinity,
+        });
+
+        // If it meets the minimum, send it
+        if (evalResult.commitScore >= 15) {
+            return buildSucessiveActions(evalResult?.history ?? []);
+        }
+
+        // otherwise try with heal
         return buildSucessiveActions(
-            evalDefense(prev, [], 0, {
-                action: null,
-                commitScore: -Infinity,
-                upkeepScore: -Infinity,
-            })?.history ?? [],
+            evalDefense(
+                prev,
+                [...relevantDefenseActions, actionKeys.HEAL],
+                [],
+                0,
+                {
+                    action: null,
+                    commitScore: -Infinity,
+                    upkeepScore: -Infinity,
+                },
+            )?.history ?? [],
         );
     };
 
@@ -1773,7 +1866,7 @@ export async function voyagerAI(context) {
 
     // Tracker and helper to prevent UI freezing during heavy calculations
     const nodeTracker = { count: 0 };
-    const yieldToUI = async (interval = 40, delay = 10) => {
+    const yieldToUI = async (interval = 40, delay = WAIT_TIME) => {
         nodeTracker.count++;
         if (nodeTracker.count % interval === 0) {
             await new Promise((resolve) => setTimeout(resolve, delay));
@@ -2677,6 +2770,13 @@ export function lunaticAI(context) {
             return false;
         }
 
+        if (
+            !isElementActive(entity, elementalKeys.SHATTERED) &&
+            element === elementalKeys.SHATTERED
+        ) {
+            return false;
+        }
+
         return true;
     };
 
@@ -2686,7 +2786,7 @@ export function lunaticAI(context) {
         actionKeys.ATTACK,
         actionKeys.SPECIAL_ATTACK,
         actionKeys.LUNAR_STRIKE,
-        // actionKeys.LUNAR_SMITE,
+        actionKeys.LUNAR_SMITE,
         actionKeys.CHALK,
         actionKeys.SHATTER,
     ];
@@ -2701,11 +2801,6 @@ export function lunaticAI(context) {
 
         for (let relAct of relevantKillActions) {
             for (let element of relevantElements) {
-                // Skip invalid elements
-                if (!isElementValid(agent, element)) {
-                    continue;
-                }
-
                 // Skip unavailable actions
                 if (!isActionElementAvailable(sim, relAct, element)) {
                     continue;
@@ -2766,11 +2861,6 @@ export function lunaticAI(context) {
 
         for (let action of actionList) {
             for (let element of relevantElements) {
-                // Skip invalid elements
-                if (!isElementValid(agent, element)) {
-                    continue;
-                }
-
                 // Skip unavailable actions
                 if (!isActionElementAvailable(sim, action, element)) {
                     continue;
@@ -2814,11 +2904,11 @@ export function lunaticAI(context) {
             actionKeys.LUNAR_GROWTH,
             actionKeys.LUNAR_SHED,
             actionKeys.LUNAR_SHROUD,
-            // actionKeys.LUNAR_SMITE,
             actionKeys.AEGIS,
             actionKeys.GUARD,
 
             actionKeys.HEAL,
+            actionKeys.LUNAR_SMITE,
 
             actionKeys.SHATTER,
         ];
@@ -2937,15 +3027,39 @@ export function lunaticAI(context) {
 
     // === Engine ===
 
+    // Mirror
+    const simMirror = simWithElement(elementalKeys.WITHER, actionKeys.MIRROR);
+    if (
+        getTrueEffectiveHealth(simMirror, agentKey) >= 20 &&
+        agent.resources[effectKeys.MOONSHINE] >= 5 &&
+        isActionElementAvailable(
+            prev,
+            actionKeys.MIRROR,
+            elementalKeys.WITHER,
+        ) &&
+        getEntityStr(changeElement(agent, elementalKeys.DULLED)) <= 5
+    ) {
+        return buildElementAction(elementalKeys.WITHER, actionKeys.MIRROR);
+    }
+
+    const engineElements = [
+        elementalKeys.ALBEDO,
+        elementalKeys.WITHER,
+        elementalKeys.ASH,
+        elementalKeys.FROST,
+
+        elementalKeys.OCEAN,
+        elementalKeys.NATURE,
+        elementalKeys.SCORCH,
+        elementalKeys.DULLED,
+
+        elementalKeys.SHATTERED,
+    ];
+
     // Helper for engine evaluation
     const evalEngine = (sim, actionList, limiar) => {
         for (let action of actionList) {
-            for (let element of relevantElements) {
-                // Skip invalid elements
-                if (!isElementValid(agent, element)) {
-                    continue;
-                }
-
+            for (let element of engineElements) {
                 // Skip unavailable actions
                 if (!isActionElementAvailable(sim, action, element)) {
                     continue;
@@ -2981,7 +3095,7 @@ export function lunaticAI(context) {
                 actionKeys.SACRIFICE,
                 elementalKeys.ALBEDO,
             ) &&
-            getEntityStr(changeElement(agent, elementalKeys.DULLED)) >= 8
+            getEntityStr(changeElement(agent, elementalKeys.DULLED)) >= 5
         ) {
             return buildElementAction(
                 elementalKeys.ALBEDO,
@@ -3013,27 +3127,10 @@ export function lunaticAI(context) {
             );
         }
 
-        // Mirror
-        const simMirror = simWithElement(
-            elementalKeys.WITHER,
-            actionKeys.MIRROR,
-        );
-        if (
-            getTrueEffectiveHealth(simMirror, agentKey) >= 15 &&
-            agent[effectKeys.MOONLIGHT] <= 5 &&
-            isActionElementAvailable(
-                prev,
-                actionKeys.MIRROR,
-                elementalKeys.WITHER,
-            )
-        ) {
-            return buildElementAction(elementalKeys.WITHER, actionKeys.MIRROR);
-        }
-
         const WAXING_LIST = [
             actionKeys.LUNAR_SHED,
             actionKeys.LUNAR_STRIKE,
-            
+
             actionKeys.LUNAR_GROWTH,
             actionKeys.LUNAR_TIDE,
             actionKeys.LUNAR_SHROUD,
@@ -3058,23 +3155,6 @@ export function lunaticAI(context) {
 
     // Waning
     if (agent[effectKeys.MIRRORED_MOON] === moonKeys.WANING) {
-        // Mirror
-        const simMirror = simWithElement(
-            elementalKeys.WITHER,
-            actionKeys.MIRROR,
-        );
-        if (
-            getTrueEffectiveHealth(simMirror, agentKey) >= 15 &&
-            agent[effectKeys.MOONLIGHT] <= 5 &&
-            isActionElementAvailable(
-                prev,
-                actionKeys.MIRROR,
-                elementalKeys.WITHER,
-            )
-        ) {
-            return buildElementAction(elementalKeys.WITHER, actionKeys.MIRROR);
-        }
-
         const WANING_LIST = [
             actionKeys.LUNAR_SHROUD,
             actionKeys.AEGIS,
@@ -3844,7 +3924,7 @@ export async function seraphAI(context) {
             nodeTracker.count === 0 &&
             isEdictUnlocked(currentAgent, edictKeys.VIRTUES)
         ) {
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 20 * WAIT_TIME));
         }
 
         for (const command of actionCommands) {
@@ -3865,7 +3945,7 @@ export async function seraphAI(context) {
 
                 nodeTracker.count++;
                 if (nodeTracker.count % 40 === 0) {
-                    await new Promise((resolve) => setTimeout(resolve, 10));
+                    await new Promise((resolve) => setTimeout(resolve, WAIT_TIME));
                 }
 
                 // Bypass state creation if target edicts match current state

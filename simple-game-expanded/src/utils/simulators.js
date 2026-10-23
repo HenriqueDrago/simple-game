@@ -36,6 +36,7 @@ import {
     consumeLimitedResources,
     getSpAtkCost,
     getEntityTotalHealth,
+    processExitUmbral,
 } from "./entities.js";
 import {
     actionKeys,
@@ -120,14 +121,27 @@ function simulateGuard({ prev, agent, agentKey }) {
         },
     };
 
-    // Replenish missing mana
-    draftAgent = gainMana(
-        draftAgent,
-        Math.min(
-            getMissingMana(draftAgent),
-            getMaxMana(agent) * constants.GUARD_MANA_REGEN,
-        ),
-    );
+    // Visionary
+    if (draftAgent.states[effectKeys.VISIONARY]) {
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftAgent.resources[effectKeys.PRECOGNITION] +
+                    getMaxMana(agent) * constants.GUARD_MANA_REGEN,
+            },
+        };
+    } else {
+        // Replenish missing mana
+        draftAgent = gainMana(
+            draftAgent,
+            Math.min(
+                getMissingMana(draftAgent),
+                getMaxMana(agent) * constants.GUARD_MANA_REGEN,
+            ),
+        );
+    }
 
     post = replaceEntity(post, draftAgent, agentKey);
 
@@ -220,9 +234,29 @@ function simulateSpecialAttack({ prev, agentKey, nonAgentKey }) {
     };
 
     let draftAgent = extractEntity(post, agentKey);
-
     const cost = getSpAtkCost(draftAgent);
-    draftAgent = loseMana(draftAgent, cost);
+
+    // Visionary
+    if (draftAgent.states[effectKeys.VISIONARY]) {
+        const precogConsumed = Math.min(
+            cost,
+            draftAgent.resources[effectKeys.PRECOGNITION],
+        );
+
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftAgent.resources[effectKeys.PRECOGNITION] -
+                    precogConsumed,
+            },
+        };
+
+        draftAgent = loseMana(draftAgent, cost - precogConsumed);
+    } else {
+        draftAgent = loseMana(draftAgent, cost);
+    }
 
     post = replaceEntity(post, draftAgent, agentKey);
 
@@ -276,13 +310,40 @@ function simulateHeal({ prev, agent, agentKey }) {
         draftAgent = gainHp(draftAgent, bsLost);
     }
 
-    const base_heal = Math.min(
-        getMissingHealth(draftAgent),
-        getEntityTotalMana(draftAgent),
-    );
+    // Visionary
+    if (draftAgent.states[effectKeys.VISIONARY]) {
+        const base_heal = Math.min(
+            getMissingHealth(draftAgent),
+            getEntityTotalMana(draftAgent) +
+                draftAgent.resources[effectKeys.PRECOGNITION],
+        );
 
-    draftAgent = loseMana(draftAgent, base_heal);
-    draftAgent = gainHp(draftAgent, base_heal);
+        const precogConsumed = Math.min(
+            base_heal,
+            draftAgent.resources[effectKeys.PRECOGNITION],
+        );
+
+        draftAgent = {
+            ...draftAgent,
+            resources: {
+                ...draftAgent.resources,
+                [effectKeys.PRECOGNITION]:
+                    draftAgent.resources[effectKeys.PRECOGNITION] -
+                    precogConsumed,
+            },
+        };
+
+        draftAgent = loseMana(draftAgent, base_heal - precogConsumed);
+        draftAgent = gainHp(draftAgent, base_heal);
+    } else {
+        const base_heal = Math.min(
+            getMissingHealth(draftAgent),
+            getEntityTotalMana(draftAgent),
+        );
+
+        draftAgent = loseMana(draftAgent, base_heal);
+        draftAgent = gainHp(draftAgent, base_heal);
+    }
 
     return {
         ...prev,
@@ -306,15 +367,16 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
             ...draftAgent.resources,
             [effectKeys.LINGERING_EMBER]:
                 draftAgent.resources[effectKeys.LINGERING_EMBER] +
-                Math.floor(getEntityDef(draftAgent)),
+                Math.floor(getEntityDef(draftAgent) * constants.PACT_DEF_GAIN),
             [effectKeys.SHADOWFLAME]:
                 draftAgent.resources[effectKeys.SHADOWFLAME] +
-                Math.floor(getEntityStr(draftAgent)),
+                Math.floor(getEntityStr(draftAgent) * constants.PACT_STR_GAIN),
         },
     };
 
     draftAgent = {
         ...draftAgent,
+        [effectKeys.MAX_UNRELENTING_SHADOWS]: constants.MAX_SHADOWS_PACT,
         states: {
             ...draftAgent.states,
             [effectKeys.UMBRAL_CORE]: true,
@@ -364,10 +426,10 @@ function simulateRitualOfAsh({ prev, agent, agentKey }) {
             ...agent.resources,
             [effectKeys.LINGERING_EMBER]:
                 agent.resources[effectKeys.LINGERING_EMBER] +
-                agent.resources[effectKeys.SHADOWFLAME],
-            [effectKeys.CINDERS]:
-                agent.resources[effectKeys.CINDERS] +
-                agent.resources[effectKeys.SHADOWFLAME],
+                Math.floor(
+                    agent.resources[effectKeys.SHADOWFLAME] *
+                        constants.RITUAL_SHADOW_ASH,
+                ),
             [effectKeys.SHADOWFLAME]: 0,
         },
     };
@@ -389,6 +451,7 @@ function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = {
         ...draftAgent,
+        [effectKeys.UNRELENTING_SHADOWS]: 0,
         resources: {
             ...draftAgent.resources,
             [effectKeys.SHADOWFLAME]: 0,
@@ -397,7 +460,6 @@ function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
         },
         states: {
             ...draftAgent.states,
-            [effectKeys.UMBRAL_CORE]: false,
             [effectKeys.DIMMING_DARKNESS]: true,
         },
     };
@@ -407,6 +469,8 @@ function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
 
     post = replaceEntity(post, draftAgent, agentKey);
     post = replaceEntity(post, draftNonAgent, nonAgentKey);
+
+    post = processExitUmbral(post, agentKey);
 
     return post;
 }

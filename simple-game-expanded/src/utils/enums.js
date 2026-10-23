@@ -132,6 +132,8 @@ export const actionKeys = Object.freeze({
 });
 
 export const effectKeys = Object.freeze({
+    UNRELENTING_SHADOWS: "unrelentingShadows",
+    MAX_UNRELENTING_SHADOWS: "maxUnrelentingShadows",
     TUTORIAL: "tutorial",
     GUARDING_STATE: "guarding",
     MANA_OVERFLOW: "manaOverflow",

@@ -14,6 +14,7 @@ import SelenianTracker from "./SelenianTracker";
 import SonorityCounter from "./SonorityCounter";
 import StateBadges from "./StateBadges";
 import "./RightPanel.css";
+import ShadowsBar from "./ShadowsBar";
 
 export default function RightPanel({ entityKey }) {
     const { game } = useGame();
@@ -31,6 +32,7 @@ export default function RightPanel({ entityKey }) {
             <DivineBar entityKey={entityKey} />
 
             <HpBar entity={entity} simEntity={simEntity} />
+            <ShadowsBar entity={entity} simEntity={simEntity} />
             <ManaBar entity={entity} simEntity={simEntity} />
 
             <ModifiersTracker entityKey={entityKey} />

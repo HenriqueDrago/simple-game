@@ -1,0 +1,77 @@
+/* ShadowsBar.css */
+
+.shadows-bar-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #c9b3e6;
+}
+
+.shadows-text-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.shadows-values {
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.is-preview {
+    opacity: 0.75;
+}
+
+.shadows-track {
+    width: 100%;
+    height: 18px;
+    background-color: #110e17;
+    border: 1px solid #4a2b66;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.8),
+        inset 0 0 10px rgba(74, 43, 102, 0.5);
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.shadows-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #9d00ff;
+    box-shadow: inset 0 0 10px rgba(157, 0, 255, 0.5);
+    transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    z-index: 1;
+}
+
+.preview-chunk {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+}
+
+.preview-chunk.shadows-loss {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    transition: width 0.2s ease-out;
+    z-index: 2;
+}
+
+.preview-chunk.shadows-gain {
+    background-color: rgba(242, 230, 255, 0.4);
+    box-shadow: 0 0 6px rgba(157, 0, 255, 0.8);
+    z-index: 2;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+}

@@ -167,32 +167,27 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
 
     // Harmony
     if (draftTarget.resources[effectKeys.HARMONY] > 0) {
-        draftTarget = restoreResources(
-            draftTarget,
-            draftTarget.resources[effectKeys.HARMONY],
-        );
-
         draftTarget = {
             ...draftTarget,
             resources: {
                 ...draftTarget.resources,
                 [effectKeys.HARMONY]: 0,
-            },
-        };
+            }
+        }
     }
 
-    // Unrelenting Shadows
-    if (draftTarget.resources.unrelentingShadows > 0) {
+    // Mycelium
+    if (draftTarget.resources[effectKeys.MYCELIUM] > 0) {
         draftTarget = restoreResources(
             draftTarget,
-            draftTarget.resources.unrelentingShadows,
+            draftTarget.resources[effectKeys.MYCELIUM],
         );
 
         draftTarget = {
             ...draftTarget,
             resources: {
                 ...draftTarget.resources,
-                unrelentingShadows: 0,
+                [effectKeys.MYCELIUM]: 0,
             },
         };
     }
@@ -1067,23 +1062,6 @@ export function processMoonPhase(prev) {
             [effectKeys.MOONLIGHT]: newMoonlight,
             [effectKeys.MIRRORED_MOON]: newMoon,
         };
-
-        // Mycelium restore
-        // Mycelium
-        if (draftEntity.resources[effectKeys.MYCELIUM] > 0) {
-            draftEntity = restoreResources(
-                draftEntity,
-                draftEntity.resources[effectKeys.MYCELIUM],
-            );
-
-            draftEntity = {
-                ...draftEntity,
-                resources: {
-                    ...draftEntity.resources,
-                    [effectKeys.MYCELIUM]: 0,
-                },
-            };
-        }
 
         newGameState = {
             ...newGameState,

@@ -49,9 +49,14 @@ import {
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
 export const constants = Object.freeze({
-    EMBRACE_RESTORE: 0.5,
-    TUTORIAL_DR_REDUCTION: 0.25,
+    EMBRACE_RESTORE: 1,
     RITUAL_SHADOW_ASH: 0.5,
+    MAX_SHADOWS_PACT: 15,
+    PACT_DEF_GAIN: 2,
+    PACT_STR_GAIN: 1,
+    SHADOWS_EMBRACE_DR: 0.5,
+
+    TUTORIAL_DR_REDUCTION: 0.25,
 
     // Lunatic
     REFRACT_LUNACY_RATE: 1.25,
@@ -135,7 +140,7 @@ export const constants = Object.freeze({
     IRRADIATION_GAIN_RATE: 5,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
-    
+
     ACC_STARBLIGHT_CONVERSION: 5,
     CHALK_EXTRA_DMG: 10,
 
@@ -170,7 +175,7 @@ export const constants = Object.freeze({
     URD_STR_LOSS: 0.3,
 
     CURSE_EMPTY_RUNE_DMG: 0.3,
-    
+
     GRAVITATION_GAIN: 5,
     MAX_GRAVITATION: 100,
     MAX_ACCRETION: 100,
@@ -184,14 +189,13 @@ export const constants = Object.freeze({
     STANDARD_DR_INCREASE: 0.5,
     STANDARD_DEF_EFFECT_INCREASE: 1.5,
     GUARD_MANA_REGEN: 0.3,
-    
+
     CHART_STAR_GAIN: 3,
     STARDUST_RATE_CONVERSION: 3,
-
-    
 });
 
 export const MITIGATION_RESOURCES = [
+    effectKeys.HARMONY,
     effectKeys.SANCTUARY,
     effectKeys.FAULTY_FIRMAMENT,
     effectKeys.FRACTURED_DOME,
@@ -202,7 +206,6 @@ export const MITIGATION_RESOURCES = [
     effectKeys.FUNERARY_URN,
     effectKeys.LINGERING_EMBER,
     effectKeys.MYCELIUM,
-    effectKeys.HARMONY,
 ];
 
 export const FREE_RESOURCES = [

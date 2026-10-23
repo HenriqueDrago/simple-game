@@ -55,6 +55,18 @@ export function restoreResources(entity, amount) {
 
     // Skip Blood Sacrifice
 
+    // Unrelenting Shadows
+    if (getMaxShadows(draftEntity) > 0) {
+        const restoredShadows = Math.min(
+            getMissingShadows(draftEntity),
+            amount,
+        );
+
+        amount -= restoredShadows;
+
+        draftEntity = gainShadows(draftEntity, restoredShadows);
+    }
+
     // Mana
     if (getMaxMana(entity) > 0) {
         draftEntity = gainMana(draftEntity, amount);
@@ -204,6 +216,8 @@ export function createBaseEntity() {
         [effectKeys.ENLIGHTENMENT]: 0,
         [effectKeys.MAX_ENLIGHTENMENT]: 0,
         [effectKeys.BLOOD_SACRIFICE]: 0,
+        [effectKeys.UNRELENTING_SHADOWS]: 0,
+        [effectKeys.MAX_UNRELENTING_SHADOWS]: 0,
 
         // fixed resources
         [effectKeys.DIVINE_SPARK]: 0,
@@ -371,6 +385,41 @@ export function resetPlayerEntity(prev, entityKey) {
         baseEntity,
         currentEntity.statDistributionMode,
         presetAi[currentEntity.controller].best,
+    );
+}
+
+export function gainShadows(entity, amount) {
+    const restored = Math.max(0, Math.min(amount, getMissingShadows(entity)));
+
+    return {
+        ...entity,
+        [effectKeys.UNRELENTING_SHADOWS]:
+            entity[effectKeys.UNRELENTING_SHADOWS] + restored,
+    };
+}
+
+export function loseShadows(entity, amount) {
+    const lost = Math.max(
+        0,
+        Math.min(amount, entity[effectKeys.UNRELENTING_SHADOWS]),
+    );
+
+    return {
+        ...entity,
+        [effectKeys.UNRELENTING_SHADOWS]:
+            entity[effectKeys.UNRELENTING_SHADOWS] - lost,
+    };
+}
+
+export function getMaxShadows(entity) {
+    return entity?.[effectKeys.MAX_UNRELENTING_SHADOWS] ?? 0;
+}
+
+export function getMissingShadows(entity) {
+    return Math.max(
+        entity[effectKeys.MAX_UNRELENTING_SHADOWS] -
+            entity[effectKeys.UNRELENTING_SHADOWS],
+        0,
     );
 }
 
@@ -1438,6 +1487,11 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                     },
                 };
             }
+
+            // Harmony
+            if (isCauseDamage && currResourceKey === effectKeys.HARMONY) {
+                draftEntity = restoreResources(draftEntity, consumption);
+            }
         }
 
         i++;
@@ -1540,6 +1594,20 @@ export function consumeLimitedResources(entity, amount) {
     limitedResourcesConsumed = {
         ...limitedResourcesConsumed,
         [effectKeys.MANA]: manaConsumed,
+    };
+
+    // Unrelenting Shadows
+    const shadowsConsumed = Math.min(
+        draftEntity[effectKeys.UNRELENTING_SHADOWS],
+        amount,
+    );
+    draftEntity = loseShadows(draftEntity, shadowsConsumed);
+    amount -= shadowsConsumed;
+
+    totalLimitedResourcesConsumption += shadowsConsumed;
+    limitedResourcesConsumed = {
+        ...limitedResourcesConsumed,
+        [effectKeys.UNRELENTING_SHADOWS]: shadowsConsumed,
     };
 
     // Blood Sacrifice
@@ -2889,7 +2957,15 @@ export function getEntityDR(prev, entityKey) {
                 : 1;
     }
     if (entity.states[effectKeys.DARK_EMBRACE]) {
-        drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
+        drMult *=
+            getMaxShadows(entity) > 0
+                ? Math.max(
+                      0,
+                      1 -
+                          (getMissingShadows(entity) / getMaxShadows(entity)) *
+                              constants.SHADOWS_EMBRACE_DR,
+                  )
+                : 1;
     }
     if (entity.states[effectKeys.ARMORED_DEPLOYMENT]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
@@ -3093,15 +3169,10 @@ export function processExitUmbral(prev, targetKey) {
         ...prev.entities[targetKey],
     };
 
-    const newShadows = Math.floor(
-        draftTarget.resources[effectKeys.SHADOWFLAME] +
-            draftTarget.resources[effectKeys.LINGERING_EMBER] / 2,
-    );
-
-    draftTarget = restoreResources(draftTarget, newShadows);
-
     draftTarget = {
         ...draftTarget,
+        [effectKeys.UNRELENTING_SHADOWS]: 0,
+        [effectKeys.MAX_UNRELENTING_SHADOWS]: 0,
         states: {
             ...draftTarget.states,
             [effectKeys.UMBRAL_CORE]: false,
