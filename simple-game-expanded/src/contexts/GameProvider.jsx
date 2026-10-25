@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import {
     canUseCombatInteractions,
     createBaseEntity,
@@ -58,7 +58,6 @@ import {
     processReckoning,
     startGame,
 } from "../utils/turnManagement";
-import { centralAIManagement } from "../utils/aiControllers";
 import { GameContext } from "./GameContext";
 import { simulateFullStarfall } from "../utils/starfall";
 
@@ -259,6 +258,24 @@ export default function GameProvider({ children }) {
             progressStatus: playerProgress,
         };
     });
+
+    // === Web Workers ===
+    // Maintain a ref for the Web Worker instance
+    const aiWorkerRef = useRef(null);
+
+    // Initialize worker on mount and cleanup on unmount
+    useEffect(() => {
+        aiWorkerRef.current = new Worker(
+            new URL("../workers/ai.worker.js", import.meta.url),
+            { type: "module" },
+        );
+
+        return () => {
+            if (aiWorkerRef.current) {
+                aiWorkerRef.current.terminate();
+            }
+        };
+    }, []);
 
     // === Handles ===
     function handleAction(action, agentKey, nonAgentKey) {
@@ -1203,6 +1220,7 @@ export default function GameProvider({ children }) {
     ]);
 
     // AI Controller
+    // AI Controller Effect
     useEffect(() => {
         if (game.paused || !getCurrActivePlayer(game)) {
             return;
@@ -1237,29 +1255,44 @@ export default function GameProvider({ children }) {
                     break;
             }
 
-            // Judgement Override
             if (activePlayer?.states?.[effectKeys.ANOINTED_PROXY]) {
                 delay = 1600;
             }
 
-            const aiTimer = setTimeout(async () => {
-                // Await the async result first so setGame receives clean state object, not a Promise
-                const updatedGame = await centralAIManagement(
-                    game,
-                    targetKey,
-                    nonTargetKey,
+            const aiTimer = setTimeout(() => {
+                // Terminate existing worker to drop in-flight calculations before creating a new request
+                if (aiWorkerRef.current) {
+                    aiWorkerRef.current.terminate();
+                }
+
+                // Re-instantiate worker for the new request
+                const worker = new Worker(
+                    new URL("../workers/ai.worker.js", import.meta.url),
+                    { type: "module" },
                 );
-                setGame((prev) => {
-                    return {
-                        ...updatedGame,
-                        speed: prev.speed,
-                        paused: prev.paused,
-                    };
-                });
+                aiWorkerRef.current = worker;
+
+                worker.onmessage = (event) => {
+                    const { success, updatedGame, error } = event.data;
+                    if (success) {
+                        setGame((prev) => ({
+                            ...updatedGame,
+                            speed: prev.speed,
+                            paused: prev.paused,
+                        }));
+                    } else {
+                        console.error("AI Worker Error:", error);
+                    }
+                };
+
+                worker.postMessage({ game, targetKey, nonTargetKey });
             }, delay * gameSpeeds[game.speed].mod);
 
             return () => {
                 clearTimeout(aiTimer);
+                if (aiWorkerRef.current) {
+                    aiWorkerRef.current.onmessage = null;
+                }
             };
         }
     }, [

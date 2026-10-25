@@ -10,6 +10,7 @@ import {
     Pyramid,
     Sparkles,
     Sun,
+    Zap,
 } from "lucide-react";
 import { effectKeys } from "../utils/enums";
 import "./MitigationTracker.css";
@@ -71,6 +72,11 @@ const mitigators = {
         icon: <Church className="svg-icon" strokeWidth={2.5} />,
         color: "#ffd54f",
         borderColor: "rgba(255, 213, 79, 0.25)",
+    },
+    [effectKeys.ENERGY_BARRIER]: {
+        icon: <Zap className="svg-icon" strokeWidth={2.5} />,
+        color: "#00DD00",
+        borderColor: "rgba(0, 220, 0, 0.25)",
     },
 };
 

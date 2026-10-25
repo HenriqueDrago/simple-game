@@ -3,7 +3,6 @@ import {
     Shield,
     HeartCrack,
     ChevronsDown,
-    Crosshair,
 } from "lucide-react";
 import "./ModifiersTracker.css";
 import { effectKeys } from "../utils/enums";
@@ -11,7 +10,6 @@ import { useUI } from "../contexts/UIContext";
 import { useGame } from "../contexts/GameContext";
 import {
     getEntityDamageBonus,
-    getEntityDefPen,
     getEntityDR,
     getEntityFragility,
     getEntityWeakness,
@@ -61,13 +59,6 @@ export default function ModifiersTracker({ entityKey }) {
     const isFragChanged = simGame && simFrag !== realFrag;
     const displayFrag = simGame ? simFrag : realFrag;
 
-    const realDefPen = getEntityDefPen(game, entityKey);
-    const simDefPen = simGame
-        ? getEntityDefPen(simGame, entityKey)
-        : realDefPen;
-    const isDefPenChanged = simGame && simDefPen !== realDefPen;
-    const displayDefPen = simGame ? simDefPen : realDefPen;
-
     return (
         <div className="modifiers-tracker-container">
             <span
@@ -101,13 +92,6 @@ export default function ModifiersTracker({ entityKey }) {
             >
                 <HeartCrack size={18} />
                 {displayFrag}%
-            </span>
-            <span
-                className={isDefPenChanged ? "is-preview" : ""}
-                onMouseDown={(e) => handleSpawnTooltip(e, effectKeys.BREACH)}
-            >
-                <Crosshair size={18} />
-                {displayDefPen}
             </span>
         </div>
     );

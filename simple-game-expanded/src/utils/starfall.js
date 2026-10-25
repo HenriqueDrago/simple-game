@@ -357,9 +357,9 @@ export function processYellowStar(
             0,
             draftMaster[effectKeys.ACCRETION] + accretionRaised,
         ),
-        [effectKeys.STARBLIGHT]: Math.max(
+        [effectKeys.STARGATE]: Math.max(
             0,
-            draftMaster[effectKeys.STARBLIGHT] + starblightRaised,
+            draftMaster[effectKeys.STARGATE] + starblightRaised,
         ),
     };
 

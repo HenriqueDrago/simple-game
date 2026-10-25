@@ -11,9 +11,13 @@ import {
     consumeResources,
     deleteCondition,
     extractEntity,
+    gainHp,
+    gainMana,
     gainSin,
     getEntityColoredStars,
     getEntityElement,
+    getMissingHealth,
+    getMissingMana,
     getProvForVirtues,
     isChoirActive,
     isEdictActive,
@@ -23,6 +27,7 @@ import {
     processActionTypeUsed,
     processDeathCheck,
     raiseDivineSpark,
+    raiseDynamo,
     raiseProvidence,
     replaceEntity,
     restoreResources,
@@ -140,6 +145,38 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = { ...post.entities[targetKey] };
     }
 
+    // Harmony (missing)
+    if (draftTarget.resources[effectKeys.HARMONY] > 0) {
+        const hpRestored = Math.min(
+            draftTarget.resources[effectKeys.HARMONY],
+            getMissingHealth(draftTarget),
+        );
+        const manaRestored = Math.min(
+            draftTarget.resources[effectKeys.HARMONY] - hpRestored,
+            getMissingMana(draftTarget),
+        );
+
+        draftTarget = gainHp(draftTarget, hpRestored);
+        draftTarget = gainMana(draftTarget, manaRestored);
+    }
+
+    // Energy Barrier
+    if (draftTarget.resources[effectKeys.ENERGY_BARRIER] > 0) {
+        const dynamoGain =
+            draftTarget.resources[effectKeys.ENERGY_BARRIER] *
+            constants.ENERGY_BARRIER_RATE;
+
+        draftTarget = {
+            ...draftTarget,
+            resources: {
+                ...draftTarget.resources,
+                [effectKeys.ENERGY_BARRIER]: 0,
+            },
+        };
+
+        draftTarget = raiseDynamo(draftTarget, dynamoGain);
+    }
+
     // Stardust
     if (draftTarget.resources[effectKeys.STARDUST] > 0) {
         const newStardust =
@@ -163,17 +200,6 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
                 [effectKeys.WHITE_STAR]: newWhites,
             },
         };
-    }
-
-    // Harmony
-    if (draftTarget.resources[effectKeys.HARMONY] > 0) {
-        draftTarget = {
-            ...draftTarget,
-            resources: {
-                ...draftTarget.resources,
-                [effectKeys.HARMONY]: 0,
-            }
-        }
     }
 
     // Mycelium
@@ -707,11 +733,11 @@ export function commitTurn(prev, currActorKey, nextActorKey) {
         };
     }
 
-    // Starblight
-    if (draftCurrActor[effectKeys.STARBLIGHT] > 0) {
+    // Stargate
+    if (draftCurrActor[effectKeys.STARGATE] > 0) {
         draftCurrActor = {
             ...draftCurrActor,
-            [effectKeys.STARBLIGHT]: 0,
+            [effectKeys.STARGATE]: 0,
         };
     }
 

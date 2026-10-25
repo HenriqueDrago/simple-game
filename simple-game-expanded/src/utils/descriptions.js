@@ -110,7 +110,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "TURN END",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: SACRED FLAMES, INSPIRATION, MARTYR, SACRILEGE, PENITENCE, MOTES OF RUIN, BAD OMEN, MANA OVERFLOW, DISSONANCE, RADIANCE, MOONSHINE, GRAVITATION, ACCRETION, STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION.",
+            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: SACRED FLAMES, INSPIRATION, MARTYR, SACRILEGE, PENITENCE, MOTES OF RUIN, BAD OMEN, MANA OVERFLOW, DISSONANCE, RADIANCE, MOONSHINE, GRAVITATION, ACCRETION, STARGATE, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION.",
     },
 
     [entryTypes.ACTION]: {
@@ -238,13 +238,6 @@ export const GENERAL_DESCRIPTIONS = {
             "Reduces the target's HEALTH. Cannot be blocked by DEFENSE, affected by DAMAGE MODIFIERS, or mitigated by MITIGATION RESOURCES.",
     },
 
-    [effectKeys.BREACH]: {
-        name: "BREACH",
-        type: entryTypes.MECHANIC,
-        description:
-            "When dealing PHYSICAL DAMAGE, ignores a portion of the target's DEFENSE equal to the user's BREACH.",
-    },
-
     [entryTypes.DAMAGE_MODIFIERS]: {
         name: "DAMAGE MODIFIERS",
         type: entryTypes.CATEGORY,
@@ -346,7 +339,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "RANKED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that are rank-based and displayed as Roman numerals. Includes STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, and STIGMATA.",
+            "A subset of RESOURCES that are rank-based and displayed as Roman numerals. Includes STARGATE, CONSTELLATION, AZURE CONSTELLATION, CRIMSON CONSTELLATION, and STIGMATA.",
     },
 
     [entryTypes.GLOBAL_RESOURCE]: {
@@ -436,8 +429,7 @@ export const BLOODKNIGHT_DESCRIPTIONS = {
     [effectKeys.TUTORIAL]: {
         name: "TUTORIAL",
         type: entryTypes.STATE,
-        description:
-            "This is a tutorial enemy. Lowers DAMAGE REDUCTION by 25%.",
+        description: "This is a tutorial enemy. Sets DAMAGE REDUCTION to 0%.",
     },
 
     [actionKeys.SACRIFICE]: {
@@ -516,14 +508,14 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "SHADOW PACT",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all STATES. Enters UMBRAL CORE. Gains SHADOWFLAME equal to the user's STRENGTH. Gains LINGERING EMBER equal to twice the user's DEFENSE. Sets MAX UNRELENTING SHADOWS to 15.",
+            "Exits all STATES. Enters UMBRAL CORE. Gains SHADOWFLAME equal to the user's STRENGTH. Gains LINGERING EMBER equal to the user's DEFENSE. Sets MAX UNRELENTING SHADOWS to 15.",
     },
 
     [effectKeys.UMBRAL_CORE]: {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
         description:
-            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS and CINDERS on self and sets MAX UNRELENTING SHADOWS to 0. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
+            "Nullifies all STRENGTH and DEFENSE on self. Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS and CINDERS on self and sets MAX UNRELENTING SHADOWS to 0. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -546,12 +538,6 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
             "Cannot be burned. When taking PHYSICAL DAMAGE or PIERCING DAMAGE, extinguishes LINGERING EMBER to reduce the damage taken. At TURN START, extinguishes half the LINGERING EMBER on self. Then, gains SHADOWFLAME equal to the amount extinguished.",
     },
 
-    [effectKeys.CINDERS]: {
-        name: "CINDERS",
-        type: entryTypes.FREE_RESOURCE,
-        description: "No effect.",
-    },
-
     [effectKeys.UNRELENTING_SHADOWS]: {
         name: "UNRELENTING SHADOWS",
         type: entryTypes.LIMITED_RESOURCE,
@@ -572,18 +558,24 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
             "Burns RESOURCES on all entities equal to SHADOWFLAME on self. Gains CINDERS equal to the total amount burned. When burning CINDERS, does not gain CINDERS.",
     },
 
+    [effectKeys.CINDERS]: {
+        name: "CINDERS",
+        type: entryTypes.FREE_RESOURCE,
+        description: "No effect.",
+    },
+
     [actionKeys.SHADOW_MANTLE]: {
         name: "SHADOW MANTLE",
         type: entryTypes.DEFENSIVE_ACTION,
         description:
-            "Restores RESOURCES on self equal to the user's SHADOWFLAME. Enters DARK EMBRACE.",
+            "Restores RESOURCES on self equal to half the user's SHADOWFLAME. Enters DARK EMBRACE.",
     },
 
     [effectKeys.DARK_EMBRACE]: {
         name: "DARK EMBRACE",
         type: entryTypes.STATE,
         description:
-            "Raises DAMAGE REDUCTION by half the user's missing UNRELENTING SHADOWS percentage. At TURN START, disables SHADOWFLAME effects, then exits this state.",
+            "At TURN START, disables SHADOWFLAME effects, then exits this state.",
     },
 
     [actionKeys.RITUAL_OF_ASH]: {
@@ -653,14 +645,21 @@ export const CYBORG_DESCRIPTIONS = {
         name: "DYNAMO",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Can be raised above the cap. At 100% DYNAMO or more, consumes 100% DYNAMO and increases ENERGY LEVEL by 1.",
+            "Capped at 100%. When raising DYNAMO above 100%, gains ENERGY BARRIER for every 5% excess DYNAMO. At 100% DYNAMO, consumes all DYNAMO and increases ENERGY LEVEL by 1.",
+    },
+
+    [effectKeys.ENERGY_BARRIER]: {
+        name: "ENERGY BARRIER",
+        type: entryTypes.MITIGATION_RESOURCE,
+        description:
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes ENERGY BARRIER to reduce the damage taken. At TURN START, loses all ENERGY BARRIER, then, raises DYNAMO by 5% per ENERGY BARRIER lost.",
     },
 
     [effectKeys.OVERHEAT]: {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Can be raised above the cap. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30%. Lowers OVERHEAT by an additional 5% per point of the user's STRENGTH. Then, raises DYNAMO by the total amount lowered. Raises FRAGILITY by OVERHEAT on self. Lowers DEFENSE by a percentage of itself equivalent to OVERHEAT on self. At 100% or more OVERHEAT, enters THERMAL OVERLOAD.",
+            "Capped at 100%. Can be raised above the cap. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30%. Lowers OVERHEAT by an additional 5% per point of the user's STRENGTH. Then, raises DYNAMO by the total amount lowered. Lowers DEFENSE by a percentage of itself equivalent to OVERHEAT on self. At 100% or more OVERHEAT, enters THERMAL OVERLOAD.",
     },
 
     [effectKeys.THERMAL_OVERLOAD]: {
@@ -702,7 +701,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "SONORITY",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Ranges from -75% to +75%. When using a DEFENSIVE ACTION, raises SONORITY by 15%. When using an OFFENSIVE ACTION, lowers SONORITY by 15%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
+            "Ranges from -60% to +60%. When using a DEFENSIVE ACTION, raises SONORITY by 12%. When using an OFFENSIVE ACTION, lowers SONORITY by 12%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
     },
 
     [actionKeys.DA_CAPO]: {
@@ -716,21 +715,21 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Gains HARMONY for every 10% shift on SONORITY.",
+            "Inverts current SONORITY. Gains HARMONY for every 8% shift on SONORITY.",
     },
 
     [effectKeys.HARMONY]: {
         name: "HARMONY",
         type: entryTypes.MITIGATION_RESOURCE,
         description:
-            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HARMONY to reduce the damage taken, then restores RESOURCES equal to the amount lost.",
+            "When taking PHYSICAL DAMAGE or PIERCING DAMAGE, consumes HARMONY to reduce the damage taken, then restores RESOURCES to all entities equal to the amount lost. At TURN START, consumes HARMONY to replenish missing HEALTH and missing MANA.",
     },
 
     [actionKeys.BABEL]: {
         name: "BABEL",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Inflicts DISSONANCE on the opponent for every 10% shift on SONORITY.",
+            "Inverts current SONORITY. Consumes RESOURCES on self for every 8% shift on SONORITY. Then, inflicts DISSONANCE on the opponent equal to the amount consumed.",
     },
 
     [effectKeys.DISSONANCE]: {
@@ -801,7 +800,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF VERDANDI",
         type: entryTypes.RUNES,
         description:
-            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's DEFENSE. While on RUNIC ARRAY: Lowers the user's DEFENSE by 30% of itself. Upon detonation: Replenishes 60% missing MANA.",
+            "Gained from HEAL. Upon acquisition: Gains CONJECTURE equal to the user's DEFENSE. While on RUNIC ARRAY: Lowers the user's DEFENSE by 30% of itself. Upon detonation: Replenishes MANA by 60% of missing MANA. Replenishes HEALTH by 60% of missing HEALTH.",
     },
 
     [effectKeys.CONJECTURE]: {
@@ -815,7 +814,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RUNE OF SKULD",
         type: entryTypes.RUNES,
         description:
-            "Gained from SPECIAL ATTACK. Upon acquisition: Gains PRECOGNITION equal to 30% of MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS and DAMAGE REDUCTION by 30%. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
+            "Gained from SPECIAL ATTACK. Upon acquisition: Replenishes missing MANA by 30% of MAX MANA. While on RUNIC ARRAY: Raises WEAKNESS and DAMAGE REDUCTION by 30%. Upon detonation: Raises the opponent's BAD OMEN by 30%.",
     },
 
     [effectKeys.BAD_OMEN]: {
@@ -859,7 +858,7 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "STARGAZER",
         type: entryTypes.STATE,
         description:
-            "While active, enables STARFALL after the corresponding player's TURN. Enables a side-menu for assigning STARS. Upon exiting this state, loses all STARS and sets STARBLIGHT, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION to zero.",
+            "While active, enables STARFALL after the corresponding player's TURN. Enables a side-menu for assigning STARS. Upon exiting this state, loses all STARS and sets STARGATE, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION to zero.",
     },
 
     [entryTypes.STAR]: {
@@ -978,14 +977,14 @@ export const VOYAGER_DESCRIPTIONS = {
         name: "ACCRETION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to ACCRETION on self. When raising ACCRETION above 100%, raises STARBLIGHT rank for every 5% excess. At TURN END, loses all ACCRETION.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to ACCRETION on self. When raising ACCRETION above 100%, raises STARGATE rank for every 5% excess. At TURN END, loses all ACCRETION.",
     },
 
-    [effectKeys.STARBLIGHT]: {
-        name: "STARBLIGHT",
+    [effectKeys.STARGATE]: {
+        name: "STARGATE",
         type: entryTypes.RANKED_RESOURCE,
         description:
-            "Raises BREACH by its rank. At TURN END, sets STARBLIGHT to 0.",
+            "When dealing PHYSICAL DAMAGE, ignores a portion of the target's DEFENSE equal to STARGATE rank. At TURN END, sets STARGATE to 0.",
     },
 
     [effectKeys.CONSTELLATION]: {
@@ -1369,7 +1368,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 0.25% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 20% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 0.25% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 12.5% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
@@ -1450,7 +1449,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCENDENCE OF SPIRIT",
         type: entryTypes.STATE,
         description:
-            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS and BREACH with SPIRITUAL ORDINANCES and DEFILEMENT. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 1.25% per point replenished. Raises DISGRACE by half the TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the ENLIGHTENMENT consumed, gains SACRED FLAMES equal to the other RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
+            "Cannot die. Replaces HEALTH and MANA with ENLIGHTENMENT. Replaces DAMAGE MODIFIERS with SPIRITUAL ORDINANCES. Converts all DAMAGE TYPES taken into their corresponding TARNISHMENT TYPES. Replaces all actions with CONDEMN, SUPPLICATE, DISCERN, and ATONE. Opens a side-menu for enabling or disabling EDICTS. Effects that replenish HEALTH or MANA directly will instead raise TARNISHED SIN by 1.25% per point replenished. Raises DISGRACE by the TARNISHED SIN on self. Upon exiting this state, exits the HEAVENLY CHOIRS and IMMACULATE, loses all REVELATION and FORTITUDE, and consumes all RESOURCES on self, then sets MAX HEALTH to MAX ENLIGHTENMENT and MAX ENLIGHTENMENT to 0, restores RESOURCES equal to the ENLIGHTENMENT consumed, gains SACRED FLAMES equal to the other RESOURCES consumed, raises ATTRIBUTES equal to half the sum of REVELATION and FORTITUDE lost, then, finally, enters CUTOFF WINGS.",
     },
 
     [effectKeys.CUTOFF_WINGS]: {
@@ -1505,7 +1504,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "DEFILEMENT",
         type: entryTypes.GLOBAL_RESOURCE,
         description:
-            "When inflicting PHYSICAL TARNISHMENT, ignores a portion of the target's FORTITUDE equal to the battlefield's DEFILEMENT. Raises the battlefield's DEFILEMENT by the sum of all entities' BREACH.",
+            "When receiving PHYSICAL TARNISHMENT, ignores a portion of the entity's FORTITUDE equal to the battlefield's DEFILEMENT. Raises DEFILEMENT by the sum of all entities STARGATE.",
     },
 
     [entryTypes.SPIRITUAL_ORDINANCE]: {

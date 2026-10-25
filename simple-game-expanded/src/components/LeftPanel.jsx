@@ -58,8 +58,8 @@ const FIXED_BARS_CONFIG = {
 };
 
 const RANKED_COUNTERS_CONFIG = {
-    [effectKeys.STARBLIGHT]: {
-        label: "STARBLIGHT",
+    [effectKeys.STARGATE]: {
+        label: "STARGATE",
         style: {
             color: "#ea80fc",
             borderColor: "#e040fb",

@@ -132,6 +132,9 @@ export const actionKeys = Object.freeze({
 });
 
 export const effectKeys = Object.freeze({
+    PERCEPTION: "perception",
+    ENERGY_BARRIER: "energyBarrier",
+    INTUITION: "intuition",
     UNRELENTING_SHADOWS: "unrelentingShadows",
     MAX_UNRELENTING_SHADOWS: "maxUnrelentingShadows",
     TUTORIAL: "tutorial",
@@ -225,7 +228,7 @@ export const effectKeys = Object.freeze({
     HARMONY: "harmony",
     DISSONANCE: "dissonance",
 
-    STARBLIGHT: "starblight",
+    STARGATE: "starblight",
     CONSTELLATION: "constellation",
     CRIMSON_CONSTELLATION: "crimsonConstellation",
     AZURE_CONSTELLATION: "azureConstellation",
@@ -256,9 +259,6 @@ export const effectKeys = Object.freeze({
     SHORTCUTS: "shorcuts",
 
     IRRADIATION: "irradiation",
-
-    DEF_PEN: "defPen",
-    BREACH: "breach",
 
     // Seraph
     ZENITH_OF_MORTALITY: "zenithOfMortality",

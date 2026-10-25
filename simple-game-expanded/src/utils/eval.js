@@ -1,3 +1,4 @@
+/* global process */
 import { centralAIManagement } from "./aiControllers";
 import { ATTRIBUTE_NAMES, constants, INITIAL_GAME_STATE, playerMap } from "./constants";
 import {
@@ -469,7 +470,7 @@ async function simAllMatches({ results = [], onProgress = () => {} } = {}) {
         onProgress(i + 1, matchesConfig.length);
 
         // Yield to the event loop so the bar renders and Ctrl+C is handled
-        await new Promise((resolve) => setImmediate(resolve));
+        await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
     return { results, errors };

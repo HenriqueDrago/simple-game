@@ -45,9 +45,8 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 
 ## Progression Mode
 
-- **Mundane:** A tutorial enemy utilizing basic Attack, Guard, and Heal actions.
 - **Warlock:** Focuses on Special Attack damage scaling based on mana imbalance.
-- **Bloodknight:** Uses Sacrifice and Blood Sacrifice to convert health into physical damage and delayed healing.
+- **Bloodknight:** Uses Sacrifice and Blood Sacrifice to convert health into extra attributes.
 - **Paladin:** Generates mitigation shields and builds divine energy to scale attributes and restore resources.
 - **Shadow Sorcerer:** Enters Umbral Core to manage self-damaging burn loops and restoration triggers.
 - **Cyborg:** Fires laser attacks while managing heat buildup and dynamo charge.

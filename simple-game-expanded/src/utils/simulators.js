@@ -37,6 +37,7 @@ import {
     getSpAtkCost,
     getEntityTotalHealth,
     processExitUmbral,
+    raiseDynamo,
 } from "./entities.js";
 import {
     actionKeys,
@@ -363,6 +364,7 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
 
     draftAgent = {
         ...draftAgent,
+        [effectKeys.MAX_UNRELENTING_SHADOWS]: constants.MAX_SHADOWS_PACT,
         resources: {
             ...draftAgent.resources,
             [effectKeys.LINGERING_EMBER]:
@@ -372,11 +374,6 @@ function simulateShadowPact({ prev, agentKey, nonAgentKey }) {
                 draftAgent.resources[effectKeys.SHADOWFLAME] +
                 Math.floor(getEntityStr(draftAgent) * constants.PACT_STR_GAIN),
         },
-    };
-
-    draftAgent = {
-        ...draftAgent,
-        [effectKeys.MAX_UNRELENTING_SHADOWS]: constants.MAX_SHADOWS_PACT,
         states: {
             ...draftAgent.states,
             [effectKeys.UMBRAL_CORE]: true,
@@ -426,7 +423,7 @@ function simulateRitualOfAsh({ prev, agent, agentKey }) {
             ...agent.resources,
             [effectKeys.LINGERING_EMBER]:
                 agent.resources[effectKeys.LINGERING_EMBER] +
-                Math.floor(
+                Math.ceil(
                     agent.resources[effectKeys.SHADOWFLAME] *
                         constants.RITUAL_SHADOW_ASH,
                 ),
@@ -499,11 +496,13 @@ function simulateBlackMayhem({ prev, agentKey, nonAgentKey }) {
     );
     draftNonAgent = resultNonAgent.draftEntity;
 
-    const cinderGain =
-        resultAgent.resourcesConsumed.totalConsumption +
-        resultNonAgent.resourcesConsumed.totalConsumption -
-        (resultAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0) -
-        (resultNonAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0);
+    const cinderGain = Math.floor(
+        (resultAgent.resourcesConsumed.totalConsumption +
+            resultNonAgent.resourcesConsumed.totalConsumption -
+            (resultAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0) -
+            (resultNonAgent.resourcesConsumed[effectKeys.CINDERS] ?? 0)) *
+            constants.MAYHEM_CINDERS,
+    );
 
     draftAgent = {
         ...draftAgent,
@@ -568,9 +567,9 @@ function simulateSoundOfSilence({ prev, agent, agentKey }) {
         [effectKeys.SONORITY]: newSonority,
         resources: {
             ...agent.resources,
-            [effectKeys.HARMONY]: Math.floor(
-                musicalShift * constants.SILENCE_RATE,
-            ),
+            [effectKeys.HARMONY]:
+                agent.resources[effectKeys.HARMONY] +
+                Math.floor(musicalShift * constants.SILENCE_RATE),
         },
     };
 
@@ -589,18 +588,23 @@ function simulateBabel({ prev, agent, agentKey, nonAgent, nonAgentKey }) {
     const newSonority = -agent[effectKeys.SONORITY];
 
     const musicalShift = Math.abs(newSonority * 2);
+    const toBeConsumed = Math.floor(musicalShift * constants.BABEL_RATE);
 
-    const draftAgent = {
+    let draftAgent = {
         ...agent,
         [effectKeys.SONORITY]: newSonority,
     };
+
+    const result = consumeResources(draftAgent, toBeConsumed, actionKeys.BABEL);
+    draftAgent = result.draftEntity;
+
     const draftNonAgent = {
         ...nonAgent,
         resources: {
             ...nonAgent.resources,
-            [effectKeys.DISSONANCE]: Math.floor(
-                musicalShift * constants.BABEL_RATE,
-            ),
+            [effectKeys.DISSONANCE]:
+                agent.resources[effectKeys.DISSONANCE] +
+                result.resourcesConsumed.totalConsumption,
         },
     };
 
@@ -649,17 +653,12 @@ function simulateLaser({ prev, agent, agentKey, nonAgentKey }) {
 
     const newOverheat =
         draftAgent[effectKeys.OVERHEAT] +
-        10 * (1 + draftAgent.lasersUsedThisTurn);
-    const newDynamo = Math.min(
-        constants.MAX_DYNAMO,
-        draftAgent[effectKeys.DYNAMO] + 10,
-    );
+        Math.floor(10 * (1 + draftAgent.lasersUsedThisTurn));
     const newlasersUsedThisTurn = draftAgent.lasersUsedThisTurn + 1;
 
     draftAgent = {
         ...draftAgent,
         [effectKeys.OVERHEAT]: newOverheat,
-        [effectKeys.DYNAMO]: newDynamo,
         lasersUsedThisTurn: newlasersUsedThisTurn,
         states: {
             ...draftAgent.states,
@@ -667,6 +666,8 @@ function simulateLaser({ prev, agent, agentKey, nonAgentKey }) {
                 newOverheat >= constants.MAX_OVERHEAT,
         },
     };
+
+    draftAgent = raiseDynamo(draftAgent, constants.DYNAMO_GAIN_LASER);
 
     return {
         ...post,

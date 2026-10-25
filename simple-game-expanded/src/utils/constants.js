@@ -49,14 +49,14 @@ import {
 export const ATTRIBUTE_NAMES = [effectKeys.STR, effectKeys.DEF];
 
 export const constants = Object.freeze({
+    // Shadow Sorcerer
     EMBRACE_RESTORE: 1,
     RITUAL_SHADOW_ASH: 0.5,
     MAX_SHADOWS_PACT: 15,
-    PACT_DEF_GAIN: 2,
+    PACT_DEF_GAIN: 1,
     PACT_STR_GAIN: 1,
-    SHADOWS_EMBRACE_DR: 0.5,
-
-    TUTORIAL_DR_REDUCTION: 0.25,
+    SHADOWS_EMBRACE_DR: 0,
+    MAYHEM_CINDERS: 1,
 
     // Lunatic
     REFRACT_LUNACY_RATE: 1.25,
@@ -96,6 +96,9 @@ export const constants = Object.freeze({
 
     OVERHEAT_DEF_LOSS: 30,
     OVERHEAT_STR_LOSS: 5,
+    ENERGY_BARRIER_RATE: 5,
+
+    DYNAMO_GAIN_LASER: 10,
 
     // Bloodknight
     BS_DR: 1,
@@ -104,7 +107,7 @@ export const constants = Object.freeze({
 
     // Seraph
     RISE_DEF_RATE: 2,
-    TARNISH_DISGRACE: 0.5,
+    TARNISH_DISGRACE: 1,
     WISDOM_PROV: 5,
     WISDOM_STR_RATE: 2,
     TARNISH_SIN_CONVERSION: 0.5,
@@ -120,7 +123,7 @@ export const constants = Object.freeze({
     APOC_DISGRACE: 2.5,
     GENE_BENE: 2.5,
     SERAPHIM_MULT: 0.5,
-    ASCEND_SKIP_RATE: 20,
+    ASCEND_SKIP_RATE: 12.5,
     HALLOW_CONDEMN: -10,
     HALLOW_SUPPLICATE: 10,
     MIN_HALLOW: -50,
@@ -135,9 +138,9 @@ export const constants = Object.freeze({
     BLAS_TARNISH: 0.2,
     PROV_EXCESS_RATE: 0.5 / 2.5,
 
-    IRRAD_DMG_EXCESS: 5,
+    IRRAD_DMG_EXCESS: 10,
     MAX_IRRADIATION: 100,
-    IRRADIATION_GAIN_RATE: 5,
+    IRRADIATION_GAIN_RATE: 10,
     BASE_HEALTH: 20,
     BASE_MANA: 10,
 
@@ -195,7 +198,6 @@ export const constants = Object.freeze({
 });
 
 export const MITIGATION_RESOURCES = [
-    effectKeys.HARMONY,
     effectKeys.SANCTUARY,
     effectKeys.FAULTY_FIRMAMENT,
     effectKeys.FRACTURED_DOME,
@@ -203,8 +205,10 @@ export const MITIGATION_RESOURCES = [
     effectKeys.HALO,
     effectKeys.REFRACTED_DIVINITY,
     effectKeys.CONJECTURE,
+    effectKeys.ENERGY_BARRIER,
     effectKeys.FUNERARY_URN,
     effectKeys.LINGERING_EMBER,
+    effectKeys.HARMONY,
     effectKeys.MYCELIUM,
 ];
 
@@ -749,7 +753,7 @@ export const FIXED_RESOURCES = [
 ];
 
 export const RANKED_RESOURCES = [
-    effectKeys.STARBLIGHT,
+    effectKeys.STARGATE,
     effectKeys.CONSTELLATION,
     effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.AZURE_CONSTELLATION,

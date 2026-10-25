@@ -237,7 +237,7 @@ export function createBaseEntity() {
         [effectKeys.CONSTELLATION]: 0,
         [effectKeys.AZURE_CONSTELLATION]: 0,
         [effectKeys.CRIMSON_CONSTELLATION]: 0,
-        [effectKeys.STARBLIGHT]: 0,
+        [effectKeys.STARGATE]: 0,
         [effectKeys.BURDEN_OF_STIGMA]: 0,
 
         // special attributes
@@ -303,6 +303,7 @@ export function createBaseEntity() {
             [effectKeys.CONJECTURE]: 0,
             [effectKeys.SANCTUARY]: 0,
             [effectKeys.WISDOM]: 0,
+            [effectKeys.ENERGY_BARRIER]: 0,
         },
         states: {
             // standalones
@@ -419,6 +420,13 @@ export function getMissingShadows(entity) {
     return Math.max(
         entity[effectKeys.MAX_UNRELENTING_SHADOWS] -
             entity[effectKeys.UNRELENTING_SHADOWS],
+        0,
+    );
+}
+
+export function getMissingEnlit(entity) {
+    return Math.max(
+        entity[effectKeys.MAX_ENLIGHTENMENT] - entity[effectKeys.ENLIGHTENMENT],
         0,
     );
 }
@@ -545,7 +553,7 @@ export function gainMana(entity, amount) {
         amount = 0;
     }
 
-    const missingMana = getMaxMana(draftEntity) - draftEntity.currMana;
+    const missingMana = getMissingMana(draftEntity);
 
     const newMana = Math.min(
         getMaxMana(draftEntity),
@@ -618,7 +626,7 @@ export function processExitStargazer(prev, targetKey) {
                 [effectKeys.CONSTELLATION]: 0,
                 [effectKeys.AZURE_CONSTELLATION]: 0,
                 [effectKeys.CRIMSON_CONSTELLATION]: 0,
-                [effectKeys.STARBLIGHT]: 0,
+                [effectKeys.STARGATE]: 0,
                 states: {
                     ...currentEntity.states,
                     [effectKeys.STARGAZER]: false,
@@ -811,14 +819,13 @@ export function processActionTypeUsed(prev, agentKey, nonAgentKey, action) {
                 draftAgent[effectKeys.OVERHEAT],
             );
 
-            const newOverheat = draftAgent[effectKeys.OVERHEAT] - overheatLost;
-            const newDynamo = draftAgent[effectKeys.DYNAMO] + overheatLost;
-
             draftAgent = {
                 ...draftAgent,
-                [effectKeys.OVERHEAT]: newOverheat,
-                [effectKeys.DYNAMO]: newDynamo,
+                [effectKeys.OVERHEAT]:
+                    draftAgent[effectKeys.OVERHEAT] - overheatLost,
             };
+
+            draftAgent = raiseDynamo(draftAgent, overheatLost);
         }
 
         // Waning Moon
@@ -1051,10 +1058,7 @@ export function processEntityDeathStates(prev, entityKey) {
 
     // Precognition
     if (draftEntity.resources[effectKeys.PRECOGNITION] > 0) {
-        const missingMana = Math.max(
-            0,
-            getMaxMana(draftEntity) - getEntityTotalMana(draftEntity),
-        );
+        const missingMana = getMissingMana(draftEntity);
 
         if (missingMana > 0) {
             const precogConsumed = Math.min(
@@ -1246,6 +1250,10 @@ export function getEntityDef(entity) {
         return 0;
     }
 
+    if (draftEntity.states[effectKeys.UMBRAL_CORE]) {
+        return 0;
+    }
+
     // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
@@ -1299,6 +1307,10 @@ export function getEntityStr(entity) {
     let draftEntity = {
         ...entity,
     };
+
+    if (draftEntity.states[effectKeys.UMBRAL_CORE]) {
+        return 0;
+    }
 
     // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
@@ -1486,11 +1498,6 @@ export function consumeMitigationResources(entity, amount, cause = null) {
                         [effectKeys.MOONSHINE]: currentMoondust + consumption,
                     },
                 };
-            }
-
-            // Harmony
-            if (isCauseDamage && currResourceKey === effectKeys.HARMONY) {
-                draftEntity = restoreResources(draftEntity, consumption);
             }
         }
 
@@ -2558,6 +2565,15 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
                 },
             };
 
+            // // Gain Mana
+            // draftTarget = gainMana(
+            //     draftTarget,
+            //     Math.min(
+            //         getMissingMana(draftTarget),
+            //         getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
+            //     ),
+            // );
+
             break;
         }
 
@@ -2621,14 +2637,18 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
         ...prev.entities[nonTargetKey],
     };
 
-    const missingMana = Math.max(
-        0,
-        getMaxMana(draftTarget) - getEntityTotalMana(draftTarget),
-    );
-
     draftTarget = gainMana(
         draftTarget,
-        Math.floor(missingMana * constants.VERDANDI_MANA_RESTORE),
+        Math.floor(
+            getMissingMana(draftTarget) * constants.VERDANDI_MANA_RESTORE,
+        ),
+    );
+
+    draftTarget = gainHp(
+        draftTarget,
+        Math.floor(
+            getMissingHealth(draftTarget) * constants.VERDANDI_MANA_RESTORE,
+        ),
     );
 
     return {
@@ -2698,6 +2718,11 @@ export function newDealDmg(
     dealerKey = null,
     finalDmgBonus = 0,
 ) {
+    let post = {
+        ...prev,
+    };
+
+    // === Dmg Dealt ===
     let dmgDealt = baseDmg;
 
     // Calculates Final Damage Dealt
@@ -2722,7 +2747,7 @@ export function newDealDmg(
                 // Benediction
                 const beneMult = getBenediction(prev, dealerKey);
 
-                // Dmg Bonus
+                // Malediction
                 const maleMult = getMalediction(prev, dealerKey);
 
                 dmgDealt = Math.floor(dmgDealt * beneMult * maleMult);
@@ -2740,14 +2765,6 @@ export function newDealDmg(
     }
 
     dmgDealt += finalDmgBonus;
-
-    return newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach);
-}
-
-export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
-    let processedGame = {
-        ...prev,
-    };
 
     const keys = Array.isArray(takerKeys) ? takerKeys : [takerKeys];
 
@@ -2811,8 +2828,7 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
         // Fortitude
         const fort = Math.max(
             0,
-            getFortitude(processedGame, entityKey) -
-                getDefilement(processedGame),
+            getFortitude(post, entityKey) - getDefilement(post),
         );
 
         switch (dmgTypeTaken) {
@@ -2859,6 +2875,36 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
                 );
 
                 draftTaker = consumeResult.draftEntity;
+
+                // Harmony
+                if (
+                    (consumeResult?.mitigationResourcesConsumed?.[
+                        effectKeys.HARMONY
+                    ] ?? 0) > 0
+                ) {
+                    post = replaceEntity(post, draftTaker, entityKey);
+
+                    let p1 = extractEntity(post, entityKeys.PLAYER_ONE);
+                    p1 = restoreResources(
+                        p1,
+                        consumeResult?.mitigationResourcesConsumed?.[
+                            effectKeys.HARMONY
+                        ],
+                    );
+                    post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
+
+                    let p2 = extractEntity(post, entityKeys.PLAYER_TWO);
+                    p2 = restoreResources(
+                        p2,
+                        consumeResult?.mitigationResourcesConsumed?.[
+                            effectKeys.HARMONY
+                        ],
+                    );
+                    post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+
+                    draftTaker = extractEntity(post, entityKey);
+                }
+
                 let remainingDmg =
                     dmgTaken -
                     consumeResult.mitigationResourcesConsumed
@@ -2885,6 +2931,36 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
                 );
 
                 draftTaker = consumeResult.draftEntity;
+
+                // Harmony
+                if (
+                    (consumeResult?.mitigationResourcesConsumed?.[
+                        effectKeys.HARMONY
+                    ] ?? 0) > 0
+                ) {
+                    post = replaceEntity(post, draftTaker, entityKey);
+
+                    let p1 = extractEntity(post, entityKeys.PLAYER_ONE);
+                    p1 = restoreResources(
+                        p1,
+                        consumeResult?.mitigationResourcesConsumed?.[
+                            effectKeys.HARMONY
+                        ],
+                    );
+                    post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
+
+                    let p2 = extractEntity(post, entityKeys.PLAYER_TWO);
+                    p2 = restoreResources(
+                        p2,
+                        consumeResult?.mitigationResourcesConsumed?.[
+                            effectKeys.HARMONY
+                        ],
+                    );
+                    post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+
+                    draftTaker = extractEntity(post, entityKey);
+                }
+
                 let remainingDmg =
                     dmgTaken -
                     consumeResult.mitigationResourcesConsumed
@@ -2906,30 +2982,27 @@ export function newTakeDmg(prev, dmgDealt, takerKeys, dmgType, breach = 0) {
             }
         }
 
-        processedGame = buildHistory(
-            {
-                ...processedGame,
-                entities: {
-                    ...processedGame.entities,
-                    [entityKey]: draftTaker,
-                },
-            },
-            eventKeys.TOOK_DMG,
-            {
-                player: entityKey,
-                damage: dmgTaken,
-                dmgType: dmgTypeTaken,
-            },
-        );
+        post = replaceEntity(post, draftTaker, entityKey);
+
+        post = buildHistory(post, eventKeys.TOOK_DMG, {
+            player: entityKey,
+            damage: dmgTaken,
+            dmgType: dmgTypeTaken,
+        });
     }
 
-    return processedGame;
+    return post;
 }
 
 export function getEntityDR(prev, entityKey) {
     const entity = {
         ...prev.entities[entityKey],
     };
+
+    // Tutorial override
+    if (entity.states[effectKeys.TUTORIAL]) {
+        return 0;
+    }
 
     let drMult = 1.0;
     if (entity.states[effectKeys.GUARDING_STATE]) {
@@ -2956,13 +3029,23 @@ export function getEntityDR(prev, entityKey) {
                   )
                 : 1;
     }
-    if (entity.states[effectKeys.DARK_EMBRACE]) {
+    if (entity.states[effectKeys.UMBRAL_CORE]) {
+        const maxLimitedResources =
+            getMaxEnlit(entity) +
+            getMaxMana(entity) +
+            getMaxShadows(entity) +
+            getEntityMaxHealth(entity);
+        const missingLR =
+            getMissingHealth(entity) +
+            getMissingMana(entity) +
+            getMissingShadows(entity) +
+            getMissingEnlit(entity);
         drMult *=
-            getMaxShadows(entity) > 0
+            maxLimitedResources > 0
                 ? Math.max(
                       0,
                       1 -
-                          (getMissingShadows(entity) / getMaxShadows(entity)) *
+                          (missingLR / maxLimitedResources) *
                               constants.SHADOWS_EMBRACE_DR,
                   )
                 : 1;
@@ -2989,10 +3072,6 @@ export function getEntityDR(prev, entityKey) {
                 constants.SKULD_WEAK;
     }
 
-    if (entity.states[effectKeys.TUTORIAL]) {
-        drMult = Math.min(1, drMult + constants.TUTORIAL_DR_REDUCTION);
-    }
-
     return Math.min(1, Math.max(0, drMult));
 }
 
@@ -3002,8 +3081,8 @@ export function getEntityDefPen(prev, entityKey) {
     };
 
     let defPen = 0;
-    if (entity[effectKeys.STARBLIGHT] > 0) {
-        defPen += entity[effectKeys.STARBLIGHT];
+    if (entity[effectKeys.STARGATE] > 0) {
+        defPen += entity[effectKeys.STARGATE];
     }
 
     return Math.max(0, defPen);
@@ -3056,10 +3135,6 @@ export function getEntityFragility(prev, entityKey) {
 
     if (entity[effectKeys.IRRADIATION] > 0) {
         frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
-    }
-
-    if (entity[effectKeys.OVERHEAT] > 0) {
-        frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
     }
 
     return Math.max(0, frail);
@@ -4089,12 +4164,27 @@ export function processExitWeaponsDeployed(prev, targetKey) {
 }
 
 export function getSpAtkCost(entity) {
-    const totalMult =
-        constants.SP_ATTACK_COST +
-        countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
-            constants.URD_SP_ATK_EXTRA_COST;
+    const totalMult = constants.SP_ATTACK_COST;
 
     return (entity?.[effectKeys.MAX_MANA] ?? 0) > 0
         ? entity?.[effectKeys.MAX_MANA] * totalMult
         : Infinity;
+}
+
+export function raiseDynamo(entity, amount) {
+    const excessDynamo = Math.max(
+        0,
+        entity[effectKeys.DYNAMO] + amount - constants.MAX_DYNAMO,
+    );
+
+    return {
+        ...entity,
+        [effectKeys.DYNAMO]: entity[effectKeys.DYNAMO] + amount - excessDynamo,
+        resources: {
+            ...entity.resources,
+            [effectKeys.ENERGY_BARRIER]:
+                entity.resources[effectKeys.ENERGY_BARRIER] +
+                Math.floor(excessDynamo / constants.ENERGY_BARRIER_RATE),
+        },
+    };
 }

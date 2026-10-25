@@ -34,6 +34,7 @@ const EFFECT_COLORS = {
     CONSTELLATION: "#DAA520",
     DIVINE_SPARK: "#ffd93b",
     BLOOD_SACRIFICE: "#da291c",
+    UMBRAL_CORE: "#d500f9"
 };
 
 function getStatColors(attr, entity) {
@@ -46,6 +47,9 @@ function getStatColors(attr, entity) {
     if (attr === "str") {
         if (countRunes(entity[effectKeys.RUNIC_ARRAY], runeKeys.URD) > 0) {
             colors.push(EFFECT_COLORS.URD);
+        }
+        if (entity.states[effectKeys.UMBRAL_CORE]) {
+            colors.push(EFFECT_COLORS.UMBRAL_CORE);
         }
         if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
             colors.push(EFFECT_COLORS.BLOOD_SACRIFICE);
@@ -81,6 +85,9 @@ function getStatColors(attr, entity) {
     }
 
     if (attr === "def") {
+        if (entity.states[effectKeys.UMBRAL_CORE]) {
+            colors.push(EFFECT_COLORS.UMBRAL_CORE);
+        }
         if (entity[effectKeys.BLOOD_SACRIFICE] > 0) {
             colors.push(EFFECT_COLORS.BLOOD_SACRIFICE);
         }
