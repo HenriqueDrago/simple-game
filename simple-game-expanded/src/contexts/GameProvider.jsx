@@ -320,6 +320,12 @@ export default function GameProvider({ children }) {
                 controller: prev.progressMode ? aiKeys.WARLOCK : p2.controller,
             };
 
+            p2 = distributePoints(
+                p2,
+                prev.progressMode ? sdmKeys.BEST : p2.statDistributionMode,
+                presetAi[prev.progressMode ? aiKeys.WARLOCK : p2.controller].best,
+            );
+
             post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
 
             return post;
@@ -1128,28 +1134,50 @@ export default function GameProvider({ children }) {
 
                     if (currPlayerPhase === playerTurnPhases.COMMIT) {
                         const currEntity = game?.entities?.[targetKey];
-                        const willTriggerRevelevantTurnEndEffects =
-                            currEntity &&
-                            (currEntity.resources[effectKeys.RADIANCE] > 0 ||
-                                currEntity.resources[effectKeys.MOONSHINE] >
-                                    0 ||
-                                currEntity.resources[effectKeys.MANA_OVERFLOW] >
-                                    0 ||
-                                currEntity.resources[effectKeys.SACRED_FLAMES] >
-                                    0 ||
-                                currEntity.resources[effectKeys.SACRILEGE] >
-                                    0 ||
-                                currEntity.resources[effectKeys.MARTYR] > 0 ||
-                                currEntity[effectKeys.BAD_OMEN] > 0 ||
-                                currEntity.resources[effectKeys.INSPIRATION] >
-                                    0);
+                        let delayCommit = false;
+
+                        if (currEntity) {
+                            const RELEVANT_COMMIT_RESOURCES = [
+                                effectKeys.SACRED_FLAMES,
+                                effectKeys.INSPIRATION,
+                                effectKeys.MARTYR,
+                                effectKeys.SACRILEGE,
+                                effectKeys.PENITENCE,
+                                effectKeys.MOTES_OF_RUIN,
+                                effectKeys.MANA_OVERFLOW,
+                                effectKeys.DISSONANCE,
+                                effectKeys.RADIANCE,
+                                effectKeys.MOONSHINE,
+                            ];
+
+                            for (let entry of RELEVANT_COMMIT_RESOURCES) {
+                                if (currEntity.resources[entry] > 0) {
+                                    delayCommit = true;
+                                }
+                            }
+
+                            // other (Bad Omen, Shattered)
+                            if (currEntity[effectKeys.BAD_OMEN] > 0) {
+                                delayCommit = true;
+                            }
+
+                            if (
+                                isElementActive(
+                                    currEntity,
+                                    elementalKeys.SHATTERED,
+                                )
+                            ) {
+                                delayCommit = true;
+                            }
+                        }
 
                         nextState = commitTurn(
                             gameState,
                             targetKey,
                             nonTargetKey,
                         );
-                        delayAmount = willTriggerRevelevantTurnEndEffects
+
+                        delayAmount = delayCommit
                             ? 800 * gameSpeeds[game.speed].mod
                             : 0;
                     }

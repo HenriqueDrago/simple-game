@@ -944,8 +944,11 @@ export function shadowSorcererAI(context) {
             actionKeys.ASCEND,
         ]; // actions that consume mana
 
-        // Ignore Selenians, they have an easy way out
-        if (!nonAgent.states[effectKeys.SELENIAN]) {
+        // Ignore Selenians and Ascended, they have an easy way out
+        if (
+            !nonAgent.states[effectKeys.SELENIAN] &&
+            !nonAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]
+        ) {
             // baseline simulations
             const simPostCommitPromise = commitTurn(
                 simPromise,
@@ -1438,7 +1441,7 @@ export function augurAI(context) {
                 continue;
             }
 
-            const simAction = simulate(relAct);
+            const simAction = simulate(relAct, { prev: sim });
 
             if (
                 !willEntityDieImmediately(extractEntity(simAction, agentKey)) &&
@@ -1544,7 +1547,7 @@ export function augurAI(context) {
                     continue;
                 }
 
-                const simAction = simulate(relAct);
+                const simAction = simulate(relAct, { prev: sim });
                 const realMana = getAugurMana(
                     extractEntity(simAction, agentKey),
                 );
@@ -1653,7 +1656,7 @@ export function augurAI(context) {
                     continue;
                 }
 
-                const simAction = simulate(relAct);
+                const simAction = simulate(relAct, { prev: sim });
                 const simCommit = commitTurn(simAction, agentKey, nonAgentKey);
                 const simUpkeep = processUpkeep(
                     simCommit,
@@ -2572,7 +2575,7 @@ export async function voyagerAI(context) {
 }
 
 export function lunaticAI(context) {
-    const { prev, agent, agentKey, nonAgentKey, nonAgent } = context;
+    const { prev, agent, agentKey, nonAgentKey } = context;
 
     // Helper for building action
     const buildAction = (action, command = commandKeys.USE_ACTION) => {
@@ -2681,7 +2684,9 @@ export function lunaticAI(context) {
                     continue;
                 }
 
-                const simAction = simWithElement(element, relAct);
+                const simAction = simWithElement(element, relAct, {
+                    prev: sim,
+                });
 
                 if (
                     !willEntityDieImmediately(
@@ -2710,7 +2715,7 @@ export function lunaticAI(context) {
             }
         }
 
-        return [];
+        return null;
     };
 
     const foundDeath = evalKill(prev, [], 0);
@@ -2741,7 +2746,9 @@ export function lunaticAI(context) {
                     continue;
                 }
 
-                const simAction = simWithElement(element, action);
+                const simAction = simWithElement(element, action, {
+                    prev: sim,
+                });
                 const simCommit = commitTurn(simAction, agentKey, nonAgentKey);
 
                 if (
@@ -2753,7 +2760,7 @@ export function lunaticAI(context) {
                 }
 
                 if (FREE_ACTIONS.includes(action)) {
-                    const freeResult = evalKill(
+                    const freeResult = evalSurvival(
                         simAction,
                         [...history, ...buildElementAction(element, action)],
                         actionList,
@@ -2767,7 +2774,7 @@ export function lunaticAI(context) {
             }
         }
 
-        return [];
+        return null;
     };
 
     // If we'll die, check survival, pick first
@@ -2834,7 +2841,9 @@ export function lunaticAI(context) {
                     continue;
                 }
 
-                const simAction = simWithElement(element, action);
+                const simAction = simWithElement(element, action, {
+                    prev: sim,
+                });
                 const simCommit = commitTurn(simAction, agentKey, nonAgentKey);
 
                 if (getTrueEffectiveHealth(simCommit, agentKey) >= limiar) {
@@ -2843,7 +2852,7 @@ export function lunaticAI(context) {
             }
         }
 
-        return [];
+        return null;
     };
 
     // Waxing
@@ -2869,30 +2878,6 @@ export function lunaticAI(context) {
             return buildElementAction(
                 elementalKeys.ALBEDO,
                 actionKeys.SACRIFICE,
-            );
-        }
-
-        // Lunar Strike
-        const simStrike = simWithElement(
-            elementalKeys.SCORCH,
-            actionKeys.LUNAR_STRIKE,
-        );
-        if (
-            getTrueEffectiveHealth(
-                commitTurn(simStrike, agentKey, nonAgentKey),
-                agentKey,
-            ) >= 15 &&
-            isActionElementAvailable(
-                prev,
-                actionKeys.SCORCH,
-                elementalKeys.LUNAR_STRIKE,
-            ) &&
-            getEffectiveHealth(extractEntity(simStrike, nonAgentKey)) <=
-                getEffectiveHealth(nonAgent) * 0.5
-        ) {
-            return buildElementAction(
-                elementalKeys.SCORCH,
-                actionKeys.LUNAR_STRIKE,
             );
         }
 
@@ -2926,9 +2911,9 @@ export function lunaticAI(context) {
     if (agent[effectKeys.MIRRORED_MOON] === moonKeys.WANING) {
         const WANING_LIST = [
             actionKeys.LUNAR_SHROUD,
-            actionKeys.AEGIS,
             actionKeys.LUNAR_GROWTH,
             actionKeys.LUNAR_TIDE,
+            actionKeys.AEGIS,
             actionKeys.GUARD,
 
             actionKeys.LUNAR_SHED,
@@ -3065,7 +3050,19 @@ export async function seraphAI(context) {
         }
 
         // default: Aegis
-        return buildAction(actionKeys.AEGIS);
+        if (actionAvailable(actionKeys.AEGIS)) {
+            return buildAction(actionKeys.AEGIS);
+        }
+
+        // else: Ascend
+        if (actionAvailable(actionKeys.ASCEND)) {
+            return buildAction(actionKeys.ASCEND);
+        }
+
+        // else: Sacrifice
+        if (actionAvailable(actionKeys.SACRIFICE)) {
+            return buildAction(actionKeys.SACRIFICE);
+        }
     }
 
     // === Ascendence ===

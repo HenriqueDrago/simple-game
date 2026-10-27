@@ -437,7 +437,7 @@ export function gainHp(entity, amount) {
     };
 
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftEntity = gainSin(draftEntity, amount * constants.HIGH_SIN_GAIN);
+        draftEntity = gainSin(draftEntity, amount * constants.MEDIUM_SIN_GAIN);
         amount = 0;
     }
 
@@ -549,7 +549,7 @@ export function gainMana(entity, amount) {
     };
 
     if (draftEntity.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
-        draftEntity = gainSin(draftEntity, amount * constants.HIGH_SIN_GAIN);
+        draftEntity = gainSin(draftEntity, amount * constants.MEDIUM_SIN_GAIN);
         amount = 0;
     }
 
@@ -1250,10 +1250,6 @@ export function getEntityDef(entity) {
         return 0;
     }
 
-    if (draftEntity.states[effectKeys.UMBRAL_CORE]) {
-        return 0;
-    }
-
     // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
         draftEntity = raiseStats(entity, entity[effectKeys.CONSTELLATION]);
@@ -1281,10 +1277,6 @@ export function getEntityDef(entity) {
     }
 
     // === Percent Decreases ===
-    if (draftEntity[effectKeys.OVERHEAT] > 0) {
-        totalDef *= Math.max(0, 1 - draftEntity[effectKeys.OVERHEAT] / 100);
-    }
-
     if (
         draftEntity.states[effectKeys.VISIONARY] &&
         countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) > 0
@@ -1307,10 +1299,6 @@ export function getEntityStr(entity) {
     let draftEntity = {
         ...entity,
     };
-
-    if (draftEntity.states[effectKeys.UMBRAL_CORE]) {
-        return 0;
-    }
 
     // === Attr Raise ===
     if (entity[effectKeys.CONSTELLATION] > 0) {
@@ -1356,6 +1344,10 @@ export function getEntityStr(entity) {
                 countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.URD) *
                     constants.URD_STR_LOSS,
         );
+    }
+
+    if (draftEntity[effectKeys.OVERHEAT] > 0) {
+        totalStr *= Math.max(0, 1 - draftEntity[effectKeys.OVERHEAT] / 100);
     }
 
     return Math.max(0, Math.floor(totalStr));
@@ -3001,7 +2993,7 @@ export function getEntityDR(prev, entityKey) {
 
     // Tutorial override
     if (entity.states[effectKeys.TUTORIAL]) {
-        return 0;
+        return 1;
     }
 
     let drMult = 1.0;
@@ -3029,27 +3021,7 @@ export function getEntityDR(prev, entityKey) {
                   )
                 : 1;
     }
-    if (entity.states[effectKeys.UMBRAL_CORE]) {
-        const maxLimitedResources =
-            getMaxEnlit(entity) +
-            getMaxMana(entity) +
-            getMaxShadows(entity) +
-            getEntityMaxHealth(entity);
-        const missingLR =
-            getMissingHealth(entity) +
-            getMissingMana(entity) +
-            getMissingShadows(entity) +
-            getMissingEnlit(entity);
-        drMult *=
-            maxLimitedResources > 0
-                ? Math.max(
-                      0,
-                      1 -
-                          (missingLR / maxLimitedResources) *
-                              constants.SHADOWS_EMBRACE_DR,
-                  )
-                : 1;
-    }
+
     if (entity.states[effectKeys.ARMORED_DEPLOYMENT]) {
         drMult *= Math.max(0, 1 - constants.STANDARD_DR_INCREASE);
     }
@@ -3136,6 +3108,11 @@ export function getEntityFragility(prev, entityKey) {
     if (entity[effectKeys.IRRADIATION] > 0) {
         frail *= 1 + entity[effectKeys.IRRADIATION] / 100;
     }
+
+    if (entity[effectKeys.OVERHEAT] > 0) {
+        frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
+    }
+
 
     return Math.max(0, frail);
 }

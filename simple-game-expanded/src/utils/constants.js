@@ -55,7 +55,6 @@ export const constants = Object.freeze({
     MAX_SHADOWS_PACT: 15,
     PACT_DEF_GAIN: 1,
     PACT_STR_GAIN: 1,
-    SHADOWS_EMBRACE_DR: 0,
     MAYHEM_CINDERS: 1,
 
     // Lunatic
@@ -66,7 +65,7 @@ export const constants = Object.freeze({
     MIRROR_ML_GAIN: 3,
     BLOOD_CORONA_ML_GAIN: 1,
     LUNAR_GROWTH_MULT: 1,
-    HIDDEN_MOON_ML_GAIN: 3,
+    HIDDEN_MOON_ML_GAIN: 4,
     SMITE_MULT: 5,
     WITHER_LUNACY_MULT: 2.5,
     LUNAR_TIDE_MULT: 2,
@@ -106,7 +105,8 @@ export const constants = Object.freeze({
     SAC_HP_CONSUMPTION: 0.5,
 
     // Seraph
-    RISE_DEF_RATE: 2,
+    MEDIUM_SIN_GAIN: 1.25,
+    RISE_DEF_RATE: 1,
     TARNISH_DISGRACE: 1,
     WISDOM_PROV: 5,
     WISDOM_STR_RATE: 2,
@@ -128,7 +128,7 @@ export const constants = Object.freeze({
     HALLOW_SUPPLICATE: 10,
     MIN_HALLOW: -50,
     MAX_HALLOW: 50,
-    HIGH_SIN_GAIN: 1.25,
+    HIGH_SIN_GAIN: 2.5,
     YEST_SIN_RATE: 1 / 10,
     TOMOR_RATE: 1 / 10,
     ANGEL_LOSE: 0.5,
@@ -270,8 +270,8 @@ export const presetAi = {
     [aiKeys.SHADOW_SORCERER]: {
         name: "Shadow Sorcerer",
         best: {
-            str: 4,
-            def: 6,
+            str: 0,
+            def: 10,
         },
         caller: shadowSorcererAI,
         desc: [...Object.keys(SHADOW_SORCERER_DESCRIPTIONS)],
@@ -279,8 +279,8 @@ export const presetAi = {
     [aiKeys.CYBORG]: {
         name: "Cyborg",
         best: {
-            str: 0,
-            def: 10,
+            str: 10,
+            def: 0,
         },
         caller: cyborgAI,
         desc: [...Object.keys(CYBORG_DESCRIPTIONS)],
@@ -288,8 +288,8 @@ export const presetAi = {
     [aiKeys.MAESTRO]: {
         name: "Maestro",
         best: {
-            str: 10,
-            def: 0,
+            str: 5,
+            def: 5,
         },
         caller: maestroAI,
         desc: [...Object.keys(MAESTRO_DESCRIPTIONS)],
@@ -351,16 +351,16 @@ const offensiveActions = [
 ];
 
 const defensiveActions = [
-    actionKeys.HEAL,
     actionKeys.GUARD,
+    actionKeys.HEAL,
     actionKeys.AEGIS,
 
     actionKeys.SHADOW_MANTLE,
     actionKeys.RITUAL_OF_ASH,
 
     actionKeys.LUNAR_GROWTH,
-    actionKeys.LUNAR_SHROUD,
     actionKeys.LUNAR_TIDE,
+    actionKeys.LUNAR_SHROUD,
 
     actionKeys.SUPPLICATE,
 ];
@@ -745,18 +745,19 @@ export const FIXED_RESOURCES = [
     effectKeys.SONORITY,
     effectKeys.BAD_OMEN,
     effectKeys.RECOLLECTION,
-    effectKeys.IRRADIATION,
     effectKeys.GRAVITATION,
     effectKeys.ACCRETION,
+    effectKeys.IRRADIATION,
     effectKeys.LUNACY,
+    effectKeys.HALLOWED_ECHOES,
     effectKeys.TARNISHED_SIN,
 ];
 
 export const RANKED_RESOURCES = [
     effectKeys.STARGATE,
     effectKeys.CONSTELLATION,
-    effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.AZURE_CONSTELLATION,
+    effectKeys.CRIMSON_CONSTELLATION,
     effectKeys.BURDEN_OF_STIGMA,
 ];
 

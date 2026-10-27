@@ -33,6 +33,11 @@
     color: #ffff00;
 }
 
+.energy-line-value.is-simulating-energy {
+    opacity: 0.75;
+}
+
+
 /* Side-by-Side Dual Gauges Grid */
 .cyborg-gauges-grid {
     display: grid;

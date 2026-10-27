@@ -35,7 +35,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SHORTCUTS",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTION simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings, increasing the speed of animations and transitions. Pressing 1/2/3 directly sets speed settings to 1x/2x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn; with a max of 30 undoable actions or combat interactions. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
+            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTIONS simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings, increasing the speed of animations and transitions. Pressing 1/2/3 directly sets speed settings to 1x/2x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn; with a max of 30 undoable actions or combat interactions. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
     },
 
     [turnStatus.SETUP]: {
@@ -49,7 +49,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "CONTROLLER",
         type: entryTypes.MECHANIC,
         description:
-            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, WARLOCK, BLOODKNIGHT, PALADIN, CYBORG, MAESTRO, AUGUR, SHADOW SORCERER, VOYAGER, LUNATIC, and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves control in the hands of an AI.",
+            "Determines how each player's ACTIONS and other combat interactions are decided. Includes HUMAN, WARLOCK, BLOODKNIGHT, PALADIN, SHADOW SORCERER, CYBORG, MAESTRO, AUGUR, VOYAGER, LUNATIC, and SERAPH. Selecting HUMAN allows a player to be manually controlled. Selecting any other option leaves control in the hands of an AI.",
     },
 
     [aiKeys.HUMAN]: {
@@ -89,18 +89,18 @@ export const GENERAL_DESCRIPTIONS = {
         name: "TURN",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A player's active cycle. It can be subdivided into three phases: TURN START, ACTIVE PHASE, and TURN END. Every player has a single TURN per ROUND.",
+            "A player's active cycle. It can be subdivided into three phases: TURN START, ACTION PHASE, and TURN END. Every player has a single TURN per ROUND.",
     },
 
     [effectKeys.TURN_START]: {
         name: "TURN START",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, STARDUST, MOON DEW, HARMONY, CONJECTURE, SHADOWFLAME, LINGERING EMBER, UMBRAL CORE, SHATTERED, ARMORED DEPLOYMENT, DYNAMO, REFRACTED DIVINITY, RADIANT, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE, and CEREMONIAL clearance.",
+            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: HALLOWED ECHOES, IRRADIATION, FAULTY FIRMAMENT, FRACTURED DOME, HARMONY, ENERGY BARRIER, STARDUST, MYCELIUM, CONJECTURE, SHADOWFLAME, LINGERING EMBER, ARMORED DEPLOYMENT, REFRACTED DIVINITY, HALO, INSIGHT, SANCTUARY, MOTES OF CREATION, HEAVENLY CHOIRS, STIGMATA, and finally, GUARDING, RADIANT, DARK EMBRACE, DIMMING DARKNESS, PRISMATIC, EVENT HORIZON, IMMACULATE, CEREMONIAL, MOON DEW and GIBBOUS clearance.",
     },
 
     [effectKeys.ACTIVE_PHASE]: {
-        name: "ACTIVE PHASE",
+        name: "ACTION PHASE",
         type: entryTypes.BATTLE_PHASE,
         description:
             "A TURN subphase where a player may use combat interactions. This subphase ends upon utilizing any of the available ACTIONS, unless it is a FREE ACTION.",
@@ -110,14 +110,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "TURN END",
         type: entryTypes.BATTLE_PHASE,
         description:
-            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: SACRED FLAMES, INSPIRATION, MARTYR, SACRILEGE, PENITENCE, MOTES OF RUIN, BAD OMEN, MANA OVERFLOW, DISSONANCE, RADIANCE, MOONSHINE, GRAVITATION, ACCRETION, STARGATE, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION.",
+            "A TURN subphase where certain effects are applied. In this subphase, combat effects are applied in the following order: SACRED FLAMES, INSPIRATION, MARTYR, SACRILEGE, PENITENCE, MOTES OF RUIN, BAD OMEN, SHATTERED, MANA OVERFLOW, DISSONANCE, RADIANCE, MOONSHINE, GRAVITATION, ACCRETION, STARGATE, CONSTELLATION, AZURE CONSTELLATION, and CRIMSON CONSTELLATION.",
     },
 
     [entryTypes.ACTION]: {
         name: "ACTIONS",
         type: entryTypes.CATEGORY,
         description:
-            "Abilities a player may choose to use during the ACTIVE PHASE of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, and TRANSFORMATIVE ACTIONS. Most ACTIONS automatically advance the TURN phase to TURN END, unless it is a FREE ACTION. A player's base ACTIONS include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, AEGIS, SHADOW PACT, DEPLOY, ATTUNE, CARVE, CHART, and REFRACT.",
+            "Abilities a player may choose to use during the ACTION PHASE of their TURN. Can be subdivided into OFFENSIVE ACTIONS, DEFENSIVE ACTIONS, and TRANSFORMATIVE ACTIONS. Most ACTIONS automatically advance the TURN phase to TURN END, unless it is a FREE ACTION. A player's base ACTIONS include: ATTACK, GUARD, HEAL, SPECIAL ATTACK, SACRIFICE, AEGIS, SHADOW PACT, DEPLOY, ATTUNE, CARVE, CHART, and REFRACT.",
     },
 
     [entryTypes.OFFENSIVE_ACTION]: {
@@ -211,10 +211,10 @@ export const GENERAL_DESCRIPTIONS = {
     },
 
     [entryTypes.DAMAGE_TYPE]: {
-        name: "DAMAGE TYPE",
+        name: "DAMAGE TYPES",
         type: entryTypes.CATEGORY,
         description:
-            "A property that defines how the resulting damage will be calculated. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE, and LUNIC DAMAGE. All damage taken has a minimum of 1, regardless of DAMAGE TYPE, DEFENSE, or DAMAGE MODIFIERS.",
+            "A property that defines how the resulting damage will be calculated. Includes PHYSICAL DAMAGE, PIERCING DAMAGE, TRUE DAMAGE, and LUNIC DAMAGE. All damage taken has a minimum of 1, regardless of DAMAGE TYPES, DEFENSE, or DAMAGE MODIFIERS.",
     },
 
     [dmgTypes.PHYSICAL]: {
@@ -325,14 +325,14 @@ export const GENERAL_DESCRIPTIONS = {
         name: "FIXED RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that vary within a fixed range and are displayed as percentages. Includes OVERHEAT, DYNAMO, DIVINE SPARK, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, ACCRETION, LUNACY, HALLOWED ECHOES, and TARNISHED SIN.",
+            "A subset of RESOURCES that vary within a fixed range and are displayed as percentages. Includes DIVINE SPARK, OVERHEAT, DYNAMO, SONORITY, BAD OMEN, RECOLLECTION, GRAVITATION, ACCRETION, IRRADIATION, LUNACY, HALLOWED ECHOES, and TARNISHED SIN.",
     },
 
     [entryTypes.MITIGATION_RESOURCE]: {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes HARMONY, SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, FUNERARY URN, LINGERING EMBER, and MYCELIUM. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, ENERGY BARRIER, FUNERARY URN, LINGERING EMBER, HARMONY and MYCELIUM. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
@@ -372,7 +372,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "FREE ACTION",
         type: entryTypes.MECHANIC,
         description:
-            "A special category of ACTIONS that does not end a player's ACTION PHASE.",
+            "A special category of ACTIONS that don't end a player's ACTION PHASE.",
     },
 };
 
@@ -515,7 +515,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "UMBRAL CORE",
         type: entryTypes.STATE,
         description:
-            "Nullifies all STRENGTH and DEFENSE on self. Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS and CINDERS on self and sets MAX UNRELENTING SHADOWS to 0. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
+            "Replaces all actions with BLACK MAYHEM, SHADOW MANTLE, RITUAL OF ASH, and DARK PROMISE. Upon exiting this state, extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS and CINDERS on self and sets MAX UNRELENTING SHADOWS to 0. When losing all SHADOWFLAME and LINGERING EMBER on self, exits UMBRAL CORE and enters BLEAK DECEPTION.",
     },
 
     [effectKeys.BLEAK_DECEPTION]: {
@@ -605,7 +605,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "CYBORG",
         type: entryTypes.CONTROLLER,
         description:
-            "The fifth challenge. Focuses on the use of LASER, ending turns with a DEFENSIVE ACTION for maximizing DYNAMO generation; avoids THERMAL OVERLOAD unless its enemy can be killed via MELTDOWN. In PROGRESSION MODE, defeat this enemy to unlock the DEPLOY action and the MAESTRO enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
+            "The fifth challenge. Focuses on the use of LASER, ending turns with DEFENSIVE ACTIONS for maximizing DYNAMO generation; avoids THERMAL OVERLOAD unless its enemy can be killed via MELTDOWN. In PROGRESSION MODE, defeat this enemy to unlock the DEPLOY action and the MAESTRO enemy, alongside the corresponding GLOSSARY entries and TOOLTIPS.",
     },
 
     [actionKeys.DEPLOY]: {
@@ -659,7 +659,7 @@ export const CYBORG_DESCRIPTIONS = {
         name: "OVERHEAT",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Can be raised above the cap. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30%. Lowers OVERHEAT by an additional 5% per point of the user's STRENGTH. Then, raises DYNAMO by the total amount lowered. Lowers DEFENSE by a percentage of itself equivalent to OVERHEAT on self. At 100% or more OVERHEAT, enters THERMAL OVERLOAD.",
+            "Capped at 100%. Can be raised above the cap. Lowers STRENGTH by a percentage of itself equivalent to OVERHEAT on self. Raises FRAGILITY by OVERHEAT on self. When using DEFENSIVE ACTIONS, lowers OVERHEAT by 30%. Lowers OVERHEAT by an additional 5% per point of the user's STRENGTH. Then, raises DYNAMO by the total amount lowered. At 100% or more OVERHEAT, enters THERMAL OVERLOAD.",
     },
 
     [effectKeys.THERMAL_OVERLOAD]: {
@@ -701,7 +701,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "SONORITY",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Ranges from -60% to +60%. When using a DEFENSIVE ACTION, raises SONORITY by 12%. When using an OFFENSIVE ACTION, lowers SONORITY by 12%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
+            "Ranges from -75% to +75%. When using DEFENSIVE ACTIONS, raises SONORITY by 15%. When using OFFENSIVE ACTIONS, lowers SONORITY by 15%. Raises WEAKNESS and DAMAGE REDUCTION equal to SONORITY below 0. Raises DAMAGE BONUS and FRAGILITY equal to SONORITY above 0.",
     },
 
     [actionKeys.DA_CAPO]: {
@@ -715,7 +715,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "THE SOUND OF SILENCE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Gains HARMONY for every 8% shift on SONORITY.",
+            "Inverts current SONORITY. Gains HARMONY for every 10% shift on SONORITY.",
     },
 
     [effectKeys.HARMONY]: {
@@ -729,7 +729,7 @@ export const MAESTRO_DESCRIPTIONS = {
         name: "BABEL",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Inverts current SONORITY. Consumes RESOURCES on self for every 8% shift on SONORITY. Then, inflicts DISSONANCE on the opponent equal to the amount consumed.",
+            "Inverts current SONORITY. Consumes RESOURCES on self for every 10% shift on SONORITY. Then, inflicts DISSONANCE on the opponent equal to the amount consumed.",
     },
 
     [effectKeys.DISSONANCE]: {
@@ -758,7 +758,7 @@ export const AUGUR_DESCRIPTIONS = {
         name: "VISIONARY",
         type: entryTypes.STATE,
         description:
-            "Enables RUNIC ARRAY. When using GUARD, HEAL, or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI, or RUNE OF SKULD to the RUNIC ARRAY, respectively. When using SPECIAL ATTACK or HEAL, consume PRECOGNITION first before MANA. When using GUARD, gain PRECOGNITION instead of replenishing missing MANA. Upon exiting this state, detonates all RUNES, starting from the oldest.",
+            "Enables RUNIC ARRAY. When using GUARD, HEAL, or SPECIAL ATTACK, adds RUNE OF URD, RUNE OF VERDANDI, or RUNE OF SKULD to the RUNIC ARRAY, respectively. Upon exiting this state, detonates all RUNES, starting from the oldest.",
     },
 
     [effectKeys.RUNIC_ARRAY]: {
@@ -786,14 +786,14 @@ export const AUGUR_DESCRIPTIONS = {
         name: "RECOLLECTION",
         type: entryTypes.FIXED_RESOURCE,
         description:
-            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. Raises STRENGTH by a percentage of DEFENSE equivalent to RECOLLECTION on self. When raising RECOLLECTION above 100%, gains PRECOGNITION for every 10% excess. When using an OFFENSIVE ACTION, loses all RECOLLECTION.",
+            "Capped at 100%. Raises DAMAGE BONUS equal to RECOLLECTION on self. Raises STRENGTH by a percentage of DEFENSE equivalent to RECOLLECTION on self. When raising RECOLLECTION above 100%, gains PRECOGNITION for every 10% excess. When using OFFENSIVE ACTIONS, loses all RECOLLECTION.",
     },
 
     [effectKeys.PRECOGNITION]: {
         name: "PRECOGNITION",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish missing MANA.",
+            "When MANA falls below MAX MANA, consumes PRECOGNITION to replenish missing MANA. When using SPECIAL ATTACK or HEAL, consumes PRECOGNITION first before MANA.",
     },
 
     [runeKeys.VERDANDI]: {
@@ -1108,19 +1108,19 @@ export const LUNATIC_DESCRIPTIONS = {
     [moonKeys.HIDDEN]: {
         name: "HIDDEN",
         type: entryTypes.MECHANIC,
-        description: "At MOON PHASE, gains 3 MOONLIGHT.",
+        description: "At MOON PHASE, gains 4 MOONLIGHT.",
     },
 
     [moonKeys.WAXING]: {
         name: "WAXING",
         type: entryTypes.MECHANIC,
-        description: "When using an OFFENSIVE ACTION, becomes BLOODSTAINED.",
+        description: "When using OFFENSIVE ACTIONS, becomes BLOODSTAINED.",
     },
 
     [moonKeys.WANING]: {
         name: "WANING",
         type: entryTypes.MECHANIC,
-        description: "When using a DEFENSIVE ACTION, becomes CORONAL.",
+        description: "When using DEFENSIVE ACTIONS, becomes CORONAL.",
     },
 
     [moonKeys.BLOODSTAINED]: {
@@ -1172,7 +1172,7 @@ export const LUNATIC_DESCRIPTIONS = {
     [effectKeys.PRISMATIC]: {
         name: "PRISMATIC",
         type: entryTypes.STATE,
-        description: "Converts all PHYSICAL DAMAGE taken into PIERCING DAMAGE.",
+        description: "Converts all PHYSICAL DAMAGE taken into PIERCING DAMAGE. At TURN START, exits this state.",
     },
 
     [effectKeys.REFRACTED_DIVINITY]: {
@@ -1234,7 +1234,7 @@ export const LUNATIC_DESCRIPTIONS = {
     [actionKeys.LUNAR_STRIKE]: {
         name: "LUNAR STRIKE",
         type: entryTypes.OFFENSIVE_ACTION,
-        description: "Deals TRUE DAMAGE equal to half the user's STRENGTH.",
+        description: "Deals PIERCING DAMAGE equal to half the user's STRENGTH.",
     },
 
     [elementalKeys.OCEAN]: {
@@ -1348,7 +1348,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "RISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Then, gains WISDOM and raises DEFENSE by twice the user's STRENGTH. Enters ZENITH OF MORTALITY.",
+            "Exits all states. Raises DEFENSE by the user's STRENGTH. Gains WISDOM equal to twice the user's STRENGTH. Enters ZENITH OF MORTALITY.",
     },
 
     [effectKeys.WISDOM]: {
@@ -1368,13 +1368,19 @@ export const SERAPH_DESCRIPTIONS = {
         name: "ASCEND",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 0.25% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 12.5% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the DIVINE SPARK consumed. This is a FREE ACTION.",
+            "Exits all states. Consumes all RESOURCES on self. Sets MAX ENLIGHTENMENT to the sum of MAX MANA and MAX HEALTH. Then, sets MAX MANA and MAX HEALTH to 0. Replenishes ENLIGHTENMENT equal to the LIMITED RESOURCES consumed. Raises the battlefield's PROVIDENCE by 5% per WISDOM or RADIANCE consumed. Raises TARNISHED SIN by 2.5% for every other RESOURCES consumed. Raises REVELATION by the user's STRENGTH. Raises FORTITUDE by the user's DEFENSE. Then, sets all BASE ATTRIBUTES to 0. Consumes all DIVINE SPARK on self. Enters ASCENDENCE OF SPIRIT and initiates the HEAVENLY CHOIRS. Advances the HEAVENLY CHOIRS for every 12.5% DIVINE SPARK consumed. Raises the battlefield's PROVIDENCE by the DIVINE SPARK consumed. This is a FREE ACTION.",
     },
 
     [effectKeys.REVELATION]: {
         name: "REVELATION",
         type: entryTypes.SPECIAL_ATTRIBUTES,
         description: "Scales certain actions and effects.",
+    },
+
+    [effectKeys.FORTITUDE]: {
+        name: "FORTITUDE",
+        type: entryTypes.SPECIAL_ATTRIBUTES,
+        description: "Reduces PHYSICAL TARNISHMENT received.",
     },
 
     [effectKeys.PROVIDENCE]: {
@@ -1463,7 +1469,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "TARNISHMENT TYPES",
         type: entryTypes.CATEGORY,
         description:
-            "Includes PHYSICAL TARNISHMENT, PIERCING TARNISHMENT, TRUE TARNISHMENT, and LUNIC TARNISHMENT. All TARNISHMENT received has a minimum of 1. When reducing a target's ENLIGHTENMENT or MAX ENLIGHTENMENT below 0, raises their TARNISHED SIN by 0.5% per point of tarnishment received instead.",
+            "Includes PHYSICAL TARNISHMENT, PIERCING TARNISHMENT, TRUE TARNISHMENT, and LUNIC TARNISHMENT. All tarnishment received has a minimum of 1. When reducing a target's ENLIGHTENMENT or MAX ENLIGHTENMENT below 0, raises their TARNISHED SIN by 0.5% per point of tarnishment received instead.",
     },
 
     [tarnishTypes.PHYSICAL]: {
@@ -1492,12 +1498,6 @@ export const SERAPH_DESCRIPTIONS = {
         type: entryTypes.TARNISHMENT_TYPE,
         description:
             "Reduces the target's MAX ENLIGHTENMENT. Cannot be blocked by FORTITUDE, affected by SPIRITUAL ORDINANCES, or mitigated by SANCTUARY.",
-    },
-
-    [effectKeys.FORTITUDE]: {
-        name: "FORTITUDE",
-        type: entryTypes.MECHANIC,
-        description: "Reduces PHYSICAL TARNISHMENT received.",
     },
 
     [effectKeys.DEFILEMENT]: {
@@ -1671,7 +1671,7 @@ export const SERAPH_DESCRIPTIONS = {
         name: "SACRILEGE",
         type: entryTypes.FREE_RESOURCE,
         description:
-            "When using CONDEMN, consumes all SACRILEGE on self, then increases the base tarnishment inflicted by the amount lost. At TURN END, loses all SACRILEGE and raises TARNISHED SIN on self by 1.25% for every SACRILEGE lost.",
+            "When using CONDEMN, consumes all SACRILEGE on self, then increases the base tarnishment inflicted by the amount lost. At TURN END, loses all SACRILEGE and raises TARNISHED SIN on self by 2.5% for every SACRILEGE lost.",
     },
 
     [choirKeys.FOURTH]: {
@@ -1690,7 +1690,7 @@ export const SERAPH_DESCRIPTIONS = {
 
     [effectKeys.SACRED_FLAMES]: {
         name: "SACRED FLAMES",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.FREE_RESOURCE,
         description:
             "At TURN END, raises TARNISHED SIN by 0.25% and restores RESOURCES for every SACRED FLAMES on self.",
     },

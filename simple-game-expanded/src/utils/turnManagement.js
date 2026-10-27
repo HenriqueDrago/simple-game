@@ -145,7 +145,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = { ...post.entities[targetKey] };
     }
 
-    // Harmony (missing)
+    // Harmony
     if (draftTarget.resources[effectKeys.HARMONY] > 0) {
         const hpRestored = Math.min(
             draftTarget.resources[effectKeys.HARMONY],
@@ -397,7 +397,7 @@ export function processUpkeep(prev, targetKey, nonTargetKey) {
         draftTarget = extractEntity(post, targetKey);
     }
 
-    // Burden of Stigma
+    // Stigmata
     if (draftTarget[effectKeys.BURDEN_OF_STIGMA] > 0) {
         draftTarget = {
             ...draftTarget,
@@ -1153,7 +1153,7 @@ export function processActionUse(
         action,
     );
 
-    return processedGame;
+    return processDeathCheck(processedGame);
 }
 
 export function processExtraTurn(prev, agentKey, action) {

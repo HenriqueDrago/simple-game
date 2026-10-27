@@ -10,12 +10,21 @@ export default function CyborgTracker({ entityKey }) {
     const { handleSpawnTooltip } = useUI();
 
     const entity = game?.entities?.[entityKey];
+    const simEntity = game?.simGame?.entities?.[entityKey];
 
     const isCyborgActive = entity?.states?.[effectKeys.WEAPONS_DEPLOYED];
 
     if (!entity || !isCyborgActive) {
         return null;
     }
+
+    const realEnergy = entity?.[effectKeys.ENERGY_LEVEL] ?? 0;
+    const simEnergy = simEntity
+        ? (simEntity?.[effectKeys.ENERGY_LEVEL] ?? realEnergy)
+        : realEnergy;
+
+    const isChanged = simEntity && simEnergy !== realEnergy;
+    const displayEnergy = simEntity ? simEnergy : realEnergy;
 
     return (
         <div className="cyborg-tracker-container">
@@ -26,8 +35,8 @@ export default function CyborgTracker({ entityKey }) {
             >
                 <div className="energy-line-row">
                     <span className="energy-line-label">ENERGY LEVEL</span>
-                    <span className="energy-line-value">
-                        {entity.energyLevel}
+                    <span className={`energy-line-value ${isChanged ? "is-simulating-energy" : ""}`}>
+                        {displayEnergy}
                     </span>
                 </div>
             </div>

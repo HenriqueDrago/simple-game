@@ -122,27 +122,14 @@ function simulateGuard({ prev, agent, agentKey }) {
         },
     };
 
-    // Visionary
-    if (draftAgent.states[effectKeys.VISIONARY]) {
-        draftAgent = {
-            ...draftAgent,
-            resources: {
-                ...draftAgent.resources,
-                [effectKeys.PRECOGNITION]:
-                    draftAgent.resources[effectKeys.PRECOGNITION] +
-                    getMaxMana(agent) * constants.GUARD_MANA_REGEN,
-            },
-        };
-    } else {
-        // Replenish missing mana
-        draftAgent = gainMana(
-            draftAgent,
-            Math.min(
-                getMissingMana(draftAgent),
-                getMaxMana(agent) * constants.GUARD_MANA_REGEN,
-            ),
-        );
-    }
+    // Replenish missing mana
+    draftAgent = gainMana(
+        draftAgent,
+        Math.min(
+            getMissingMana(draftAgent),
+            getMaxMana(agent) * constants.GUARD_MANA_REGEN,
+        ),
+    );
 
     post = replaceEntity(post, draftAgent, agentKey);
 
@@ -238,7 +225,7 @@ function simulateSpecialAttack({ prev, agentKey, nonAgentKey }) {
     const cost = getSpAtkCost(draftAgent);
 
     // Visionary
-    if (draftAgent.states[effectKeys.VISIONARY]) {
+    if (draftAgent.resources[effectKeys.PRECOGNITION] > 0) {
         const precogConsumed = Math.min(
             cost,
             draftAgent.resources[effectKeys.PRECOGNITION],
@@ -311,8 +298,8 @@ function simulateHeal({ prev, agent, agentKey }) {
         draftAgent = gainHp(draftAgent, bsLost);
     }
 
-    // Visionary
-    if (draftAgent.states[effectKeys.VISIONARY]) {
+    // Precognition
+    if (draftAgent.resources[effectKeys.PRECOGNITION] > 0) {
         const base_heal = Math.min(
             getMissingHealth(draftAgent),
             getEntityTotalMana(draftAgent) +
@@ -897,7 +884,7 @@ function simulateLunarStrike({ prev, agent, agentKey, nonAgentKey }) {
         Math.floor(getEntityStr(agent) / 2) +
             agent.resources[effectKeys.MOONSHINE],
         nonAgentKey,
-        dmgTypes.TRUE,
+        dmgTypes.PIERCING,
         agentKey,
     );
 
@@ -1119,7 +1106,7 @@ function simulateAscend({ prev, agentKey, nonAgentKey }) {
             result.resourcesConsumed.totalLimitedResourcesConsumption -
             (result.resourcesConsumed?.[effectKeys.WISDOM] ?? 0) -
             (result.resourcesConsumed?.[effectKeys.RADIANCE] ?? 0)) *
-            constants.BASE_SIN_GAIN,
+            constants.HIGH_SIN_GAIN,
     );
 
     draftAgent = {
