@@ -45,7 +45,7 @@ function ActionPanel() {
                     onClick={() => {
                         setUIElements((prev) => ({
                             ...prev,
-                            history: false,
+                   
                             continueModal: false,
                         }));
                         handleResetGame();
@@ -85,7 +85,7 @@ function ActionPanel() {
                                 if (index >= keys.length - 1) {
                                     setUIElements((prev) => ({
                                         ...prev,
-                                        history: false,
+                          
                                         continueModal: false,
                                         completionModal: true,
                                     }));
@@ -93,7 +93,7 @@ function ActionPanel() {
                                 } else {
                                     setUIElements((prev) => ({
                                         ...prev,
-                                        history: false,
+                                
                                         continueModal: false,
                                     }));
                                     handleContinue(entityKeys.PLAYER_TWO);

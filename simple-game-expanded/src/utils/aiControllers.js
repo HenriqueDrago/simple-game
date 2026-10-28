@@ -6,12 +6,14 @@ import {
     presetAi,
 } from "./constants.js";
 import {
+    addToHistory,
     canUseAction,
     canUseCombatInteractions,
     consumeMitigationResources,
     consumeResources,
     countBlasphemies,
     createBaseEntity,
+    enactCelestialStars,
     expungeBlas,
     extractEntity,
     getBenediction,
@@ -37,11 +39,9 @@ import {
     isEdictUnlocked,
     isElementActive,
     isEntityDead,
-    newDealDmg,
     processDeathCheck,
     processHealth,
     replaceEntity,
-    restoreResources,
     translateElementIntoCrystals,
 } from "./entities.js";
 import {
@@ -53,11 +53,10 @@ import {
     edictKeys,
     effectKeys,
     elementalKeys,
-    entityKeys,
     entryTypes,
+    eventKeys,
     eyeKeys,
     moonKeys,
-    tarnishTypes,
 } from "./enums.js";
 import { simulateFullStarfall } from "./starfall.js";
 import {
@@ -154,6 +153,11 @@ export async function centralAIManagement(
                 command.field,
             );
             post = replaceEntity(post, draftAgent, agentKey);
+            post = addToHistory(post, {
+                event: eventKeys.SET_CONSTELLATION,
+                player: agentKey,
+                constellation: command.field,
+            });
 
             break;
         }
@@ -173,25 +177,18 @@ export async function centralAIManagement(
                     break;
                 }
 
-                draftAgent = {
-                    ...draftAgent,
-                    [effectKeys.STARS_OF_APOCALYPSE]:
-                        draftAgent[effectKeys.STARS_OF_APOCALYPSE] - starsUsed,
-                };
-
                 post = replaceEntity(post, draftAgent, agentKey);
 
-                post = newDealDmg(
+                post = enactCelestialStars(
                     post,
                     starsUsed,
-                    [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
-                    tarnishTypes.TRUE,
+                    effectKeys.STARS_OF_APOCALYPSE,
+                    agentKey,
                 );
             }
 
             if (command.field === effectKeys.STARS_OF_GENESIS) {
                 let draftAgent = extractEntity(post, agentKey);
-                let draftNonAgent = extractEntity(post, nonAgentKey);
 
                 const starsUsed = draftAgent[effectKeys.STARS_OF_GENESIS];
 
@@ -199,17 +196,13 @@ export async function centralAIManagement(
                     break;
                 }
 
-                draftAgent = {
-                    ...draftAgent,
-                    [effectKeys.STARS_OF_GENESIS]:
-                        draftAgent[effectKeys.STARS_OF_GENESIS] - starsUsed,
-                };
-
-                draftAgent = restoreResources(draftAgent, starsUsed);
-                draftNonAgent = restoreResources(draftNonAgent, starsUsed);
-
                 post = replaceEntity(post, draftAgent, agentKey);
-                post = replaceEntity(post, draftNonAgent, nonAgentKey);
+                post = enactCelestialStars(
+                    post,
+                    starsUsed,
+                    effectKeys.STARS_OF_GENESIS,
+                    agentKey,
+                );
             }
 
             break;
@@ -232,15 +225,27 @@ export async function centralAIManagement(
                 draftAgent = processHealth(draftAgent);
 
                 post = replaceEntity(post, draftAgent, agentKey);
+                post = addToHistory(post, {
+                    event: eventKeys.SET_ELEMENT,
+                    player: agentKey,
+                    element: command.field,
+                });
             }
             break;
         }
         case commandKeys.SET_EDICTS: {
             let draftAgent = extractEntity(post, agentKey);
 
+            // Edicts that actually changed, for the history
+            let changedEdicts = [];
+
             if (draftAgent.states[effectKeys.ASCENDENCE_OF_SPIRIT]) {
                 for (let edict of Object.entries(command.field)) {
                     if (isEdictUnlocked(draftAgent, edict[0])) {
+                        if (draftAgent.edicts[edict[0]] !== edict[1]) {
+                            changedEdicts = [...changedEdicts, edict];
+                        }
+
                         draftAgent = {
                             ...draftAgent,
                             edicts: {
@@ -253,6 +258,15 @@ export async function centralAIManagement(
             }
 
             post = replaceEntity(post, draftAgent, agentKey);
+
+            for (let [edict, enabled] of changedEdicts) {
+                post = addToHistory(post, {
+                    event: eventKeys.SET_EDICT,
+                    player: agentKey,
+                    edict: edict,
+                    enabled: enabled,
+                });
+            }
 
             break;
         }
@@ -679,11 +693,6 @@ function getTrueEffectiveHealth(sim, agentKey, log = false) {
             agent[effectKeys.TARNISHED_SIN] < constants.MAX_SIN
             ? Infinity
             : 0;
-    }
-
-    // Lunatic Override
-    if (nonAgent.states[effectKeys.SELENIAN]) {
-        return getEntityTotalHealth(agent) + getTotalEnlit(agent);
     }
 
     return (

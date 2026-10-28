@@ -1,9 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useMemo, useRef } from "react";
 import {
+    addToHistory,
     canUseCombatInteractions,
     createBaseEntity,
     distributePoints,
+    enactCelestialStars,
     expungeBlas,
     extractEntity,
     getCurrActivePlayer,
@@ -11,12 +13,11 @@ import {
     getTotalEnlit,
     isEdictUnlocked,
     isElementActive,
-    newDealDmg,
+    isPhaseLogged,
     processDeathCheck,
     processHealth,
     replaceEntity,
     resetPlayerEntity,
-    restoreResources,
 } from "../utils/entities";
 import {
     aiKeys,
@@ -32,7 +33,6 @@ import {
     sdmKeys,
     speedKeys,
     starfallPhases,
-    tarnishTypes,
     turnStatus,
     whoStartsKeys,
 } from "../utils/enums";
@@ -45,7 +45,6 @@ import {
     presetAi,
 } from "../utils/constants";
 import {
-    buildHistory,
     buildRoundQueue,
     commitTurn,
     processActionUse,
@@ -323,7 +322,8 @@ export default function GameProvider({ children }) {
             p2 = distributePoints(
                 p2,
                 prev.progressMode ? sdmKeys.BEST : p2.statDistributionMode,
-                presetAi[prev.progressMode ? aiKeys.WARLOCK : p2.controller].best,
+                presetAi[prev.progressMode ? aiKeys.WARLOCK : p2.controller]
+                    .best,
             );
 
             post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
@@ -596,7 +596,7 @@ export default function GameProvider({ children }) {
                 [effectKeys.ELEMENTAL_CRYSTALS]: newElements,
             });
 
-            let post = buildHistory(
+            let post = addToHistory(
                 {
                     ...prev,
                     entities: {
@@ -606,8 +606,11 @@ export default function GameProvider({ children }) {
                         },
                     },
                 },
-                eventKeys.SET_ELEMENT,
-                { player: entityKey },
+                {
+                    event: eventKeys.SET_ELEMENT,
+                    player: entityKey,
+                    element: element,
+                },
             );
 
             post =
@@ -732,15 +735,29 @@ export default function GameProvider({ children }) {
                 }
             }
 
-            let post = {
-                ...prev,
-                entities: {
-                    ...prev.entities,
-                    [entityKey]: {
-                        ...draftEntity,
+            const newConstellation =
+                draftEntity[effectKeys.AZURE_CONSTELLATION] > 0
+                    ? effectKeys.AZURE_CONSTELLATION
+                    : draftEntity[effectKeys.CRIMSON_CONSTELLATION] > 0
+                      ? effectKeys.CRIMSON_CONSTELLATION
+                      : effectKeys.CONSTELLATION;
+
+            let post = addToHistory(
+                {
+                    ...prev,
+                    entities: {
+                        ...prev.entities,
+                        [entityKey]: {
+                            ...draftEntity,
+                        },
                     },
                 },
-            };
+                {
+                    event: eventKeys.SET_CONSTELLATION,
+                    player: entityKey,
+                    constellation: newConstellation,
+                },
+            );
 
             post =
                 canUseCombatInteractions(post, entityKey) &&
@@ -779,6 +796,11 @@ export default function GameProvider({ children }) {
 
             if (nextIndex < 0) {
                 nextIndex += keys.length;
+            }
+
+            // Skip INF speed
+            if (keys[nextIndex] === speedKeys.INF) {
+                nextIndex = (nextIndex + value) % keys.length;
             }
 
             return {
@@ -821,36 +843,9 @@ export default function GameProvider({ children }) {
                 return prev;
             }
 
-            draftEntity = {
-                ...draftEntity,
-                [starKey]: draftEntity[starKey] - starsUsed,
-            };
-
             post = replaceEntity(post, draftEntity, entityKey);
 
-            if (starKey === effectKeys.STARS_OF_APOCALYPSE) {
-                post = newDealDmg(
-                    post,
-                    starsUsed,
-                    [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
-                    tarnishTypes.TRUE,
-                );
-            } else if (starKey === effectKeys.STARS_OF_GENESIS) {
-                let p1 = restoreResources(
-                    extractEntity(post, entityKeys.PLAYER_ONE),
-                    starsUsed,
-                );
-                post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
-
-                let p2 = restoreResources(
-                    extractEntity(post, entityKeys.PLAYER_TWO),
-                    starsUsed,
-                );
-                post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
-            } else {
-                return post;
-            }
-
+            post = enactCelestialStars(post, starsUsed, starKey, entityKey);
             post = processDeathCheck(post);
 
             // Undo/Redo logic
@@ -945,7 +940,12 @@ export default function GameProvider({ children }) {
                 },
             };
 
-            let post = replaceEntity(prev, draftAgent, agentKey);
+            let post = addToHistory(replaceEntity(prev, draftAgent, agentKey), {
+                event: eventKeys.SET_EDICT,
+                player: agentKey,
+                edict: edict,
+                enabled: draftAgent.edicts[edict],
+            });
 
             post =
                 canUseCombatInteractions(post, agentKey) &&
@@ -1209,15 +1209,32 @@ export default function GameProvider({ children }) {
                 }
             }
 
+            // Extra phases are played out by the player/AI, so log them once when they start
+            const isExtraPhase =
+                targetKey && playerMap[targetKey].extra.includes(currPhase);
+            const isExtraLogged =
+                isExtraPhase && isPhaseLogged(gameState, historyKey, targetKey);
+
+            if (!nextState && isExtraPhase && !isExtraLogged) {
+                nextState = gameState;
+            }
+
             // Fallback
             if (!nextState) {
                 return;
             }
 
             // History
-            nextState = buildHistory(buildRoundQueue(nextState), historyKey, {
-                player: targetKey,
-            });
+            nextState = addToHistory(
+                buildRoundQueue(nextState),
+                isExtraLogged
+                    ? null
+                    : {
+                          event: historyKey,
+                          player: targetKey,
+                          roundCount: nextState?.roundCount,
+                      },
+            );
 
             // Clear Sim
             nextState = {
@@ -1391,10 +1408,16 @@ export default function GameProvider({ children }) {
         // Match Data
         if (CHECKPOINT_STATES.includes(game.status)) {
             try {
+                // Save the state before any undoable action was taken
+                const baseGame = game.undoPile?.[0] ?? game;
+
                 localStorage.setItem(
                     "gameCheckpoint",
                     JSON.stringify({
-                        ...game,
+                        ...baseGame,
+                        speed: game.speed,
+                        paused: game.paused,
+                        progressStatus: game.progressStatus,
                         simGame: null,
                         simSpecs: null,
                         undoPile: [],

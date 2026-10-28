@@ -384,27 +384,33 @@ export const progKeys = Object.freeze({
 
 export const eventKeys = Object.freeze({
     BATTLE_START: "battleStart",
-    BATTLE_END: "battleEnd",
     ROUND_START: "roundStart",
-    ROUND_END: "roundEnd",
     PLAYER_TURN_START: "playerTurnStart",
     USE_ACTION: "useAction",
     SET_ELEMENT: "setElement",
     MOON_PHASE: "moonPhase",
-    VICTORY: "victory",
-    DEFEAT: "defeat",
-    DRAW: "draw",
     STARFALL_START: "starfallStart",
     FAILED_ACTION: "failedAction",
     TOOK_DMG: "tookDmg",
     STARFALL_SUBPHASE: "starfallSub",
     SINGULARITY: "singularity",
     PROSECUTION: "prosecution",
+    GAME_OVER: "gameOver",
+    SET_EDICT: "setEdict",
+    USE_CELESTIAL_STARS: "useCelestialStars",
+    EXPUNGE_BLASPHEMY: "expungeBlasphemy",
+    SET_CONSTELLATION: "setConstellation",
+    ANOINTMENT: "anointment",
+    RECKONING: "reckoning",
+    ADD_RUNE: "addRune",
+    DETONATE_RUNE: "detonateRune",
+    ADD_BLASPHEMY: "addBlasphemy",
 });
 
 export const speedKeys = Object.freeze({
     ONE: "one",
     TWO: "two",
+    FOUR: "four",
     INF: "inf",
 });
 

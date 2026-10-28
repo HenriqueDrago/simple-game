@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DESCRIPTIONS } from "../utils/descriptions";
 import { UIContext } from "./UIContext";
 import { turnStatus } from "../utils/enums";
-import { INITIAL_GAME_STATE, INITIAL_GLOSSARY_SPECS } from "../utils/constants";
+import {
+    INITIAL_GAME_STATE,
+    INITIAL_GLOSSARY_SPECS,
+    INITIAL_PERSISTENT_UI,
+} from "../utils/constants";
 
 function hasOngoingSavedGame() {
     try {
@@ -18,7 +22,10 @@ function hasOngoingSavedGame() {
             turnStatus.DEFEAT,
             turnStatus.SETUP,
         ];
-        return !finishedStatuses.includes(parsed.status) && parsed?.ivn === INITIAL_GAME_STATE?.ivn;
+        return (
+            !finishedStatuses.includes(parsed.status) &&
+            parsed?.ivn === INITIAL_GAME_STATE?.ivn
+        );
     } catch {
         return false;
     }
@@ -38,6 +45,26 @@ function isNewcomer() {
     }
 }
 
+function loadPersistentUI() {
+    try {
+        const savedData = localStorage.getItem("persistentUI");
+        if (!savedData) {
+            return false;
+        }
+
+        const parsed = JSON.parse(savedData);
+
+        return {
+            ...INITIAL_PERSISTENT_UI,
+            ...parsed,
+        };
+    } catch {
+        return {
+            ...INITIAL_PERSISTENT_UI,
+        };
+    }
+}
+
 export default function UIProvider({ children }) {
     // === States ===
     const [UIElements, setUIElements] = useState({
@@ -49,10 +76,10 @@ export default function UIProvider({ children }) {
         completionModal: false,
 
         glossary: false,
-        history: false,
     });
     const [tooltipStack, setTooltipStack] = useState([]);
     const [glossarySpecs, setGlossarySpecs] = useState(INITIAL_GLOSSARY_SPECS);
+    const [persistentUI, setPersistentUI] = useState(loadPersistentUI());
 
     // === Handles ===
     function handleSetTooltip(tooltipData, depth = 0) {
@@ -141,6 +168,20 @@ export default function UIProvider({ children }) {
         return false;
     }
 
+    useEffect(() => {
+        // Persistent UI data
+        if (persistentUI) {
+            try {
+                localStorage.setItem(
+                    "persistentUI",
+                    JSON.stringify(persistentUI),
+                );
+            } catch (error) {
+                console.error("Failed to save persistent UI data:", error);
+            }
+        }
+    }, [persistentUI]);
+
     return (
         <UIContext.Provider
             value={{
@@ -148,6 +189,8 @@ export default function UIProvider({ children }) {
                 setUIElements,
                 tooltipStack,
                 setTooltipStack,
+                persistentUI,
+                setPersistentUI,
 
                 handleClearTooltip,
                 handleSetTooltip,

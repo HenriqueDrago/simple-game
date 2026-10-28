@@ -35,7 +35,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "SHORTCUTS",
         type: entryTypes.MECHANIC,
         description:
-            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTIONS simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings, increasing the speed of animations and transitions. Pressing 1/2/3 directly sets speed settings to 1x/2x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn; with a max of 30 undoable actions or combat interactions. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
+            "SIMPLE GAME comes equipped with a few shortcuts for an improved game experience. Pressing P during SETUP switches WHO STARTS the MATCH. Pressing SPACE starts a MATCH. While inside a MATCH, pressing SPACE pauses or unpauses the MATCH instead, which puts automatic phases on hold. Clicking with the MOUSE WHEEL on nearly anything spawns a TOOLTIP containing its description. Hovering over any ACTIONS simulates its effects. Holding SHIFT simulates TURN END and STARFALL effects, which can be combined with hover simulations. Pressing F during a MATCH cycles through game speed settings (1x/2x/4x), increasing the speed of animations and transitions. Pressing 1/2/3/4 directly sets speed settings to 1x/2x/4x/Inf. Pressing Z/X undoes or redoes the previous action on the current turn; with a max of 99 undoable actions or combat interactions. Pressing G/H/C opens or closes GLOSSARY / HISTORY / CODE INSERT. Pressing R while holding SHIFT restarts a MATCH. Pressing R while holding ALT resets a MATCH and returns to the SETUP screen.",
     },
 
     [turnStatus.SETUP]: {
@@ -277,7 +277,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "STATES",
         type: entryTypes.CATEGORY,
         description:
-            "A persistent effect that applies only to a singular entity.",
+            "A persistent effect that applies only to a singular entity. Includes GUARDING, TUTORIAL, CEREMONIAL, RADIANT, UMBRAL CORE, BLEAK DECEPTION, DARK EMBRACE, DIMMING DARKNESS, ARMORED DEPLOYMENT, WEAPONS DEPLOYED, THERMAL OVERLOAD, RESONANT, VISIONARY, STARGAZER, EVENT HORIZON, SELENIAN, PRISMATIC, MOON DEW, GIBBOUS, ZENITH OF MORTALITY, ABANDONED BY GRACE, ANOINTED PROXY, ASCENDENCE OF SPIRIT, CUTOFF WINGS, and IMMACULATE.",
     },
 
     [effectKeys.CONDITION]: {
@@ -295,7 +295,7 @@ export const GENERAL_DESCRIPTIONS = {
 
     [effectKeys.RESOURCES]: {
         name: "RESOURCES",
-        type: entryTypes.MECHANIC,
+        type: entryTypes.CATEGORY,
         description:
             "Can be subdivided into FREE RESOURCES, LIMITED RESOURCES, OVERFLOWN RESOURCES, MITIGATION RESOURCES, RANKED RESOURCES, FIXED RESOURCES, and GLOBAL RESOURCES. Abilities that restore RESOURCES restore LIMITED RESOURCES, FREE RESOURCES, and MITIGATION RESOURCES in this order. Abilities that consume RESOURCES follow the reverse order.",
     },
@@ -332,7 +332,7 @@ export const GENERAL_DESCRIPTIONS = {
         name: "MITIGATION RESOURCES",
         type: entryTypes.CATEGORY,
         description:
-            "A subset of RESOURCES that mitigate PHYSICAL DAMAGE and PIERCING DAMAGE taken. Includes SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, ENERGY BARRIER, FUNERARY URN, LINGERING EMBER, HARMONY and MYCELIUM. When consuming this type of resource, consumes them in this order.",
+            "A subset of RESOURCES that mitigate damage or tarnishment received. Includes SANCTUARY, FAULTY FIRMAMENT, FRACTURED DOME, WISDOM, HALO, REFRACTED DIVINITY, CONJECTURE, ENERGY BARRIER, FUNERARY URN, LINGERING EMBER, HARMONY and MYCELIUM. When consuming this type of resource, consumes them in this order.",
     },
 
     [entryTypes.RANKED_RESOURCE]: {
@@ -589,7 +589,7 @@ export const SHADOW_SORCERER_DESCRIPTIONS = {
         name: "DARK PROMISE",
         type: entryTypes.TRANSFORMATIVE_ACTION,
         description:
-            "Extinguishes all SHADOWFLAME, LINGERING EMBER, UNRELENTING SHADOWS, and CINDERS on self. Restores RESOURCES to all entities equal to half the SHADOWFLAME extinguished. Then, exits UMBRAL CORE and enters DIMMING DARKNESS.",
+            "Restores RESOURCES to all entities equal to the user's SHADOWFLAME. Then, exits UMBRAL CORE and enters DIMMING DARKNESS.",
     },
 
     [effectKeys.DIMMING_DARKNESS]: {
@@ -1172,7 +1172,8 @@ export const LUNATIC_DESCRIPTIONS = {
     [effectKeys.PRISMATIC]: {
         name: "PRISMATIC",
         type: entryTypes.STATE,
-        description: "Converts all PHYSICAL DAMAGE taken into PIERCING DAMAGE. At TURN START, exits this state.",
+        description:
+            "Converts all PHYSICAL DAMAGE taken into PIERCING DAMAGE. At TURN START, exits this state.",
     },
 
     [effectKeys.REFRACTED_DIVINITY]: {
@@ -1810,7 +1811,7 @@ export const SERAPH_DESCRIPTIONS = {
     [entryTypes.CELESTIAL_STAR]: {
         name: "CELESTIAL STARS",
         type: entryTypes.CATEGORY,
-        description: "Includes STARS OF APOCALYPSE and STARS OF GENESIS.",
+        description: "Includes STARS OF APOCALYPSE and STARS OF GENESIS. When exiting ASCENDENCE OF SPIRIT, enacts all STARS OF GENESIS and STARS OF APOCALYPSE in this order.",
     },
 
     [effectKeys.STARS_OF_APOCALYPSE]: {

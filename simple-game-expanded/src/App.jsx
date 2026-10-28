@@ -13,9 +13,7 @@ import "./App.css";
 
 import { useGame } from "./contexts/GameContext.js";
 import { useUI } from "./contexts/UIContext.js";
-import {
-    INITIAL_GLOSSARY_SPECS,
-} from "./utils/constants.js";
+import { INITIAL_GLOSSARY_SPECS } from "./utils/constants.js";
 import { speedKeys, turnStatus } from "./utils/enums.js";
 import { useEffect } from "react";
 import NewcomerModal from "./components/NewcomerModal.jsx";
@@ -46,6 +44,7 @@ function App() {
         handleClearTooltip,
         setGlossarySpecs,
         isAnyOverlayOpen,
+        setPersistentUI
     } = useUI();
 
     // Event Listeners
@@ -110,6 +109,13 @@ function App() {
                         e.code === "Numpad3"
                     ) {
                         e.preventDefault();
+                        handleSpeedAbs(speedKeys.FOUR);
+                    } else if (
+                        e.key === "4" ||
+                        e.code === "Digit4" ||
+                        e.code === "Numpad4"
+                    ) {
+                        e.preventDefault();
                         handleSpeedAbs(speedKeys.INF);
                     }
                 }
@@ -167,7 +173,7 @@ function App() {
                 !isAnyOverlayOpen(["history"])
             ) {
                 if (e.code === "KeyH" || e.key === "h" || e.key === "H") {
-                    setUIElements((prev) => ({
+                    setPersistentUI((prev) => ({
                         ...prev,
                         history: !prev.history,
                     }));
@@ -189,7 +195,8 @@ function App() {
             // Code
             if (
                 (e.code === "KeyC" || e.key === "c" || e.key === "C") &&
-                !isAnyOverlayOpen(["history", "insertCode"])
+                !isAnyOverlayOpen(["history", "insertCode"]) &&
+                game.status === turnStatus.SETUP
             ) {
                 setUIElements((prev) => ({
                     ...prev,

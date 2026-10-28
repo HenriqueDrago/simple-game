@@ -39,6 +39,33 @@
     font-size: 1rem;
 }
 
+/* Color Mode Select */
+.history-header .history-color-select {
+    margin-left: auto;
+    margin-right: 10px;
+    height: 28px;
+    padding: 0 8px;
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+
+.history-header .history-color-select:focus {
+    outline: none;
+    border-color: #ffffff;
+}
+
+.history-header .history-color-select option {
+    background-color: #000000;
+    color: #ffffff;
+}
+
 /* Close Button */
 .history-header button {
     background: transparent;
@@ -75,7 +102,7 @@
     scroll-behavior: smooth;
 }
 
-.history-list-items span {
+.history-list-items > .history-entry {
     font-size: 0.85rem;
     line-height: 1.4;
     color: #e5e7eb;
@@ -84,8 +111,133 @@
     word-break: break-word;
 }
 
-.history-list-items span:last-child {
+.history-list-items > .history-entry:last-child {
     border-bottom: none;
+}
+
+.history-list-items > .history-entry.history-latest {
     color: #ffffff;
     font-weight: bold;
+}
+
+/* Simulated entries (action/turn-end previews) */
+.history-list-items > .history-entry.history-preview {
+    opacity: 0.75;
+}
+
+/* --- COLORFUL MODE --- */
+.history-colorful .history-player-one {
+    color: #fbbf24;
+}
+
+.history-colorful .history-player-two {
+    color: #c084fc;
+}
+
+.history-colorful .history-action-offensive {
+    color: #f87171;
+}
+
+.history-colorful .history-action-defensive {
+    color: #22d3ee;
+}
+
+.history-colorful .history-action-transformative {
+    color: #4ade80;
+}
+
+/* Elements */
+.history-colorful .history-element-nature {
+    color: var(--nature-color);
+}
+
+.history-colorful .history-element-frost {
+    color: var(--frost-color);
+}
+
+.history-colorful .history-element-scorch {
+    color: var(--scorch-color);
+}
+
+.history-colorful .history-element-ocean {
+    color: var(--ocean-color);
+}
+
+.history-colorful .history-element-wither {
+    color: var(--wither-color);
+}
+
+.history-colorful .history-element-ash {
+    color: var(--ash-color);
+}
+
+.history-colorful .history-element-albedo {
+    color: var(--albedo-color);
+}
+
+.history-colorful .history-element-dulled,
+.history-colorful .history-element-shattered {
+    color: #94a3b8;
+}
+
+/* Runes */
+.history-colorful .history-rune-urd {
+    color: var(--color-rune-urd);
+}
+
+.history-colorful .history-rune-verdandi {
+    color: var(--color-rune-verdandi);
+}
+
+.history-colorful .history-rune-skuld {
+    color: var(--color-rune-skuld);
+}
+
+/* Starfall (color comes from coloredStars via inline variable) */
+.history-colorful .history-star {
+    color: var(--history-star-color);
+}
+
+/* Celestial Stars */
+.history-colorful .history-celestial-apocalypse {
+    color: #ff4d4d;
+}
+
+.history-colorful .history-celestial-genesis {
+    color: #80d8ff;
+}
+
+/* Blasphemies */
+.history-colorful .history-blasphemy-yesterday {
+    color: #ff4d4d;
+}
+
+.history-colorful .history-blasphemy-today {
+    color: #38bdf8;
+}
+
+.history-colorful .history-blasphemy-tomorrow {
+    color: #fbbf24;
+}
+
+/* Constellations */
+.history-colorful .history-constellation {
+    color: #e879f9;
+}
+
+.history-colorful .history-constellation-azure {
+    color: #00bfff;
+}
+
+.history-colorful .history-constellation-crimson {
+    color: #dc143c;
+}
+
+/* Edicts */
+.history-colorful .history-edict-enabled {
+    color: #fbbf24;
+}
+
+.history-colorful .history-edict-disabled {
+    color: #8b6508;
 }

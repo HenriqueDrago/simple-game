@@ -1,11 +1,6 @@
+import { actionMap, constants, FREE_ACTIONS, playerMap } from "./constants.js";
 import {
-    actionMap,
-    constants,
-    elementsMap,
-    FREE_ACTIONS,
-    playerMap,
-} from "./constants.js";
-import {
+    addToHistory,
     advanceChoir,
     canUseAction,
     consumeResources,
@@ -15,7 +10,6 @@ import {
     gainMana,
     gainSin,
     getEntityColoredStars,
-    getEntityElement,
     getMissingHealth,
     getMissingMana,
     getProvForVirtues,
@@ -46,10 +40,10 @@ import {
     edictKeys,
     choirKeys,
     eyeKeys,
-    tarnishTypes,
     whoStartsKeys,
     aiKeys,
     progKeys,
+    speedKeys,
 } from "./enums.js";
 import { simulators } from "./simulators.js";
 import { processROYGBIVStar } from "./starfall.js";
@@ -1119,13 +1113,15 @@ export function processActionUse(
             );
         }
 
-        return buildHistory(prev, eventKeys.FAILED_ACTION, {
+        return addToHistory(prev, {
+            event: eventKeys.FAILED_ACTION,
             player: agentKey,
             action: action,
         });
     }
 
-    let processedGame = buildHistory(prev, eventKeys.USE_ACTION, {
+    let processedGame = addToHistory(prev, {
+        event: eventKeys.USE_ACTION,
         player: agentKey,
         action: action,
     });
@@ -1162,9 +1158,9 @@ export function processExtraTurn(prev, agentKey, action) {
 
     if (
         post.status !== turnStatus.ONGOING ||
-        playerMap?.[agentKey].extra.includes(currPhase)
+        !playerMap?.[agentKey].extra.includes(currPhase)
     ) {
-        return buildHistory(buildRoundQueue(post), null);
+        return buildRoundQueue(post);
     }
 
     let isFreeAction = FREE_ACTIONS.includes(action);
@@ -1216,7 +1212,7 @@ export function processPlan(prev, agentKey, action) {
         !post?.playerQueue ||
         post.playerQueue.length === 0
     ) {
-        return buildHistory(buildRoundQueue(post), null);
+        return buildRoundQueue(post);
     }
 
     let isFreeAction = FREE_ACTIONS.includes(action);
@@ -1265,124 +1261,6 @@ export function processPlan(prev, agentKey, action) {
         status: newStatus,
         playerQueue: newQueue,
     });
-}
-
-export function buildHistory(prev, event, info = {}) {
-    const history = [...prev.history];
-    const { player, action } = info;
-
-    const playerName = player
-        ? player === entityKeys.PLAYER_ONE
-            ? "Player One"
-            : "Player Two"
-        : "";
-
-    const dmgMap = {
-        [dmgTypes.PHYSICAL]: "Physical Damage",
-        [dmgTypes.PIERCING]: "Piercing Damage",
-        [dmgTypes.TRUE]: "True Damage",
-        [dmgTypes.LUNIC]: "Lunic Damage",
-        [tarnishTypes.PHYSICAL]: "Physical Tarnishment",
-        [tarnishTypes.PIERCING]: "Piercing Tarnishment",
-        [tarnishTypes.TRUE]: "True Tarnishment",
-        [tarnishTypes.LUNIC]: "Lunic Tarnishment",
-    };
-
-    const starMap = {
-        [effectKeys.RED_STAR]: "Red Star",
-        [effectKeys.ORANGE_STAR]: "Orange Star",
-        [effectKeys.YELLOW_STAR]: "Yellow Star",
-        [effectKeys.GREEN_STAR]: "Green Star",
-        [effectKeys.BLUE_STAR]: "Blue Star",
-        [effectKeys.INDIGO_STAR]: "Indigo Star",
-        [effectKeys.VIOLET_STAR]: "Violet Star",
-    };
-
-    let string;
-    switch (event) {
-        case eventKeys.BATTLE_START:
-            string = "Battle Start";
-            break;
-
-        case eventKeys.ROUND_START:
-            string = `Round ${prev.roundCount} Start`;
-            break;
-
-        case eventKeys.PLAYER_TURN_START:
-            string = `${playerName}'s Turn Start`;
-            break;
-
-        case eventKeys.USE_ACTION: {
-            const actionName = actionMap?.[action]?.name;
-            string = `${playerName} used ${actionName}`;
-            break;
-        }
-
-        case eventKeys.FAILED_ACTION: {
-            const actionName = actionMap?.[action]?.name;
-            string = `${playerName} failed to use ${actionName}!`;
-            break;
-        }
-
-        case eventKeys.SET_ELEMENT: {
-            const elementName =
-                elementsMap[getEntityElement(prev.entities[player])];
-            string = `${playerName} set element to ${elementName}`;
-            break;
-        }
-
-        case eventKeys.TOOK_DMG: {
-            string = `${playerName} took ${info?.damage ?? "Unknown"} ${dmgMap?.[info?.dmgType] ?? "Unknown"}!`;
-            break;
-        }
-
-        case eventKeys.STARFALL_SUBPHASE: {
-            string = `${playerName}'s ${info?.normalStars ?? "Unknown"} Normal and ${info?.augmentedStars ?? "Unknown"} Augmented ${starMap?.[info?.starKey] ?? "Unknown"} have fallen!`;
-            break;
-        }
-
-        case eventKeys.STARFALL_START: {
-            string = `${playerName}'s Starfall Start`;
-            break;
-        }
-
-        case eventKeys.SINGULARITY: {
-            string = `${playerName}'s Singularity Start`;
-            break;
-        }
-
-        case eventKeys.PROSECUTION: {
-            string = `${playerName}'s Prosecution Start`;
-            break;
-        }
-
-        case eventKeys.MOON_PHASE:
-            string = "Moon Phase";
-            break;
-
-        default:
-            string = null;
-            break;
-    }
-
-    if (string) {
-        history.push(string);
-    }
-
-    if (prev.status === turnStatus.DEFEAT) {
-        history.push("Player Two Win");
-    }
-    if (prev.status === turnStatus.VICTORY) {
-        history.push("Player One Win");
-    }
-    if (prev.status === turnStatus.DRAW) {
-        history.push("Draw");
-    }
-
-    return {
-        ...prev,
-        history: history,
-    };
 }
 
 export function processReckoning(prev) {
@@ -1504,7 +1382,7 @@ export function startGame(prev) {
         );
     }
 
-    return buildHistory(
+    return addToHistory(
         {
             ...post,
             paused: false,
@@ -1514,7 +1392,12 @@ export function startGame(prev) {
             redoPile: [],
             aiQueue: [],
             simSpecs: null,
+            speed: post?.speed
+                ? post?.speed === speedKeys.INF
+                    ? speedKeys.FOUR
+                    : post?.speed
+                : speedKeys.ONE,
         },
-        eventKeys.BATTLE_START,
+        { event: eventKeys.BATTLE_START },
     );
 }

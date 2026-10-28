@@ -56,6 +56,7 @@ export const constants = Object.freeze({
     PACT_DEF_GAIN: 1,
     PACT_STR_GAIN: 1,
     MAYHEM_CINDERS: 1,
+    PROMISE_MULT: 1,
 
     // Lunatic
     REFRACT_LUNACY_RATE: 1.25,
@@ -452,6 +453,10 @@ export const gameSpeeds = Object.freeze({
         label: "2x",
         mod: 0.5,
     },
+    [speedKeys.FOUR]: {
+        label: "4x",
+        mod: 0.25,
+    },
     [speedKeys.INF]: {
         label: "Inf",
         mod: 0,
@@ -778,6 +783,11 @@ export const INITIAL_GLOSSARY_SPECS = {
     matchWholeWord: false,
 };
 
+export const INITIAL_PERSISTENT_UI = {
+    history: false,
+    historyColor: false,
+};
+
 export const playerMap = Object.freeze({
     [entityKeys.PLAYER_ONE]: {
         turn: [
@@ -809,4 +819,4 @@ export const edictChoirMap = Object.freeze({
     [edictKeys.SERAPHIM]: choirKeys.NINTH,
 });
 
-export const MAX_UNDO_DEPTH = 30;
+export const MAX_UNDO_DEPTH = 99;

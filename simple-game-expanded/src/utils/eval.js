@@ -2,16 +2,19 @@
 import { centralAIManagement } from "./aiControllers";
 import { ATTRIBUTE_NAMES, constants, INITIAL_GAME_STATE, playerMap } from "./constants";
 import {
+    addToHistory,
     canUseCombatInteractions,
     extractEntity,
     getCurrActivePlayer,
     getOtherEntity,
+    isPhaseLogged,
     replaceEntity,
 } from "./entities";
 import {
     aiKeys,
     effectKeys,
     entityKeys,
+    eventKeys,
     playerTurnPhases,
     roundPhases,
     starfallPhases,
@@ -51,9 +54,9 @@ const ATTR_DIST = [
 ];
 
 const AI_LIST = [
-    aiKeys.WARLOCK,
-    aiKeys.BLOODKNIGHT,
-    aiKeys.PALADIN,
+    // aiKeys.WARLOCK,
+    // aiKeys.BLOODKNIGHT,
+    // aiKeys.PALADIN,
     aiKeys.SHADOW_SORCERER,
     aiKeys.CYBORG,
     aiKeys.MAESTRO,
@@ -109,6 +112,7 @@ function advanceTurnManagement(game) {
     let targetKey = null;
     let nonTargetKey = null;
     let nextState = null;
+    let historyKey = null;
 
     switch (currPhase) {
         case roundPhases.ROUND_START:
@@ -117,18 +121,22 @@ function advanceTurnManagement(game) {
                 roundCount: gameState.roundCount + 1,
                 roundIndex: gameState.roundIndex + 1,
             };
+            historyKey = eventKeys.ROUND_START;
             break;
 
         case roundPhases.MOON_TURN:
             nextState = processMoonPhase(gameState);
+            historyKey = eventKeys.MOON_PHASE;
             break;
 
         case roundPhases.ANOINTMENT:
             nextState = processAnointment(gameState);
+            historyKey = eventKeys.ANOINTMENT;
             break;
 
         case roundPhases.RECKONING:
             nextState = processReckoning(gameState);
+            historyKey = eventKeys.RECKONING;
             break;
 
         case roundPhases.ROUND_END:
@@ -147,7 +155,32 @@ function advanceTurnManagement(game) {
             nonTargetKey = entityKeys.PLAYER_ONE;
             break;
 
-        // Singularity phases are driven entirely by the AI command queue
+        // Singularity/Prosecution phases are driven by the AI command queue,
+        // only advanced here when the player is blocked
+        case roundPhases.P1_SINGULARITY:
+            targetKey = entityKeys.PLAYER_ONE;
+            nonTargetKey = entityKeys.PLAYER_TWO;
+            historyKey = eventKeys.SINGULARITY;
+            break;
+
+        case roundPhases.P2_SINGULARITY:
+            targetKey = entityKeys.PLAYER_TWO;
+            nonTargetKey = entityKeys.PLAYER_ONE;
+            historyKey = eventKeys.SINGULARITY;
+            break;
+
+        case roundPhases.P1_PROSECUTION:
+            targetKey = entityKeys.PLAYER_ONE;
+            nonTargetKey = entityKeys.PLAYER_TWO;
+            historyKey = eventKeys.PROSECUTION;
+            break;
+
+        case roundPhases.P2_PROSECUTION:
+            targetKey = entityKeys.PLAYER_TWO;
+            nonTargetKey = entityKeys.PLAYER_ONE;
+            historyKey = eventKeys.PROSECUTION;
+            break;
+
         default:
             break;
     }
@@ -163,6 +196,7 @@ function advanceTurnManagement(game) {
                 ...gameState,
                 starQueue: Object.values(starfallPhases),
             };
+            historyKey = eventKeys.STARFALL_START;
         } else {
             nextState = processStarfallTurn(gameState, targetKey, nonTargetKey);
         }
@@ -179,6 +213,7 @@ function advanceTurnManagement(game) {
                 ...gameState,
                 playerQueue: Object.values(playerTurnPhases),
             };
+            historyKey = eventKeys.PLAYER_TURN_START;
         } else {
             const currPlayerPhase = gameState.playerQueue[0];
 
@@ -214,11 +249,30 @@ function advanceTurnManagement(game) {
         }
     }
 
+    // Extra phases are played out by the player/AI, so log them once when they start
+    const isExtraPhase =
+        targetKey && playerMap[targetKey].extra.includes(currPhase);
+    const isExtraLogged =
+        isExtraPhase && isPhaseLogged(gameState, historyKey, targetKey);
+
+    if (!nextState && isExtraPhase && !isExtraLogged) {
+        nextState = gameState;
+    }
+
     if (!nextState) {
         return null;
     }
 
-    nextState = buildRoundQueue(nextState);
+    nextState = addToHistory(
+        buildRoundQueue(nextState),
+        isExtraLogged
+            ? null
+            : {
+                  event: historyKey,
+                  player: targetKey,
+                  roundCount: nextState?.roundCount,
+              },
+    );
 
     return { ...nextState, simGame: null };
 }
@@ -242,8 +296,17 @@ async function stepSimulation(sim) {
         return sim;
     }
 
-    // AI controller (same gate as the AI effect)
+    // Extra phases: the turn loop logs the phase before the AI acts (its timer has no delay)
     const targetKey = getCurrActivePlayer(sim);
+    const currPhase = sim?.roundQueue?.[sim?.roundIndex];
+    if (targetKey && playerMap[targetKey].extra.includes(currPhase)) {
+        const next = advanceTurnManagement(sim);
+        if (next) {
+            return next;
+        }
+    }
+
+    // AI controller (same gate as the AI effect)
     if (
         targetKey &&
         canUseCombatInteractions(sim, targetKey, true, false) &&
@@ -378,8 +441,9 @@ function configureMatch(matchConfig) {
     return sim;
 }
 
-function extractMatchInfo(simMatch, matchConfig, time) {
+function extractMatchInfo(simMatch, matchConfig, matchId, time) {
     return {
+        matchId: matchId,
         p1Controller: matchConfig.p1Controller,
         p2Controller: matchConfig.p2Controller,
         p1AttrDist: matchConfig.p1AttrDist.name,
@@ -393,6 +457,7 @@ function extractMatchInfo(simMatch, matchConfig, time) {
 // ---------- Runner ----------
 
 const CSV_COLUMNS = [
+    "matchId",
     "p1Controller",
     "p2Controller",
     "p1AttrDist",
@@ -441,66 +506,84 @@ function renderProgress(done, total, startedAt) {
     );
 }
 
-// Pushes into `results` as it goes so partial data survives Ctrl+C
-async function simAllMatches({ results = [], onProgress = () => {} } = {}) {
+// One JSON object per line (matchId + config + the match's history array)
+function toJsonl(histories) {
+    return histories.map((entry) => JSON.stringify(entry)).join("\n") + "\n";
+}
+
+function saveHistories(histories, path) {
+    fs.writeFileSync(path, toJsonl(histories));
+}
+
+async function simAllMatches({ onProgress = () => {} } = {}) {
     const matchesConfig = generateMatchConfigs();
+    const results = [];
+    const histories = [];
     const errors = [];
 
     for (let i = 0; i < matchesConfig.length; i++) {
         const matchConfig = matchesConfig[i];
+        const matchId = i;
+        let history = [];
 
         try {
             const matchInit = configureMatch(matchConfig);
             const t0 = Date.now();
             const simMatch = await simulateMatch(matchInit);
             const t1 = Date.now();
-            results.push(extractMatchInfo(simMatch, matchConfig, t1 - t0));
+            results.push(
+                extractMatchInfo(simMatch, matchConfig, matchId, t1 - t0),
+            );
+            history = simMatch?.history ?? [];
         } catch (error) {
             errors.push({ matchConfig, error });
             results.push({
+                matchId: matchId,
                 p1Controller: matchConfig.p1Controller,
                 p2Controller: matchConfig.p2Controller,
                 p1AttrDist: matchConfig.p1AttrDist.name,
                 p2AttrDist: matchConfig.p2AttrDist.name,
                 status: "",
                 rounds: "",
+                ms: "",
             });
         }
 
+        histories.push({
+            matchId: matchId,
+            p1Controller: matchConfig.p1Controller,
+            p2Controller: matchConfig.p2Controller,
+            p1AttrDist: matchConfig.p1AttrDist.name,
+            p2AttrDist: matchConfig.p2AttrDist.name,
+            history: history,
+        });
+
         onProgress(i + 1, matchesConfig.length);
 
-        // Yield to the event loop so the bar renders and Ctrl+C is handled
+        // Yield to the event loop so the bar renders
         await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
-    return { results, errors };
+    return { results, histories, errors };
 }
 
 async function main() {
     const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19);
     const outPath = process.argv[2] ?? `data/sim-results-${stamp}.csv`;
+    const historyPath =
+        process.argv[3] ?? `${outPath.replace(/\.csv$/, "")}-history.jsonl`;
 
-    const results = [];
     const startedAt = Date.now();
-
-    process.on("SIGINT", () => {
-        process.stdout.write("\n");
-        fs.writeFileSync(outPath, toCsv(results));
-        console.log(
-            `Interrupted. Saved ${results.length} partial results to ${outPath}`,
-        );
-        process.exit(130);
-    });
 
     console.log("Simulating matches...");
     renderProgress(0, generateMatchConfigs().length, startedAt);
 
-    const { errors } = await simAllMatches({
-        results,
+    const { results, histories, errors } = await simAllMatches({
         onProgress: (done, total) => renderProgress(done, total, startedAt),
     });
 
     fs.writeFileSync(outPath, toCsv(results));
+    saveHistories(histories, historyPath);
 
     const elapsed = Date.now() - startedAt;
     const unfinished = results.filter((r) => ![turnStatus.DEFEAT, turnStatus.VICTORY].includes(r.status)).length;
@@ -514,7 +597,8 @@ async function main() {
     );
     console.log(`Draw/Unfinished (stalled/timeout): ${unfinished}`);
     console.log(`Errors: ${errors.length}`);
-    console.log(`Saved to ${outPath}`);
+    console.log(`Saved results to ${outPath}`);
+    console.log(`Saved histories to ${historyPath}`);
 
     if (errors.length > 0) {
         const { matchConfig, error } = errors[0];

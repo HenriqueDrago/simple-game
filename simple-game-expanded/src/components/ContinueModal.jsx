@@ -72,7 +72,6 @@ export default function ContinueModal() {
                         setUIElements((prev) => {
                             return {
                                 ...prev,
-                                history: false,
                                 continueModal: false,
                             };
                         });

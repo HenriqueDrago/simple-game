@@ -31,7 +31,6 @@ import {
     eyeKeys,
 } from "./enums.js";
 import { roundNumber } from "./general.js";
-import { buildHistory } from "./turnManagement.js";
 
 export function restoreResources(entity, amount) {
     let draftEntity = {
@@ -1001,10 +1000,34 @@ export function processDeathCheck(prev) {
         status = turnStatus.VICTORY;
     }
 
-    return processProgUnlock({
-        ...post,
-        status: status,
-    });
+    const endStatuses = [
+        turnStatus.DRAW,
+        turnStatus.DEFEAT,
+        turnStatus.VICTORY,
+    ];
+
+    if (endStatuses.includes(status)) {
+        post = {
+            ...post,
+            status: status,
+        };
+
+        // Only log the first time the match ends
+        if (!endStatuses.includes(prev.status)) {
+            post = addToHistory(post, {
+                event: eventKeys.GAME_OVER,
+                status,
+                player:
+                    status === turnStatus.VICTORY
+                        ? entityKeys.PLAYER_ONE
+                        : status === turnStatus.DEFEAT
+                          ? entityKeys.PLAYER_TWO
+                          : null,
+            });
+        }
+    }
+
+    return processProgUnlock(post);
 }
 
 // Realize "constant" checks
@@ -1268,12 +1291,6 @@ export function getEntityDef(entity) {
 
     if (isElementActive(draftEntity, elementalKeys.FROST)) {
         totalDef += draftEntity[effectKeys.MOONLIGHT];
-    }
-
-    if (draftEntity.states[effectKeys.VISIONARY]) {
-        totalDef -=
-            countRunes(draftEntity[effectKeys.RUNIC_ARRAY], runeKeys.VERDANDI) *
-            3;
     }
 
     // === Percent Decreases ===
@@ -2195,9 +2212,7 @@ export function canUseAction(prev, entityKey, action) {
         }
         return (
             getEntityTotalMana(entity) +
-                (entity.states[effectKeys.VISIONARY]
-                    ? entity.resources[effectKeys.PRECOGNITION]
-                    : 0) >=
+                entity.resources[effectKeys.PRECOGNITION] >=
             getSpAtkCost(entity)
         );
     }
@@ -2499,6 +2514,14 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
         }
     }
 
+    if (newRune !== runeKeys.EMPTY) {
+        newGameState = addToHistory(newGameState, {
+            event: eventKeys.ADD_RUNE,
+            player: targetKey,
+            rune: newRune,
+        });
+    }
+
     draftTarget = {
         ...newGameState.entities[targetKey],
     };
@@ -2557,15 +2580,6 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
                 },
             };
 
-            // // Gain Mana
-            // draftTarget = gainMana(
-            //     draftTarget,
-            //     Math.min(
-            //         getMissingMana(draftTarget),
-            //         getMaxMana(draftTarget) * constants.SKULD_MANA_REGEN,
-            //     ),
-            // );
-
             break;
         }
 
@@ -2593,6 +2607,12 @@ export function addRune(prev, targetKey, nonTargetKey, newRune) {
 }
 
 export function detonateUrd(prev, targetKey, nonTargetKey) {
+    prev = addToHistory(prev, {
+        event: eventKeys.DETONATE_RUNE,
+        player: targetKey,
+        rune: runeKeys.URD,
+    });
+
     let draftTarget = {
         ...prev.entities[targetKey],
     };
@@ -2621,6 +2641,12 @@ export function detonateUrd(prev, targetKey, nonTargetKey) {
 }
 
 export function detonateVerdandi(prev, targetKey, nonTargetKey) {
+    prev = addToHistory(prev, {
+        event: eventKeys.DETONATE_RUNE,
+        player: targetKey,
+        rune: runeKeys.VERDANDI,
+    });
+
     let draftTarget = {
         ...prev.entities[targetKey],
     };
@@ -2658,6 +2684,12 @@ export function detonateVerdandi(prev, targetKey, nonTargetKey) {
 }
 
 export function detonateSkuld(prev, targetKey, nonTargetKey) {
+    prev = addToHistory(prev, {
+        event: eventKeys.DETONATE_RUNE,
+        player: targetKey,
+        rune: runeKeys.SKULD,
+    });
+
     let draftTarget = {
         ...prev.entities[targetKey],
     };
@@ -2976,7 +3008,8 @@ export function newDealDmg(
 
         post = replaceEntity(post, draftTaker, entityKey);
 
-        post = buildHistory(post, eventKeys.TOOK_DMG, {
+        post = addToHistory(post, {
+            event: eventKeys.TOOK_DMG,
             player: entityKey,
             damage: dmgTaken,
             dmgType: dmgTypeTaken,
@@ -3112,7 +3145,6 @@ export function getEntityFragility(prev, entityKey) {
     if (entity[effectKeys.OVERHEAT] > 0) {
         frail *= 1 + entity[effectKeys.OVERHEAT] / 100;
     }
-
 
     return Math.max(0, frail);
 }
@@ -3892,14 +3924,60 @@ export function processExitAscendence(prev, entityKey) {
         ...prev,
     };
 
+    // Exits the Heavenly Choirs
     post = exitChoirs(post, entityKey);
 
+    // Resets Choir effects (Celestial Stars, Blasphemies, Echoes)
+    let draftEntity = extractEntity(post, entityKey);
+
+    // Echoes
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.HALLOWED_ECHOES]: 0,
+    };
+    post = replaceEntity(post, draftEntity, entityKey);
+
+    // Blasphemies
+    const arrayLength =
+        prev.entities[entityKey]?.[effectKeys.CODEX_OF_BLASPHEMY]?.length || 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+        post = addBlasphemy(
+            post,
+            entityKey,
+            getOtherEntity(entityKey),
+            blasphemyKeys.NONE,
+        );
+    }
+
+    // Stars of Genesis
+    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_GENESIS] > 0) {
+        post = enactCelestialStars(
+            post,
+            draftEntity[effectKeys.STARS_OF_GENESIS],
+            effectKeys.STARS_OF_GENESIS,
+            entityKey,
+        );
+    }
+
+    // Stars of Apocalypse
+    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_APOCALYPSE] > 0) {
+        post = enactCelestialStars(
+            post,
+            draftEntity[effectKeys.STARS_OF_APOCALYPSE],
+            effectKeys.STARS_OF_APOCALYPSE,
+            entityKey,
+        );
+    }
+
+    // Raises Attributes
     const raisedStats = Math.floor(
         (getRevelation(post, entityKey) + getFortitude(post, entityKey)) / 2,
     );
 
-    let draftEntity = extractEntity(post, entityKey);
+    draftEntity = extractEntity(post, entityKey);
 
+    // Exits Extra States
     draftEntity = {
         ...draftEntity,
         states: {
@@ -3909,12 +3987,15 @@ export function processExitAscendence(prev, entityKey) {
         },
     };
 
+    // Nulls Special Attributes
     draftEntity = {
         ...draftEntity,
         [effectKeys.REVELATION]: 0,
         [effectKeys.FORTITUDE]: 0,
     };
 
+    // Consume all Resources on self and redistributes them as Health and Sacred flames
+    // Also sets Max Enlit to 0 and Max Health to previous Max Enlit
     const result = consumeResources(draftEntity, Infinity);
 
     draftEntity = result.draftEntity;
@@ -3942,6 +4023,7 @@ export function processExitAscendence(prev, entityKey) {
 
     draftEntity = raiseStats(draftEntity, raisedStats);
 
+    // Enters Cutoff Wings
     draftEntity = {
         ...draftEntity,
         states: {
@@ -3983,6 +4065,14 @@ export function addBlasphemy(prev, targetKey, nonTargetKey, newBlas) {
     post = expungeBlas(post, targetKey, nonTargetKey, disposedBlasphemy);
 
     // Add the new Blasphemy
+    if (newBlas !== blasphemyKeys.NONE) {
+        post = addToHistory(post, {
+            event: eventKeys.ADD_BLASPHEMY,
+            player: targetKey,
+            blasphemy: newBlas,
+        });
+    }
+
     draftTarget = extractEntity(post, targetKey);
     const newCodex = [
         ...draftTarget[effectKeys.CODEX_OF_BLASPHEMY].slice(1),
@@ -4011,6 +4101,12 @@ export function expungeBlas(prev, targetKey, nonTargetKey, blasphemy) {
             blasphemyKeys.TOMORROW,
         ].includes(blasphemy)
     ) {
+        post = addToHistory(post, {
+            event: eventKeys.EXPUNGE_BLASPHEMY,
+            player: targetKey,
+            blasphemy: blasphemy,
+        });
+
         post = newDealDmg(
             post,
             getMaxEnlit(extractEntity(post, targetKey)) *
@@ -4164,4 +4260,104 @@ export function raiseDynamo(entity, amount) {
                 Math.floor(excessDynamo / constants.ENERGY_BARRIER_RATE),
         },
     };
+}
+
+export function addToHistory(prev, event) {
+    if (!event || !event?.event) {
+        return prev;
+    }
+
+    let history = prev?.history ?? [];
+    history = [...history, event];
+
+    return {
+        ...prev,
+        history,
+    };
+}
+
+// Whether the event was already logged for the player in the current round
+export function isPhaseLogged(prev, event, player) {
+    const history = prev?.history ?? [];
+
+    for (let i = history.length - 1; i >= 0; i--) {
+        const entry = history[i];
+
+        if (entry?.event === event && entry?.player === player) {
+            return true;
+        }
+
+        if (entry?.event === eventKeys.ROUND_START) {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+export function enactCelestialStars(prev, amount, starKey, entityKey) {
+    let post = {
+        ...prev,
+    };
+
+    // Early exit if invalid key
+    if (
+        ![effectKeys.STARS_OF_APOCALYPSE, effectKeys.STARS_OF_GENESIS].includes(
+            starKey,
+        )
+    ) {
+        console.error(`error using celestial stars: ${starKey}`);
+        return post;
+    }
+
+    // Calc available stars to use
+    const starsUsed = Math.min(amount, extractEntity(post, entityKey)[starKey]);
+
+    if (starsUsed <= 0) {
+        return post;
+    }
+
+    // Add use to history
+    post = addToHistory(post, {
+        event: eventKeys.USE_CELESTIAL_STARS,
+        player: entityKey,
+        starKey: starKey,
+        amount: starsUsed,
+    });
+
+    // Remove used stars
+    let draftEntity = extractEntity(post, entityKey);
+    draftEntity = {
+        ...draftEntity,
+        [starKey]: draftEntity[starKey] - starsUsed,
+    };
+    post = replaceEntity(post, draftEntity, entityKey);
+
+    // Apply star effects
+    switch (starKey) {
+        case effectKeys.STARS_OF_APOCALYPSE:
+            post = newDealDmg(
+                post,
+                starsUsed,
+                [entityKeys.PLAYER_ONE, entityKeys.PLAYER_TWO],
+                tarnishTypes.TRUE,
+            );
+            break;
+        case effectKeys.STARS_OF_GENESIS: {
+            let p1 = restoreResources(
+                extractEntity(post, entityKeys.PLAYER_ONE),
+                starsUsed,
+            );
+            post = replaceEntity(post, p1, entityKeys.PLAYER_ONE);
+
+            let p2 = restoreResources(
+                extractEntity(post, entityKeys.PLAYER_TWO),
+                starsUsed,
+            );
+            post = replaceEntity(post, p2, entityKeys.PLAYER_TWO);
+            break;
+        }
+    }
+
+    return post;
 }

@@ -5,9 +5,9 @@ import {
     restoreResources,
     newDealDmg,
     isEntityDead,
+    addToHistory,
 } from "./entities";
 import { dmgTypes, effectKeys, eventKeys } from "./enums";
-import { buildHistory } from "./turnManagement";
 
 export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
     let draftMaster = {
@@ -55,7 +55,7 @@ export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
         };
     }
 
-    const currentGameState = buildHistory(
+    const currentGameState = addToHistory(
         {
             ...prev,
             entities: {
@@ -63,8 +63,13 @@ export function processROYGBIVStar(prev, masterKey, nonMasterKey, starKey) {
                 [masterKey]: draftMaster,
             },
         },
-        eventKeys.STARFALL_SUBPHASE,
-        { player: masterKey, normalStars, augmentedStars, starKey },
+        {
+            event: eventKeys.STARFALL_SUBPHASE,
+            player: masterKey,
+            normalStars,
+            augmentedStars,
+            starKey,
+        },
     );
 
     switch (starKey) {

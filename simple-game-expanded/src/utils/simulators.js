@@ -430,26 +430,19 @@ function simulateDarkPromise({ prev, agentKey, nonAgentKey }) {
     let draftNonAgent = extractEntity(post, nonAgentKey);
 
     const toBeRestored = Math.floor(
-        draftAgent.resources[effectKeys.SHADOWFLAME] / 2,
+        draftAgent.resources[effectKeys.SHADOWFLAME] * constants.PROMISE_MULT,
     );
+
+    draftAgent = restoreResources(draftAgent, toBeRestored);
+    draftNonAgent = restoreResources(draftNonAgent, toBeRestored);
 
     draftAgent = {
         ...draftAgent,
-        [effectKeys.UNRELENTING_SHADOWS]: 0,
-        resources: {
-            ...draftAgent.resources,
-            [effectKeys.SHADOWFLAME]: 0,
-            [effectKeys.LINGERING_EMBER]: 0,
-            [effectKeys.CINDERS]: 0,
-        },
         states: {
             ...draftAgent.states,
             [effectKeys.DIMMING_DARKNESS]: true,
         },
     };
-
-    draftAgent = restoreResources(draftAgent, toBeRestored);
-    draftNonAgent = restoreResources(draftNonAgent, toBeRestored);
 
     post = replaceEntity(post, draftAgent, agentKey);
     post = replaceEntity(post, draftNonAgent, nonAgentKey);

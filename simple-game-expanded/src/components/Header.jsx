@@ -19,7 +19,7 @@ function Header() {
         handleUndo,
         handleRedo,
     } = useGame();
-    const { setUIElements, handleSpawnTooltip, setGlossarySpecs } = useUI();
+    const { setUIElements, handleSpawnTooltip, setGlossarySpecs, setPersistentUI } = useUI();
 
     const battleState = game.status;
     const isSetup = battleState === turnStatus.SETUP;
@@ -183,7 +183,7 @@ function Header() {
                         onClick={() => {
                             setUIElements((prev) => ({
                                 ...prev,
-                                history: false,
+               
                                 continueModal: false,
                             }));
                             handleResetGame();
@@ -210,7 +210,7 @@ function Header() {
                     <button
                         className="hdr-btn"
                         onClick={() => {
-                            setUIElements((prev) => ({
+                            setPersistentUI((prev) => ({
                                 ...prev,
                                 history: !prev.history,
                             }));
