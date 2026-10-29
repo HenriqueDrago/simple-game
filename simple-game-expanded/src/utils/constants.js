@@ -743,6 +743,14 @@ export const entryTypeClassMap = {
     [entryTypes.HEAVENLY_CHOIR]: "type-heavenly-choir",
 };
 
+export const getEntryTypeClass = (type, originalKey) => {
+    if (type === entryTypes.CATEGORY && entryTypeClassMap[originalKey]) {
+        return entryTypeClassMap[originalKey];
+    }
+
+    return entryTypeClassMap[type] || "type-category";
+};
+
 export const FIXED_RESOURCES = [
     effectKeys.DIVINE_SPARK,
     effectKeys.OVERHEAT,

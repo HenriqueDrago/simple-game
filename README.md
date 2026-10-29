@@ -46,8 +46,8 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 ## Progression Mode
 
 - **Warlock:** Focuses on Special Attack damage scaling based on mana imbalance.
-- **Bloodknight:** Uses Sacrifice and Blood Sacrifice to convert health into extra attributes.
-- **Paladin:** Generates mitigation shields and builds divine energy to scale attributes and restore resources.
+- **Bloodknight:** Uses Sacrifice to convert health into extra attributes.
+- **Paladin:** Generates mitigation shields and builds divine energy to scale Strength and restore resources.
 - **Shadow Sorcerer:** Enters Umbral Core to manage self-damaging burn loops and restoration triggers.
 - **Cyborg:** Fires laser attacks while managing heat buildup and dynamo charge.
 - **Maestro:** Manipulates Sonority through offensive and defensive actions, using Babel and The Sound of Silence to invert its polarity.
@@ -62,7 +62,8 @@ Abilities that consume resources draw from **Mitigation Resources**, **Free Reso
 * **Middle Mouse Click (Wheel):** Click on any term or UI element to open a tooltip; clicking highlighted terms inside opens nested tooltips.
 * **Hover Over Actions:** Simulates the immediate outcome of an action (can be combined with Shift).
 * **Shift (Hold):** Simulates turn-end effects and upcoming Starfall resolutions.
-* **F / 1 / 2 / 3:** Cycle through game speed settings (1x, 2x, or Inf).
+* **F** Cycle through game speed settings (1x, 2x, or 4x).
+* **1 / 2 / 3** Set the game speed directly (1x, 2x, 4x, or Inf).
 * **Z / X:** Undo or redo the previous action on the current turn.
 * **G / H / C:** Toggle the Glossary, History, or Code Insert panels.
 * **Shift + R:** Restart the current match.

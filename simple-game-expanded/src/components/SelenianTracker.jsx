@@ -90,11 +90,14 @@ function SelenianTracker({ entityKey }) {
                     handleSpawnTooltip(e, effectKeys.MIRRORED_MOON)
                 }
             >
-                <div
-                    className={`moon-sphere ${moonClass} ${
-                        isPhaseChanged ? "is-preview" : ""
-                    }`}
-                />
+                <div className={`moon-orb ${moonClass}`}>
+                    <div className="moon-corona" />
+                    <div
+                        className={`moon-sphere ${moonClass} ${
+                            isPhaseChanged ? "is-preview" : ""
+                        }`}
+                    />
+                </div>
             </div>
             <span
                 className={`panel-text-label label-default ${

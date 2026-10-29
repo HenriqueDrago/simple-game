@@ -178,18 +178,54 @@
     opacity: 1;
 }
 
-.moon-sphere.moon-coronal {
-    background: linear-gradient(
-        90deg, 
-        var(--frost-color), 
-        var(--nature-color), 
-        var(--scorch-color), 
+/* Coronal Phase: the gradient body and corona glow live on their own layers that
+   only fade in/out, so entering/leaving this phase transitions smoothly instead of
+   snapping (gradients and keyframed box-shadows can't be transitioned directly) */
+.moon-orb {
+    position: relative;
+    width: 32px;
+    height: 32px;
+}
+
+.moon-corona {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    animation: coronal-glow-cycle 5s infinite ease-in-out;
+    transition: opacity 0.4s ease;
+}
+
+.moon-orb.moon-coronal .moon-corona {
+    opacity: 1;
+}
+
+.moon-sphere::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-image: linear-gradient(
+        90deg,
+        var(--frost-color),
+        var(--nature-color),
+        var(--scorch-color),
         var(--frost-color)
     );
     background-size: 300% 100%;
-    animation: 
-        coronal-glow-cycle 5s infinite ease-in-out,
-        coronal-body-wave 5s infinite ease-in-out;
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    animation: coronal-body-wave 5s infinite ease-in-out;
+    transition: opacity 0.4s ease;
+}
+
+.moon-sphere.moon-coronal {
+    box-shadow: 0 0 12px 2px rgba(251, 247, 235, 0);
+}
+
+.moon-sphere.moon-coronal::before {
+    opacity: 1;
 }
 
 .moon-sphere.moon-coronal::after {
@@ -359,18 +395,12 @@
 /* Corona Glow Cycle matching the exact same interval beats */
 @keyframes coronal-glow-cycle {
     0%, 100% {
-        box-shadow: 
-            inset 0 0 4px rgba(255, 255, 255, 0.6),
-            0 0 16px 4px var(--frost-color);
+        box-shadow: 0 0 16px 4px var(--frost-color);
     }
     33% {
-        box-shadow: 
-            inset 0 0 4px rgba(255, 255, 255, 0.6),
-            0 0 16px 4px var(--nature-color);
+        box-shadow: 0 0 16px 4px var(--nature-color);
     }
     66% {
-        box-shadow: 
-            inset 0 0 4px rgba(255, 255, 255, 0.6),
-            0 0 16px 4px var(--scorch-color);
+        box-shadow: 0 0 16px 4px var(--scorch-color);
     }
 }

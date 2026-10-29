@@ -3,7 +3,6 @@ import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
 import {
     entryTypesMap,
-    entryTypeClassMap,
     presetAi,
     ALL_CATEGORY_KEY,
     INITIAL_GLOSSARY_SPECS,
@@ -12,6 +11,7 @@ import { DESCRIPTIONS } from "../utils/descriptions";
 import { aiKeys, progKeys } from "../utils/enums";
 import Backdrop from "./Backdrop";
 import "./Glossary.css";
+import Parser from "./Parser";
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -272,10 +272,6 @@ function Glossary() {
                                         return null;
                                     }
 
-                                    const typeClass =
-                                        entryTypeClassMap?.[descData.type] ||
-                                        "";
-
                                     return (
                                         <div
                                             className="glossary-item"
@@ -286,7 +282,7 @@ function Glossary() {
                                                     {descData.name}
                                                 </span>
                                                 <span
-                                                    className={`glossary-item-type ${typeClass}`}
+                                                    className="glossary-item-type"
                                                 >
                                                     {
                                                         entryTypesMap[
@@ -296,7 +292,12 @@ function Glossary() {
                                                 </span>
                                             </div>
                                             <div className="glossary-item-body">
-                                                {descData.description}
+                                                <Parser
+                                                    rawText={
+                                                        descData.description
+                                                    }
+                                                    interactive={false}
+                                                />
                                             </div>
                                         </div>
                                     );

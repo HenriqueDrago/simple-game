@@ -1,11 +1,17 @@
 import { useGame } from "../contexts/GameContext";
 import { useUI } from "../contexts/UIContext";
-import { entryTypeClassMap, presetAi } from "../utils/constants";
+import { getEntryTypeClass, presetAi } from "../utils/constants";
 import { keywordDictionary } from "../utils/dictionary";
 import { progKeys } from "../utils/enums";
 import "./KeywordTooltip.css";
 
-function KeywordTooltip({ keyword, type, depth, originalKey }) {
+function KeywordTooltip({
+    keyword,
+    type,
+    depth,
+    originalKey,
+    interactive = true,
+}) {
     const { game } = useGame();
     const { handleSetTooltip } = useUI();
 
@@ -50,12 +56,12 @@ function KeywordTooltip({ keyword, type, depth, originalKey }) {
         }
     };
 
-    const typeClass = entryTypeClassMap[type] || "type-category";
+    const typeClass = getEntryTypeClass(type, originalKey);
 
     return (
         <span
-            className={`keyword-text ${typeClass} ${isLocked() ? "locked" : ""}`}
-            onMouseDown={handleMouseDown}
+            className={`keyword-text ${typeClass} ${isLocked() ? "locked" : ""} ${interactive ? "" : "static"}`}
+            onMouseDown={interactive ? handleMouseDown : undefined}
         >
             {keyword}
         </span>

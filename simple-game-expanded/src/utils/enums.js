@@ -355,6 +355,7 @@ export const entryTypes = Object.freeze({
     GLOBAL_RESOURCE: "globalResource",
     EDICT: "edict",
     HEAVENLY_CHOIR: "heavenlyChoir",
+    RESOURCE: "resource",
 });
 
 export const starfallPhases = Object.freeze({

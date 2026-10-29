@@ -13,46 +13,60 @@
     text-decoration-color: currentColor;
 }
 
+/* Generic */
 .type-default,
-.type-category { color: #94a3b8; }
+.type-category { color: #9ca3af; }
+.type-mechanic { color: #86efac; }
+.type-battle-phase { color: #fbbf24; }
+.type-controller { color: #bef264; }
 
-.type-action { color: #f97316; }
-.type-offensive-action { color: #ff4d4d; }
-.type-defensive-action { color: #38bdf8; }
-.type-transformative-action { color: #c084fc; }
+/* Actions — warm for offense, cool for defense, violet for transformation */
+.type-action { color: #fdba74; }
+.type-offensive-action { color: #f87171; }
+.type-defensive-action { color: #60a5fa; }
+.type-transformative-action { color: #c4b5fd; }
 
-.type-state { color: #a855f7; }
-.type-field-effect { color: #2dd4bf; }
+/* Effects */
+.type-state { color: #d8b4fe; }
+.type-field-effect { color: #5eead4; }
 
-.type-damage-type { color: #ff2a6d; }
-.type-damage-modifiers { color: #ff758f; }
+/* Damage */
+.type-damage-type { color: #fb7185; }
+.type-damage-modifiers { color: #fda4af; }
 
-.type-resource { color: #38bdf8; }
-.type-mitigation-resource { color: #00f5d4; }
-.type-free-resource { color: #22d3ee; }
-.type-limited-resource { color: #818cf8; }
+/* Resources — teal/cyan/blue family, each step distinct */
+.type-resource { color: #7dd3fc; }
+.type-limited-resource { color: #38bdf8; }
+.type-free-resource { color: #67e8f9; }
+.type-overflown-resource { color: #e0f2fe; }
+.type-mitigation-resource { color: #2dd4bf; }
 .type-fixed-resource { color: #fb923c; }
-.type-ranked-resource { color: #e879f9; }
-.type-overflown-resource { color: #f1f5f9; }
-.type-global-resource { color: #14b8a6; }
+.type-ranked-resource { color: #f0abfc; }
+.type-global-resource { color: #a5b4fc; }
 
-.type-stat { color: #94a3b8; }
-.type-base-stats { color: #cbd5e1; }
+/* Attributes */
+.type-stat { color: #f9a8d4; }
+.type-base-stats { color: #fbcfe8; }
 .type-alternate-stats { color: #f472b6; }
 
-.type-battle-phase { color: #f59e0b; }
-.type-mechanic { color: #4ade80; }
-
+/* Astral */
 .type-star { color: #fde047; }
-.type-celestial-star { color: #fef08a; }
-.type-runes { color: #00e676; }
+.type-celestial-star { color: #fef9c3; }
+.type-runes { color: #4ade80; }
 
-.type-controller { color: #a3e635; }
+/* Seraph */
 .type-tarnishment-type { color: #e11d48; }
-.type-spiritual-ordinance { color: #6366f1; }
-.type-blasphemy { color: #dc2626; }
-.type-edict { color: #fbbf24; }
+.type-spiritual-ordinance { color: #818cf8; }
+.type-blasphemy { color: #ef4444; }
+.type-edict { color: #facc15; }
 .type-heavenly-choir { color: #e0e7ff; }
+
+.keyword-text.static,
+.keyword-text.static:hover {
+    text-decoration: none;
+    cursor: text;
+    opacity: 1;
+}
 
 .keyword-text.locked {
     text-decoration: none;

@@ -10,7 +10,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.WEAPONS_DEPLOYED, label: "Weapons Deployed" },
     { key: effectKeys.THERMAL_OVERLOAD, label: "Thermal Overload" },
     { key: effectKeys.GUARDING_STATE, label: "Guarding" },
-    { key: effectKeys.CEREMONIAL, label: "CEREMONIAL" },
+    { key: effectKeys.CEREMONIAL, label: "Ceremonial" },
     { key: effectKeys.RADIANT, label: "Radiant" },
     { key: effectKeys.DARK_EMBRACE, label: "Dark Embrace" },
     { key: effectKeys.DIMMING_DARKNESS, label: "Dimming Darkness" },
@@ -26,7 +26,7 @@ const STATE_MAPPINGS = [
     { key: effectKeys.ZENITH_OF_MORTALITY, label: "Zenith of Mortality" },
     { key: effectKeys.IMMACULATE, label: "Immaculate" },
     { key: effectKeys.CUTOFF_WINGS, label: "Cutoff Wings" },
-    { key: effectKeys.ANOINTED_PROXY, label: "Annointed Proxy" },
+    { key: effectKeys.ANOINTED_PROXY, label: "Anointed Proxy" },
     { key: effectKeys.ABANDONED_BY_GRACE, label: "Abandoned by Grace" },
 
     { key: effectKeys.GIBBOUS, label: "Gibbous" },

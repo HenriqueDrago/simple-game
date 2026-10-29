@@ -5,7 +5,7 @@ import './Parser.css';
 // Regex to capture and list the keys found
 const keywordRegex = new RegExp(`\\b(${sortedKeywordList.join("|")})\\b`, "g");
 
-function Parser({ rawText, depth }) {
+function Parser({ rawText, depth, interactive = true }) {
     if (!rawText) {
         return null;
     }
@@ -26,7 +26,8 @@ function Parser({ rawText, depth }) {
                             originalKey={dictionaryEntry.originalKey}
                             keyword={textChunk}
                             type={dictionaryEntry.type}
-                            depth={depth} 
+                            depth={depth}
+                            interactive={interactive}
                         />
                     );
                 }

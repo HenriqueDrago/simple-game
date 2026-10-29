@@ -3927,55 +3927,12 @@ export function processExitAscendence(prev, entityKey) {
     // Exits the Heavenly Choirs
     post = exitChoirs(post, entityKey);
 
-    // Resets Choir effects (Celestial Stars, Blasphemies, Echoes)
-    let draftEntity = extractEntity(post, entityKey);
-
-    // Echoes
-    draftEntity = {
-        ...draftEntity,
-        [effectKeys.HALLOWED_ECHOES]: 0,
-    };
-    post = replaceEntity(post, draftEntity, entityKey);
-
-    // Blasphemies
-    const arrayLength =
-        prev.entities[entityKey]?.[effectKeys.CODEX_OF_BLASPHEMY]?.length || 0;
-
-    for (let i = 0; i < arrayLength; i++) {
-        post = addBlasphemy(
-            post,
-            entityKey,
-            getOtherEntity(entityKey),
-            blasphemyKeys.NONE,
-        );
-    }
-
-    // Stars of Genesis
-    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_GENESIS] > 0) {
-        post = enactCelestialStars(
-            post,
-            draftEntity[effectKeys.STARS_OF_GENESIS],
-            effectKeys.STARS_OF_GENESIS,
-            entityKey,
-        );
-    }
-
-    // Stars of Apocalypse
-    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_APOCALYPSE] > 0) {
-        post = enactCelestialStars(
-            post,
-            draftEntity[effectKeys.STARS_OF_APOCALYPSE],
-            effectKeys.STARS_OF_APOCALYPSE,
-            entityKey,
-        );
-    }
-
     // Raises Attributes
     const raisedStats = Math.floor(
         (getRevelation(post, entityKey) + getFortitude(post, entityKey)) / 2,
     );
 
-    draftEntity = extractEntity(post, entityKey);
+    let draftEntity = extractEntity(post, entityKey);
 
     // Exits Extra States
     draftEntity = {
@@ -4038,7 +3995,7 @@ export function processExitAscendence(prev, entityKey) {
 }
 
 export function exitChoirs(prev, entityKey) {
-    return replaceEntity(
+    let post = replaceEntity(
         prev,
         {
             ...extractEntity(prev, entityKey),
@@ -4049,6 +4006,51 @@ export function exitChoirs(prev, entityKey) {
         },
         entityKey,
     );
+
+    // Resets Choir effects in Choir order (Echoes, Blasphemies, Celestial Stars)
+    let draftEntity = extractEntity(post, entityKey);
+
+    // Echoes
+    draftEntity = {
+        ...draftEntity,
+        [effectKeys.HALLOWED_ECHOES]: 0,
+    };
+    post = replaceEntity(post, draftEntity, entityKey);
+
+    // Blasphemies
+    const arrayLength =
+        prev.entities[entityKey]?.[effectKeys.CODEX_OF_BLASPHEMY]?.length || 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+        post = addBlasphemy(
+            post,
+            entityKey,
+            getOtherEntity(entityKey),
+            blasphemyKeys.NONE,
+        );
+    }
+
+    // Stars of Genesis
+    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_GENESIS] > 0) {
+        post = enactCelestialStars(
+            post,
+            draftEntity[effectKeys.STARS_OF_GENESIS],
+            effectKeys.STARS_OF_GENESIS,
+            entityKey,
+        );
+    }
+
+    // Stars of Apocalypse
+    if (extractEntity(post, entityKey)[effectKeys.STARS_OF_APOCALYPSE] > 0) {
+        post = enactCelestialStars(
+            post,
+            draftEntity[effectKeys.STARS_OF_APOCALYPSE],
+            effectKeys.STARS_OF_APOCALYPSE,
+            entityKey,
+        );
+    }
+
+    return post;
 }
 
 export function addBlasphemy(prev, targetKey, nonTargetKey, newBlas) {
